@@ -22,15 +22,16 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getDashboardData } from "@/server/services/dashboard";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const metadata = { title: "Executive Dashboard" };
 // Always rebuild on request — the dashboard reads live operating counts.
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  await requirePermission(PERMISSIONS.DASHBOARD_VIEW);
+  const user = await requirePermission(PERMISSIONS.DASHBOARD_VIEW);
   const data = await getDashboardData();
+  const canRegenerateBriefing = userHasPermission(user, PERMISSIONS.AI_USE);
 
   const periodLabel = data.period?.name ?? "No open period";
   const compareCaption = data.previousPeriod
@@ -131,7 +132,7 @@ export default async function DashboardPage() {
               </p>
             )}
           </ChartCard>
-          <AiBriefingPanel briefing={data.aiBriefing} />
+          <AiBriefingPanel briefing={data.aiBriefing} canRegenerate={canRegenerateBriefing} />
         </section>
 
         {/* Row 3 — product leaderboards + campaigns */}
