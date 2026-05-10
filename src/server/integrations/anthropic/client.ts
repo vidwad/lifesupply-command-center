@@ -1,18 +1,18 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-let cached: Anthropic | null = null;
+import { resolveSecretForType } from "@/server/services/integrations";
 
 /**
- * Returns a singleton Anthropic client, or null if ANTHROPIC_API_KEY is not
- * configured. Callers must handle the null case (typically by returning a
- * "configuration required" message rather than throwing).
+ * Returns an Anthropic client, or null if no API key is available.
+ *
+ * Resolution order: process.env.ANTHROPIC_API_KEY (env wins), then the
+ * encrypted vault entry for integrationType=anthropic. Callers must handle
+ * the null case (typically by throwing AiNotConfiguredError).
  */
-export function getAnthropicClient(): Anthropic | null {
-  if (cached) return cached;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+export async function getAnthropicClient(): Promise<Anthropic | null> {
+  const apiKey = await resolveSecretForType("anthropic");
   if (!apiKey) return null;
-  cached = new Anthropic({ apiKey });
-  return cached;
+  return new Anthropic({ apiKey });
 }
 
 export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";

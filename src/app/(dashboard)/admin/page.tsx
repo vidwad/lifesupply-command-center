@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Users } from "lucide-react";
+import { Key, ShieldCheck, Users } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/PageHeader";
@@ -30,13 +30,26 @@ export default async function AdminPage() {
             </CardHeader>
           </Card>
         </Link>
+        <Link href="/admin/integrations" className="block">
+          <Card className="h-full transition-colors hover:border-primary">
+            <CardHeader>
+              <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <Key className="h-5 w-5" />
+              </div>
+              <CardTitle>API & Integrations</CardTitle>
+              <CardDescription>
+                Manage API keys per integration. Encrypted at rest in the vault.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
         <Card className="h-full opacity-60">
           <CardHeader>
             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <CardTitle>Roles & Permissions</CardTitle>
-            <CardDescription>Editable role/permission management — Phase 2+.</CardDescription>
+            <CardDescription>Editable role/permission management — later phase.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">

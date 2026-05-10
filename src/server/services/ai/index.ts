@@ -136,7 +136,7 @@ export class AiNotConfiguredError extends Error {
 }
 
 export async function generateDashboardBriefing(userId: string): Promise<AiOutput> {
-  const client = getAnthropicClient();
+  const client = await getAnthropicClient();
   if (!client) throw new AiNotConfiguredError();
 
   const data = await getDashboardData();
@@ -218,7 +218,7 @@ Rules:
   about a specific division.`;
 
 export async function askAiAnalyst(args: { question: string; userId: string }): Promise<AiOutput> {
-  const client = getAnthropicClient();
+  const client = await getAnthropicClient();
   if (!client) throw new AiNotConfiguredError();
 
   const trimmed = args.question.trim();

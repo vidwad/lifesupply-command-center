@@ -342,15 +342,37 @@ Controls:
 
 ## 8. API Credential Security
 
+Updated 2026-05-10: Original spec required env-vars-only. Owner explicitly
+authorized DB-stored encrypted credentials so admins can manage integration
+keys from the UI without filesystem access. The encrypted-vault approach is
+now permitted under the rules below.
+
 Requirements:
 
-- Store API keys only in environment variables or secure secret manager.
-- Do not store raw credentials in plain database fields.
-- Store credential references where needed.
-- Do not expose keys to client-side code.
+- Store API keys in environment variables, a secure secret manager, OR the
+  encrypted credential vault (see vault rules below).
+- Never store raw credentials in plain database fields. Vault entries must be
+  encrypted at rest.
+- Do not expose secrets to client-side code under any circumstance.
 - Rotate keys when needed.
-- Log credential configuration changes.
-- Limit admin access to integration settings.
+- Log every credential set / update / clear / rotation as an audit event.
+- Limit admin access to integration settings via `admin.manage_integrations`.
+
+### Encrypted credential vault rules
+
+- Encryption: AES-256-GCM with a 12-byte random IV per record. The
+  authentication tag is stored alongside the ciphertext.
+- Master key: a 32-byte value supplied via `MASTER_ENCRYPTION_KEY` env var
+  (base64-encoded). The master key is never stored in the database.
+- DB stores: `encryptedSecret` (packed iv.tag.ciphertext base64),
+  `secretLastFour` (for display), `secretSetAt`, `secretSetById`. The full
+  plaintext is never returned by any API or rendered in any view.
+- Resolution order at integration call time: env var first (if set), DB vault
+  second. This lets dev/CI use env, and production use the vault.
+- If `MASTER_ENCRYPTION_KEY` is not set, the vault is disabled — the settings
+  UI shows a configuration prompt and integrations fall back to env-only.
+- Master key rotation requires re-encrypting every vault row; this is an
+  ops-team task, not exposed in the UI.
 
 ---
 

@@ -33,17 +33,18 @@ model User {
   updatedAt    DateTime   @updatedAt
 
   userRoles                   UserRole[]
-  auditLogs                   AuditLog[]            @relation("ActorAuditLogs")
-  createdTasks                Task[]                @relation("TaskCreator")
-  assignedTasks               Task[]                @relation("TaskAssignee")
-  preparedReports             Report[]              @relation("ReportPreparedBy")
-  approvedReports             Report[]              @relation("ReportApprovedBy")
-  requestedApprovals          Approval[]            @relation("ApprovalRequester")
-  decidedApprovals            Approval[]            @relation("ApprovalApprover")
+  auditLogs                   AuditLog[]              @relation("ActorAuditLogs")
+  createdTasks                Task[]                  @relation("TaskCreator")
+  assignedTasks               Task[]                  @relation("TaskAssignee")
+  preparedReports             Report[]                @relation("ReportPreparedBy")
+  approvedReports             Report[]                @relation("ReportApprovedBy")
+  requestedApprovals          Approval[]              @relation("ApprovalRequester")
+  decidedApprovals            Approval[]              @relation("ApprovalApprover")
   aiOutputs                   AiOutput[]
-  triggeredSyncs              IntegrationSyncLog[]  @relation("SyncTriggeredBy")
-  investorInteractionsCreated InvestorInteraction[] @relation("InvestorInteractionCreator")
-  ownedOpportunities          Opportunity[]         @relation("OpportunityOwner")
+  triggeredSyncs              IntegrationSyncLog[]    @relation("SyncTriggeredBy")
+  investorInteractionsCreated InvestorInteraction[]   @relation("InvestorInteractionCreator")
+  ownedOpportunities          Opportunity[]           @relation("OpportunityOwner")
+  integrationSecretsSet       IntegrationConnection[] @relation("IntegrationSecretSetter")
 
   @@index([status])
   @@map("users")
@@ -913,7 +914,11 @@ model IntegrationConnection {
   integrationType      IntegrationType
   name                 String
   status               IntegrationStatus @default(not_configured)
-  credentialReference  String?
+  credentialReference  String? // env var reference (e.g. "env:ANTHROPIC_API_KEY")
+  encryptedSecret      String? // AES-256-GCM packed: base64(iv).base64(tag).base64(ciphertext)
+  secretLastFour       String? // last 4 chars of plaintext, for display only
+  secretSetAt          DateTime?
+  secretSetById        String?
   config               Json?
   lastSyncAt           DateTime?
   lastSuccessfulSyncAt DateTime?
@@ -921,7 +926,8 @@ model IntegrationConnection {
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
-  syncLogs IntegrationSyncLog[]
+  syncLogs    IntegrationSyncLog[]
+  secretSetBy User?                @relation("IntegrationSecretSetter", fields: [secretSetById], references: [id], onDelete: SetNull)
 
   @@unique([integrationType, name])
   @@index([status])

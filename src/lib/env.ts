@@ -9,6 +9,9 @@ const envSchema = z.object({
   AUTH_SECRET: z.string().min(32).optional(),
   AUTH_URL: z.string().url().optional(),
 
+  // Encrypted credential vault — see docs/06 §8
+  MASTER_ENCRYPTION_KEY: z.string().optional(),
+
   BIGCOMMERCE_STORE_HASH: z.string().optional(),
   BIGCOMMERCE_API_TOKEN: z.string().optional(),
   BIGCOMMERCE_CLIENT_ID: z.string().optional(),
