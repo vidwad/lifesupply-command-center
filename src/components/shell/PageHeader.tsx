@@ -4,7 +4,7 @@ type Props = {
   title: string;
   description?: string;
   actions?: React.ReactNode;
-  breadcrumb?: string;
+  breadcrumb?: React.ReactNode;
   className?: string;
 };
 
