@@ -224,10 +224,23 @@ export default async function OrderDetailPage({ params }: Props) {
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <ClipboardList className="h-4 w-4" /> Related tasks
               </CardTitle>
+              <Link
+                href={{
+                  pathname: "/tasks/new",
+                  query: {
+                    relatedEntityType: "Order",
+                    relatedEntityId: order.id,
+                    title: `Follow up on order ${order.orderNumber}`,
+                  },
+                }}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                + New
+              </Link>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               {tasks.length === 0 ? (
@@ -236,12 +249,15 @@ export default async function OrderDetailPage({ params }: Props) {
                 <ul className="space-y-2">
                   {tasks.map((t) => (
                     <li key={t.id} className="rounded border bg-muted/20 p-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-medium">{t.title}</span>
+                      <Link
+                        href={`/tasks/${t.id}`}
+                        className="flex items-start justify-between gap-2"
+                      >
+                        <span className="font-medium hover:underline">{t.title}</span>
                         <Badge variant={t.priority === "urgent" ? "destructive" : "secondary"}>
                           {t.priority}
                         </Badge>
-                      </div>
+                      </Link>
                       {t.dueDate && (
                         <p className="mt-1 text-xs text-muted-foreground">
                           Due {formatDate(t.dueDate)} • {t.status.replace("_", " ")}
