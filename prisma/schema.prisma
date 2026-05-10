@@ -32,16 +32,18 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  userRoles          UserRole[]
-  auditLogs          AuditLog[]           @relation("ActorAuditLogs")
-  createdTasks       Task[]               @relation("TaskCreator")
-  assignedTasks      Task[]               @relation("TaskAssignee")
-  preparedReports    Report[]             @relation("ReportPreparedBy")
-  approvedReports    Report[]             @relation("ReportApprovedBy")
-  requestedApprovals Approval[]           @relation("ApprovalRequester")
-  decidedApprovals   Approval[]           @relation("ApprovalApprover")
-  aiOutputs          AiOutput[]
-  triggeredSyncs     IntegrationSyncLog[] @relation("SyncTriggeredBy")
+  userRoles                   UserRole[]
+  auditLogs                   AuditLog[]            @relation("ActorAuditLogs")
+  createdTasks                Task[]                @relation("TaskCreator")
+  assignedTasks               Task[]                @relation("TaskAssignee")
+  preparedReports             Report[]              @relation("ReportPreparedBy")
+  approvedReports             Report[]              @relation("ReportApprovedBy")
+  requestedApprovals          Approval[]            @relation("ApprovalRequester")
+  decidedApprovals            Approval[]            @relation("ApprovalApprover")
+  aiOutputs                   AiOutput[]
+  triggeredSyncs              IntegrationSyncLog[]  @relation("SyncTriggeredBy")
+  investorInteractionsCreated InvestorInteraction[] @relation("InvestorInteractionCreator")
+  ownedOpportunities          Opportunity[]         @relation("OpportunityOwner")
 
   @@index([status])
   @@map("users")
@@ -974,4 +976,94 @@ enum SyncStatus {
   success
   failed
   partial
+}
+
+// =============================================================================
+// Strategic Growth — investors, opportunities, acquisition targets
+// docs/04 §12
+// =============================================================================
+
+model Investor {
+  id           String    @id @default(cuid())
+  name         String
+  organization String?
+  email        String?
+  phone        String?
+  investorType String? // angel, vc, family_office, lender, strategic, other
+  status       String    @default("prospect") // prospect, engaged, committed, declined, closed
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  interactions InvestorInteraction[]
+
+  @@index([status])
+  @@map("investors")
+}
+
+model InvestorInteraction {
+  id              String   @id @default(cuid())
+  investorId      String
+  interactionType String // meeting, email, call, document_shared
+  interactionDate DateTime
+  summary         String?
+  nextAction      String?
+  createdById     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  investor  Investor @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  createdBy User?    @relation("InvestorInteractionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([investorId])
+  @@index([interactionDate])
+  @@map("investor_interactions")
+}
+
+model Opportunity {
+  id                     String    @id @default(cuid())
+  title                  String
+  opportunityType        String // acquisition, supplier, financing, marketing, product, operational, technology, partnership, cost_reduction
+  status                 String    @default("identified") // identified, evaluating, committed, in_progress, completed, declined, on_hold
+  strategicRationale     String?
+  estimatedRevenueImpact Decimal?  @db.Decimal(14, 2)
+  estimatedMarginImpact  Decimal?  @db.Decimal(5, 4)
+  estimatedCost          Decimal?  @db.Decimal(14, 2)
+  riskRating             String? // low, medium, high
+  priority               String? // low, medium, high, critical
+  ownerId                String?
+  nextAction             String?
+  dueDate                DateTime?
+  metadata               Json?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  owner             User?              @relation("OpportunityOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  acquisitionTarget AcquisitionTarget?
+
+  @@index([status])
+  @@index([opportunityType])
+  @@index([priority])
+  @@map("opportunities")
+}
+
+model AcquisitionTarget {
+  id                    String   @id @default(cuid())
+  opportunityId         String   @unique
+  companyName           String
+  website               String?
+  geography             String?
+  revenueEstimate       Decimal? @db.Decimal(14, 2)
+  ebitdaEstimate        Decimal? @db.Decimal(14, 2)
+  strategicFit          String?
+  integrationComplexity String? // low, medium, high
+  valuationNotes        String?  @db.Text
+  diligenceStatus       String? // not_started, in_progress, complete
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@map("acquisition_targets")
 }

@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { seedAuth } from "./seed/auth";
 import { seedManagement } from "./seed/management";
 import { seedOperating } from "./seed/operating";
+import { seedStrategic } from "./seed/strategic";
 import { seedTransactions } from "./seed/transactions";
 
 const prisma = new PrismaClient();
@@ -14,6 +15,7 @@ async function main() {
   await seedOperating(prisma);
   await seedTransactions(prisma);
   await seedManagement(prisma);
+  await seedStrategic(prisma);
 
   console.log("\nSeed complete.");
   console.log(`\nDev login: ${admin.email} / ${admin.password}`);
