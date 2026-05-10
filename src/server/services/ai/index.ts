@@ -193,3 +193,97 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
   revalidatePath("/dashboard");
   return aiOutput;
 }
+
+// -----------------------------------------------------------------------------
+// AI Analyst — open Q&A grounded in the dashboard snapshot
+// -----------------------------------------------------------------------------
+
+const ANALYST_SYSTEM_PROMPT = `You are the LifeSupply Command Center analyst.
+
+The owner asks you questions about the business. Today's snapshot is supplied
+in the user message. Answer concisely (under ~250 words unless the question
+genuinely needs more), grounded ONLY in the provided data.
+
+Voice: direct, owner-to-owner, professional. No marketing fluff.
+
+Rules:
+- If a question can't be answered from the supplied data, say so plainly and
+  list what data you would need.
+- Reference order numbers (e.g. LS-1032), supplier codes (BBM01), customer
+  names, period names verbatim from the data.
+- Distinguish facts from your recommendations.
+- Never instruct anyone to send emails, place supplier orders, modify pricing
+  on external systems, or push external updates without human approval.
+- For financial figures, use the consolidated numbers unless the question is
+  about a specific division.`;
+
+export async function askAiAnalyst(args: { question: string; userId: string }): Promise<AiOutput> {
+  const client = getAnthropicClient();
+  if (!client) throw new AiNotConfiguredError();
+
+  const trimmed = args.question.trim();
+  if (!trimmed) throw new Error("Question is required.");
+
+  const data = await getDashboardData();
+  const context = buildBriefingContext(data);
+
+  const userPrompt = `## Today's snapshot\n\n${context}\n\n## Question\n\n${trimmed}`;
+
+  const response = await client.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 1024,
+    system: ANALYST_SYSTEM_PROMPT,
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const output = response.content
+    .map((b) => (b.type === "text" ? b.text : ""))
+    .join("\n")
+    .trim();
+
+  const aiOutput = await prisma.aiOutput.create({
+    data: {
+      userId: args.userId,
+      modelProvider: "anthropic",
+      modelName: response.model,
+      module: "analyst_query",
+      prompt: trimmed,
+      output,
+      sourceReferences: {
+        period: data.period?.name,
+        exceptionOrderNumbers: data.exceptions.map((e) => e.orderNumber),
+      },
+      tokenUsage: {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      },
+      status: "generated",
+    },
+  });
+
+  await writeAudit({
+    actorUserId: args.userId,
+    action: "ai.analyst_query",
+    entityType: "AiOutput",
+    entityId: aiOutput.id,
+    afterData: {
+      module: "analyst_query",
+      model: response.model,
+      questionPreview: trimmed.slice(0, 120),
+    },
+  });
+
+  revalidatePath("/ai-analyst");
+  return aiOutput;
+}
+
+export async function listRecentAiOutputs(opts: { module?: string; limit?: number } = {}) {
+  return prisma.aiOutput.findMany({
+    where: opts.module ? { module: opts.module } : undefined,
+    orderBy: { createdAt: "desc" },
+    take: opts.limit ?? 10,
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+    },
+  });
+}
