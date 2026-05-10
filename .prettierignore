@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+build
+dist
+coverage
+pnpm-lock.yaml
+*.min.js
+*.min.css
+
+# Authored content — preserve original formatting
+*.md
+docs/
+CLAUDE.md
+README.md
+MANIFEST.md
+00_START_HERE_FOR_CLAUDE_CODE.md
