@@ -2,14 +2,14 @@ import NextAuth from "next-auth";
 
 import { authConfig } from "@/server/auth/config";
 
-export const { auth: middleware } = NextAuth(authConfig);
+const { auth } = NextAuth(authConfig);
 
 export const config = {
   // Match all routes except Next internals and static assets.
   matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.).*)"],
 };
 
-export default middleware((req) => {
+export default auth((req) => {
   const isLoggedIn = !!req.auth?.user;
   const { pathname, origin } = req.nextUrl;
 

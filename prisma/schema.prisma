@@ -1,8 +1,11 @@
 // LifeSupply Command Center — Prisma schema
 //
-// Phase 1 scope: identity, role-based access control, and audit logging.
-// Operating tables (orders, customers, products, suppliers, financials, etc.)
-// land in Phase 2+ per docs/04_DATABASE_SCHEMA.md and docs/07 §6.
+// Phase 1: identity, RBAC, audit logging.
+// Phase 2: operating tables (divisions, stores, customers, products,
+// orders, suppliers, financial summaries, marketing, analytics, tasks,
+// reports, AI outputs, integration logs).
+//
+// Source: docs/04_DATABASE_SCHEMA.md
 
 generator client {
   provider = "prisma-client-js"
@@ -13,24 +16,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 // Identity & Access Control
-// -----------------------------------------------------------------------------
+// =============================================================================
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   name         String?
   passwordHash String?
   status       UserStatus @default(active)
   title        String?
   department   String?
   lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  userRoles UserRole[]
-  auditLogs AuditLog[] @relation("ActorAuditLogs")
+  userRoles          UserRole[]
+  auditLogs          AuditLog[]           @relation("ActorAuditLogs")
+  createdTasks       Task[]               @relation("TaskCreator")
+  assignedTasks      Task[]               @relation("TaskAssignee")
+  preparedReports    Report[]             @relation("ReportPreparedBy")
+  approvedReports    Report[]             @relation("ReportApprovedBy")
+  requestedApprovals Approval[]           @relation("ApprovalRequester")
+  decidedApprovals   Approval[]           @relation("ApprovalApprover")
+  aiOutputs          AiOutput[]
+  triggeredSyncs     IntegrationSyncLog[] @relation("SyncTriggeredBy")
 
   @@index([status])
   @@map("users")
@@ -101,22 +112,21 @@ model RolePermission {
   @@map("role_permissions")
 }
 
-// -----------------------------------------------------------------------------
-// Audit Logging — material user/system actions
-// docs/06 §9
-// -----------------------------------------------------------------------------
+// =============================================================================
+// Audit Logging — docs/06 §9
+// =============================================================================
 
 model AuditLog {
-  id           String   @id @default(cuid())
-  actorUserId  String?
-  action       String
-  entityType   String?
-  entityId     String?
-  beforeData   Json?
-  afterData    Json?
-  ipAddress    String?
-  userAgent    String?
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String?
+  entityId    String?
+  beforeData  Json?
+  afterData   Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 
   actor User? @relation("ActorAuditLogs", fields: [actorUserId], references: [id], onDelete: SetNull)
 
@@ -124,4 +134,844 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// =============================================================================
+// Business Structure — divisions and stores
+// docs/04 §4
+// =============================================================================
+
+model Division {
+  id               String   @id @default(cuid())
+  name             String
+  code             String   @unique
+  type             String? // operating, holding, geographic, consolidated
+  jurisdiction     String? // CA, US, etc.
+  parentDivisionId String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  parentDivision     Division?          @relation("DivisionTree", fields: [parentDivisionId], references: [id], onDelete: SetNull)
+  childDivisions     Division[]         @relation("DivisionTree")
+  stores             Store[]
+  customers          Customer[]
+  products           Product[]
+  orders             Order[]
+  financialSummaries FinancialSummary[]
+
+  @@map("divisions")
+}
+
+model Store {
+  id              String   @id @default(cuid())
+  divisionId      String
+  name            String
+  platform        String // bigcommerce, amazon, manual, other
+  url             String?
+  sourceSystem    String?
+  externalStoreId String?
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  division       Division        @relation(fields: [divisionId], references: [id], onDelete: Restrict)
+  customers      Customer[]
+  categories     Category[]
+  products       Product[]
+  orders         Order[]
+  websiteMetrics WebsiteMetric[]
+
+  @@unique([sourceSystem, externalStoreId])
+  @@index([divisionId])
+  @@map("stores")
+}
+
+// =============================================================================
+// Customers — docs/04 §5.1–5.3
+// =============================================================================
+
+model Customer {
+  id                String        @id @default(cuid())
+  storeId           String?
+  divisionId        String?
+  sourceSystem      String?
+  sourceId          String?
+  email             String?
+  firstName         String?
+  lastName          String?
+  companyName       String?
+  customerType      CustomerType  @default(unknown)
+  phone             String?
+  billingAddress    Json?
+  shippingAddress   Json?
+  consentStatus     ConsentStatus @default(unknown)
+  mailchimpStatus   String?
+  lifetimeValue     Decimal       @default(0) @db.Decimal(14, 2)
+  orderCount        Int           @default(0)
+  firstOrderAt      DateTime?
+  lastOrderAt       DateTime?
+  reactivationScore Int? // 0–100, higher = better reactivation candidate
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+
+  store             Store?                  @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  division          Division?               @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  orders            Order[]
+  marketingContacts MarketingContact[]
+  segmentMembers    CustomerSegmentMember[]
+
+  @@unique([sourceSystem, sourceId])
+  @@index([email])
+  @@index([customerType])
+  @@index([divisionId])
+  @@index([storeId])
+  @@map("customers")
+}
+
+enum CustomerType {
+  retail
+  b2b
+  clinic
+  institutional
+  supplier
+  investor
+  unknown
+}
+
+enum ConsentStatus {
+  subscribed
+  unsubscribed
+  cleaned
+  transactional
+  pending
+  unknown
+}
+
+model CustomerSegment {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  segmentType  String // reactivation, vip, lapsed, b2b, retail, custom
+  criteria     Json?
+  sourceSystem String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members CustomerSegmentMember[]
+
+  @@map("customer_segments")
+}
+
+model CustomerSegmentMember {
+  id         String    @id @default(cuid())
+  customerId String
+  segmentId  String
+  addedAt    DateTime  @default(now())
+  removedAt  DateTime?
+
+  customer Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  segment  CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, segmentId])
+  @@index([segmentId])
+  @@map("customer_segment_members")
+}
+
+// =============================================================================
+// Products & Catalog — docs/04 §5.4–5.7
+// =============================================================================
+
+model Category {
+  id               String   @id @default(cuid())
+  storeId          String?
+  sourceSystem     String?
+  sourceId         String?
+  name             String
+  path             String?
+  parentCategoryId String?
+  sortOrder        Int      @default(0)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  store           Store?     @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  parentCategory  Category?  @relation("CategoryTree", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  childCategories Category[] @relation("CategoryTree")
+  products        Product[]
+
+  @@unique([sourceSystem, sourceId])
+  @@index([storeId])
+  @@map("categories")
+}
+
+model Product {
+  id                  String            @id @default(cuid())
+  storeId             String?
+  divisionId          String?
+  categoryId          String?
+  sourceSystem        String?
+  sourceId            String?
+  name                String
+  sku                 String?
+  brand               String?
+  description         String?           @db.Text
+  url                 String?
+  imageStatus         DataQualityStatus @default(missing)
+  descriptionStatus   DataQualityStatus @default(missing)
+  status              ProductStatus     @default(active)
+  productType         String?
+  isFeatured          Boolean           @default(false)
+  isRockstarCandidate Boolean           @default(false)
+  metadata            Json?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  deletedAt           DateTime?
+
+  store            Store?            @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  division         Division?         @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  category         Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants         ProductVariant[]
+  orderItems       OrderItem[]
+  supplierProducts SupplierProduct[]
+
+  @@unique([sourceSystem, sourceId])
+  @@index([storeId])
+  @@index([categoryId])
+  @@index([sku])
+  @@index([status])
+  @@map("products")
+}
+
+enum ProductStatus {
+  draft
+  active
+  inactive
+  archived
+}
+
+enum DataQualityStatus {
+  missing
+  present
+  needs_review
+  validated
+}
+
+model ProductVariant {
+  id                    String        @id @default(cuid())
+  productId             String
+  sku                   String
+  optionSummary         String?
+  price                 Decimal       @db.Decimal(12, 2)
+  salePrice             Decimal?      @db.Decimal(12, 2)
+  costPrice             Decimal?      @db.Decimal(12, 2)
+  inventoryTrackingType String? // none, bigcommerce, supplier
+  stockLevel            Int?
+  status                ProductStatus @default(active)
+  sourceSystem          String?
+  sourceId              String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  product          Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems       OrderItem[]
+  supplierProducts SupplierProduct[]
+
+  @@unique([sourceSystem, sourceId])
+  @@index([productId])
+  @@index([sku])
+  @@map("product_variants")
+}
+
+// =============================================================================
+// Orders — docs/04 §5.8–5.9
+// =============================================================================
+
+model Order {
+  id                   String                 @id @default(cuid())
+  storeId              String
+  divisionId           String?
+  customerId           String?
+  sourceSystem         String?
+  sourceId             String?
+  orderNumber          String
+  status               OrderStatus            @default(received)
+  paymentStatus        PaymentStatus          @default(pending)
+  fulfillmentStatus    FulfillmentStatus      @default(unfulfilled)
+  orderDate            DateTime
+  subtotal             Decimal                @default(0) @db.Decimal(12, 2)
+  discountTotal        Decimal                @default(0) @db.Decimal(12, 2)
+  shippingTotal        Decimal                @default(0) @db.Decimal(12, 2)
+  taxTotal             Decimal                @default(0) @db.Decimal(12, 2)
+  grandTotal           Decimal                @default(0) @db.Decimal(12, 2)
+  currency             String                 @default("CAD")
+  estimatedGrossProfit Decimal?               @db.Decimal(12, 2)
+  estimatedGrossMargin Decimal?               @db.Decimal(5, 4)
+  supplierStatus       SupplierWorkflowStatus @default(not_required)
+  automationStatus     AutomationStatus       @default(none)
+  exceptionStatus      ExceptionStatus        @default(none)
+  exceptionReason      String?
+  metadata             Json?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  store    Store       @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  division Division?   @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  customer Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    OrderItem[]
+  tasks    Task[]      @relation("OrderTasks")
+
+  @@unique([sourceSystem, sourceId])
+  @@unique([storeId, orderNumber])
+  @@index([orderDate])
+  @@index([status])
+  @@index([exceptionStatus])
+  @@index([customerId])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  received
+  processing
+  awaiting_supplier
+  in_supplier_queue
+  awaiting_human_review
+  shipped
+  delivered
+  completed
+  cancelled
+  refunded
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+  partially_refunded
+}
+
+enum FulfillmentStatus {
+  unfulfilled
+  partially_fulfilled
+  fulfilled
+  returned
+}
+
+enum SupplierWorkflowStatus {
+  not_required
+  pending_assignment
+  assigned
+  awaiting_confirmation
+  confirmed
+  shipped
+  completed
+  failed
+}
+
+enum AutomationStatus {
+  none
+  queued
+  running
+  succeeded
+  failed
+  paused
+}
+
+enum ExceptionStatus {
+  none
+  flagged
+  in_review
+  resolved
+}
+
+model OrderItem {
+  id                   String   @id @default(cuid())
+  orderId              String
+  productId            String?
+  productVariantId     String?
+  sku                  String
+  productName          String
+  quantity             Int
+  unitPrice            Decimal  @db.Decimal(12, 2)
+  unitCost             Decimal? @db.Decimal(12, 2)
+  lineSubtotal         Decimal  @db.Decimal(12, 2)
+  lineTax              Decimal  @default(0) @db.Decimal(12, 2)
+  lineTotal            Decimal  @db.Decimal(12, 2)
+  estimatedGrossProfit Decimal? @db.Decimal(12, 2)
+  estimatedGrossMargin Decimal? @db.Decimal(5, 4)
+  supplierId           String?
+  supplierProductId    String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  order           Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productVariant  ProductVariant?  @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+  supplier        Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierProduct SupplierProduct? @relation(fields: [supplierProductId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([supplierId])
+  @@map("order_items")
+}
+
+// =============================================================================
+// Suppliers — docs/04 §6
+// =============================================================================
+
+model Supplier {
+  id                  String    @id @default(cuid())
+  name                String
+  code                String    @unique
+  type                String? // distributor, manufacturer, dropship, marketplace
+  websiteUrl          String?
+  portalUrl           String?
+  apiAvailable        Boolean   @default(false)
+  automationAvailable Boolean   @default(false)
+  status              String    @default("active")
+  primaryContactName  String?
+  primaryContactEmail String?
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  supplierProducts SupplierProduct[]
+  orderItems       OrderItem[]
+
+  @@map("suppliers")
+}
+
+model SupplierProduct {
+  id                  String    @id @default(cuid())
+  supplierId          String
+  productId           String?
+  productVariantId    String?
+  supplierSku         String
+  supplierProductName String?
+  supplierUrl         String?
+  cost                Decimal   @db.Decimal(12, 2)
+  currency            String    @default("CAD")
+  availabilityStatus  String    @default("unknown") // in_stock, low_stock, out_of_stock, discontinued, unknown
+  lastCheckedAt       DateTime?
+  isPreferred         Boolean   @default(false)
+  metadata            Json?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  supplier       Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  product        Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+  orderItems     OrderItem[]
+
+  @@unique([supplierId, supplierSku])
+  @@index([productId])
+  @@index([supplierId])
+  @@map("supplier_products")
+}
+
+// =============================================================================
+// Financials — docs/04 §7
+// =============================================================================
+
+model FinancialPeriod {
+  id         String                @id @default(cuid())
+  name       String                @unique
+  periodType FinancialPeriodType
+  startDate  DateTime              @db.Date
+  endDate    DateTime              @db.Date
+  status     FinancialPeriodStatus @default(open)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  summaries FinancialSummary[]
+
+  @@index([startDate])
+  @@index([status])
+  @@map("financial_periods")
+}
+
+enum FinancialPeriodType {
+  month
+  quarter
+  year
+}
+
+enum FinancialPeriodStatus {
+  open
+  imported
+  under_review
+  approved
+  closed
+}
+
+model FinancialSummary {
+  id                 String         @id @default(cuid())
+  financialPeriodId  String
+  divisionId         String?
+  revenue            Decimal        @default(0) @db.Decimal(14, 2)
+  cogs               Decimal        @default(0) @db.Decimal(14, 2)
+  grossProfit        Decimal        @default(0) @db.Decimal(14, 2)
+  grossMargin        Decimal?       @db.Decimal(5, 4)
+  operatingExpenses  Decimal        @default(0) @db.Decimal(14, 2)
+  operatingIncome    Decimal        @default(0) @db.Decimal(14, 2)
+  ebitda             Decimal?       @db.Decimal(14, 2)
+  adjustedEbitda     Decimal?       @db.Decimal(14, 2)
+  cash               Decimal?       @db.Decimal(14, 2)
+  accountsReceivable Decimal?       @db.Decimal(14, 2)
+  accountsPayable    Decimal?       @db.Decimal(14, 2)
+  workingCapital     Decimal?       @db.Decimal(14, 2)
+  currency           String         @default("CAD")
+  sourceSystem       String?
+  sourceImportId     String?
+  approvalStatus     ApprovalStatus @default(pending)
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  financialPeriod FinancialPeriod @relation(fields: [financialPeriodId], references: [id], onDelete: Cascade)
+  division        Division?       @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+
+  @@unique([financialPeriodId, divisionId])
+  @@index([divisionId])
+  @@map("financial_summaries")
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  withdrawn
+  not_required
+}
+
+// =============================================================================
+// Marketing & Analytics — docs/04 §8
+// =============================================================================
+
+model MarketingContact {
+  id                 String        @id @default(cuid())
+  customerId         String?
+  sourceSystem       String?
+  sourceId           String?
+  email              String
+  status             String        @default("subscribed")
+  consentStatus      ConsentStatus @default(unknown)
+  tags               Json?
+  lastCampaignSentAt DateTime?
+  lastOpenedAt       DateTime?
+  lastClickedAt      DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceSystem, sourceId])
+  @@index([email])
+  @@index([customerId])
+  @@map("marketing_contacts")
+}
+
+model Campaign {
+  id              String         @id @default(cuid())
+  name            String
+  campaignType    String // email, social, paid, content, lifecycle
+  sourceSystem    String?
+  sourceId        String?
+  status          CampaignStatus @default(draft)
+  subject         String?
+  audienceSummary String?
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  createdById     String?
+  approvedById    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  metrics CampaignMetrics[]
+
+  @@unique([sourceSystem, sourceId])
+  @@index([status])
+  @@map("campaigns")
+}
+
+enum CampaignStatus {
+  draft
+  scheduled
+  sent
+  paused
+  cancelled
+}
+
+model CampaignMetrics {
+  id                String   @id @default(cuid())
+  campaignId        String
+  sentCount         Int      @default(0)
+  openCount         Int      @default(0)
+  clickCount        Int      @default(0)
+  conversionCount   Int      @default(0)
+  attributedRevenue Decimal  @default(0) @db.Decimal(14, 2)
+  unsubscribeCount  Int      @default(0)
+  bounceCount       Int      @default(0)
+  measuredAt        DateTime
+  createdAt         DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, measuredAt])
+  @@map("campaign_metrics")
+}
+
+model WebsiteMetric {
+  id              String   @id @default(cuid())
+  storeId         String
+  date            DateTime @db.Date
+  sourceSystem    String?  @default("ga4")
+  users           Int      @default(0)
+  sessions        Int      @default(0)
+  engagedSessions Int      @default(0)
+  pageViews       Int      @default(0)
+  productViews    Int      @default(0)
+  addToCarts      Int      @default(0)
+  checkouts       Int      @default(0)
+  purchases       Int      @default(0)
+  revenue         Decimal  @default(0) @db.Decimal(12, 2)
+  conversionRate  Decimal? @db.Decimal(5, 4)
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, date])
+  @@index([date])
+  @@map("website_metrics")
+}
+
+// =============================================================================
+// AI — docs/04 §9
+// =============================================================================
+
+model AiOutput {
+  id               String          @id @default(cuid())
+  userId           String?
+  modelProvider    AiModelProvider
+  modelName        String
+  module           String? // dashboard_briefing, financial_commentary, campaign_draft, etc.
+  prompt           String          @db.Text
+  output           String          @db.Text
+  structuredOutput Json?
+  sourceReferences Json?
+  tokenUsage       Json?
+  status           AiOutputStatus  @default(generated)
+  approvedById     String?
+  createdAt        DateTime        @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([module])
+  @@index([createdAt])
+  @@map("ai_outputs")
+}
+
+enum AiModelProvider {
+  openai
+  anthropic
+}
+
+enum AiOutputStatus {
+  generated
+  reviewed
+  approved
+  rejected
+}
+
+// =============================================================================
+// Tasks & Approvals — docs/04 §10
+// =============================================================================
+
+model Task {
+  id                String       @id @default(cuid())
+  title             String
+  description       String?      @db.Text
+  status            TaskStatus   @default(open)
+  priority          TaskPriority @default(medium)
+  assignedToId      String?
+  createdById       String?
+  dueDate           DateTime?
+  completedAt       DateTime?
+  relatedEntityType String? // Order, Customer, Product, Supplier, Campaign, FinancialPeriod, Report, Opportunity
+  relatedEntityId   String?
+  sourceType        String? // ai_recommendation, exception, manual, workflow, integration
+  sourceId          String?
+  metadata          Json?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  assignedTo   User?  @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy    User?  @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  relatedOrder Order? @relation("OrderTasks", fields: [relatedEntityId], references: [id], onDelete: NoAction, map: "tasks_related_order_fk")
+
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([assignedToId])
+  @@index([relatedEntityType, relatedEntityId])
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  open
+  in_progress
+  blocked
+  awaiting_approval
+  completed
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+model Approval {
+  id                String         @id @default(cuid())
+  approvalType      String // financial_summary, report, campaign, supplier_order, external_update
+  status            ApprovalStatus @default(pending)
+  requestedById     String?
+  approverId        String?
+  relatedEntityType String?
+  relatedEntityId   String?
+  requestSummary    String?
+  decisionNotes     String?
+  requestedAt       DateTime       @default(now())
+  decidedAt         DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  requestedBy User? @relation("ApprovalRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  approver    User? @relation("ApprovalApprover", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([approvalType])
+  @@index([relatedEntityType, relatedEntityId])
+  @@map("approvals")
+}
+
+// =============================================================================
+// Reports — docs/04 §11
+// =============================================================================
+
+model Report {
+  id           String       @id @default(cuid())
+  title        String
+  reportType   String // daily_brief, monthly_management, board, investor, product_margin, supplier_performance, customer_reactivation, marketing_performance
+  periodStart  DateTime?    @db.Date
+  periodEnd    DateTime?    @db.Date
+  status       ReportStatus @default(draft)
+  preparedById String?
+  approvedById String?
+  fileId       String?
+  summary      String?      @db.Text
+  metadata     Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  preparedBy User? @relation("ReportPreparedBy", fields: [preparedById], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("ReportApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([reportType])
+  @@index([status])
+  @@index([periodStart])
+  @@map("reports")
+}
+
+enum ReportStatus {
+  draft
+  generated
+  under_review
+  approved
+  archived
+}
+
+// =============================================================================
+// Integrations & Sync Logs — docs/04 §13
+// =============================================================================
+
+model IntegrationConnection {
+  id                   String            @id @default(cuid())
+  integrationType      IntegrationType
+  name                 String
+  status               IntegrationStatus @default(not_configured)
+  credentialReference  String?
+  config               Json?
+  lastSyncAt           DateTime?
+  lastSuccessfulSyncAt DateTime?
+  notes                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  syncLogs IntegrationSyncLog[]
+
+  @@unique([integrationType, name])
+  @@index([status])
+  @@map("integration_connections")
+}
+
+enum IntegrationType {
+  bigcommerce
+  quickbooks
+  mailchimp
+  ga4
+  openai
+  anthropic
+  supplier_portal
+  manual_import
+}
+
+enum IntegrationStatus {
+  not_configured
+  configured
+  error
+  disabled
+}
+
+model IntegrationSyncLog {
+  id                      String     @id @default(cuid())
+  integrationConnectionId String
+  syncType                String // products, orders, customers, campaigns, metrics, full
+  status                  SyncStatus
+  startedAt               DateTime
+  completedAt             DateTime?
+  recordsProcessed        Int        @default(0)
+  recordsCreated          Int        @default(0)
+  recordsUpdated          Int        @default(0)
+  recordsFailed           Int        @default(0)
+  errorSummary            String?    @db.Text
+  triggeredById           String?
+  metadata                Json?
+  createdAt               DateTime   @default(now())
+
+  integrationConnection IntegrationConnection @relation(fields: [integrationConnectionId], references: [id], onDelete: Cascade)
+  triggeredBy           User?                 @relation("SyncTriggeredBy", fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([integrationConnectionId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("integration_sync_logs")
+}
+
+enum SyncStatus {
+  running
+  success
+  failed
+  partial
 }
