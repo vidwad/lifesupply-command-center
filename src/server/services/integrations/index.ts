@@ -30,6 +30,22 @@ export type IntegrationField = {
   hint?: string;
 };
 
+/**
+ * Default display name for each integration type — used by the admin page to
+ * auto-create a placeholder row when the DB has no rows of that type yet.
+ * The seed creates more specific names (e.g. "BigCommerce — LifeSupply.ca"),
+ * so these defaults only kick in on a fresh / unseeded database.
+ */
+export const INTEGRATION_DEFAULT_NAMES: Partial<Record<IntegrationType, string>> = {
+  anthropic: "Anthropic Claude API",
+  openai: "OpenAI API",
+  bigcommerce: "BigCommerce",
+  mailchimp: "Mailchimp",
+  ga4: "Google Analytics 4",
+  quickbooks: "QuickBooks Online",
+  supplier_portal: "BBM01 — Best Buy Medical Portal",
+};
+
 export const INTEGRATION_FIELDS: Partial<Record<IntegrationType, IntegrationField[]>> = {
   anthropic: [
     {
@@ -222,6 +238,28 @@ export type IntegrationSettingsRow = {
 };
 
 export async function listIntegrationSettings(): Promise<IntegrationSettingsRow[]> {
+  // Self-heal: ensure every integration type with defined fields has at least
+  // one row, so a fresh / unseeded production DB still renders configurable
+  // cards instead of an empty page.
+  const existing = await prisma.integrationConnection.findMany({
+    select: { integrationType: true },
+    distinct: ["integrationType"],
+  });
+  const existingTypes = new Set(existing.map((r) => r.integrationType));
+  const missing = (Object.keys(INTEGRATION_FIELDS) as IntegrationType[]).filter(
+    (t) => !existingTypes.has(t),
+  );
+  if (missing.length > 0) {
+    for (const type of missing) {
+      const name = INTEGRATION_DEFAULT_NAMES[type] ?? String(type);
+      await prisma.integrationConnection.upsert({
+        where: { integrationType_name: { integrationType: type, name } },
+        create: { integrationType: type, name, status: "not_configured" },
+        update: {},
+      });
+    }
+  }
+
   const records = await prisma.integrationConnection.findMany({
     orderBy: [{ integrationType: "asc" }, { name: "asc" }],
   });
