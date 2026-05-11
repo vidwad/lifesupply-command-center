@@ -267,6 +267,33 @@ async function decide(args: {
     });
   }
 
+  // Side-effect: when a campaign approval is decided, transition the
+  // Campaign row. Approval moves to "scheduled" (the export step picks it
+  // up); rejection moves it back to "draft" for revision. Per CLAUDE.md §13
+  // we deliberately stop short of "sent" — the actual Mailchimp export is
+  // a separate, feature-flag-gated action even after approval.
+  if (
+    before.approvalType === "campaign" &&
+    before.relatedEntityType === "Campaign" &&
+    before.relatedEntityId
+  ) {
+    if (args.decision === "approved") {
+      await prisma.campaign.update({
+        where: { id: before.relatedEntityId },
+        data: {
+          status: "scheduled",
+          approvedById: args.actor.id,
+          approvedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.campaign.update({
+        where: { id: before.relatedEntityId },
+        data: { status: "draft" },
+      });
+    }
+  }
+
   // Side-effect: when a report approval is approved or rejected, transition
   // the Report row. Approval moves it to "approved"; rejection moves it
   // back to "draft" so the prepared can revise and re-request.
@@ -308,7 +335,11 @@ async function decide(args: {
   revalidatePath("/approvals");
   revalidatePath(`/approvals/${updated.id}`);
   if (before.relatedEntityType === "FinancialPeriod") revalidatePath("/financials");
-  if (before.relatedEntityType === "Campaign") revalidatePath("/marketing");
+  if (before.relatedEntityType === "Campaign" && before.relatedEntityId) {
+    revalidatePath("/marketing");
+    revalidatePath("/marketing/reactivation");
+    revalidatePath(`/marketing/campaigns/${before.relatedEntityId}`);
+  }
   if (before.relatedEntityType === "Report" && before.relatedEntityId) {
     revalidatePath("/reports");
     revalidatePath(`/reports/${before.relatedEntityId}`);

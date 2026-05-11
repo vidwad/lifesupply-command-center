@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   icon?: LucideIcon;
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
 };

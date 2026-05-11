@@ -704,18 +704,37 @@ model Campaign {
   sourceId        String?
   status          CampaignStatus @default(draft)
   subject         String?
+  /// Draft body (HTML or plain text). For approval-gated campaigns this is
+  /// what the AI generated and the marketer reviewed; the actual Mailchimp
+  /// payload is built from this when (and only when) export is approved.
+  bodyDraft       String?        @db.Text
   audienceSummary String?
+  /// Snapshot of customer IDs included at draft time. Stored so the
+  /// approver sees exactly who would receive the message — even if the
+  /// reactivation segment shifts later.
+  audienceSnapshot Json?
+  /// Pointer to the AiOutput row that drafted this campaign, when AI-drafted.
+  aiOutputId      String?
+  /// Mailchimp export lifecycle. "not_queued" by default; only flips after
+  /// approval + the mailchimp.send feature flag is on.
+  mailchimpExportStatus  String?  @default("not_queued") // not_queued, queued, sent, failed
+  mailchimpExportedAt    DateTime?
+  mailchimpExternalId    String?
+  mailchimpExportError   String?  @db.Text
   scheduledAt     DateTime?
   sentAt          DateTime?
   createdById     String?
   approvedById    String?
+  approvedAt      DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  metrics CampaignMetrics[]
+  metrics  CampaignMetrics[]
+  aiOutput AiOutput?         @relation(fields: [aiOutputId], references: [id], onDelete: SetNull)
 
   @@unique([sourceSystem, sourceId])
   @@index([status])
+  @@index([mailchimpExportStatus])
   @@map("campaigns")
 }
 
@@ -805,8 +824,9 @@ model AiOutput {
   promptTemplateVersion Int?
   createdAt        DateTime        @default(now())
 
-  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  reports Report[]
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reports   Report[]
+  campaigns Campaign[]
 
   @@index([userId])
   @@index([module])
