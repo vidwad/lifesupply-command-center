@@ -17,10 +17,13 @@ databases:
   - name: lifesupply-cc-db
     databaseName: lifesupply_cc
     user: lifesupply_cc
-    # Postgres plans: basic_256mb ($6/mo, 256 MB RAM, 1 GB storage),
-    # basic_1gb ($19/mo, 1 GB RAM, 5 GB storage), pro_4gb ($95/mo) etc.
-    # Bump to basic_1gb once you have real traffic and want headroom.
-    plan: basic_256mb
+    # Postgres plans use kebab-case slugs: basic-256mb ($6/mo, 256 MB
+    # RAM, 1 GB storage), basic-1gb ($19/mo, 1 GB RAM, 5 GB storage),
+    # pro-4gb ($95/mo) etc. Render's blueprint validator rejects the
+    # underscore form. If basic-256mb is also rejected by your account
+    # tier, check https://render.com/docs/blueprint-spec for the current
+    # accepted slugs (Render updates them periodically).
+    plan: basic-256mb
     postgresMajorVersion: 16
 
 services:
