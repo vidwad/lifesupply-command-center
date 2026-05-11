@@ -1,5 +1,8 @@
+import { revalidatePath } from "next/cache";
+
 import type { OrderStatus, Prisma } from "@prisma/client";
 
+import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 
 export type ListOrdersFilters = {
@@ -123,6 +126,143 @@ export async function getRelatedTasks(orderId: string) {
       assignedToId: true,
     },
   });
+}
+
+// -----------------------------------------------------------------------------
+// Mutations — operational accountability per docs/02 §5.3 + §5.2
+// -----------------------------------------------------------------------------
+
+export type OrderNote = {
+  id: string;
+  text: string;
+  authorId: string;
+  authorName: string | null;
+  createdAt: string;
+};
+
+export async function updateOrderStatus(args: {
+  orderId: string;
+  newStatus: OrderStatus;
+  actorUserId: string;
+}) {
+  const before = await prisma.order.findUnique({
+    where: { id: args.orderId },
+    select: { id: true, orderNumber: true, status: true, fulfillmentStatus: true },
+  });
+  if (!before) throw new Error("Order not found.");
+  if (before.status === args.newStatus) return before;
+
+  // Convenience: completed/delivered orders should also be marked fulfilled.
+  const fulfillmentStatus =
+    args.newStatus === "completed" || args.newStatus === "delivered"
+      ? ("fulfilled" as const)
+      : args.newStatus === "cancelled" || args.newStatus === "refunded"
+        ? before.fulfillmentStatus
+        : before.fulfillmentStatus;
+
+  const updated = await prisma.order.update({
+    where: { id: args.orderId },
+    data: { status: args.newStatus, fulfillmentStatus },
+  });
+
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: "order.status_change",
+    entityType: "Order",
+    entityId: updated.id,
+    beforeData: { status: before.status, fulfillmentStatus: before.fulfillmentStatus },
+    afterData: { status: updated.status, fulfillmentStatus: updated.fulfillmentStatus },
+  });
+
+  revalidatePath(`/orders/${updated.id}`);
+  revalidatePath("/orders");
+  revalidatePath("/operations");
+  return updated;
+}
+
+export async function resolveOrderException(args: {
+  orderId: string;
+  resolutionNote: string;
+  actorUserId: string;
+}) {
+  const before = await prisma.order.findUnique({
+    where: { id: args.orderId },
+    select: { id: true, orderNumber: true, exceptionStatus: true, exceptionReason: true },
+  });
+  if (!before) throw new Error("Order not found.");
+  if (before.exceptionStatus === "resolved" || before.exceptionStatus === "none") {
+    return before;
+  }
+
+  const trimmed = args.resolutionNote.trim();
+  if (!trimmed) throw new Error("Resolution note is required.");
+
+  const resolutionLine = `[Resolved ${new Date().toISOString().slice(0, 10)}] ${trimmed}`;
+  const newReason = before.exceptionReason
+    ? `${before.exceptionReason}\n\n${resolutionLine}`
+    : resolutionLine;
+
+  const updated = await prisma.order.update({
+    where: { id: args.orderId },
+    data: { exceptionStatus: "resolved", exceptionReason: newReason },
+  });
+
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: "order.exception_resolved",
+    entityType: "Order",
+    entityId: updated.id,
+    beforeData: { exceptionStatus: before.exceptionStatus },
+    afterData: { exceptionStatus: updated.exceptionStatus, resolution: trimmed },
+  });
+
+  revalidatePath(`/orders/${updated.id}`);
+  revalidatePath("/orders");
+  revalidatePath("/operations");
+  return updated;
+}
+
+export async function addOrderNote(args: { orderId: string; text: string; actorUserId: string }) {
+  const trimmed = args.text.trim();
+  if (!trimmed) throw new Error("Note cannot be empty.");
+
+  const order = await prisma.order.findUnique({
+    where: { id: args.orderId },
+    select: { id: true, metadata: true },
+  });
+  if (!order) throw new Error("Order not found.");
+
+  const actor = await prisma.user.findUnique({
+    where: { id: args.actorUserId },
+    select: { name: true, email: true },
+  });
+
+  const existing = (order.metadata as Prisma.JsonObject | null) ?? {};
+  const existingNotes = Array.isArray(existing.notes) ? (existing.notes as OrderNote[]) : [];
+  const note: OrderNote = {
+    id: crypto.randomUUID(),
+    text: trimmed,
+    authorId: args.actorUserId,
+    authorName: actor?.name ?? actor?.email ?? null,
+    createdAt: new Date().toISOString(),
+  };
+  const newMetadata = { ...existing, notes: [...existingNotes, note] };
+
+  await prisma.order.update({
+    where: { id: args.orderId },
+    data: { metadata: newMetadata as Prisma.InputJsonValue },
+  });
+
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: "order.note_added",
+    entityType: "Order",
+    entityId: args.orderId,
+    afterData: { notePreview: trimmed.slice(0, 100) },
+  });
+
+  revalidatePath(`/orders/${args.orderId}`);
+  return note;
 }
 
 function customerLabel(

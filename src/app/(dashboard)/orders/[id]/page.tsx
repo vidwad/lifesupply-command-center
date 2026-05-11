@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, ClipboardList } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ClipboardList, MessageSquare } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import {
@@ -16,8 +16,10 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatDateTime, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { customerDisplayName } from "@/server/services/customers";
-import { getOrderById, getRelatedTasks } from "@/server/services/orders";
-import { requirePermission } from "@/server/permissions";
+import { getOrderById, getRelatedTasks, type OrderNote } from "@/server/services/orders";
+import { requirePermission, userHasPermission } from "@/server/permissions";
+
+import { AddNoteForm, ResolveExceptionForm, UpdateStatusForm } from "./order-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,12 +32,19 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function OrderDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.ORDERS_VIEW);
+  const user = await requirePermission(PERMISSIONS.ORDERS_VIEW);
   const { id } = await params;
   const order = await getOrderById(id);
   if (!order) notFound();
 
   const tasks = await getRelatedTasks(order.id);
+  const canUpdate = userHasPermission(user, PERMISSIONS.ORDERS_UPDATE);
+  const canResolveException = userHasPermission(user, PERMISSIONS.ORDERS_MANAGE_EXCEPTIONS);
+  const exceptionOpen =
+    order.exceptionStatus === "flagged" || order.exceptionStatus === "in_review";
+
+  const metadata = (order.metadata ?? null) as { notes?: OrderNote[] } | null;
+  const notes: OrderNote[] = Array.isArray(metadata?.notes) ? metadata.notes : [];
 
   return (
     <div>
@@ -62,13 +71,42 @@ export default async function OrderDetailPage({ params }: Props) {
         {/* Main column */}
         <div className="space-y-6 lg:col-span-2">
           {order.exceptionReason && (
-            <Card className="border-warning/40 bg-warning/5">
+            <Card
+              className={
+                exceptionOpen ? "border-warning/40 bg-warning/5" : "border-success/40 bg-success/5"
+              }
+            >
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base text-warning">
-                  <AlertTriangle className="h-4 w-4" /> Exception
+                <CardTitle
+                  className={
+                    exceptionOpen
+                      ? "flex items-center gap-2 text-base text-warning"
+                      : "flex items-center gap-2 text-base text-success"
+                  }
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  {exceptionOpen ? "Exception" : "Exception (resolved)"}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm">{order.exceptionReason}</CardContent>
+              <CardContent className="space-y-3 text-sm">
+                <p className="whitespace-pre-wrap leading-relaxed">{order.exceptionReason}</p>
+                {exceptionOpen && canResolveException && (
+                  <div className="border-t pt-3">
+                    <ResolveExceptionForm orderId={order.id} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {canUpdate && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Update order status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <UpdateStatusForm orderId={order.id} currentStatus={order.status} />
+              </CardContent>
             </Card>
           )}
 
@@ -174,6 +212,37 @@ export default async function OrderDetailPage({ params }: Props) {
                   }
                 />
               </dl>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MessageSquare className="h-4 w-4" /> Internal notes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {notes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No notes yet. Add the first one below.
+                </p>
+              ) : (
+                <ul className="divide-y">
+                  {notes.map((n) => (
+                    <li key={n.id} className="space-y-1 py-3 first:pt-0">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{n.text}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {n.authorName ?? "Unknown"} • {formatDateTime(n.createdAt)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {canUpdate && (
+                <div className="border-t pt-3">
+                  <AddNoteForm orderId={order.id} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
