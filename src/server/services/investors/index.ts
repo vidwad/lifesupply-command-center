@@ -1,5 +1,9 @@
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
 import type { Prisma } from "@prisma/client";
 
+import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 
 export type ListInvestorsFilters = {
@@ -60,3 +64,53 @@ export async function getInvestorById(id: string) {
 }
 
 export type InvestorDetail = NonNullable<Awaited<ReturnType<typeof getInvestorById>>>;
+
+// -----------------------------------------------------------------------------
+// Mutations
+// -----------------------------------------------------------------------------
+
+const interactionSchema = z.object({
+  investorId: z.string().min(1),
+  interactionType: z.enum(["meeting", "email", "call", "document_shared"]),
+  interactionDate: z.string().min(1),
+  summary: z.string().max(2000).optional(),
+  nextAction: z.string().max(500).optional(),
+  actorUserId: z.string().min(1),
+});
+
+export async function logInvestorInteraction(input: z.input<typeof interactionSchema>) {
+  const parsed = interactionSchema.parse(input);
+
+  const investor = await prisma.investor.findUnique({
+    where: { id: parsed.investorId },
+    select: { id: true, name: true },
+  });
+  if (!investor) throw new Error("Investor not found.");
+
+  const interaction = await prisma.investorInteraction.create({
+    data: {
+      investorId: parsed.investorId,
+      interactionType: parsed.interactionType,
+      interactionDate: new Date(parsed.interactionDate),
+      summary: parsed.summary?.trim() || null,
+      nextAction: parsed.nextAction?.trim() || null,
+      createdById: parsed.actorUserId,
+    },
+  });
+
+  await writeAudit({
+    actorUserId: parsed.actorUserId,
+    action: "investor.interaction_logged",
+    entityType: "InvestorInteraction",
+    entityId: interaction.id,
+    afterData: {
+      investorName: investor.name,
+      interactionType: parsed.interactionType,
+      hasNextAction: !!parsed.nextAction?.trim(),
+    },
+  });
+
+  revalidatePath(`/investors/${parsed.investorId}`);
+  revalidatePath("/investors");
+  return interaction;
+}

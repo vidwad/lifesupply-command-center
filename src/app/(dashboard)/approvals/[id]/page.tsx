@@ -9,7 +9,7 @@ import { formatDateTime } from "@/lib/format";
 import { APPROVAL_TYPE_LABEL, canUserApprove, getApprovalById } from "@/server/services/approvals";
 import { requireUser } from "@/server/permissions";
 
-import { ApprovalDecisionForms } from "./approval-decision-forms";
+import { ApprovalDecisionForms, WithdrawForm } from "./approval-decision-forms";
 
 export const dynamic = "force-dynamic";
 
@@ -181,5 +181,3 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-import { WithdrawForm } from "./approval-decision-forms";

@@ -9,7 +9,9 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getInvestorById } from "@/server/services/investors";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
+
+import { LogInteractionForm } from "./log-interaction-form";
 
 export const dynamic = "force-dynamic";
 
@@ -49,10 +51,12 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function InvestorDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.INVESTORS_VIEW);
+  const user = await requirePermission(PERMISSIONS.INVESTORS_VIEW);
   const { id } = await params;
   const investor = await getInvestorById(id);
   if (!investor) notFound();
+
+  const canLogInteraction = userHasPermission(user, PERMISSIONS.INVESTORS_UPDATE);
 
   return (
     <div>
@@ -75,6 +79,17 @@ export default async function InvestorDetailPage({ params }: Props) {
 
       <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
+          {canLogInteraction && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Log new interaction</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LogInteractionForm investorId={investor.id} />
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
