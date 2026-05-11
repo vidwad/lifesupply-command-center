@@ -1,3 +1,4 @@
+import { prisma } from "@/server/db/client";
 import { getNotificationCounts } from "@/server/services/notifications";
 
 import { SidebarNav } from "./SidebarNav";
@@ -16,10 +17,20 @@ type Props = {
 };
 
 export async function AppShell({ user, signOutAction, children }: Props) {
-  const notificationCounts = await getNotificationCounts({
-    id: user.id,
-    permissions: user.permissions,
-  });
+  const [notificationCounts, divisions, periods] = await Promise.all([
+    getNotificationCounts({ id: user.id, permissions: user.permissions }),
+    prisma.division.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, code: true },
+    }),
+    prisma.financialPeriod.findMany({
+      where: { periodType: "month" },
+      orderBy: { startDate: "desc" },
+      take: 12,
+      select: { id: true, name: true, status: true },
+    }),
+  ]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-muted/20">
@@ -27,7 +38,16 @@ export async function AppShell({ user, signOutAction, children }: Props) {
         <SidebarNav permissions={user.permissions} />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar user={user} notificationCounts={notificationCounts} signOutAction={signOutAction} />
+        <TopBar
+          user={user}
+          divisions={divisions.map((d) => ({ value: d.id, label: d.name }))}
+          periods={periods.map((p) => ({
+            value: p.id,
+            label: p.status === "open" ? `${p.name} · open` : p.name,
+          }))}
+          notificationCounts={notificationCounts}
+          signOutAction={signOutAction}
+        />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
