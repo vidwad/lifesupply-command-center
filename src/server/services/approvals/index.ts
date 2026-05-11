@@ -294,6 +294,32 @@ async function decide(args: {
     }
   }
 
+  // Side-effect: when an investor-material approval is decided, transition
+  // the InvestorUpdate row. Approval moves to "approved"; rejection moves
+  // it back to "draft". Releasing the update is a separate action that
+  // requires the investor.distribution FeatureFlag — we never auto-release.
+  if (
+    before.approvalType === "investor_material" &&
+    before.relatedEntityType === "InvestorUpdate" &&
+    before.relatedEntityId
+  ) {
+    if (args.decision === "approved") {
+      await prisma.investorUpdate.update({
+        where: { id: before.relatedEntityId },
+        data: {
+          status: "approved",
+          approvedById: args.actor.id,
+          approvedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.investorUpdate.update({
+        where: { id: before.relatedEntityId },
+        data: { status: "draft" },
+      });
+    }
+  }
+
   // Side-effect: when a report approval is approved or rejected, transition
   // the Report row. Approval moves it to "approved"; rejection moves it
   // back to "draft" so the prepared can revise and re-request.
@@ -343,6 +369,10 @@ async function decide(args: {
   if (before.relatedEntityType === "Report" && before.relatedEntityId) {
     revalidatePath("/reports");
     revalidatePath(`/reports/${before.relatedEntityId}`);
+  }
+  if (before.relatedEntityType === "InvestorUpdate" && before.relatedEntityId) {
+    revalidatePath("/investors/updates");
+    revalidatePath(`/investors/updates/${before.relatedEntityId}`);
   }
   return updated;
 }

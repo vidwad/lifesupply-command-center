@@ -52,6 +52,12 @@ model User {
   ownedCloseTasks             MonthlyCloseTask[]    @relation("CloseTaskOwner")
   completedCloseTasks         MonthlyCloseTask[]    @relation("CloseTaskCompleter")
   triggeredAutomationRuns     AutomationRun[]       @relation("AutomationRunTrigger")
+  ownedCapitalRaises          CapitalRaise[]        @relation("CapitalRaiseOwner")
+  createdCommitments          CapitalRaiseCommitment[] @relation("CommitmentCreator")
+  ownedDiligenceItems         DiligenceItem[]       @relation("DiligenceOwner")
+  completedDiligenceItems     DiligenceItem[]       @relation("DiligenceCompleter")
+  preparedInvestorUpdates     InvestorUpdate[]      @relation("InvestorUpdatePreparer")
+  approvedInvestorUpdates     InvestorUpdate[]      @relation("InvestorUpdateApprover")
 
   @@index([status])
   @@map("users")
@@ -609,6 +615,7 @@ model FinancialPeriod {
   adjustments       FinancialAdjustment[]
   budgetLines       BudgetLine[]
   monthlyCloseTasks MonthlyCloseTask[]
+  investorUpdates   InvestorUpdate[]
 
   @@index([startDate])
   @@index([status])
@@ -824,9 +831,10 @@ model AiOutput {
   promptTemplateVersion Int?
   createdAt        DateTime        @default(now())
 
-  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  reports   Report[]
-  campaigns Campaign[]
+  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reports         Report[]
+  campaigns       Campaign[]
+  investorUpdates InvestorUpdate[]
 
   @@index([userId])
   @@index([module])
@@ -1073,6 +1081,7 @@ model Investor {
   deletedAt    DateTime?
 
   interactions InvestorInteraction[]
+  commitments  CapitalRaiseCommitment[]
 
   @@index([status])
   @@map("investors")
@@ -1117,6 +1126,7 @@ model Opportunity {
 
   owner             User?              @relation("OpportunityOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   acquisitionTarget AcquisitionTarget?
+  diligenceItems    DiligenceItem[]
 
   @@index([status])
   @@index([opportunityType])
@@ -1531,4 +1541,179 @@ model AutomationEvidence {
   @@index([runId])
   @@index([capturedAt])
   @@map("automation_evidence")
+}
+
+// =============================================================================
+// Capital Raises — docs/18 §3
+// Tracks active capital-raising rounds + named investor commitments. The
+// Investor model continues to be the contact-level record; CapitalRaise +
+// CapitalRaiseCommitment are the per-round + per-position records.
+// =============================================================================
+
+model CapitalRaise {
+  id              String           @id @default(cuid())
+  name            String
+  /// e.g. "seed", "series_a", "bridge", "credit_facility", "convertible".
+  roundType       String
+  status          CapitalRaiseStatus @default(planning)
+  targetAmount    Decimal          @db.Decimal(14, 2)
+  /// Fully-diluted pre-money valuation in CAD. Optional for debt rounds.
+  preMoneyValuation Decimal?       @db.Decimal(14, 2)
+  currency        String           @default("CAD")
+  openedAt        DateTime?
+  closedAt        DateTime?
+  description     String?          @db.Text
+  ownerId         String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  owner       User?                    @relation("CapitalRaiseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  commitments CapitalRaiseCommitment[]
+
+  @@index([status])
+  @@map("capital_raises")
+}
+
+enum CapitalRaiseStatus {
+  planning
+  open
+  closing
+  closed
+  cancelled
+}
+
+model CapitalRaiseCommitment {
+  id            String              @id @default(cuid())
+  capitalRaiseId String
+  investorId    String?
+  /// Free-text name when the investor isn't (yet) in our investor CRM.
+  investorLabel String?
+  amount        Decimal             @db.Decimal(14, 2)
+  status        CommitmentStatus    @default(soft)
+  /// Date the commitment was signed / wired / etc.
+  effectiveAt   DateTime?
+  notes         String?             @db.Text
+  createdById   String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  capitalRaise CapitalRaise @relation(fields: [capitalRaiseId], references: [id], onDelete: Cascade)
+  investor     Investor?    @relation(fields: [investorId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("CommitmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([capitalRaiseId, status])
+  @@index([investorId])
+  @@map("capital_raise_commitments")
+}
+
+enum CommitmentStatus {
+  soft
+  signed
+  funded
+  withdrawn
+  declined
+}
+
+// =============================================================================
+// Diligence Items — docs/18 §6
+// Per-opportunity / per-acquisition-target diligence checklist. Mirror of the
+// MonthlyCloseTask pattern: standard-task seed via service helper, per-item
+// status transitions, audit trail.
+// =============================================================================
+
+model DiligenceItem {
+  id            String           @id @default(cuid())
+  opportunityId String
+  category      DiligenceCategory
+  itemKey       String
+  title         String
+  description   String?
+  ownerId       String?
+  status        DiligenceStatus  @default(pending)
+  dueDate       DateTime?
+  completedById String?
+  completedAt   DateTime?
+  notes         String?          @db.Text
+  /// Reference to a stored evidence file (URL or storage ref). Free-form for
+  /// now — promote to its own model if multi-file evidence is required.
+  evidenceRef   String?
+  sortOrder     Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  owner       User?       @relation("DiligenceOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  completedBy User?       @relation("DiligenceCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@unique([opportunityId, itemKey])
+  @@index([opportunityId, status])
+  @@index([ownerId, status])
+  @@map("diligence_items")
+}
+
+enum DiligenceCategory {
+  financial
+  legal
+  operational
+  commercial
+  technology
+  hr
+  regulatory
+  other
+}
+
+enum DiligenceStatus {
+  pending
+  in_progress
+  blocked
+  done
+  not_applicable
+}
+
+// =============================================================================
+// Investor Updates — docs/18 §4
+// Drafted (often AI-assisted), reviewed, approved, then released to a
+// recorded distribution list. Distribution itself is not wired in this
+// phase — the released_at + distribution snapshot are persisted so the
+// real send (email / data-room post) can be added later behind the
+// `investor.distribution` feature flag.
+// =============================================================================
+
+model InvestorUpdate {
+  id                 String              @id @default(cuid())
+  title              String
+  /// Period the update covers — usually a closed FinancialPeriod name.
+  periodLabel        String?
+  financialPeriodId  String?
+  status             InvestorUpdateStatus @default(draft)
+  bodyDraft          String?             @db.Text
+  /// Bullet highlights surfaced in the email/preview.
+  highlights         String[]
+  /// Snapshot of {investorId, name, email} at draft time so the approver
+  /// sees who would receive this even if the investor list changes later.
+  distributionSnapshot Json?
+  aiOutputId         String?
+  preparedById       String?
+  approvedById       String?
+  approvedAt         DateTime?
+  releasedAt         DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  financialPeriod FinancialPeriod? @relation(fields: [financialPeriodId], references: [id], onDelete: SetNull)
+  preparedBy      User?            @relation("InvestorUpdatePreparer", fields: [preparedById], references: [id], onDelete: SetNull)
+  approvedBy      User?            @relation("InvestorUpdateApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  aiOutput        AiOutput?        @relation(fields: [aiOutputId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([financialPeriodId])
+  @@map("investor_updates")
+}
+
+enum InvestorUpdateStatus {
+  draft
+  under_review
+  approved
+  released
+  archived
 }

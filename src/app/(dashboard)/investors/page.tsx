@@ -70,13 +70,27 @@ export default async function InvestorsPage({
         description="Capital raising, investor updates, lender reporting. Approval-controlled materials only."
         breadcrumb={`${investors.length} ${investors.length === 1 ? "investor" : "investors"}`}
         actions={
-          canCreate && (
-            <Link href="/investors/new">
-              <Button size="sm">
-                <Plus className="h-4 w-4" /> New investor
-              </Button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/investors/capital-raises"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Capital raises
             </Link>
-          )
+            <Link
+              href="/investors/updates"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Updates
+            </Link>
+            {canCreate && (
+              <Link href="/investors/new">
+                <Button size="sm">
+                  <Plus className="h-4 w-4" /> New investor
+                </Button>
+              </Link>
+            )}
+          </div>
         }
       />
 

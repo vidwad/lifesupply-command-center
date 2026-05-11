@@ -84,6 +84,12 @@ export default async function OpportunityDetailPage({ params }: Props) {
                 {opportunity.riskRating} risk
               </Badge>
             )}
+            <Link
+              href={`/opportunities/${opportunity.id}/diligence`}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Diligence checklist
+            </Link>
             {userHasPermission(user, PERMISSIONS.OPPORTUNITIES_UPDATE) && (
               <Link
                 href={`/opportunities/${opportunity.id}/edit`}
