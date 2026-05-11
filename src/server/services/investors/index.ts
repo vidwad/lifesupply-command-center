@@ -69,6 +69,80 @@ export type InvestorDetail = NonNullable<Awaited<ReturnType<typeof getInvestorBy
 // Mutations
 // -----------------------------------------------------------------------------
 
+const investorWriteSchema = z.object({
+  name: z.string().min(1, "Name is required.").max(200),
+  organization: z.string().max(200).optional().nullable(),
+  email: z.string().email("Invalid email.").optional().nullable().or(z.literal("")),
+  phone: z.string().max(40).optional().nullable(),
+  investorType: z
+    .enum(["angel", "vc", "family_office", "lender", "strategic", "other"])
+    .optional()
+    .nullable(),
+  status: z.enum(["prospect", "engaged", "committed", "declined", "closed"]).default("prospect"),
+  notes: z.string().max(4000).optional().nullable(),
+});
+
+export async function createInvestor(
+  input: z.input<typeof investorWriteSchema> & { actorUserId: string },
+) {
+  const parsed = investorWriteSchema.parse(input);
+  const investor = await prisma.investor.create({
+    data: {
+      name: parsed.name,
+      organization: parsed.organization?.trim() || null,
+      email: parsed.email?.trim() || null,
+      phone: parsed.phone?.trim() || null,
+      investorType: parsed.investorType ?? null,
+      status: parsed.status,
+      notes: parsed.notes?.trim() || null,
+    },
+  });
+  await writeAudit({
+    actorUserId: input.actorUserId,
+    action: "investor.create",
+    entityType: "Investor",
+    entityId: investor.id,
+    afterData: { name: investor.name, status: investor.status },
+  });
+  revalidatePath("/investors");
+  return investor;
+}
+
+export async function updateInvestor(
+  input: z.input<typeof investorWriteSchema> & { investorId: string; actorUserId: string },
+) {
+  const parsed = investorWriteSchema.parse(input);
+  const before = await prisma.investor.findUnique({
+    where: { id: input.investorId },
+    select: { id: true, name: true, status: true },
+  });
+  if (!before) throw new Error("Investor not found.");
+
+  const investor = await prisma.investor.update({
+    where: { id: input.investorId },
+    data: {
+      name: parsed.name,
+      organization: parsed.organization?.trim() || null,
+      email: parsed.email?.trim() || null,
+      phone: parsed.phone?.trim() || null,
+      investorType: parsed.investorType ?? null,
+      status: parsed.status,
+      notes: parsed.notes?.trim() || null,
+    },
+  });
+  await writeAudit({
+    actorUserId: input.actorUserId,
+    action: "investor.update",
+    entityType: "Investor",
+    entityId: investor.id,
+    beforeData: { name: before.name, status: before.status },
+    afterData: { name: investor.name, status: investor.status },
+  });
+  revalidatePath("/investors");
+  revalidatePath(`/investors/${investor.id}`);
+  return investor;
+}
+
 const interactionSchema = z.object({
   investorId: z.string().min(1),
   interactionType: z.enum(["meeting", "email", "call", "document_shared"]),

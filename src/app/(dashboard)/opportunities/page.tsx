@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { TrendingUp } from "lucide-react";
+import { Plus, TrendingUp } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { listOpportunities, type ListOpportunitiesFilters } from "@/server/services/opportunities";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const metadata = { title: "M&A / Opportunities" };
 export const dynamic = "force-dynamic";
@@ -57,7 +58,7 @@ export default async function OpportunitiesPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.OPPORTUNITIES_VIEW);
+  const user = await requirePermission(PERMISSIONS.OPPORTUNITIES_VIEW);
   const params = await searchParams;
 
   const filters: ListOpportunitiesFilters = {
@@ -68,6 +69,7 @@ export default async function OpportunitiesPage({
 
   const opportunities = await listOpportunities(filters);
   const activeType = filters.opportunityType ?? "";
+  const canCreate = userHasPermission(user, PERMISSIONS.OPPORTUNITIES_UPDATE);
 
   return (
     <div>
@@ -75,6 +77,15 @@ export default async function OpportunitiesPage({
         title="M&A / Opportunities"
         description="Acquisition targets, supplier deals, strategic initiatives, and cost-reduction projects."
         breadcrumb={`${opportunities.length} ${opportunities.length === 1 ? "opportunity" : "opportunities"}`}
+        actions={
+          canCreate && (
+            <Link href="/opportunities/new">
+              <Button size="sm">
+                <Plus className="h-4 w-4" /> New opportunity
+              </Button>
+            </Link>
+          )
+        }
       />
 
       <div className="space-y-4 p-6">

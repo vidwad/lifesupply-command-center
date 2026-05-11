@@ -1,5 +1,9 @@
-import type { Prisma } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
+import { Prisma } from "@prisma/client";
+
+import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 
 const num = (d: Prisma.Decimal | null | undefined): number | null => (d == null ? null : Number(d));
@@ -75,3 +79,132 @@ export async function getOpportunityById(id: string) {
 }
 
 export type OpportunityDetail = NonNullable<Awaited<ReturnType<typeof getOpportunityById>>>;
+
+// -----------------------------------------------------------------------------
+// Mutations
+// -----------------------------------------------------------------------------
+
+const opportunityWriteSchema = z.object({
+  title: z.string().min(1, "Title is required.").max(200),
+  opportunityType: z.enum([
+    "acquisition",
+    "supplier",
+    "financing",
+    "marketing",
+    "product",
+    "operational",
+    "technology",
+    "partnership",
+    "cost_reduction",
+  ]),
+  status: z
+    .enum([
+      "identified",
+      "evaluating",
+      "committed",
+      "in_progress",
+      "completed",
+      "declined",
+      "on_hold",
+    ])
+    .default("identified"),
+  strategicRationale: z.string().max(4000).optional().nullable(),
+  estimatedRevenueImpact: z.number().nullable().optional(),
+  estimatedMarginImpact: z.number().nullable().optional(),
+  estimatedCost: z.number().nullable().optional(),
+  riskRating: z.enum(["low", "medium", "high"]).optional().nullable(),
+  priority: z.enum(["low", "medium", "high", "critical"]).optional().nullable(),
+  ownerId: z.string().optional().nullable(),
+  nextAction: z.string().max(500).optional().nullable(),
+  dueDate: z.string().optional().nullable(),
+});
+
+function toDecimal(n: number | null | undefined, scale = 2): Prisma.Decimal | null {
+  if (n == null) return null;
+  return new Prisma.Decimal(n.toFixed(scale));
+}
+
+export async function createOpportunity(
+  input: z.input<typeof opportunityWriteSchema> & { actorUserId: string },
+) {
+  const parsed = opportunityWriteSchema.parse(input);
+
+  const opportunity = await prisma.opportunity.create({
+    data: {
+      title: parsed.title,
+      opportunityType: parsed.opportunityType,
+      status: parsed.status,
+      strategicRationale: parsed.strategicRationale?.trim() || null,
+      estimatedRevenueImpact: toDecimal(parsed.estimatedRevenueImpact, 2),
+      estimatedMarginImpact: toDecimal(parsed.estimatedMarginImpact, 4),
+      estimatedCost: toDecimal(parsed.estimatedCost, 2),
+      riskRating: parsed.riskRating ?? null,
+      priority: parsed.priority ?? null,
+      ownerId: parsed.ownerId || input.actorUserId,
+      nextAction: parsed.nextAction?.trim() || null,
+      dueDate: parsed.dueDate ? new Date(parsed.dueDate) : null,
+    },
+  });
+
+  await writeAudit({
+    actorUserId: input.actorUserId,
+    action: "opportunity.create",
+    entityType: "Opportunity",
+    entityId: opportunity.id,
+    afterData: {
+      title: opportunity.title,
+      opportunityType: opportunity.opportunityType,
+      status: opportunity.status,
+    },
+  });
+  revalidatePath("/opportunities");
+  return opportunity;
+}
+
+export async function updateOpportunity(
+  input: z.input<typeof opportunityWriteSchema> & {
+    opportunityId: string;
+    actorUserId: string;
+  },
+) {
+  const parsed = opportunityWriteSchema.parse(input);
+  const before = await prisma.opportunity.findUnique({
+    where: { id: input.opportunityId },
+    select: { id: true, title: true, status: true, opportunityType: true },
+  });
+  if (!before) throw new Error("Opportunity not found.");
+
+  const opportunity = await prisma.opportunity.update({
+    where: { id: input.opportunityId },
+    data: {
+      title: parsed.title,
+      opportunityType: parsed.opportunityType,
+      status: parsed.status,
+      strategicRationale: parsed.strategicRationale?.trim() || null,
+      estimatedRevenueImpact: toDecimal(parsed.estimatedRevenueImpact, 2),
+      estimatedMarginImpact: toDecimal(parsed.estimatedMarginImpact, 4),
+      estimatedCost: toDecimal(parsed.estimatedCost, 2),
+      riskRating: parsed.riskRating ?? null,
+      priority: parsed.priority ?? null,
+      ownerId: parsed.ownerId || input.actorUserId,
+      nextAction: parsed.nextAction?.trim() || null,
+      dueDate: parsed.dueDate ? new Date(parsed.dueDate) : null,
+    },
+  });
+
+  await writeAudit({
+    actorUserId: input.actorUserId,
+    action: "opportunity.update",
+    entityType: "Opportunity",
+    entityId: opportunity.id,
+    beforeData: { title: before.title, status: before.status, type: before.opportunityType },
+    afterData: {
+      title: opportunity.title,
+      status: opportunity.status,
+      type: opportunity.opportunityType,
+    },
+  });
+  revalidatePath("/opportunities");
+  revalidatePath(`/opportunities/${opportunity.id}`);
+  return opportunity;
+}

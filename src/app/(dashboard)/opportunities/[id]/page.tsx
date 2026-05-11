@@ -70,7 +70,7 @@ export default async function OpportunityDetailPage({ params }: Props) {
           </Link>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant={STATUS_BADGE[opportunity.status] ?? "outline"}>
               {opportunity.status.replace("_", " ")}
             </Badge>
@@ -83,6 +83,14 @@ export default async function OpportunityDetailPage({ params }: Props) {
               <Badge variant="outline" className={RISK_TONE[opportunity.riskRating]}>
                 {opportunity.riskRating} risk
               </Badge>
+            )}
+            {userHasPermission(user, PERMISSIONS.OPPORTUNITIES_UPDATE) && (
+              <Link
+                href={`/opportunities/${opportunity.id}/edit`}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Edit
+              </Link>
             )}
           </div>
         }

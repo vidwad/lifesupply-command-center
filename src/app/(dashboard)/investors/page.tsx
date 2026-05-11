@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Plus } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { listInvestors, type ListInvestorsFilters } from "@/server/services/investors";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const metadata = { title: "Investor Relations" };
 export const dynamic = "force-dynamic";
@@ -50,7 +51,7 @@ export default async function InvestorsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.INVESTORS_VIEW);
+  const user = await requirePermission(PERMISSIONS.INVESTORS_VIEW);
   const params = await searchParams;
 
   const filters: ListInvestorsFilters = {
@@ -60,6 +61,7 @@ export default async function InvestorsPage({
 
   const investors = await listInvestors(filters);
   const activeStatus = filters.status ?? "";
+  const canCreate = userHasPermission(user, PERMISSIONS.INVESTORS_UPDATE);
 
   return (
     <div>
@@ -67,6 +69,15 @@ export default async function InvestorsPage({
         title="Investor Relations"
         description="Capital raising, investor updates, lender reporting. Approval-controlled materials only."
         breadcrumb={`${investors.length} ${investors.length === 1 ? "investor" : "investors"}`}
+        actions={
+          canCreate && (
+            <Link href="/investors/new">
+              <Button size="sm">
+                <Plus className="h-4 w-4" /> New investor
+              </Button>
+            </Link>
+          )
+        }
       />
 
       <div className="space-y-4 p-6">

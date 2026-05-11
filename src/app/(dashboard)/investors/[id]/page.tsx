@@ -73,7 +73,17 @@ export default async function InvestorDetailPage({ params }: Props) {
           </Link>
         }
         actions={
-          <Badge variant={STATUS_BADGE[investor.status] ?? "outline"}>{investor.status}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={STATUS_BADGE[investor.status] ?? "outline"}>{investor.status}</Badge>
+            {canLogInteraction && (
+              <Link
+                href={`/investors/${investor.id}/edit`}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Edit
+              </Link>
+            )}
+          </div>
         }
       />
 
