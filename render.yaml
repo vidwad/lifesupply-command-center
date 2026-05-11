@@ -17,7 +17,10 @@ databases:
   - name: lifesupply-cc-db
     databaseName: lifesupply_cc
     user: lifesupply_cc
-    plan: starter # $7/mo Starter; bump to standard for daily backups + PITR
+    # Postgres plans: basic_256mb ($6/mo, 256 MB RAM, 1 GB storage),
+    # basic_1gb ($19/mo, 1 GB RAM, 5 GB storage), pro_4gb ($95/mo) etc.
+    # Bump to basic_1gb once you have real traffic and want headroom.
+    plan: basic_256mb
     postgresMajorVersion: 16
 
 services:

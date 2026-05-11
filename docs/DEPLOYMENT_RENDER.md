@@ -17,9 +17,9 @@ web service + database + nightly cron in one apply.
 - **No request-duration limits** — PDF/XLSX generation, AI calls, and
   Playwright runs never get killed mid-request.
 - **Persistent disk** available if you later wire S3-style evidence storage.
-- **Flat pricing**: $7/mo per service, $7/mo Postgres Starter. Year-1
-  total ≈ $21/mo (web + cron + DB), bumps to $25 if you want Standard DB
-  with daily backups + PITR.
+- **Flat pricing**: $7/mo per service, $6/mo Postgres Basic 256 MB.
+  Year-1 total ≈ $20/mo (web + cron + DB); bump the DB to Basic 1 GB
+  ($19/mo) once you want headroom.
 - **Auto-deploy from GitHub** + preview environments per PR.
 
 ---
@@ -30,9 +30,9 @@ web service + database + nightly cron in one apply.
 2. **Dashboard → New → Blueprint**.
 3. Connect your GitHub account, pick `vidwad/lifesupply-command-center`.
 4. Render reads `render.yaml` and shows you the resources it will create:
-   - `lifesupply-cc-db` (Postgres 16, Starter $7/mo)
+   - `lifesupply-cc-db` (Postgres 16, Basic 256 MB plan, $6/mo)
    - `lifesupply-cc-web` (Docker web service, Starter $7/mo)
-   - `lifesupply-cc-audit-retention` (Cron Docker service, runs 03:15 UTC daily)
+   - `lifesupply-cc-audit-retention` (Cron Docker service, runs 03:15 UTC daily, $7/mo)
 5. Click **Apply**. Render provisions the DB first, then builds + deploys
    the web service (~6 minutes for the first build because Chromium is
    bundled into the image; subsequent builds are cached and faster).
@@ -141,11 +141,12 @@ install step on Render.
 
 ## 7. Backups + restore
 
-Render Postgres **Starter** ($7/mo) keeps the last day's snapshot. Upgrade
-to **Standard** ($25/mo) for:
-- Daily automated backups
-- 7-day point-in-time recovery
-- Read replicas
+Render Postgres **Basic 256 MB** ($6/mo) supports manual snapshots and
+7-day point-in-time recovery. Upgrade to **Basic 1 GB** ($19/mo) or
+higher for:
+- Faster recovery + more headroom
+- Higher connection limit
+- Read replicas (Pro plans)
 
 To take a manual snapshot at any time: **Database → Backups → Take backup now**.
 
@@ -224,15 +225,16 @@ For high-risk schema changes use expand-contract (see `docs/OPS_RUNBOOK.md` §10
 | Plan | Monthly |
 |---|---|
 | Web service Starter | $7 |
-| Postgres Starter | $7 |
+| Postgres Basic 256 MB | $6 |
 | Cron Starter | $7 |
-| **Subtotal** | **$21** |
+| **Subtotal** | **$20** |
 | Anthropic | $5–50 (usage) |
 | Resend Free | $0 (3k emails/mo) |
 
-Total: **$26–71/mo** depending on AI volume.
+Total: **$25–70/mo** depending on AI volume.
 
-Bump web + DB to Standard for 2GB RAM + daily backups: +$36/mo.
+Bump web service to Standard ($25, 2 GB RAM) and DB to Basic 1 GB ($19)
+for headroom: +$31/mo.
 
 ---
 
