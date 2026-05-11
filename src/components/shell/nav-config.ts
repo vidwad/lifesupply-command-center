@@ -109,6 +109,12 @@ export const PRIMARY_NAV: NavItem[] = [
     permission: PERMISSIONS.TASKS_VIEW,
   },
   {
+    label: "Approvals",
+    href: "/approvals",
+    icon: ShieldCheck,
+    permission: PERMISSIONS.TASKS_VIEW,
+  },
+  {
     label: "Investor Relations",
     href: "/investors",
     icon: Briefcase,
