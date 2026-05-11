@@ -1074,3 +1074,19 @@ model AcquisitionTarget {
 
   @@map("acquisition_targets")
 }
+
+// =============================================================================
+// System Settings — small key/value store for tenant-wide config that does
+// not warrant a dedicated table (default AI model, temperature, etc.).
+// All writes go through services that also call writeAudit.
+// =============================================================================
+
+model SystemSetting {
+  key         String   @id
+  value       String   @db.Text
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  @@map("system_settings")
+}

@@ -4,7 +4,7 @@ import type { AiOutput } from "@prisma/client";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
-import { ANTHROPIC_MODEL, getAnthropicClient } from "@/server/integrations/anthropic/client";
+import { getAnthropicClient, resolveAnthropicModel } from "@/server/integrations/anthropic/client";
 import { getDashboardData } from "@/server/services/dashboard";
 
 // -----------------------------------------------------------------------------
@@ -144,8 +144,9 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
 
   const userPrompt = `Today's data is below. Write a daily management briefing using the format in the system prompt.\n\n${context}`;
 
+  const model = await resolveAnthropicModel();
   const response = await client.messages.create({
-    model: ANTHROPIC_MODEL,
+    model,
     max_tokens: 1024,
     system: BRIEFING_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
@@ -229,8 +230,9 @@ export async function askAiAnalyst(args: { question: string; userId: string }): 
 
   const userPrompt = `## Today's snapshot\n\n${context}\n\n## Question\n\n${trimmed}`;
 
+  const model = await resolveAnthropicModel();
   const response = await client.messages.create({
-    model: ANTHROPIC_MODEL,
+    model,
     max_tokens: 1024,
     system: ANALYST_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
@@ -381,8 +383,9 @@ export async function analyzeOpportunity(args: {
   }
   const userPrompt = `${lines.join("\n")}\n\nProduce the memo.`;
 
+  const model = await resolveAnthropicModel();
   const response = await client.messages.create({
-    model: ANTHROPIC_MODEL,
+    model,
     max_tokens: 1024,
     system: OPPORTUNITY_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
