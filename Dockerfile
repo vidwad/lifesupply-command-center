@@ -55,8 +55,17 @@ COPY --from=builder --chown=pwuser:pwuser /app/.next ./.next
 COPY --from=builder --chown=pwuser:pwuser /app/public ./public
 COPY --from=builder --chown=pwuser:pwuser /app/node_modules ./node_modules
 COPY --from=builder --chown=pwuser:pwuser /app/package.json ./package.json
+COPY --from=builder --chown=pwuser:pwuser /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder --chown=pwuser:pwuser /app/prisma ./prisma
 COPY --from=builder --chown=pwuser:pwuser /app/next.config.ts ./next.config.ts
+# src + scripts + tsconfig are needed at runtime so `pnpm db:seed` and
+# the audit-retention cron (`pnpm tsx scripts/cron/audit-retention.ts`)
+# can resolve their imports. The Next.js app itself does NOT need src/
+# at runtime — the .next bundle has everything baked in — but tsx-driven
+# scripts do.
+COPY --from=builder --chown=pwuser:pwuser /app/src ./src
+COPY --from=builder --chown=pwuser:pwuser /app/scripts ./scripts
+COPY --from=builder --chown=pwuser:pwuser /app/tsconfig.json ./tsconfig.json
 
 EXPOSE 3000
 
