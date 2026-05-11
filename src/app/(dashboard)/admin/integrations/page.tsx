@@ -10,7 +10,7 @@ import { listIntegrationSettings } from "@/server/services/integrations";
 import { vaultEnabled } from "@/server/security/secrets";
 import { requirePermission } from "@/server/permissions";
 
-import { IntegrationSecretForm } from "./integration-secret-form";
+import { IntegrationFieldForm } from "./integration-secret-form";
 
 export const metadata = { title: "API & Integrations" };
 export const dynamic = "force-dynamic";
@@ -34,9 +34,15 @@ const STATUS_BADGE: Record<string, "success" | "destructive" | "warning" | "outl
 };
 
 const SOURCE_LABEL: Record<string, string> = {
-  env: "Environment variable",
-  vault: "Encrypted vault",
-  none: "Not configured",
+  env: "env",
+  vault: "vault",
+  none: "—",
+};
+
+const SOURCE_TONE: Record<string, string> = {
+  env: "text-success",
+  vault: "text-primary",
+  none: "text-muted-foreground",
 };
 
 export default async function IntegrationsSettingsPage() {
@@ -48,7 +54,7 @@ export default async function IntegrationsSettingsPage() {
     <div>
       <PageHeader
         title="API & Integrations"
-        description="Manage API keys per integration. Secrets are encrypted at rest with the master key from MASTER_ENCRYPTION_KEY."
+        description="Manage credential fields per integration. Encrypted at rest with the master key from MASTER_ENCRYPTION_KEY."
         breadcrumb={
           <Link href="/admin" className="inline-flex items-center gap-1 hover:underline">
             <ArrowLeft className="h-3 w-3" /> Admin
@@ -84,9 +90,7 @@ export default async function IntegrationsSettingsPage() {
                 {`MASTER_ENCRYPTION_KEY=$(openssl rand -base64 32)`}
               </pre>
               <p className="text-muted-foreground">
-                Until then, integrations fall back to env vars only. See{" "}
-                <code className="rounded bg-muted px-1">.env.example</code> for the per- integration
-                env vars (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.).
+                Until then, integrations fall back to env vars only.
               </p>
             </CardContent>
           </Card>
@@ -96,22 +100,21 @@ export default async function IntegrationsSettingsPage() {
           <CardContent className="flex items-start gap-3 py-4 text-sm">
             <Key className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div>
-              <p className="font-medium text-foreground">How secrets resolve</p>
+              <p className="font-medium text-foreground">How resolution works</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                <strong>Env wins.</strong> If the env var is set (e.g.{" "}
-                <code className="rounded bg-muted px-1">ANTHROPIC_API_KEY</code>), it takes
-                precedence over any value stored here. Otherwise the encrypted vault entry is used.
-                Per{" "}
+                Each integration may have multiple credential fields (e.g. BigCommerce needs both
+                store hash and API token). For each field, env wins over vault. Per{" "}
                 <a className="underline" href="/docs/06" target="_blank" rel="noreferrer">
                   docs/06 §8
                 </a>
-                , every set / clear is audit-logged and the plaintext is never displayed after save.
+                , every set / clear is audit-logged. Plaintext is never returned by the API or
+                rendered after save — only the last 4 characters are shown.
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="space-y-4">
           {integrations.map((i) => (
             <Card key={i.id}>
               <CardHeader className="pb-3">
@@ -122,63 +125,79 @@ export default async function IntegrationsSettingsPage() {
                     </p>
                     <CardTitle className="text-base">{i.name}</CardTitle>
                   </div>
-                  <Badge variant={STATUS_BADGE[i.status] ?? "outline"}>
-                    {i.status.replace("_", " ")}
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs">
-                  Source:{" "}
-                  <span
-                    className={
-                      i.effectiveSource === "none"
-                        ? "text-muted-foreground"
-                        : "font-medium text-foreground"
-                    }
-                  >
-                    {SOURCE_LABEL[i.effectiveSource]}
-                  </span>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Env var status */}
-                {i.envVarName && (
-                  <div className="flex items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2 text-xs">
-                    <code className="font-mono">{i.envVarName}</code>
-                    <span className={i.envVarPresent ? "text-success" : "text-muted-foreground"}>
-                      {i.envVarPresent ? "✓ set in env" : "not set"}
-                    </span>
-                  </div>
-                )}
-
-                {/* Vault status */}
-                <div className="rounded-md border px-3 py-2 text-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium">Vault entry</span>
-                    {i.vaultSecretSet ? (
-                      <span className="font-mono text-success">
-                        ✓ ••••{i.secretLastFour ?? "????"}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">not set</span>
+                  <div className="flex items-center gap-2">
+                    {i.fields.length > 0 && (
+                      <Badge variant={i.fullyConfigured ? "success" : "outline"}>
+                        {i.fields.filter((f) => f.effectiveSource !== "none").length} of{" "}
+                        {i.fields.length} set
+                      </Badge>
                     )}
+                    <Badge variant={STATUS_BADGE[i.status] ?? "outline"}>
+                      {i.status.replace("_", " ")}
+                    </Badge>
                   </div>
-                  {i.vaultSecretSet && i.secretSetAt && (
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      Set by {i.secretSetByName ?? "unknown"} on {formatDateTime(i.secretSetAt)}
-                    </p>
-                  )}
                 </div>
-
-                {/* Form */}
-                <IntegrationSecretForm
-                  integrationId={i.id}
-                  integrationName={i.name}
-                  hasVaultSecret={i.vaultSecretSet}
-                  vaultEnabled={isVaultEnabled}
-                />
-
-                {i.notes && (
-                  <p className="border-t pt-2 text-xs italic text-muted-foreground">{i.notes}</p>
+                {i.notes && <CardDescription className="text-xs italic">{i.notes}</CardDescription>}
+              </CardHeader>
+              <CardContent className="pt-0">
+                {i.fields.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    This integration has no credential fields.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {i.fields.map((f) => (
+                      <div key={f.name} className="rounded-md border p-3">
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <div>
+                            <span className="text-sm font-medium">{f.label}</span>
+                            <span
+                              className={
+                                "ml-2 text-[10px] font-medium uppercase tracking-wide " +
+                                (SOURCE_TONE[f.effectiveSource] ?? "text-muted-foreground")
+                              }
+                            >
+                              {SOURCE_LABEL[f.effectiveSource]}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {f.envVarName && (
+                              <span>
+                                env: <code className="font-mono">{f.envVarName}</code>{" "}
+                                <span className={f.envVarPresent ? "text-success" : ""}>
+                                  {f.envVarPresent ? "✓" : "—"}
+                                </span>
+                              </span>
+                            )}
+                            {f.vaultLastFour && (
+                              <span className="ml-3 font-mono text-success">
+                                vault: ••••{f.vaultLastFour}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {f.hint && <p className="mt-1 text-xs text-muted-foreground">{f.hint}</p>}
+                        {f.vaultLastFour && f.vaultSetAt && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            Set by {f.vaultSetByName ?? "unknown"} on {formatDateTime(f.vaultSetAt)}
+                          </p>
+                        )}
+                        <div className="mt-2">
+                          <IntegrationFieldForm
+                            integrationId={i.id}
+                            integrationName={i.name}
+                            fieldName={f.name}
+                            fieldLabel={f.label}
+                            isSet={!!f.vaultLastFour}
+                            isSecret={f.secret}
+                            isMultiline={f.multiline}
+                            placeholder={f.placeholder}
+                            vaultEnabled={isVaultEnabled}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>

@@ -6,69 +6,96 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { clearSecretAction, setSecretAction, type SecretActionState } from "./actions";
+import { clearFieldAction, setFieldAction, type FieldActionState } from "./actions";
 
 type Props = {
   integrationId: string;
   integrationName: string;
-  hasVaultSecret: boolean;
+  fieldName: string;
+  fieldLabel: string;
+  isSet: boolean;
+  isSecret: boolean;
+  isMultiline: boolean;
+  placeholder?: string;
   vaultEnabled: boolean;
 };
 
-export function IntegrationSecretForm({
+export function IntegrationFieldForm({
   integrationId,
   integrationName,
-  hasVaultSecret,
+  fieldName,
+  fieldLabel,
+  isSet,
+  isSecret,
+  isMultiline,
+  placeholder,
   vaultEnabled: vaultOn,
 }: Props) {
-  const [state, formAction, pending] = useActionState<SecretActionState, FormData>(
-    setSecretAction,
+  const [state, formAction, pending] = useActionState<FieldActionState, FormData>(
+    setFieldAction,
     undefined,
   );
   const [reveal, setReveal] = useState(false);
 
   return (
     <div className="space-y-2">
-      <form action={formAction} className="flex flex-wrap items-center gap-2">
+      <form action={formAction} className="flex flex-wrap items-end gap-2">
         <input type="hidden" name="integrationId" value={integrationId} />
+        <input type="hidden" name="fieldName" value={fieldName} />
         <div className="relative min-w-[200px] flex-1">
-          <Input
-            type={reveal ? "text" : "password"}
-            name="secret"
-            placeholder={hasVaultSecret ? "Enter new key to rotate…" : "Paste API key…"}
-            autoComplete="off"
-            disabled={pending || !vaultOn}
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setReveal((r) => !r)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-accent"
-            aria-label={reveal ? "Hide" : "Show"}
-            tabIndex={-1}
-          >
-            {reveal ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-          </button>
+          {isMultiline ? (
+            <textarea
+              name="value"
+              rows={3}
+              placeholder={placeholder ?? (isSet ? "Enter new value to rotate…" : "Paste value…")}
+              autoComplete="off"
+              disabled={pending || !vaultOn}
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+            />
+          ) : (
+            <>
+              <Input
+                type={isSecret && !reveal ? "password" : "text"}
+                name="value"
+                placeholder={placeholder ?? (isSet ? "Enter new value to rotate…" : "Paste value…")}
+                autoComplete="off"
+                disabled={pending || !vaultOn}
+                className={isSecret ? "pr-10" : undefined}
+              />
+              {isSecret && (
+                <button
+                  type="button"
+                  onClick={() => setReveal((r) => !r)}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-accent"
+                  aria-label={reveal ? "Hide" : "Show"}
+                  tabIndex={-1}
+                >
+                  {reveal ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                </button>
+              )}
+            </>
+          )}
         </div>
         <Button type="submit" size="sm" disabled={pending || !vaultOn}>
-          {pending ? "Saving…" : hasVaultSecret ? "Rotate" : "Save"}
+          {pending ? "Saving…" : isSet ? "Rotate" : "Save"}
         </Button>
       </form>
 
-      {hasVaultSecret && vaultOn && (
+      {isSet && vaultOn && (
         <form
           action={async (fd) => {
-            if (!confirm(`Clear the saved key for ${integrationName}?`)) return;
-            await clearSecretAction(fd);
+            if (!confirm(`Clear ${fieldLabel} for ${integrationName}?`)) return;
+            await clearFieldAction(fd);
           }}
         >
           <input type="hidden" name="integrationId" value={integrationId} />
+          <input type="hidden" name="fieldName" value={fieldName} />
           <button
             type="submit"
             className="text-xs text-destructive hover:underline"
             disabled={pending}
           >
-            Clear vault entry
+            Clear this value
           </button>
         </form>
       )}

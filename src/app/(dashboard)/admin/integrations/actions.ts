@@ -4,32 +4,34 @@ import { revalidatePath } from "next/cache";
 
 import { PERMISSIONS } from "@/lib/permissions";
 import {
-  clearIntegrationSecret,
-  setIntegrationSecret,
+  clearIntegrationField,
+  setIntegrationField,
   updateIntegrationNotes,
 } from "@/server/services/integrations";
 import { SecretVaultNotConfiguredError } from "@/server/security/secrets";
 import { requirePermission } from "@/server/permissions";
 
-export type SecretActionState = { error?: string; ok?: string } | undefined;
+export type FieldActionState = { error?: string; ok?: string } | undefined;
 
-export async function setSecretAction(
-  _prev: SecretActionState,
+export async function setFieldAction(
+  _prev: FieldActionState,
   formData: FormData,
-): Promise<SecretActionState> {
+): Promise<FieldActionState> {
   const user = await requirePermission(PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
   const integrationId = String(formData.get("integrationId") ?? "");
-  const plaintext = String(formData.get("secret") ?? "");
+  const fieldName = String(formData.get("fieldName") ?? "");
+  const plaintext = String(formData.get("value") ?? "");
   if (!integrationId) return { error: "Integration is required." };
-  if (!plaintext.trim()) return { error: "Secret cannot be empty." };
+  if (!fieldName) return { error: "Field is required." };
+  if (!plaintext.trim()) return { error: "Value cannot be empty." };
 
   try {
-    await setIntegrationSecret({ integrationId, plaintext, actorUserId: user.id });
+    await setIntegrationField({ integrationId, fieldName, plaintext, actorUserId: user.id });
   } catch (err) {
     if (err instanceof SecretVaultNotConfiguredError) {
       return { error: err.message };
     }
-    return { error: err instanceof Error ? err.message : "Failed to set secret." };
+    return { error: err instanceof Error ? err.message : "Failed to set value." };
   }
 
   revalidatePath("/admin/integrations");
@@ -37,11 +39,12 @@ export async function setSecretAction(
   return { ok: "Saved." };
 }
 
-export async function clearSecretAction(formData: FormData): Promise<void> {
+export async function clearFieldAction(formData: FormData): Promise<void> {
   const user = await requirePermission(PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
   const integrationId = String(formData.get("integrationId") ?? "");
-  if (!integrationId) return;
-  await clearIntegrationSecret({ integrationId, actorUserId: user.id });
+  const fieldName = String(formData.get("fieldName") ?? "");
+  if (!integrationId || !fieldName) return;
+  await clearIntegrationField({ integrationId, fieldName, actorUserId: user.id });
   revalidatePath("/admin/integrations");
   revalidatePath("/automation");
 }

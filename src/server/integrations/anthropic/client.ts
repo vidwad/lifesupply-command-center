@@ -1,16 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-import { resolveSecretForType } from "@/server/services/integrations";
+import { resolveCredential } from "@/server/services/integrations";
 
 /**
  * Returns an Anthropic client, or null if no API key is available.
  *
  * Resolution order: process.env.ANTHROPIC_API_KEY (env wins), then the
- * encrypted vault entry for integrationType=anthropic. Callers must handle
- * the null case (typically by throwing AiNotConfiguredError).
+ * encrypted vault's anthropic.apiKey entry. Callers must handle the null
+ * case (typically by throwing AiNotConfiguredError).
  */
 export async function getAnthropicClient(): Promise<Anthropic | null> {
-  const apiKey = await resolveSecretForType("anthropic");
+  const apiKey = await resolveCredential("anthropic", "apiKey");
   if (!apiKey) return null;
   return new Anthropic({ apiKey });
 }
