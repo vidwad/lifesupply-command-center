@@ -164,14 +164,21 @@ The application should be built in disciplined phases:
 
 ## Deploying
 
-Production deployment runs on **Vercel + Neon Postgres**. See
-[`docs/DEPLOYMENT_VERCEL.md`](./docs/DEPLOYMENT_VERCEL.md) for the full
-20-minute setup walkthrough — environment variables, database wiring,
-known limitations (Playwright supplier automation needs a separate
-worker), and post-deploy steps.
+Production deployment is on **Render** — a `render.yaml` blueprint in
+the repo provisions the web service, Postgres database, and nightly
+audit-retention cron in one click. Playwright + Chromium are baked into
+the Docker image so supplier-portal automation works without a second
+host.
 
-For day-to-day operations after deploy (kill-switch, backups, audit
-retention, secrets), see [`docs/OPS_RUNBOOK.md`](./docs/OPS_RUNBOOK.md).
+See [`docs/DEPLOYMENT_RENDER.md`](./docs/DEPLOYMENT_RENDER.md) for the
+full 15-minute walkthrough.
+
+A `vercel.json` + [`docs/DEPLOYMENT_VERCEL.md`](./docs/DEPLOYMENT_VERCEL.md)
+remain in the repo as an alternative — Vercel works for everything
+**except** the Playwright supplier-portal flow (function-size limit).
+
+For day-to-day operations after deploy (kill-switch, backups, secrets),
+see [`docs/OPS_RUNBOOK.md`](./docs/OPS_RUNBOOK.md).
 
 ---
 
