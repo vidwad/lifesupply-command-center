@@ -120,6 +120,51 @@ Rules:
 
 ---
 
+## 5.5 Live integrations — credentials cheat sheet
+
+### Mailchimp campaigns
+Configure these via **Admin → API & Integrations → Mailchimp**:
+- `apiKey` (secret)
+- `serverPrefix` (e.g. `us21`)
+- `audienceListId`
+- `fromName`
+- `fromEmail`
+
+When all five are present + `mailchimp.send` flag is on, the export creates
+a Mailchimp segment + draft campaign. Sending is still done from inside
+Mailchimp — the application never auto-sends.
+
+### Investor email distribution
+Env-only (Resend):
+```
+RESEND_API_KEY=re_xxxxxxxx
+INVESTOR_FROM_EMAIL=team@lifesupply.ca
+INVESTOR_FROM_NAME=LifeSupply  # optional, defaults to "LifeSupply"
+```
+
+When unset, `releaseInvestorUpdate()` falls back to the stub path so the
+workflow remains testable without email infra.
+
+### Supplier portal automation (BBM01)
+1. Configure credentials via **Admin → API & Integrations → Supplier portal**:
+   - `username`, `password`, optional `loginUrl` override.
+2. Install browsers (one-time per host):
+   ```sh
+   pnpm exec playwright install chromium
+   ```
+3. Set `SUPPLIER_PORTAL_BBM01_URL` to the live BBM01 portal URL. Without
+   it, the runner hits the in-repo mock portal at
+   `/dev/mock-portals/bbm01/index.html` — only useful in dev.
+4. Enable the `supplier.automation` feature flag.
+5. Trigger a price/stock check from `/automation/runs`. The run records
+   per-step output + screenshot evidence rows.
+
+When the live runner can't launch (e.g. chromium binaries missing), the
+run is marked failed with a clear `errorSummary` instead of silently
+falling back to simulation.
+
+---
+
 ## 6. Secrets
 
 - Encrypted credential vault: `/admin/integrations`. AES-256-GCM with

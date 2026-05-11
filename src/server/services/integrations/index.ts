@@ -85,6 +85,25 @@ export const INTEGRATION_FIELDS: Partial<Record<IntegrationType, IntegrationFiel
       envVarName: "MAILCHIMP_SERVER_PREFIX",
       hint: "The data-center suffix on your API key.",
     },
+    {
+      name: "audienceListId",
+      label: "Default audience list ID",
+      placeholder: "abc1234567",
+      envVarName: "MAILCHIMP_AUDIENCE_LIST_ID",
+      hint: "The Mailchimp list ID campaigns are created against.",
+    },
+    {
+      name: "fromName",
+      label: "From name",
+      placeholder: "LifeSupply",
+      envVarName: "MAILCHIMP_FROM_NAME",
+    },
+    {
+      name: "fromEmail",
+      label: "From email",
+      placeholder: "team@lifesupply.ca",
+      envVarName: "MAILCHIMP_FROM_EMAIL",
+    },
   ],
   ga4: [
     {

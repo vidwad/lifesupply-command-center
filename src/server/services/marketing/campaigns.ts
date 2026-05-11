@@ -236,7 +236,8 @@ export async function requestCampaignApproval(args: {
 }
 
 // ---------------------------------------------------------------------------
-// Mailchimp export — stub. Gated on `mailchimp.send` flag + approval.
+// Mailchimp export — live when credentials exist, stub otherwise.
+// Gated on `mailchimp.send` flag + approval in either case.
 // ---------------------------------------------------------------------------
 
 export class MailchimpExportError extends Error {
@@ -257,6 +258,7 @@ export async function exportCampaignToMailchimp(args: {
     select: {
       id: true,
       name: true,
+      subject: true,
       status: true,
       bodyDraft: true,
       audienceSnapshot: true,
@@ -283,38 +285,155 @@ export async function exportCampaignToMailchimp(args: {
     );
   }
 
-  // ---- This is where the real Mailchimp client call lands. Today: stub. ----
-  // Real implementation would:
-  //   - Look up the audience list ID from the credential vault
-  //   - Create a Mailchimp segment with the snapshotted member emails
-  //   - Create + schedule a Mailchimp campaign with the bodyDraft
-  //   - Capture the Mailchimp campaign id into mailchimpExternalId
-  // For now we record the intent + audit so the workflow + UX can be tested
-  // end-to-end before the live API is wired.
-  const stubExternalId = `stub-${Date.now()}`;
-  await prisma.campaign.update({
-    where: { id: campaign.id },
-    data: {
-      mailchimpExportStatus: "queued",
-      mailchimpExportedAt: new Date(),
-      mailchimpExternalId: stubExternalId,
-      mailchimpExportError: null,
-    },
-  });
+  // Decide live-or-stub at runtime. When all five Mailchimp credential
+  // fields are present we hit the real API; otherwise we record a stub
+  // export so the UX can still be exercised without credentials.
+  const { getMailchimpClient } = await import(
+    "@/server/integrations/mailchimp/client"
+  );
+  const configured = await getMailchimpClient();
+  const audience = Array.isArray(campaign.audienceSnapshot)
+    ? (campaign.audienceSnapshot as Array<{ id: string; email: string | null; name: string }>)
+    : [];
 
-  await writeAudit({
-    actorUserId: args.actor.id,
-    action: "campaign.mailchimp_export_queued",
-    entityType: "campaign",
-    entityId: campaign.id,
-    afterData: {
-      stub: true,
-      mailchimpExternalId: stubExternalId,
-      audienceCount: Array.isArray(campaign.audienceSnapshot)
-        ? campaign.audienceSnapshot.length
-        : null,
-    },
-  });
+  if (!configured) {
+    // ---- Stub path ----
+    const stubExternalId = `stub-${Date.now()}`;
+    await prisma.campaign.update({
+      where: { id: campaign.id },
+      data: {
+        mailchimpExportStatus: "queued",
+        mailchimpExportedAt: new Date(),
+        mailchimpExternalId: stubExternalId,
+        mailchimpExportError: null,
+      },
+    });
+    await writeAudit({
+      actorUserId: args.actor.id,
+      action: "campaign.mailchimp_export_queued",
+      entityType: "campaign",
+      entityId: campaign.id,
+      afterData: {
+        stub: true,
+        reason: "no mailchimp credentials configured",
+        mailchimpExternalId: stubExternalId,
+        audienceCount: audience.length,
+      },
+    });
+    return;
+  }
+
+  // ---- Live path ----
+  const { client, config } = configured;
+  const recipientEmails = audience
+    .map((a) => a.email)
+    .filter((e): e is string => typeof e === "string" && e.includes("@"));
+
+  if (recipientEmails.length === 0) {
+    throw new MailchimpExportError(
+      "Audience snapshot has no valid email addresses — refusing to send.",
+    );
+  }
+
+  try {
+    // 1. Create a static segment scoped to the snapshot recipients.
+    const segmentName = `cmd-center-${campaign.id.slice(-8)}-${Date.now()}`;
+    // Mailchimp's typed client is loose; cast to unknown then to the
+    // narrow shape we use to avoid an `any` leak.
+    const segments = client.lists as unknown as {
+      createSegment: (
+        listId: string,
+        body: { name: string; static_segment: string[] },
+      ) => Promise<{ id: number }>;
+    };
+    const segment = await segments.createSegment(config.audienceListId, {
+      name: segmentName,
+      static_segment: recipientEmails,
+    });
+
+    // 2. Create the campaign tied to that segment.
+    const campaignsApi = client.campaigns as unknown as {
+      create: (body: {
+        type: string;
+        recipients: { list_id: string; segment_opts: { saved_segment_id: number } };
+        settings: {
+          subject_line: string;
+          title: string;
+          from_name: string;
+          reply_to: string;
+        };
+      }) => Promise<{ id: string }>;
+      setContent: (
+        id: string,
+        body: { plain_text: string; html?: string },
+      ) => Promise<unknown>;
+    };
+
+    const created = await campaignsApi.create({
+      type: "regular",
+      recipients: {
+        list_id: config.audienceListId,
+        segment_opts: { saved_segment_id: segment.id },
+      },
+      settings: {
+        subject_line: campaign.subject ?? campaign.name,
+        title: campaign.name,
+        from_name: config.fromName,
+        reply_to: config.fromEmail,
+      },
+    });
+
+    // 3. Push the body. Mailchimp builds an HTML version from plain_text
+    // when html is omitted; safer than us assembling HTML server-side.
+    await campaignsApi.setContent(created.id, {
+      plain_text: campaign.bodyDraft ?? "",
+    });
+
+    // The campaign is created in DRAFT inside Mailchimp. Sending requires
+    // a separate `campaigns.send(id)` call which we deliberately do NOT
+    // make here — the operator schedules + sends from inside Mailchimp
+    // after a final review. Per CLAUDE.md §13 we never auto-send.
+
+    await prisma.campaign.update({
+      where: { id: campaign.id },
+      data: {
+        mailchimpExportStatus: "queued",
+        mailchimpExportedAt: new Date(),
+        mailchimpExternalId: created.id,
+        mailchimpExportError: null,
+      },
+    });
+    await writeAudit({
+      actorUserId: args.actor.id,
+      action: "campaign.mailchimp_export_queued",
+      entityType: "campaign",
+      entityId: campaign.id,
+      afterData: {
+        stub: false,
+        mailchimpExternalId: created.id,
+        mailchimpSegmentId: segment.id,
+        audienceCount: recipientEmails.length,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown Mailchimp error";
+    await prisma.campaign.update({
+      where: { id: campaign.id },
+      data: {
+        mailchimpExportStatus: "failed",
+        mailchimpExportedAt: new Date(),
+        mailchimpExportError: message,
+      },
+    });
+    await writeAudit({
+      actorUserId: args.actor.id,
+      action: "campaign.mailchimp_export_failed",
+      entityType: "campaign",
+      entityId: campaign.id,
+      afterData: { error: message, audienceCount: recipientEmails.length },
+    });
+    throw new MailchimpExportError(`Mailchimp rejected the export: ${message}`);
+  }
 }
 
 /** Read whether send is permitted right now without throwing. UI uses this to enable the button. */

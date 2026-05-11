@@ -26,6 +26,13 @@ import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { isFeatureOn, requireFeature } from "@/server/services/feature-flags";
+import { resolveCredentialsBundle } from "@/server/services/integrations";
+import {
+  BbmAuthError,
+  lookupSupplierSku,
+  type RunResult,
+} from "@/server/automation/suppliers/best-buy-medical";
+import { PlaywrightUnavailableError } from "@/server/automation/playwright-runner";
 
 export class AutomationDisabledError extends Error {
   constructor(message: string) {
@@ -168,9 +175,53 @@ async function recordStep(args: {
 // ---------------------------------------------------------------------------
 
 /**
- * Simulated price + stock check using the SupplierProduct table. Marks
- * `result.simulated: true` so reviewers know this did not touch a live
- * portal. Replace the inner body when a real runner is wired.
+ * Try the live BBM01 portal. Returns null if the supplier isn't BBM01 or
+ * credentials are missing — caller falls back to the simulation path.
+ *
+ * On Playwright unavailability the helper throws PlaywrightUnavailableError
+ * so the caller can mark the run as failed with a clear message instead of
+ * silently degrading to simulation (which would mislead the reviewer).
+ */
+async function tryLiveLookup(
+  supplierCode: string,
+  supplierSku: string,
+): Promise<RunResult | null> {
+  if (supplierCode !== "BBM01") return null;
+  const creds = await resolveCredentialsBundle("supplier_portal");
+  if (!creds || !creds.username || !creds.password) return null;
+  return lookupSupplierSku({
+    sku: supplierSku,
+    credentials: {
+      username: creds.username,
+      password: creds.password,
+      loginUrl: creds.loginUrl,
+    },
+  });
+}
+
+async function recordEvidence(
+  runId: string,
+  screenshots: { label: string; bytes: Buffer }[],
+): Promise<void> {
+  for (const shot of screenshots) {
+    await prisma.automationEvidence.create({
+      data: {
+        runId,
+        kind: "screenshot",
+        // Real storage (S3) lands in a follow-up ticket; for now we record
+        // the metadata + size so the evidence chain is auditable.
+        storageRef: `inline:${shot.label}`,
+        label: shot.label,
+        bytes: shot.bytes.length,
+      },
+    });
+  }
+}
+
+/**
+ * Price check. Tries the live BBM01 Playwright flow first; falls back to a
+ * simulated read of SupplierProduct.cost when credentials aren't configured.
+ * Reviewers can tell the two apart by `result.simulated` + the run summary.
  */
 export async function runPriceCheck(args: {
   supplierProductId: string;
@@ -207,6 +258,102 @@ export async function runPriceCheck(args: {
         },
       });
 
+      // Try live BBM01 lookup. If the supplier isn't BBM01 or creds are
+      // missing, this returns null and we fall back to simulation.
+      let live: RunResult | null = null;
+      try {
+        live = await tryLiveLookup(sp.supplier.code, sp.supplierSku);
+      } catch (err) {
+        const message =
+          err instanceof BbmAuthError
+            ? "Supplier portal rejected credentials."
+            : err instanceof PlaywrightUnavailableError
+              ? err.message
+              : err instanceof Error
+                ? err.message
+                : "Live lookup failed.";
+        await recordStep({
+          runId,
+          stepKey: "live_lookup",
+          sortOrder: 1,
+          status: "failed",
+          error: message,
+        });
+        await prisma.automationRun.update({
+          where: { id: runId },
+          data: {
+            status: "failed",
+            completedAt: new Date(),
+            errorSummary: message,
+            summary: `Live BBM01 price check failed for ${sp.supplierSku}.`,
+          },
+        });
+        await writeAudit({
+          actorUserId: args.triggeredById,
+          action: "automation.price_check_failed",
+          entityType: "automation_run",
+          entityId: runId,
+          afterData: { supplierProductId: sp.id, error: message },
+        });
+        return;
+      }
+
+      if (live) {
+        await recordEvidence(runId, live.screenshots);
+        await recordStep({
+          runId,
+          stepKey: "live_lookup",
+          sortOrder: 1,
+          status: live.lookup.found ? "succeeded" : "failed",
+          output: {
+            simulated: false,
+            sku: live.lookup.sku,
+            name: live.lookup.name,
+            price: live.lookup.price,
+            stock: live.lookup.stock,
+            screenshots: live.screenshots.length,
+          },
+          error: live.lookup.found ? undefined : "SKU not found in supplier portal.",
+        });
+        const succeeded = live.lookup.found;
+        await prisma.automationRun.update({
+          where: { id: runId },
+          data: {
+            status: succeeded ? "succeeded" : "failed",
+            completedAt: new Date(),
+            summary: succeeded
+              ? `Live BBM01 price check for ${sp.supplierSku}: ${live.lookup.price ?? "?"} (${live.lookup.stock ?? "?"})`
+              : `Live BBM01 price check: SKU ${sp.supplierSku} not found.`,
+            errorSummary: succeeded ? null : "SKU not found in supplier portal.",
+            result: {
+              simulated: false,
+              supplierCode: sp.supplier.code,
+              supplierSku: sp.supplierSku,
+              found: succeeded,
+              capturedPrice: live.lookup.price,
+              rawPrice: live.lookup.rawPrice,
+              stock: live.lookup.stock,
+              productName: live.lookup.name,
+            },
+          },
+        });
+        await writeAudit({
+          actorUserId: args.triggeredById,
+          action: succeeded
+            ? "automation.price_check_live"
+            : "automation.price_check_not_found",
+          entityType: "automation_run",
+          entityId: runId,
+          afterData: {
+            supplierProductId: sp.id,
+            capturedPrice: live.lookup.price,
+            screenshots: live.screenshots.length,
+          },
+        });
+        return;
+      }
+
+      // ---- Simulation fallback ----
       const capturedCost = Number(sp.cost);
       await recordStep({
         runId,
@@ -274,6 +421,99 @@ export async function runStockCheck(args: {
         status: "succeeded",
         output: { supplierCode: sp.supplier.code, supplierSku: sp.supplierSku },
       });
+
+      // Live BBM01 path mirrors the price-check; same lookup, different
+      // field captured on the run.
+      let live: RunResult | null = null;
+      try {
+        live = await tryLiveLookup(sp.supplier.code, sp.supplierSku);
+      } catch (err) {
+        const message =
+          err instanceof BbmAuthError
+            ? "Supplier portal rejected credentials."
+            : err instanceof PlaywrightUnavailableError
+              ? err.message
+              : err instanceof Error
+                ? err.message
+                : "Live lookup failed.";
+        await recordStep({
+          runId,
+          stepKey: "live_lookup",
+          sortOrder: 1,
+          status: "failed",
+          error: message,
+        });
+        await prisma.automationRun.update({
+          where: { id: runId },
+          data: {
+            status: "failed",
+            completedAt: new Date(),
+            errorSummary: message,
+            summary: `Live BBM01 stock check failed for ${sp.supplierSku}.`,
+          },
+        });
+        await writeAudit({
+          actorUserId: args.triggeredById,
+          action: "automation.stock_check_failed",
+          entityType: "automation_run",
+          entityId: runId,
+          afterData: { supplierProductId: sp.id, error: message },
+        });
+        return;
+      }
+
+      if (live) {
+        await recordEvidence(runId, live.screenshots);
+        await recordStep({
+          runId,
+          stepKey: "live_lookup",
+          sortOrder: 1,
+          status: live.lookup.found ? "succeeded" : "failed",
+          output: {
+            simulated: false,
+            sku: live.lookup.sku,
+            stock: live.lookup.stock,
+            screenshots: live.screenshots.length,
+          },
+          error: live.lookup.found ? undefined : "SKU not found in supplier portal.",
+        });
+        const succeeded = live.lookup.found;
+        await prisma.automationRun.update({
+          where: { id: runId },
+          data: {
+            status: succeeded ? "succeeded" : "failed",
+            completedAt: new Date(),
+            summary: succeeded
+              ? `Live BBM01 stock check for ${sp.supplierSku}: ${live.lookup.stock ?? "?"}`
+              : `Live BBM01 stock check: SKU ${sp.supplierSku} not found.`,
+            errorSummary: succeeded ? null : "SKU not found in supplier portal.",
+            result: {
+              simulated: false,
+              supplierCode: sp.supplier.code,
+              supplierSku: sp.supplierSku,
+              found: succeeded,
+              availability: live.lookup.stock,
+              productName: live.lookup.name,
+            },
+          },
+        });
+        await writeAudit({
+          actorUserId: args.triggeredById,
+          action: succeeded
+            ? "automation.stock_check_live"
+            : "automation.stock_check_not_found",
+          entityType: "automation_run",
+          entityId: runId,
+          afterData: {
+            supplierProductId: sp.id,
+            availability: live.lookup.stock,
+            screenshots: live.screenshots.length,
+          },
+        });
+        return;
+      }
+
+      // ---- Simulation fallback ----
       await recordStep({
         runId,
         stepKey: "capture_stock",

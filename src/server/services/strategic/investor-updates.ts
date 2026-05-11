@@ -311,6 +311,7 @@ export async function releaseInvestorUpdate(args: {
       id: true,
       title: true,
       status: true,
+      bodyDraft: true,
       approvedById: true,
       approvedAt: true,
       distributionSnapshot: true,
@@ -324,25 +325,95 @@ export async function releaseInvestorUpdate(args: {
   if (!update.approvedById || !update.approvedAt) {
     throw new InvestorUpdateError("Update is missing approval metadata — refusing to release.");
   }
-
-  // Stub: today we record release intent + audit. Actual email / data-room
-  // delivery lands in a follow-up ticket.
-  await prisma.investorUpdate.update({
-    where: { id: update.id },
-    data: { status: "released", releasedAt: new Date() },
-  });
+  if (!update.bodyDraft || !update.bodyDraft.trim()) {
+    throw new InvestorUpdateError("Update has no body — refusing to release.");
+  }
 
   const recipients = Array.isArray(update.distributionSnapshot)
-    ? update.distributionSnapshot.length
-    : null;
+    ? (update.distributionSnapshot as Array<{
+        id: string;
+        name: string;
+        email: string | null;
+        organization: string | null;
+        status: string;
+      }>)
+    : [];
+  const validRecipients = recipients.filter(
+    (r): r is typeof r & { email: string } =>
+      typeof r.email === "string" && r.email.includes("@"),
+  );
 
-  await writeAudit({
-    actorUserId: args.actor.id,
-    action: "investor_update.released",
-    entityType: "investor_update",
-    entityId: update.id,
-    afterData: { stub: true, recipients },
-  });
+  // Decide live-or-stub at runtime. Resend creds present → real send.
+  // Otherwise we stamp release intent + audit so the workflow + UX still
+  // work without needing email infra during dev.
+  const { getEmailClient } = await import("@/server/integrations/email/client");
+  const email = getEmailClient();
+
+  if (!email) {
+    // ---- Stub path ----
+    await prisma.investorUpdate.update({
+      where: { id: update.id },
+      data: { status: "released", releasedAt: new Date() },
+    });
+    await writeAudit({
+      actorUserId: args.actor.id,
+      action: "investor_update.released",
+      entityType: "investor_update",
+      entityId: update.id,
+      afterData: {
+        stub: true,
+        reason: "no email credentials configured (RESEND_API_KEY)",
+        recipients: recipients.length,
+      },
+    });
+    return;
+  }
+
+  if (validRecipients.length === 0) {
+    throw new InvestorUpdateError(
+      "Distribution snapshot has no valid email addresses — refusing to release.",
+    );
+  }
+
+  // ---- Live path ----
+  try {
+    const result = await email.send({
+      to: [],
+      bcc: validRecipients.map((r) => r.email),
+      subject: update.title,
+      text: update.bodyDraft,
+    });
+
+    await prisma.investorUpdate.update({
+      where: { id: update.id },
+      data: { status: "released", releasedAt: new Date() },
+    });
+
+    await writeAudit({
+      actorUserId: args.actor.id,
+      action: "investor_update.released",
+      entityType: "investor_update",
+      entityId: update.id,
+      afterData: {
+        stub: false,
+        providerId: result.providerId,
+        recipients: result.recipientCount,
+        from: email.fromAddress,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown email error";
+    // Don't flip the status on failure — keep it as approved so the
+    // operator can retry. Audit the failure.
+    await writeAudit({
+      actorUserId: args.actor.id,
+      action: "investor_update.release_failed",
+      entityType: "investor_update",
+      entityId: update.id,
+      afterData: { error: message, recipients: validRecipients.length },
+    });
+    throw new InvestorUpdateError(`Email send failed: ${message}`);
+  }
 }
 
 export async function isInvestorDistributionEnabled(): Promise<boolean> {

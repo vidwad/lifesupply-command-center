@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BBM01 Mock Supplier Portal — DEV ONLY</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 4rem auto; padding: 1rem; color: #1f2937; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    label { display: block; margin: 0.75rem 0 0.25rem; font-size: 0.85rem; color: #4b5563; }
+    input { width: 100%; box-sizing: border-box; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9rem; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .result { margin-top: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 4px; background: #f9fafb; }
+    .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
+    .value { font-size: 1rem; font-weight: 500; margin-top: 0.25rem; }
+    [hidden] { display: none !important; }
+    .banner { padding: 0.75rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem; color: #78350f; }
+    .error { color: #b91c1c; font-size: 0.85rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <strong>DEV ONLY:</strong> mock supplier portal used by Playwright in non-production environments.
+    Login: <code>demo</code> / <code>demo123</code>. SKUs: <code>WK-1</code>, <code>CN-1</code>, <code>BP-1</code>.
+  </div>
+
+  <div id="login-screen">
+    <h1>Best Buy Medical — supplier login</h1>
+    <label for="username">Username</label>
+    <input id="username" name="username" autocomplete="off" />
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="off" />
+    <button id="login-btn" type="button">Sign in</button>
+    <p class="error" id="login-error" data-testid="login-error" hidden>Invalid credentials.</p>
+  </div>
+
+  <div id="search-screen" data-testid="search-screen" hidden>
+    <h1>Product lookup</h1>
+    <label for="search-sku">Supplier SKU</label>
+    <input id="search-sku" name="sku" autocomplete="off" />
+    <button id="search-btn" type="button">Search</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // Static catalog — keep in sync with what the seed inserts in
+    // SupplierProduct so end-to-end runs find a match.
+    const CATALOG = {
+      "WK-1": { name: "Lightweight rollator", price: 89.5, stock: "in_stock" },
+      "CN-1": { name: "Aluminum cane", price: 24.95, stock: "low_stock" },
+      "BP-1": { name: "Auto blood-pressure cuff", price: 159.0, stock: "out_of_stock" },
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    $("login-btn").addEventListener("click", () => {
+      const u = $("username").value;
+      const p = $("password").value;
+      if (u === "demo" && p === "demo123") {
+        $("login-screen").hidden = true;
+        $("search-screen").hidden = false;
+      } else {
+        $("login-error").hidden = false;
+      }
+    });
+
+    $("search-btn").addEventListener("click", () => {
+      const sku = $("search-sku").value.trim().toUpperCase();
+      const item = CATALOG[sku];
+      if (item) {
+        $("result").innerHTML = `
+          <div class="result" data-testid="result-card">
+            <div class="label">SKU</div>
+            <div class="value" data-testid="result-sku">${sku}</div>
+            <div class="label" style="margin-top: 0.75rem">Name</div>
+            <div class="value" data-testid="result-name">${item.name}</div>
+            <div class="label" style="margin-top: 0.75rem">Price (CAD)</div>
+            <div class="value" data-testid="result-price">$${item.price.toFixed(2)}</div>
+            <div class="label" style="margin-top: 0.75rem">Stock</div>
+            <div class="value" data-testid="result-stock">${item.stock}</div>
+          </div>`;
+      } else {
+        $("result").innerHTML = `<div class="result" data-testid="not-found">SKU not found.</div>`;
+      }
+    });
+  </script>
+</body>
+</html>
