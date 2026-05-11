@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { NotificationBell } from "./NotificationBell";
 import { UserMenu } from "./UserMenu";
 
 type Props = {
@@ -10,10 +11,16 @@ type Props = {
     email: string;
     roles: string[];
   };
+  notificationCounts: {
+    approvalsCanDecide: number;
+    myOverdueTasks: number;
+    openExceptions: number;
+    total: number;
+  };
   signOutAction: () => Promise<void>;
 };
 
-export function TopBar({ user, signOutAction }: Props) {
+export function TopBar({ user, notificationCounts, signOutAction }: Props) {
   return (
     <header className="flex h-14 items-center justify-between border-b bg-background px-4">
       <div className="flex flex-1 items-center gap-3">
@@ -35,6 +42,7 @@ export function TopBar({ user, signOutAction }: Props) {
         <Button variant="ghost" size="sm" disabled>
           Period: MTD
         </Button>
+        <NotificationBell counts={notificationCounts} />
         <UserMenu
           name={user.name}
           email={user.email}
