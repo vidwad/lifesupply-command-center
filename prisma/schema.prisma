@@ -11,9 +11,22 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Two URLs so the same schema works in both local Docker (single connection)
+// and Vercel + Neon (pooled connection at runtime, direct connection for
+// migrations).
+//
+//   DATABASE_URL  — pooled (PgBouncer / Neon serverless) — used by the app
+//                   at runtime for normal queries.
+//   DIRECT_URL    — direct connection (port 5432, no pooler) — used by
+//                   `prisma migrate deploy` because Prisma needs an
+//                   advisory lock that pooled connections do not support.
+//
+// In local dev they can be the same value; the .env.example only shows
+// DATABASE_URL since the docker-compose Postgres has no pooler.
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // =============================================================================

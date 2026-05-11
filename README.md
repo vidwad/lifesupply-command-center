@@ -162,6 +162,19 @@ The application should be built in disciplined phases:
 
 ---
 
+## Deploying
+
+Production deployment runs on **Vercel + Neon Postgres**. See
+[`docs/DEPLOYMENT_VERCEL.md`](./docs/DEPLOYMENT_VERCEL.md) for the full
+20-minute setup walkthrough — environment variables, database wiring,
+known limitations (Playwright supplier automation needs a separate
+worker), and post-deploy steps.
+
+For day-to-day operations after deploy (kill-switch, backups, audit
+retention, secrets), see [`docs/OPS_RUNBOOK.md`](./docs/OPS_RUNBOOK.md).
+
+---
+
 ## Claude Code Start Instructions
 
 A recommended first Claude Code prompt is included in:
