@@ -82,10 +82,57 @@
   * {
     @apply border-border;
   }
+  /*
+   * Body typography. Inter character variants:
+   *   cv02 — single-storey a (less ambiguous next to o)
+   *   cv03 — straight-tail u
+   *   cv04 — straight-leg l (distinguishes from 1/I)
+   *   cv11 — single-storey g
+   *   ss01 — Inter's stylistic-set "open" forms
+   *   tnum — column-aligned figures so every dollar amount in financial
+   *          tables, KPI cards, and audit timestamps stays vertically
+   *          aligned without per-cell tabular-nums utilities
+   *   rlig + calt — contextual / required ligatures kept on for prose
+   */
   body {
     @apply bg-background text-foreground;
     font-feature-settings:
+      "cv02" 1,
+      "cv03" 1,
+      "cv04" 1,
+      "cv11" 1,
+      "ss01" 1,
+      "tnum" 1,
       "rlig" 1,
       "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * Mono blocks (audit log entity IDs, JSON output, automation step keys)
+   * benefit from a slashed zero + distinct 1/l. JetBrains Mono ships these
+   * via the `zero` and `ss02` features.
+   */
+  code,
+  pre,
+  kbd,
+  samp,
+  .font-mono {
+    font-feature-settings:
+      "zero" 1,
+      "ss02" 1,
+      "calt" 1;
+  }
+
+  /*
+   * Headings get a hair tighter tracking — Inter's defaults are loose at
+   * display sizes and look unbalanced next to dense table copy.
+   */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.011em;
   }
 }
