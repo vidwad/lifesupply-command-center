@@ -58,6 +58,48 @@ function summarizeJson(value: unknown): string | null {
   }
 }
 
+/**
+ * Map an `entityType` string used in audit logs to the in-app detail page
+ * for that entity. Returns null when no detail page exists or the entity
+ * is too generic to link (e.g. a system_setting key).
+ *
+ * Keep keys lowercase. Audit writers use mixed casing historically (e.g.
+ * "Order" + "order"), so this function lowercases the input.
+ */
+function entityHref(entityType: string | null, entityId: string | null): string | null {
+  if (!entityType || !entityId) return null;
+  switch (entityType.toLowerCase()) {
+    case "order":
+      return `/orders/${entityId}`;
+    case "customer":
+      return `/customers/${entityId}`;
+    case "product":
+      return `/products/${entityId}`;
+    case "supplier":
+      return `/suppliers/${entityId}`;
+    case "report":
+      return `/reports/${entityId}`;
+    case "task":
+      return `/tasks/${entityId}`;
+    case "approval":
+      return `/approvals/${entityId}`;
+    case "investor":
+      return `/investors/${entityId}`;
+    case "opportunity":
+      return `/opportunities/${entityId}`;
+    case "user":
+      return `/admin/users/${entityId}`;
+    case "role":
+      return `/admin/roles/${entityId}`;
+    case "exception":
+      return `/operations/exceptions`;
+    case "integration_sync_log":
+      return `/automation`;
+    default:
+      return null;
+  }
+}
+
 export default async function AuditLogsPage({
   searchParams,
 }: {
@@ -260,9 +302,26 @@ export default async function AuditLogsPage({
                             <span className="text-xs uppercase tracking-wide text-muted-foreground">
                               {row.entityType}
                             </span>
-                            {row.entityId && (
-                              <span className="font-mono text-xs">{row.entityId}</span>
-                            )}
+                            {row.entityId &&
+                              (() => {
+                                const href = entityHref(row.entityType, row.entityId);
+                                return href ? (
+                                  <Link
+                                    href={href}
+                                    className="font-mono text-xs text-primary hover:underline"
+                                  >
+                                    {row.entityId.length > 24
+                                      ? `${row.entityId.slice(0, 12)}…${row.entityId.slice(-6)}`
+                                      : row.entityId}
+                                  </Link>
+                                ) : (
+                                  <span className="font-mono text-xs">
+                                    {row.entityId.length > 24
+                                      ? `${row.entityId.slice(0, 12)}…${row.entityId.slice(-6)}`
+                                      : row.entityId}
+                                  </span>
+                                );
+                              })()}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>

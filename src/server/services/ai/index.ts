@@ -6,38 +6,7 @@ import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 import { getAnthropicClient, resolveAnthropicModel } from "@/server/integrations/anthropic/client";
 import { getDashboardData } from "@/server/services/dashboard";
-
-// -----------------------------------------------------------------------------
-// Daily management briefing
-// -----------------------------------------------------------------------------
-
-const BRIEFING_SYSTEM_PROMPT = `You are the LifeSupply Command Center management analyst.
-
-You write concise daily briefings for the owner of a Canadian medical-supply business
-operating LifeSupply.ca (B2B/clinic), Wellmart Medical (retail), and U.S. operations.
-
-Voice: professional, direct, owner-to-owner. No marketing fluff. Surface what
-matters and what management should do about it.
-
-Format the output as plain text with these EXACT sections, in this order:
-
-OBSERVATIONS
-- 3-5 short bullets summarizing today's operating + financial position.
-
-EXCEPTIONS
-- 0-5 short bullets describing orders or issues that need attention.
-- Reference order numbers (e.g. LS-1032) and supplier codes (e.g. BBM01) when relevant.
-- If there are no exceptions, write a single bullet: "- None today."
-
-RECOMMENDED ACTIONS
-- 1-4 bullets with concrete next actions, ranked by priority.
-- Each action should be something the owner can decide on or delegate.
-
-Rules:
-- Use the data provided; do not invent numbers.
-- Distinguish facts from recommendations.
-- Never instruct anyone to send emails, place supplier orders, or push external
-  updates without human approval.`;
+import { renderPrompt } from "@/server/services/prompt-templates";
 
 function buildBriefingContext(data: Awaited<ReturnType<typeof getDashboardData>>): string {
   const periodLabel = data.period?.name ?? "no open period";
@@ -142,14 +111,13 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
   const data = await getDashboardData();
   const context = buildBriefingContext(data);
 
-  const userPrompt = `Today's data is below. Write a daily management briefing using the format in the system prompt.\n\n${context}`;
-
+  const rendered = await renderPrompt("dashboard_briefing", { context });
   const model = await resolveAnthropicModel();
   const response = await client.messages.create({
     model,
     max_tokens: 1024,
-    system: BRIEFING_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
+    system: rendered.systemPrompt,
+    messages: [{ role: "user", content: rendered.userPrompt }],
   });
 
   const output = response.content
@@ -162,6 +130,7 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
     previousPeriod: data.previousPeriod?.name,
     exceptionOrderNumbers: data.exceptions.map((e) => e.orderNumber),
     topProductIds: data.topProducts.map((p) => p.id),
+    isStale: data.period == null,
   };
 
   const tokenUsage = {
@@ -169,17 +138,32 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
     outputTokens: response.usage.output_tokens,
   };
 
+  // The dashboard briefing prompt is plain-text. We surface a "stale data"
+  // warning at the AiOutput level when no period is open so consumers can
+  // flag it in the UI without having to inspect the snapshot themselves.
+  const warnings: string[] = [];
+  if (data.period == null) warnings.push("No open financial period — figures may be stale.");
+  if (data.exceptions.length === 0 && data.operations.exceptionOrders > 0) {
+    warnings.push("Exception count > 0 but exception list is empty.");
+  }
+
   const aiOutput = await prisma.aiOutput.create({
     data: {
       userId,
       modelProvider: "anthropic",
       modelName: response.model,
       module: "dashboard_briefing",
-      prompt: userPrompt,
+      prompt: rendered.userPrompt,
       output,
       sourceReferences,
       tokenUsage,
       status: "generated",
+      assumptions: [],
+      warnings,
+      confidence: null,
+      promptTemplateId: rendered.templateId,
+      promptTemplateKey: rendered.templateKey,
+      promptTemplateVersion: rendered.templateVersion,
     },
   });
 
@@ -188,7 +172,13 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
     action: "ai.briefing_generated",
     entityType: "AiOutput",
     entityId: aiOutput.id,
-    afterData: { module: "dashboard_briefing", model: response.model, tokenUsage },
+    afterData: {
+      module: "dashboard_briefing",
+      model: response.model,
+      tokenUsage,
+      promptTemplateKey: rendered.templateKey,
+      promptTemplateVersion: rendered.templateVersion,
+    },
   });
 
   revalidatePath("/dashboard");
@@ -198,25 +188,6 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
 // -----------------------------------------------------------------------------
 // AI Analyst — open Q&A grounded in the dashboard snapshot
 // -----------------------------------------------------------------------------
-
-const ANALYST_SYSTEM_PROMPT = `You are the LifeSupply Command Center analyst.
-
-The owner asks you questions about the business. Today's snapshot is supplied
-in the user message. Answer concisely (under ~250 words unless the question
-genuinely needs more), grounded ONLY in the provided data.
-
-Voice: direct, owner-to-owner, professional. No marketing fluff.
-
-Rules:
-- If a question can't be answered from the supplied data, say so plainly and
-  list what data you would need.
-- Reference order numbers (e.g. LS-1032), supplier codes (BBM01), customer
-  names, period names verbatim from the data.
-- Distinguish facts from your recommendations.
-- Never instruct anyone to send emails, place supplier orders, modify pricing
-  on external systems, or push external updates without human approval.
-- For financial figures, use the consolidated numbers unless the question is
-  about a specific division.`;
 
 export async function askAiAnalyst(args: { question: string; userId: string }): Promise<AiOutput> {
   const client = await getAnthropicClient();
@@ -228,20 +199,22 @@ export async function askAiAnalyst(args: { question: string; userId: string }): 
   const data = await getDashboardData();
   const context = buildBriefingContext(data);
 
-  const userPrompt = `## Today's snapshot\n\n${context}\n\n## Question\n\n${trimmed}`;
-
+  const rendered = await renderPrompt("analyst_query", { context, question: trimmed });
   const model = await resolveAnthropicModel();
   const response = await client.messages.create({
     model,
     max_tokens: 1024,
-    system: ANALYST_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
+    system: rendered.systemPrompt,
+    messages: [{ role: "user", content: rendered.userPrompt }],
   });
 
   const output = response.content
     .map((b) => (b.type === "text" ? b.text : ""))
     .join("\n")
     .trim();
+
+  const warnings: string[] = [];
+  if (data.period == null) warnings.push("No open financial period — answers may use stale data.");
 
   const aiOutput = await prisma.aiOutput.create({
     data: {
@@ -260,6 +233,12 @@ export async function askAiAnalyst(args: { question: string; userId: string }): 
         outputTokens: response.usage.output_tokens,
       },
       status: "generated",
+      assumptions: [],
+      warnings,
+      confidence: null,
+      promptTemplateId: rendered.templateId,
+      promptTemplateKey: rendered.templateKey,
+      promptTemplateVersion: rendered.templateVersion,
     },
   });
 
@@ -272,6 +251,8 @@ export async function askAiAnalyst(args: { question: string; userId: string }): 
       module: "analyst_query",
       model: response.model,
       questionPreview: trimmed.slice(0, 120),
+      promptTemplateKey: rendered.templateKey,
+      promptTemplateVersion: rendered.templateVersion,
     },
   });
 
@@ -282,36 +263,6 @@ export async function askAiAnalyst(args: { question: string; userId: string }): 
 // -----------------------------------------------------------------------------
 // Opportunity analysis — strategic memo on an Opportunity record
 // -----------------------------------------------------------------------------
-
-const OPPORTUNITY_SYSTEM_PROMPT = `You are the LifeSupply Command Center strategic analyst.
-
-The owner is evaluating a strategic opportunity (acquisition, supplier deal,
-cost reduction, marketing initiative, or similar). Produce a tight memo using
-ONLY the structured data provided.
-
-Voice: direct, owner-to-owner. Pragmatic, not promotional.
-
-Format the output as plain text with these EXACT sections, in this order:
-
-WHY THIS MATTERS
-- 1-2 sentences placing the opportunity in the LifeSupply / Wellmart context.
-
-KEY ASSUMPTIONS
-- 3-5 bullets stating the assumptions underpinning the financial estimates.
-
-RISKS
-- 3-5 bullets, ranked by severity. Reference supplier codes / order numbers
-  when relevant (e.g. concentration on BBM01).
-
-RECOMMENDED NEXT STEPS
-- 2-4 short, concrete bullets the owner can decide on or delegate this week.
-
-Rules:
-- Never invent numbers; only restate what was provided. Mark missing data as
-  "(not supplied)".
-- Distinguish facts from your interpretation.
-- Never instruct anyone to commit capital, sign contracts, or take external
-  action without explicit human approval.`;
 
 export async function analyzeOpportunity(args: {
   opportunityId: string;
@@ -381,14 +332,15 @@ export async function analyzeOpportunity(args: {
       lines.push(t.valuationNotes);
     }
   }
-  const userPrompt = `${lines.join("\n")}\n\nProduce the memo.`;
+  const context = lines.join("\n");
+  const rendered = await renderPrompt("opportunity_analysis", { context });
 
   const model = await resolveAnthropicModel();
   const response = await client.messages.create({
     model,
     max_tokens: 1024,
-    system: OPPORTUNITY_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
+    system: rendered.systemPrompt,
+    messages: [{ role: "user", content: rendered.userPrompt }],
   });
 
   const output = response.content
@@ -396,13 +348,23 @@ export async function analyzeOpportunity(args: {
     .join("\n")
     .trim();
 
+  // Surface missing-data warnings up to the AiOutput level so reviewers
+  // see them in the UI without having to inspect the prompt.
+  const warnings: string[] = [];
+  if (opportunity.estimatedRevenueImpact == null) warnings.push("Revenue impact not supplied.");
+  if (opportunity.estimatedMarginImpact == null) warnings.push("Margin impact not supplied.");
+  if (opportunity.estimatedCost == null) warnings.push("Cost / investment not supplied.");
+  if (opportunity.acquisitionTarget && opportunity.acquisitionTarget.revenueEstimate == null) {
+    warnings.push("Acquisition target revenue estimate missing.");
+  }
+
   const aiOutput = await prisma.aiOutput.create({
     data: {
       userId: args.userId,
       modelProvider: "anthropic",
       modelName: response.model,
       module: "opportunity_analysis",
-      prompt: userPrompt,
+      prompt: rendered.userPrompt,
       output,
       sourceReferences: {
         opportunityId: opportunity.id,
@@ -415,6 +377,12 @@ export async function analyzeOpportunity(args: {
         outputTokens: response.usage.output_tokens,
       },
       status: "generated",
+      assumptions: [],
+      warnings,
+      confidence: null,
+      promptTemplateId: rendered.templateId,
+      promptTemplateKey: rendered.templateKey,
+      promptTemplateVersion: rendered.templateVersion,
     },
   });
 
@@ -427,6 +395,8 @@ export async function analyzeOpportunity(args: {
       module: "opportunity_analysis",
       model: response.model,
       aiOutputId: aiOutput.id,
+      promptTemplateKey: rendered.templateKey,
+      promptTemplateVersion: rendered.templateVersion,
     },
   });
 

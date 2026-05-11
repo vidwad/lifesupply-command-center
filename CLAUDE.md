@@ -209,3 +209,107 @@ The MVP is successful when the application can:
 - AI-assisted, not AI-controlled.
 - Build for future capital raising, M&A, and shareholder value reporting, but do not overbuild those modules in the MVP.
 
+---
+
+## 11. Batch 2 Post-MVP Documentation
+
+The MVP is complete. Use the Batch 2 documents below to guide further work:
+
+1. `/docs/09_AI_FEATURES_AND_GUARDRAILS.md`
+2. `/docs/10_BROWSER_AUTOMATION_AND_SUPPLIER_WORKFLOWS.md`
+3. `/docs/11_REPORTING_REQUIREMENTS.md`
+4. `/docs/12_FINANCIAL_MANAGEMENT_REQUIREMENTS.md`
+5. `/docs/13_DATA_GOVERNANCE_AND_AUDIT_LOGGING.md`
+6. `/docs/14_DEVELOPMENT_STANDARDS.md`
+7. `/docs/15_TESTING_AND_QA_PLAN.md`
+8. `/docs/16_DEPLOYMENT_AND_ENVIRONMENT.md`
+9. `/docs/17_PHASE_2_AUTOMATION_PLAN.md`
+10. `/docs/18_PHASE_3_STRATEGIC_GROWTH_PLAN.md`
+
+Read the relevant document and summarize before building any post-MVP feature it covers.
+
+---
+
+## 12. Post-MVP Build Discipline
+
+Correct sequence after MVP:
+
+1. Stabilize.
+2. Validate data against source systems.
+3. Harden permissions, audit logs, error handling.
+4. Improve task and exception workflows.
+5. Add controlled supplier automation.
+6. Expand financial intelligence and reporting.
+7. Expand AI analyst capabilities.
+8. Add customer reactivation and marketing automation.
+9. Add investor relations, capital raising, and M&A modules.
+10. Add advanced forecasting and scenario planning.
+
+Do not mix supplier automation, financial reporting, and AI action workflows in a single change.
+
+---
+
+## 13. AI Rules After MVP
+
+- AI may summarize, classify, draft, explain, compare, analyze, and recommend.
+- AI must NOT execute sensitive actions without explicit approval.
+- AI must NOT send customer communications, alter product prices, place supplier orders, update financial records, or export sensitive data unless an approved workflow permits it.
+- AI outputs used for management, financial, investor, or customer-facing purposes must be logged via `AiOutput`.
+- AI outputs should identify source data, assumptions, limitations, and confidence where practical.
+- AI must distinguish facts from assumptions and recommendations.
+- All AI calls run server-side; never expose model API keys client-side.
+
+---
+
+## 14. Supplier Automation Rules After MVP
+
+- Supplier automation begins as human-in-the-loop.
+- Use Playwright (or equivalent) running in a server-side worker, never in a browser request.
+- Do not bypass security controls or violate supplier portal terms.
+- Never store credentials in code or logs — use the encrypted vault.
+- Capture evidence (screenshots, response payloads) for important automation steps.
+- Stop automation and create an Exception when supplier price, stock, SKU, shipping, address, tax, or product details do not match expectations.
+- Full automation may only be enabled after staged testing, management approval, documented thresholds, AND the relevant FeatureFlag is on.
+
+---
+
+## 15. Reporting Rules After MVP
+
+- QuickBooks remains the accounting source of truth.
+- The Command Center may create management-adjusted reporting, but adjustments must be visible, documented, and auditable.
+- AI may draft commentary but should not replace management review.
+- Board, investor, lender, and financing reports must go through approval before distribution.
+- Exported reports include: title, version, generation date, data period, source systems, approval status.
+
+---
+
+## 16. Development Rules After MVP
+
+- Implement advanced features through small, testable tickets.
+- Do not mix supplier automation, financial reporting, and AI action workflows in the same change.
+- Use feature flags (`src/lib/feature-flags.ts` + `FeatureFlag` model) for high-risk capabilities. Required flags before turning on:
+  - `supplier.automation` for any supplier portal write
+  - `external.writebacks` for BigCommerce / QuickBooks updates
+  - `ai.actions` for any AI-initiated mutation
+  - `mailchimp.send` for outbound campaigns
+- Add tests before enabling external write-back workflows.
+- Add audit logs (`writeAudit`) before enabling sensitive actions.
+- Prefer mock/sandbox data until live credentials are confirmed.
+- Treat real customer, financial, investor, supplier data with the security and permission model.
+
+---
+
+## 17. Source-of-Truth Map (authoritative)
+
+| Domain | Source of Truth | Command Center role |
+|---|---|---|
+| Accounting / financial records | **QuickBooks Online** | Import, normalize, summarize, comment, version |
+| E-commerce orders / products / customers | **BigCommerce** | Import, monitor, exception-tag, route to workflows |
+| Email subscription + campaign metrics | **Mailchimp** | Import, segment, draft, approval-gate sends |
+| Website analytics | **GA4** | Import, dashboard, attribute |
+| Supplier prices + stock + portal data | **Supplier portals** | Capture snapshots via human-in-the-loop automation |
+| Tasks, approvals, exceptions, AI outputs, reports | **Command Center (this app)** | Primary source |
+| Investors, opportunities, M&A targets | **Command Center** | Primary source unless replaced by external CRM |
+
+Never write back to a source-of-truth system without an Approval row + relevant FeatureFlag on + audit log entry.
+

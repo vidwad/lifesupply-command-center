@@ -70,6 +70,9 @@ async function finishRun(
     recordsUpdated: number;
     recordsFailed: number;
     errorSummary?: string | null;
+    syncType: string;
+    integrationType: string;
+    actorId?: string;
   },
 ) {
   await prisma.integrationSyncLog.update({
@@ -84,6 +87,27 @@ async function finishRun(
       errorSummary: counts.errorSummary ?? null,
     },
   });
+
+  // Raise a centrally-tracked Exception on partial/full failure so the
+  // operations queue surfaces import problems alongside order/supplier issues.
+  if (status !== "completed" && counts.recordsFailed > 0) {
+    const { createException } = await import("@/server/services/exceptions");
+    await createException(
+      {
+        exceptionType: "integration_sync",
+        severity: status === "failed" ? "high" : "medium",
+        title: `${counts.integrationType} ${counts.syncType} import had ${counts.recordsFailed} failed row${
+          counts.recordsFailed === 1 ? "" : "s"
+        }`,
+        description: counts.errorSummary ?? null,
+        entityType: "integration_sync_log",
+        entityId: syncLogId,
+        recurringKey: `${counts.integrationType}:${counts.syncType}:row_failures`,
+        source: counts.integrationType,
+      },
+      counts.actorId ? { id: counts.actorId } : undefined,
+    );
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -187,6 +211,9 @@ export async function importBigCommerceCustomers(args: {
     recordsUpdated: updated,
     recordsFailed: failed,
     errorSummary: allWarnings.slice(0, 10).join("\n") || null,
+    syncType: "customers",
+    integrationType: "bigcommerce",
+    actorId: args.actor.id,
   });
 
   await writeAudit({
@@ -307,6 +334,9 @@ export async function importBigCommerceProducts(args: {
     recordsUpdated: updated,
     recordsFailed: failed,
     errorSummary: allWarnings.slice(0, 10).join("\n") || null,
+    syncType: "products",
+    integrationType: "bigcommerce",
+    actorId: args.actor.id,
   });
 
   await writeAudit({
@@ -427,6 +457,9 @@ export async function importBigCommerceOrders(args: {
     recordsUpdated: updated,
     recordsFailed: failed,
     errorSummary: allWarnings.slice(0, 10).join("\n") || null,
+    syncType: "orders",
+    integrationType: "bigcommerce",
+    actorId: args.actor.id,
   });
 
   await writeAudit({

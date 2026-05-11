@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 import { seedAuth } from "./seed/auth";
+import { seedGovernance } from "./seed/governance";
 import { seedManagement } from "./seed/management";
 import { seedOperating } from "./seed/operating";
 import { seedStrategic } from "./seed/strategic";
@@ -12,6 +13,7 @@ async function main() {
   console.log("Seeding LifeSupply Command Center database...\n");
 
   const admin = await seedAuth(prisma);
+  await seedGovernance(prisma);
   await seedOperating(prisma);
   await seedTransactions(prisma);
   await seedManagement(prisma);

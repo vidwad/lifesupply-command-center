@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Key, ScrollText, ShieldCheck, Sparkles, Store, Upload, Users } from "lucide-react";
+import { Building2, Flag, Key, ScrollText, ShieldCheck, Sparkles, Store, Upload, Users } from "lucide-react";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/PageHeader";
@@ -73,6 +73,13 @@ const TILES: AdminTile[] = [
     title: "AI Settings",
     description: "Default model, temperature, and prompt template library.",
     icon: Sparkles,
+    permission: PERMISSIONS.ADMIN_MANAGE_SYSTEM_SETTINGS,
+  },
+  {
+    href: "/admin/feature-flags",
+    title: "Feature Flags",
+    description: "Kill switches for supplier automation, AI actions, and write-backs.",
+    icon: Flag,
     permission: PERMISSIONS.ADMIN_MANAGE_SYSTEM_SETTINGS,
   },
   {

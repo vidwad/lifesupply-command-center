@@ -98,12 +98,21 @@ export default async function OperationsPage({
         description="Order queues, supplier exceptions, and operational accountability."
         breadcrumb={`${data.queue.length} ${data.queue.length === 1 ? "order" : "orders"} in ${activeTab?.label.toLowerCase() ?? "queue"}`}
         actions={
-          data.counts.flaggedExceptions > 0 && (
-            <Badge variant="destructive">
-              <AlertTriangle className="mr-1 h-3 w-3" />
-              {data.counts.flaggedExceptions} flagged
-            </Badge>
-          )
+          <div className="flex items-center gap-2">
+            {data.counts.flaggedExceptions > 0 && (
+              <Badge variant="destructive">
+                <AlertTriangle className="mr-1 h-3 w-3" />
+                {data.counts.flaggedExceptions} flagged
+              </Badge>
+            )}
+            <Link
+              href="/operations/exceptions"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Exception queue
+            </Link>
+          </div>
         }
       />
 

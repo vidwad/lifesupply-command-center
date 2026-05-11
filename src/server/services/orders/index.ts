@@ -207,6 +207,23 @@ export async function resolveOrderException(args: {
     data: { exceptionStatus: "resolved", exceptionReason: newReason },
   });
 
+  // Mirror resolution into the central Exception table so the operations
+  // exception queue stays in sync. Best-effort — if no row exists nothing
+  // happens, which is fine.
+  await prisma.exception.updateMany({
+    where: {
+      entityType: "order",
+      entityId: args.orderId,
+      status: { in: ["open", "investigating", "blocked"] },
+    },
+    data: {
+      status: "resolved",
+      resolvedById: args.actorUserId,
+      resolvedAt: new Date(),
+      resolutionNotes: trimmed,
+    },
+  });
+
   await writeAudit({
     actorUserId: args.actorUserId,
     action: "order.exception_resolved",
@@ -219,6 +236,7 @@ export async function resolveOrderException(args: {
   revalidatePath(`/orders/${updated.id}`);
   revalidatePath("/orders");
   revalidatePath("/operations");
+  revalidatePath("/operations/exceptions");
   return updated;
 }
 

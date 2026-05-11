@@ -166,6 +166,24 @@ export async function importQuickBooksPnl(args: {
     },
   });
 
+  // Surface failures into the operations exception queue for triage.
+  if (status !== "completed" && failed > 0) {
+    const { createException } = await import("@/server/services/exceptions");
+    await createException(
+      {
+        exceptionType: "financial_import",
+        severity: status === "failed" ? "high" : "medium",
+        title: `QuickBooks P&L import had ${failed} failed row${failed === 1 ? "" : "s"}`,
+        description: allWarnings.slice(0, 10).join("\n") || null,
+        entityType: "integration_sync_log",
+        entityId: run.id,
+        recurringKey: "quickbooks:pnl:row_failures",
+        source: "quickbooks",
+      },
+      { id: args.actor.id },
+    );
+  }
+
   await writeAudit({
     actorUserId: args.actor.id,
     action: "import.quickbooks.pnl",

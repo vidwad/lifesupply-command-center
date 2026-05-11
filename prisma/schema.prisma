@@ -44,6 +44,8 @@ model User {
   triggeredSyncs              IntegrationSyncLog[]  @relation("SyncTriggeredBy")
   investorInteractionsCreated InvestorInteraction[] @relation("InvestorInteractionCreator")
   ownedOpportunities          Opportunity[]         @relation("OpportunityOwner")
+  assignedExceptions          Exception[]           @relation("ExceptionAssignee")
+  resolvedExceptions          Exception[]           @relation("ExceptionResolver")
 
   @@index([status])
   @@map("users")
@@ -772,6 +774,21 @@ model AiOutput {
   tokenUsage       Json?
   status           AiOutputStatus  @default(generated)
   approvedById     String?
+  approvedAt       DateTime?
+  rejectionReason  String?         @db.Text
+  /// Per docs/09 §4.3 — surfaced in the UI alongside the output. Each item
+  /// is a short string. The model is instructed to emit these as part of
+  /// structured output where supported.
+  assumptions      String[]
+  warnings         String[]
+  /// 0..1 confidence reported by the model when available. Null when the
+  /// task does not produce a confidence score.
+  confidence       Float?
+  /// Pointer to the prompt template + version used so historical outputs
+  /// remain auditable after templates change.
+  promptTemplateId      String?
+  promptTemplateKey     String?
+  promptTemplateVersion Int?
   createdAt        DateTime        @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -779,6 +796,8 @@ model AiOutput {
   @@index([userId])
   @@index([module])
   @@index([createdAt])
+  @@index([status])
+  @@index([promptTemplateKey, promptTemplateVersion])
   @@map("ai_outputs")
 }
 
@@ -792,6 +811,8 @@ enum AiOutputStatus {
   reviewed
   approved
   rejected
+  superseded
+  archived
 }
 
 // =============================================================================
@@ -1089,4 +1110,131 @@ model SystemSetting {
   updatedById String?
 
   @@map("system_settings")
+}
+
+// =============================================================================
+// Feature Flags — kill switches for high-risk capabilities.
+// docs/14 §16, docs/16 §16. Default OFF for any flag governing external write,
+// supplier automation, AI actions, or outbound messaging.
+// =============================================================================
+
+model FeatureFlag {
+  key         String   @id
+  enabled     Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  @@map("feature_flags")
+}
+
+// =============================================================================
+// Exceptions — first-class entity for items that need attention.
+// docs/17 §6 + §15 #2/#3. Order-level exception fields remain on the Order
+// model; this table aggregates exceptions across orders, suppliers, products,
+// financials so they can be assigned, aged, and escalated centrally.
+// =============================================================================
+
+model Exception {
+  id           String            @id @default(cuid())
+  exceptionType ExceptionType
+  severity     ExceptionSeverity @default(medium)
+  status       ExceptionState    @default(open)
+  title        String
+  description  String?           @db.Text
+  /// What this exception is about. Examples:
+  /// "order"/"<order id>", "supplier"/"<supplier id>", "product"/"<product id>",
+  /// "financial_summary"/"<id>", "import"/"<sync log id>".
+  entityType   String?
+  entityId     String?
+  /// Stable key used to group recurring instances of the same problem.
+  /// Example: "supplier:BBM01:price_mismatch:SKU-123".
+  recurringKey String?
+  /// What raised this exception (manual, integration name, automation run).
+  source       String?
+  assignedToId String?
+  resolvedById String?
+  resolvedAt   DateTime?
+  resolutionNotes String? @db.Text
+  metadata     Json?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  assignedTo User? @relation("ExceptionAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  resolvedBy User? @relation("ExceptionResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status, severity])
+  @@index([exceptionType])
+  @@index([entityType, entityId])
+  @@index([recurringKey])
+  @@index([createdAt])
+  @@map("exceptions")
+}
+
+enum ExceptionType {
+  order_delay
+  order_payment
+  order_address
+  supplier_stock
+  supplier_price_mismatch
+  supplier_sku_mismatch
+  product_missing_cost
+  product_missing_image
+  product_low_margin
+  financial_import
+  ai_output_review
+  integration_sync
+  other
+}
+
+enum ExceptionSeverity {
+  low
+  medium
+  high
+  urgent
+}
+
+enum ExceptionState {
+  open
+  investigating
+  blocked
+  resolved
+  dismissed
+}
+
+// =============================================================================
+// Prompt Templates — versioned prompt library used by the AI service.
+// docs/14 §10 + docs/17 §15 #6. Each invocation should reference the template
+// id + version on the AiOutput row so historical outputs remain auditable
+// after templates are revised.
+// =============================================================================
+
+model PromptTemplate {
+  id              String            @id @default(cuid())
+  /// Stable lookup key — e.g. "dashboard_briefing", "analyst_query".
+  key             String
+  version         Int               @default(1)
+  name            String
+  description     String?
+  /// Default provider; the AI service may still route to another provider
+  /// based on settings or task hints.
+  provider        AiModelProvider   @default(anthropic)
+  modelHint       String?
+  systemPrompt    String            @db.Text
+  /// User-message template. May contain `{{variable}}` placeholders rendered
+  /// at runtime; rendering is done in the AI service, not the DB.
+  userTemplate    String            @db.Text
+  outputSchema    Json?
+  /// Tags used to gate the template — e.g. ["financial","customer"]. The AI
+  /// service combines these with the calling user's permissions before use.
+  contextTags     String[]
+  isActive        Boolean           @default(true)
+  createdById     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([key, version])
+  @@index([key])
+  @@index([isActive])
+  @@map("prompt_templates")
 }

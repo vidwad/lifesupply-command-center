@@ -232,11 +232,18 @@ async function decide(args: {
     throw new ApprovalPermissionError(before.approvalType);
   }
 
+  // Per docs/13 §10 a rejection must capture a reason so it remains
+  // explainable in audit. Approvals may proceed without notes.
+  const trimmedNotes = args.decisionNotes.trim();
+  if (args.decision === "rejected" && !trimmedNotes) {
+    throw new Error("A rejection reason is required.");
+  }
+
   const updated = await prisma.approval.update({
     where: { id: args.approvalId },
     data: {
       status: args.decision,
-      decisionNotes: args.decisionNotes.trim() || null,
+      decisionNotes: trimmedNotes || null,
       approverId: args.actor.id,
       decidedAt: new Date(),
     },
