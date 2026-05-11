@@ -11,6 +11,8 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { getReportById, type ReportSnapshot } from "@/server/services/reports";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
+import { RequestApprovalButton } from "./approval-button";
+
 export const dynamic = "force-dynamic";
 
 const STATUS_BADGE: Record<string, "success" | "secondary" | "warning" | "outline"> = {
@@ -37,6 +39,9 @@ export default async function ReportDetailPage({ params }: Props) {
 
   const snapshot = report.metadata as unknown as ReportSnapshot | null;
   const canExport = userHasPermission(user, PERMISSIONS.REPORTS_EXPORT);
+  const canRequestApproval = userHasPermission(user, PERMISSIONS.REPORTS_GENERATE);
+  const isApprovableState =
+    report.status === "generated" || report.status === "under_review";
 
   return (
     <div>
@@ -49,7 +54,7 @@ export default async function ReportDetailPage({ params }: Props) {
           </Link>
         }
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Badge variant={STATUS_BADGE[report.status] ?? "outline"}>
               {report.status.replace("_", " ")}
             </Badge>
@@ -64,6 +69,12 @@ export default async function ReportDetailPage({ params }: Props) {
                   <Download className="h-4 w-4" /> Download PDF
                 </a>
               </Button>
+            )}
+            {canRequestApproval && (
+              <RequestApprovalButton
+                reportId={report.id}
+                disabled={!isApprovableState}
+              />
             )}
           </div>
         }

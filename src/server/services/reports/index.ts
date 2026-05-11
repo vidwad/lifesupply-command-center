@@ -292,6 +292,131 @@ export async function generateMonthlyManagementReport(args: {
   return report;
 }
 
+// -----------------------------------------------------------------------------
+// Report status transitions — approve / distribute / archive
+//
+// Per docs/11 §3 + CLAUDE.md §15, board / investor / lender reports must go
+// through approval before distribution. We model that as:
+//   draft → generated → under_review → approved → archived
+// `setReportStatus` does the transition + audit. `requestReportApproval`
+// raises an `Approval` row that surfaces in /approvals.
+// -----------------------------------------------------------------------------
+
+export class ReportTransitionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ReportTransitionError";
+  }
+}
+
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  draft: ["generated", "archived"],
+  generated: ["under_review", "approved", "archived"],
+  under_review: ["approved", "draft", "archived"],
+  approved: ["archived"],
+  archived: [],
+};
+
+export async function setReportStatus(args: {
+  reportId: string;
+  status: "draft" | "generated" | "under_review" | "approved" | "archived";
+  actor: { id: string };
+}) {
+  const before = await prisma.report.findUniqueOrThrow({
+    where: { id: args.reportId },
+    select: { id: true, status: true, title: true, reportType: true },
+  });
+  if (before.status === args.status) return before;
+  const allowed = ALLOWED_TRANSITIONS[before.status] ?? [];
+  if (!allowed.includes(args.status)) {
+    throw new ReportTransitionError(
+      `Cannot move report from "${before.status}" to "${args.status}". Allowed: ${allowed.join(", ") || "(none)"}`,
+    );
+  }
+  const updated = await prisma.report.update({
+    where: { id: args.reportId },
+    data: {
+      status: args.status,
+      ...(args.status === "approved"
+        ? { approvedById: args.actor.id, approvedAt: new Date() }
+        : {}),
+    },
+  });
+  await writeAudit({
+    actorUserId: args.actor.id,
+    action: `report.${args.status}`,
+    entityType: "report",
+    entityId: args.reportId,
+    beforeData: { status: before.status },
+    afterData: { status: args.status, reportType: before.reportType },
+  });
+  revalidatePath("/reports");
+  revalidatePath(`/reports/${args.reportId}`);
+  return updated;
+}
+
+/**
+ * Raise an Approval row for a report so it appears in /approvals. Used by
+ * the report detail page's "Request approval" button. Does NOT change the
+ * report status itself — that happens when an authorized user decides on
+ * the Approval row.
+ */
+export async function requestReportApproval(args: {
+  reportId: string;
+  requestedById: string;
+  notes?: string | null;
+}) {
+  const report = await prisma.report.findUniqueOrThrow({
+    where: { id: args.reportId },
+    select: { id: true, title: true, status: true },
+  });
+  if (report.status !== "generated" && report.status !== "under_review") {
+    throw new ReportTransitionError(
+      `Approval can only be requested for reports in "generated" or "under_review" state (current: "${report.status}").`,
+    );
+  }
+  const existing = await prisma.approval.findFirst({
+    where: {
+      approvalType: "report",
+      relatedEntityType: "Report",
+      relatedEntityId: report.id,
+      status: "pending",
+    },
+  });
+  if (existing) {
+    throw new ReportTransitionError("An approval request for this report is already pending.");
+  }
+  const approval = await prisma.approval.create({
+    data: {
+      approvalType: "report",
+      relatedEntityType: "Report",
+      relatedEntityId: report.id,
+      requestSummary: args.notes
+        ? `Approve report: ${report.title}\n\n${args.notes}`
+        : `Approve report: ${report.title}`,
+      requestedById: args.requestedById,
+      status: "pending",
+    },
+  });
+  // Also nudge the report into review state if it was still generated.
+  if (report.status === "generated") {
+    await prisma.report.update({
+      where: { id: report.id },
+      data: { status: "under_review" },
+    });
+  }
+  await writeAudit({
+    actorUserId: args.requestedById,
+    action: "report.approval_requested",
+    entityType: "report",
+    entityId: report.id,
+    afterData: { approvalId: approval.id },
+  });
+  revalidatePath("/approvals");
+  revalidatePath(`/reports/${report.id}`);
+  return approval;
+}
+
 function buildSummaryText(s: ReportSnapshot): string {
   const fmt = (n: number) =>
     n.toLocaleString("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 });

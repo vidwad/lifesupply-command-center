@@ -267,6 +267,31 @@ async function decide(args: {
     });
   }
 
+  // Side-effect: when a report approval is approved or rejected, transition
+  // the Report row. Approval moves it to "approved"; rejection moves it
+  // back to "draft" so the prepared can revise and re-request.
+  if (
+    before.approvalType === "report" &&
+    before.relatedEntityType === "Report" &&
+    before.relatedEntityId
+  ) {
+    if (args.decision === "approved") {
+      await prisma.report.update({
+        where: { id: before.relatedEntityId },
+        data: {
+          status: "approved",
+          approvedById: args.actor.id,
+          approvedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.report.update({
+        where: { id: before.relatedEntityId },
+        data: { status: "draft" },
+      });
+    }
+  }
+
   await writeAudit({
     actorUserId: args.actor.id,
     action: args.decision === "approved" ? "approval.approved" : "approval.rejected",
@@ -284,6 +309,10 @@ async function decide(args: {
   revalidatePath(`/approvals/${updated.id}`);
   if (before.relatedEntityType === "FinancialPeriod") revalidatePath("/financials");
   if (before.relatedEntityType === "Campaign") revalidatePath("/marketing");
+  if (before.relatedEntityType === "Report" && before.relatedEntityId) {
+    revalidatePath("/reports");
+    revalidatePath(`/reports/${before.relatedEntityId}`);
+  }
   return updated;
 }
 

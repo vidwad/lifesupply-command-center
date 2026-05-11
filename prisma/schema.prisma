@@ -46,6 +46,11 @@ model User {
   ownedOpportunities          Opportunity[]         @relation("OpportunityOwner")
   assignedExceptions          Exception[]           @relation("ExceptionAssignee")
   resolvedExceptions          Exception[]           @relation("ExceptionResolver")
+  approvedAdjustments         FinancialAdjustment[] @relation("AdjustmentApprover")
+  createdAdjustments          FinancialAdjustment[] @relation("AdjustmentCreator")
+  createdBudgets              Budget[]              @relation("BudgetCreator")
+  ownedCloseTasks             MonthlyCloseTask[]    @relation("CloseTaskOwner")
+  completedCloseTasks         MonthlyCloseTask[]    @relation("CloseTaskCompleter")
 
   @@index([status])
   @@map("users")
@@ -156,13 +161,16 @@ model Division {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  parentDivision     Division?          @relation("DivisionTree", fields: [parentDivisionId], references: [id], onDelete: SetNull)
-  childDivisions     Division[]         @relation("DivisionTree")
+  parentDivision     Division?             @relation("DivisionTree", fields: [parentDivisionId], references: [id], onDelete: SetNull)
+  childDivisions     Division[]            @relation("DivisionTree")
   stores             Store[]
   customers          Customer[]
   products           Product[]
   orders             Order[]
   financialSummaries FinancialSummary[]
+  financialAdjustments FinancialAdjustment[]
+  budgets            Budget[]
+  monthlyCloseTasks  MonthlyCloseTask[]
 
   @@map("divisions")
 }
@@ -594,7 +602,10 @@ model FinancialPeriod {
   createdAt  DateTime              @default(now())
   updatedAt  DateTime              @updatedAt
 
-  summaries FinancialSummary[]
+  summaries         FinancialSummary[]
+  adjustments       FinancialAdjustment[]
+  budgetLines       BudgetLine[]
+  monthlyCloseTasks MonthlyCloseTask[]
 
   @@index([startDate])
   @@index([status])
@@ -791,7 +802,8 @@ model AiOutput {
   promptTemplateVersion Int?
   createdAt        DateTime        @default(now())
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reports Report[]
 
   @@index([userId])
   @@index([module])
@@ -894,26 +906,39 @@ model Approval {
 // =============================================================================
 
 model Report {
-  id           String       @id @default(cuid())
-  title        String
-  reportType   String // daily_brief, monthly_management, board, investor, product_margin, supplier_performance, customer_reactivation, marketing_performance
-  periodStart  DateTime?    @db.Date
-  periodEnd    DateTime?    @db.Date
-  status       ReportStatus @default(draft)
-  preparedById String?
-  approvedById String?
-  fileId       String?
-  summary      String?      @db.Text
-  metadata     Json?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  title           String
+  reportType      String // daily_brief, monthly_management, board, investor, product_margin, supplier_performance, customer_reactivation, marketing_performance
+  periodStart     DateTime?    @db.Date
+  periodEnd       DateTime?    @db.Date
+  version         Int          @default(1)
+  status          ReportStatus @default(draft)
+  preparedById    String?
+  approvedById    String?
+  approvedAt      DateTime?
+  fileId          String?
+  /// Pointer to a ReportTemplate row when generated from one.
+  reportTemplateId      String?
+  reportTemplateKey     String?
+  reportTemplateVersion Int?
+  /// AI commentary attached at generation time, if any.
+  aiOutputId      String?
+  /// Source-system attribution per docs/11 §1: "Reports must identify data
+  /// sources." Examples: ["quickbooks:2026-04 P&L", "bigcommerce:orders"].
+  sourceReferences Json?
+  summary         String?      @db.Text
+  metadata        Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  preparedBy User? @relation("ReportPreparedBy", fields: [preparedById], references: [id], onDelete: SetNull)
-  approvedBy User? @relation("ReportApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  preparedBy User?     @relation("ReportPreparedBy", fields: [preparedById], references: [id], onDelete: SetNull)
+  approvedBy User?     @relation("ReportApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  aiOutput   AiOutput? @relation(fields: [aiOutputId], references: [id], onDelete: SetNull)
 
   @@index([reportType])
   @@index([status])
   @@index([periodStart])
+  @@index([reportTemplateKey, reportTemplateVersion])
   @@map("reports")
 }
 
@@ -1237,4 +1262,146 @@ model PromptTemplate {
   @@index([key])
   @@index([isActive])
   @@map("prompt_templates")
+}
+
+// =============================================================================
+// Financial Management — docs/12
+// Adjustments, budgets, forecasts, and monthly close tasks. QuickBooks remains
+// the accounting source of truth (CLAUDE.md §17); this layer is for the
+// management adjustments + reporting view sitting on top of QBO imports.
+// =============================================================================
+
+model FinancialAdjustment {
+  id                String         @id @default(cuid())
+  financialPeriodId String
+  divisionId        String?
+  category          String // ebitda_addback, normalization, one_time, owner_compensation, other
+  accountKey        String?
+  amount            Decimal        @db.Decimal(14, 2)
+  currency          String         @default("CAD")
+  description       String         @db.Text
+  approvalStatus    ApprovalStatus @default(pending)
+  approvedById      String?
+  approvedAt        DateTime?
+  createdById       String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  financialPeriod FinancialPeriod @relation(fields: [financialPeriodId], references: [id], onDelete: Cascade)
+  division        Division?       @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  approvedBy      User?           @relation("AdjustmentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  createdBy       User?           @relation("AdjustmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([financialPeriodId])
+  @@index([divisionId])
+  @@index([category])
+  @@map("financial_adjustments")
+}
+
+model Budget {
+  id          String   @id @default(cuid())
+  name        String
+  year        Int
+  divisionId  String?
+  currency    String   @default("CAD")
+  description String?
+  isActive    Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  division  Division?    @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  createdBy User?        @relation("BudgetCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  lines     BudgetLine[]
+
+  @@unique([year, divisionId, name])
+  @@index([year])
+  @@map("budgets")
+}
+
+model BudgetLine {
+  id        String   @id @default(cuid())
+  budgetId  String
+  periodId  String
+  /// Account category from the chart of accounts: "revenue", "cogs",
+  /// "operating_expenses", "ebitda", etc. Matches FinancialSummary columns.
+  accountKey String
+  amount    Decimal  @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+
+  budget Budget          @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  period FinancialPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetId, periodId, accountKey])
+  @@index([budgetId])
+  @@index([periodId])
+  @@map("budget_lines")
+}
+
+model MonthlyCloseTask {
+  id                String              @id @default(cuid())
+  financialPeriodId String
+  divisionId        String?
+  taskKey           String // standard close-task identifier, e.g. "bank_recon", "ap_recon"
+  title             String
+  description       String?
+  ownerId           String?
+  status            MonthlyCloseStatus  @default(pending)
+  dueDate           DateTime?
+  completedById     String?
+  completedAt       DateTime?
+  notes             String?             @db.Text
+  sortOrder         Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  financialPeriod FinancialPeriod @relation(fields: [financialPeriodId], references: [id], onDelete: Cascade)
+  division        Division?       @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  owner           User?           @relation("CloseTaskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  completedBy     User?           @relation("CloseTaskCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@unique([financialPeriodId, divisionId, taskKey])
+  @@index([financialPeriodId, status])
+  @@index([ownerId, status])
+  @@map("monthly_close_tasks")
+}
+
+enum MonthlyCloseStatus {
+  pending
+  in_progress
+  blocked
+  done
+  skipped
+}
+
+// =============================================================================
+// Report Templates — docs/11. Mirror of PromptTemplate for report generators.
+// The Report model already supports per-row versioning; ReportTemplate gives
+// us a versioned registry of report types (daily_brief, monthly_management,
+// supplier_performance, etc.) so generators can be swapped without code.
+// =============================================================================
+
+model ReportTemplate {
+  id          String   @id @default(cuid())
+  /// Stable lookup key — e.g. "monthly_management", "daily_brief".
+  key         String
+  version     Int      @default(1)
+  name        String
+  description String?
+  /// Optional PromptTemplate key for the AI commentary section.
+  aiPromptKey String?
+  /// Tags shown in the UI + used for filtering: ["financial", "investor"…]
+  contextTags String[]
+  /// JSON layout describing sections + data sources. The generator interprets
+  /// this; nothing is enforced at the DB level.
+  layout      Json?
+  isActive    Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([key, version])
+  @@index([key])
+  @@index([isActive])
+  @@map("report_templates")
 }

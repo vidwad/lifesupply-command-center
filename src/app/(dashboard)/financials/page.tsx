@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bot, Clock } from "lucide-react";
 
 import { DivisionComparisonChart } from "@/components/charts/DivisionComparisonChart";
@@ -96,10 +97,35 @@ export default async function FinancialsPage({
             <Badge variant={data.period.status === "open" ? "secondary" : "success"}>
               {data.period.status.replace("_", " ")}
             </Badge>
+            <Link
+              href="/financials/close"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Monthly close
+            </Link>
+            <Link
+              href="/financials/adjustments"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Adjustments
+            </Link>
+            <Link
+              href="/financials/budgets"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Budgets
+            </Link>
             {canExport && (
-              <ExportButton
-                href={`/api/exports/financials${params.period ? `?period=${params.period}` : ""}`}
-              />
+              <>
+                <ExportButton
+                  href={`/api/exports/financials${params.period ? `?period=${params.period}` : ""}`}
+                  label="Export CSV"
+                />
+                <ExportButton
+                  href={`/api/exports/financials/xlsx${params.period ? `?period=${params.period}` : ""}`}
+                  label="Export XLSX"
+                />
+              </>
             )}
           </div>
         }
