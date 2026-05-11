@@ -8,9 +8,11 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { listFeatureFlags } from "@/server/services/feature-flags";
+import { KILL_SWITCH_KEYS } from "@/server/services/feature-flags/kill-switch";
 import { requirePermission } from "@/server/permissions";
 
 import { FlagToggle } from "./flag-toggle";
+import { KillSwitchPanel } from "./kill-switch";
 
 export const metadata = { title: "Feature Flags" };
 export const dynamic = "force-dynamic";
@@ -19,6 +21,8 @@ export default async function FeatureFlagsPage() {
   await requirePermission(PERMISSIONS.ADMIN_MANAGE_SYSTEM_SETTINGS);
   const flags = await listFeatureFlags();
   const enabledCount = flags.filter((f) => f.enabled).length;
+  const killSet = new Set<string>(KILL_SWITCH_KEYS);
+  const riskyEnabledCount = flags.filter((f) => killSet.has(f.key) && f.enabled).length;
 
   return (
     <div>
@@ -38,6 +42,7 @@ export default async function FeatureFlagsPage() {
         }
       />
       <div className="space-y-4 p-6">
+        <KillSwitchPanel riskyEnabledCount={riskyEnabledCount} />
         <Card>
           <CardContent className="p-0">
             <DataTable className="border-0">

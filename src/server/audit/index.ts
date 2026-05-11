@@ -1,4 +1,5 @@
 import { prisma } from "@/server/db/client";
+import { captureException } from "@/server/logger/error-tracking";
 
 type AuditInput = {
   actorUserId?: string | null;
@@ -38,6 +39,9 @@ export async function writeAudit(input: AuditInput): Promise<void> {
       },
     });
   } catch (err) {
-    console.error("[audit] failed to write audit log", { action: input.action, err });
+    // Audit writes must never throw — they are observability, not control
+    // flow. Surface the failure through the structured logger + error
+    // tracker so the data isn't silently lost.
+    captureException(err, { action: input.action, where: "writeAudit" });
   }
 }

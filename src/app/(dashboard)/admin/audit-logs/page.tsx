@@ -12,7 +12,10 @@ import {
   listAuditLogEntityTypes,
   listAuditLogs,
 } from "@/server/services/audit-logs";
+import { getRetentionDays } from "@/server/services/audit-logs/retention";
 import { requirePermission } from "@/server/permissions";
+
+import { RunRetentionButton } from "./retention-button";
 
 export const metadata = { title: "Audit Logs" };
 export const dynamic = "force-dynamic";
@@ -155,6 +158,7 @@ export default async function AuditLogsPage({
             <ArrowLeft className="h-3 w-3" /> Admin
           </Link>
         }
+        actions={<RunRetentionButton retentionDays={getRetentionDays()} />}
       />
 
       <div className="space-y-4 p-6">
