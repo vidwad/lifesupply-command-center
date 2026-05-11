@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarRange } from "lucide-react";
 
@@ -39,14 +39,11 @@ export function DateRangePicker({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [from, setFrom] = useState(searchParams.get(fromParam) ?? "");
-  const [to, setTo] = useState(searchParams.get(toParam) ?? "");
-
-  // Keep state in sync with URL navigation.
-  useEffect(() => {
-    setFrom(searchParams.get(fromParam) ?? "");
-    setTo(searchParams.get(toParam) ?? "");
-  }, [searchParams, fromParam, toParam]);
+  const urlFrom = searchParams.get(fromParam) ?? "";
+  const urlTo = searchParams.get(toParam) ?? "";
+  // Local draft so the inputs feel responsive while typing; commit on blur.
+  const [from, setFrom] = useState(urlFrom);
+  const [to, setTo] = useState(urlTo);
 
   const apply = (nextFrom: string, nextTo: string) => {
     const next = new URLSearchParams(searchParams.toString());

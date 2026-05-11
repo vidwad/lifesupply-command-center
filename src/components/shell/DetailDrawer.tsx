@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -56,11 +56,6 @@ export function ControlledDetailDrawer({
   side?: "right" | "left";
   children: React.ReactNode;
 }) {
-  // Avoid SSR hydration mismatches when rendered in client.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side={side} title={title} description={description}>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatDateTime, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getReportById, type ReportSnapshot } from "@/server/services/reports";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,12 +30,13 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function ReportDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.REPORTS_VIEW);
+  const user = await requirePermission(PERMISSIONS.REPORTS_VIEW);
   const { id } = await params;
   const report = await getReportById(id);
   if (!report) notFound();
 
   const snapshot = report.metadata as unknown as ReportSnapshot | null;
+  const canExport = userHasPermission(user, PERMISSIONS.REPORTS_EXPORT);
 
   return (
     <div>
@@ -54,9 +55,16 @@ export default async function ReportDetailPage({ params }: Props) {
             </Badge>
             <Link href={`/reports/${report.id}/print`} target="_blank" rel="noopener noreferrer">
               <Button size="sm" variant="outline">
-                <Printer className="h-4 w-4" /> Print / PDF
+                <Printer className="h-4 w-4" /> Print view
               </Button>
             </Link>
+            {canExport && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={`/api/reports/${report.id}/pdf`}>
+                  <Download className="h-4 w-4" /> Download PDF
+                </a>
+              </Button>
+            )}
           </div>
         }
       />

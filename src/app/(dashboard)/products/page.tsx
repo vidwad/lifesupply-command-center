@@ -2,13 +2,14 @@ import Link from "next/link";
 import { Boxes, ImageOff, Star } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
+import { ExportButton } from "@/components/data/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { listProducts, type ListProductsFilters } from "@/server/services/products";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const metadata = { title: "Products & Catalog" };
 export const dynamic = "force-dynamic";
@@ -20,8 +21,9 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.PRODUCTS_VIEW);
+  const user = await requirePermission(PERMISSIONS.PRODUCTS_VIEW);
   const params = await searchParams;
+  const canExport = userHasPermission(user, PERMISSIONS.PRODUCTS_EXPORT);
 
   const filters: ListProductsFilters = {
     search: params.q?.trim() || undefined,
@@ -41,6 +43,7 @@ export default async function ProductsPage({
         title="Products & Catalog"
         description="Catalog quality, supplier mapping, margin, and featured selection."
         breadcrumb={`${products.length} ${products.length === 1 ? "product" : "products"}`}
+        actions={canExport ? <ExportButton href="/api/exports/products" /> : null}
       />
 
       <div className="space-y-4 p-6">

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { type Prisma } from "@prisma/client";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";

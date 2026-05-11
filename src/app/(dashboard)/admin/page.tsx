@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Key, ScrollText, ShieldCheck, Sparkles, Store, Users } from "lucide-react";
+import { Building2, Key, ScrollText, ShieldCheck, Sparkles, Store, Upload, Users } from "lucide-react";
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/PageHeader";
@@ -60,6 +60,13 @@ const TILES: AdminTile[] = [
     description: "Manage credentials per integration. Encrypted at rest in the vault.",
     icon: Key,
     permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
+  },
+  {
+    href: "/admin/import",
+    title: "Data import",
+    description: "Upload BigCommerce / QuickBooks CSV exports until live sync is wired.",
+    icon: Upload,
+    permission: PERMISSIONS.FINANCIALS_IMPORT,
   },
   {
     href: "/admin/ai-settings",

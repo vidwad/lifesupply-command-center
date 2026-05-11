@@ -4,6 +4,7 @@ import { DivisionComparisonChart } from "@/components/charts/DivisionComparisonC
 import { FinancialTrendChart } from "@/components/charts/FinancialTrendChart";
 import { ChartCard } from "@/components/data/ChartCard";
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
+import { ExportButton } from "@/components/data/ExportButton";
 import { KpiCard } from "@/components/data/KpiCard";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import { CircleDollarSign } from "lucide-react";
 import { formatCurrency, formatDateTime, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getFinancialDashboardData, listFinancialSelectors } from "@/server/services/financials";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const metadata = { title: "Financials" };
 export const dynamic = "force-dynamic";
@@ -33,8 +34,9 @@ export default async function FinancialsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.FINANCIALS_VIEW_SUMMARY);
+  const user = await requirePermission(PERMISSIONS.FINANCIALS_VIEW_SUMMARY);
   const params = await searchParams;
+  const canExport = userHasPermission(user, PERMISSIONS.FINANCIALS_EXPORT);
 
   const selectors = await listFinancialSelectors();
 
@@ -94,6 +96,11 @@ export default async function FinancialsPage({
             <Badge variant={data.period.status === "open" ? "secondary" : "success"}>
               {data.period.status.replace("_", " ")}
             </Badge>
+            {canExport && (
+              <ExportButton
+                href={`/api/exports/financials${params.period ? `?period=${params.period}` : ""}`}
+              />
+            )}
           </div>
         }
       />

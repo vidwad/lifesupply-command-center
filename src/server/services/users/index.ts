@@ -1,5 +1,5 @@
 import { hash } from "bcryptjs";
-import { Prisma, type UserStatus } from "@prisma/client";
+import { type Prisma, type UserStatus } from "@prisma/client";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";

@@ -2,13 +2,14 @@ import Link from "next/link";
 import { Users } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
+import { ExportButton } from "@/components/data/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { listCustomers, type ListCustomersFilters } from "@/server/services/customers";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const metadata = { title: "Customers" };
 export const dynamic = "force-dynamic";
@@ -37,8 +38,9 @@ export default async function CustomersPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.CUSTOMERS_VIEW);
+  const user = await requirePermission(PERMISSIONS.CUSTOMERS_VIEW);
   const params = await searchParams;
+  const canExport = userHasPermission(user, PERMISSIONS.CUSTOMERS_EXPORT);
 
   const filters: ListCustomersFilters = {
     customerType: TYPE_FILTERS.some((t) => t.value === params.type)
@@ -60,6 +62,13 @@ export default async function CustomersPage({
         title="Customers"
         description="B2B clinics, institutional buyers, and retail customers across all stores."
         breadcrumb={`${customers.length} ${customers.length === 1 ? "customer" : "customers"}`}
+        actions={
+          canExport ? (
+            <ExportButton
+              href={`/api/exports/customers${params.type || params.consent ? `?${new URLSearchParams({ ...(params.type && { type: params.type }), ...(params.consent && { consent: params.consent }) }).toString()}` : ""}`}
+            />
+          ) : null
+        }
       />
 
       <div className="space-y-4 p-6">
