@@ -4,9 +4,11 @@ import type { AiOutput } from "@prisma/client";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
-import { getAnthropicClient, resolveAnthropicModel } from "@/server/integrations/anthropic/client";
 import { getDashboardData } from "@/server/services/dashboard";
-import { renderPrompt } from "@/server/services/prompt-templates";
+
+import { aiCall } from "./call";
+
+export { AiNotConfiguredError, AiProviderNotConfiguredError } from "./errors";
 
 function buildBriefingContext(data: Awaited<ReturnType<typeof getDashboardData>>): string {
   const periodLabel = data.period?.name ?? "no open period";
@@ -95,35 +97,67 @@ function buildBriefingContext(data: Awaited<ReturnType<typeof getDashboardData>>
   return lines.join("\n");
 }
 
-export class AiNotConfiguredError extends Error {
-  constructor() {
-    super(
-      "AI provider is not configured. Set ANTHROPIC_API_KEY in your .env to enable live briefings.",
-    );
-    this.name = "AiNotConfiguredError";
+/**
+ * Strip dashboard sections the calling user is not authorized to feed to AI
+ * (docs/09 §5.2). Returns the same shape so `buildBriefingContext` can be
+ * reused, plus a list of section names that were redacted for use in
+ * AiOutput.warnings + audit metadata.
+ *
+ * Conservative defaults: if the user lacks `ai.use_financial_context`, all
+ * dollar figures are zeroed and the financial KPI deltas are wiped. If they
+ * lack `ai.use_customer_context`, top-product / low-margin / campaigns are
+ * removed. If they lack `ai.use_investor_context`, that does not affect the
+ * dashboard snapshot (investor data is handled in the opportunity analyzer).
+ *
+ * Note: we deliberately zero figures rather than throwing, so the AI gets a
+ * coherent (but redacted) snapshot. The model is also told via prompt rules
+ * to never invent figures, so this prevents leakage even if the model tries
+ * to interpolate.
+ */
+type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
+
+export function filterDashboardForAi(
+  data: DashboardData,
+  permissions: string[],
+): { data: DashboardData; redactedSections: string[] } {
+  const perms = new Set(permissions);
+  const canFinancial = perms.has("ai.use_financial_context");
+  const canCustomer = perms.has("ai.use_customer_context");
+  const redactedSections: string[] = [];
+
+  let next = data;
+  if (!canFinancial) {
+    const blankKpi = { current: 0, previous: null, deltaPct: null };
+    next = {
+      ...next,
+      revenue: blankKpi,
+      grossProfit: blankKpi,
+      grossMargin: { current: null, previous: null },
+      operatingIncome: blankKpi,
+      cash: { current: null },
+      workingCapital: { current: null },
+    };
+    redactedSections.push("financial KPIs");
   }
+  if (!canCustomer) {
+    next = {
+      ...next,
+      topProducts: [],
+      lowMarginProducts: [],
+      campaigns: [],
+      reactivation: { ...next.reactivation, candidateCount: 0, activeSegmentCount: 0 },
+    };
+    redactedSections.push("customer / product / campaign data");
+  }
+
+  return { data: next, redactedSections };
 }
 
 export async function generateDashboardBriefing(userId: string): Promise<AiOutput> {
-  const client = await getAnthropicClient();
-  if (!client) throw new AiNotConfiguredError();
-
   const data = await getDashboardData();
   const context = buildBriefingContext(data);
 
-  const rendered = await renderPrompt("dashboard_briefing", { context });
-  const model = await resolveAnthropicModel();
-  const response = await client.messages.create({
-    model,
-    max_tokens: 1024,
-    system: rendered.systemPrompt,
-    messages: [{ role: "user", content: rendered.userPrompt }],
-  });
-
-  const output = response.content
-    .map((b) => (b.type === "text" ? b.text : ""))
-    .join("\n")
-    .trim();
+  const result = await aiCall("dashboard_briefing", { context });
 
   const sourceReferences = {
     period: data.period?.name,
@@ -133,14 +167,6 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
     isStale: data.period == null,
   };
 
-  const tokenUsage = {
-    inputTokens: response.usage.input_tokens,
-    outputTokens: response.usage.output_tokens,
-  };
-
-  // The dashboard briefing prompt is plain-text. We surface a "stale data"
-  // warning at the AiOutput level when no period is open so consumers can
-  // flag it in the UI without having to inspect the snapshot themselves.
   const warnings: string[] = [];
   if (data.period == null) warnings.push("No open financial period — figures may be stale.");
   if (data.exceptions.length === 0 && data.operations.exceptionOrders > 0) {
@@ -150,20 +176,20 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
   const aiOutput = await prisma.aiOutput.create({
     data: {
       userId,
-      modelProvider: "anthropic",
-      modelName: response.model,
+      modelProvider: result.modelProvider,
+      modelName: result.modelName,
       module: "dashboard_briefing",
-      prompt: rendered.userPrompt,
-      output,
+      prompt: result.template.userPrompt,
+      output: result.output,
       sourceReferences,
-      tokenUsage,
+      tokenUsage: result.tokenUsage,
       status: "generated",
       assumptions: [],
       warnings,
       confidence: null,
-      promptTemplateId: rendered.templateId,
-      promptTemplateKey: rendered.templateKey,
-      promptTemplateVersion: rendered.templateVersion,
+      promptTemplateId: result.template.templateId,
+      promptTemplateKey: result.template.templateKey,
+      promptTemplateVersion: result.template.templateVersion,
     },
   });
 
@@ -174,10 +200,11 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
     entityId: aiOutput.id,
     afterData: {
       module: "dashboard_briefing",
-      model: response.model,
-      tokenUsage,
-      promptTemplateKey: rendered.templateKey,
-      promptTemplateVersion: rendered.templateVersion,
+      provider: result.modelProvider,
+      model: result.modelName,
+      tokenUsage: result.tokenUsage,
+      promptTemplateKey: result.template.templateKey,
+      promptTemplateVersion: result.template.templateVersion,
     },
   });
 
@@ -189,56 +216,49 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
 // AI Analyst — open Q&A grounded in the dashboard snapshot
 // -----------------------------------------------------------------------------
 
-export async function askAiAnalyst(args: { question: string; userId: string }): Promise<AiOutput> {
-  const client = await getAnthropicClient();
-  if (!client) throw new AiNotConfiguredError();
-
+export async function askAiAnalyst(args: {
+  question: string;
+  userId: string;
+  /** Permissions the calling user holds. Used to redact source data the
+   *  user is not authorized to see (docs/09 §5.2). */
+  userPermissions?: string[];
+}): Promise<AiOutput> {
   const trimmed = args.question.trim();
   if (!trimmed) throw new Error("Question is required.");
 
   const data = await getDashboardData();
-  const context = buildBriefingContext(data);
+  const filtered = filterDashboardForAi(data, args.userPermissions ?? []);
+  const context = buildBriefingContext(filtered.data);
 
-  const rendered = await renderPrompt("analyst_query", { context, question: trimmed });
-  const model = await resolveAnthropicModel();
-  const response = await client.messages.create({
-    model,
-    max_tokens: 1024,
-    system: rendered.systemPrompt,
-    messages: [{ role: "user", content: rendered.userPrompt }],
-  });
-
-  const output = response.content
-    .map((b) => (b.type === "text" ? b.text : ""))
-    .join("\n")
-    .trim();
+  const result = await aiCall("analyst_query", { context, question: trimmed });
 
   const warnings: string[] = [];
   if (data.period == null) warnings.push("No open financial period — answers may use stale data.");
+  if (filtered.redactedSections.length > 0) {
+    warnings.push(`Some sections were hidden from the AI per your role: ${filtered.redactedSections.join(", ")}.`);
+  }
 
   const aiOutput = await prisma.aiOutput.create({
     data: {
       userId: args.userId,
-      modelProvider: "anthropic",
-      modelName: response.model,
+      modelProvider: result.modelProvider,
+      modelName: result.modelName,
       module: "analyst_query",
       prompt: trimmed,
-      output,
+      output: result.output,
       sourceReferences: {
-        period: data.period?.name,
-        exceptionOrderNumbers: data.exceptions.map((e) => e.orderNumber),
+        period: filtered.data.period?.name,
+        exceptionOrderNumbers: filtered.data.exceptions.map((e) => e.orderNumber),
+        redactedSections: filtered.redactedSections,
       },
-      tokenUsage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-      },
+      tokenUsage: result.tokenUsage,
       status: "generated",
       assumptions: [],
       warnings,
       confidence: null,
-      promptTemplateId: rendered.templateId,
-      promptTemplateKey: rendered.templateKey,
-      promptTemplateVersion: rendered.templateVersion,
+      promptTemplateId: result.template.templateId,
+      promptTemplateKey: result.template.templateKey,
+      promptTemplateVersion: result.template.templateVersion,
     },
   });
 
@@ -249,10 +269,12 @@ export async function askAiAnalyst(args: { question: string; userId: string }): 
     entityId: aiOutput.id,
     afterData: {
       module: "analyst_query",
-      model: response.model,
+      provider: result.modelProvider,
+      model: result.modelName,
       questionPreview: trimmed.slice(0, 120),
-      promptTemplateKey: rendered.templateKey,
-      promptTemplateVersion: rendered.templateVersion,
+      promptTemplateKey: result.template.templateKey,
+      promptTemplateVersion: result.template.templateVersion,
+      redactedSections: filtered.redactedSections,
     },
   });
 
@@ -268,9 +290,6 @@ export async function analyzeOpportunity(args: {
   opportunityId: string;
   userId: string;
 }): Promise<AiOutput> {
-  const client = await getAnthropicClient();
-  if (!client) throw new AiNotConfiguredError();
-
   const opportunity = await prisma.opportunity.findUnique({
     where: { id: args.opportunityId },
     include: { acquisitionTarget: true, owner: { select: { name: true, email: true } } },
@@ -333,23 +352,8 @@ export async function analyzeOpportunity(args: {
     }
   }
   const context = lines.join("\n");
-  const rendered = await renderPrompt("opportunity_analysis", { context });
+  const result = await aiCall("opportunity_analysis", { context });
 
-  const model = await resolveAnthropicModel();
-  const response = await client.messages.create({
-    model,
-    max_tokens: 1024,
-    system: rendered.systemPrompt,
-    messages: [{ role: "user", content: rendered.userPrompt }],
-  });
-
-  const output = response.content
-    .map((b) => (b.type === "text" ? b.text : ""))
-    .join("\n")
-    .trim();
-
-  // Surface missing-data warnings up to the AiOutput level so reviewers
-  // see them in the UI without having to inspect the prompt.
   const warnings: string[] = [];
   if (opportunity.estimatedRevenueImpact == null) warnings.push("Revenue impact not supplied.");
   if (opportunity.estimatedMarginImpact == null) warnings.push("Margin impact not supplied.");
@@ -361,28 +365,25 @@ export async function analyzeOpportunity(args: {
   const aiOutput = await prisma.aiOutput.create({
     data: {
       userId: args.userId,
-      modelProvider: "anthropic",
-      modelName: response.model,
+      modelProvider: result.modelProvider,
+      modelName: result.modelName,
       module: "opportunity_analysis",
-      prompt: rendered.userPrompt,
-      output,
+      prompt: result.template.userPrompt,
+      output: result.output,
       sourceReferences: {
         opportunityId: opportunity.id,
         opportunityTitle: opportunity.title,
         opportunityType: opportunity.opportunityType,
         acquisitionTargetId: opportunity.acquisitionTarget?.id ?? null,
       },
-      tokenUsage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-      },
+      tokenUsage: result.tokenUsage,
       status: "generated",
       assumptions: [],
       warnings,
       confidence: null,
-      promptTemplateId: rendered.templateId,
-      promptTemplateKey: rendered.templateKey,
-      promptTemplateVersion: rendered.templateVersion,
+      promptTemplateId: result.template.templateId,
+      promptTemplateKey: result.template.templateKey,
+      promptTemplateVersion: result.template.templateVersion,
     },
   });
 
@@ -393,10 +394,11 @@ export async function analyzeOpportunity(args: {
     entityId: opportunity.id,
     afterData: {
       module: "opportunity_analysis",
-      model: response.model,
+      provider: result.modelProvider,
+      model: result.modelName,
       aiOutputId: aiOutput.id,
-      promptTemplateKey: rendered.templateKey,
-      promptTemplateVersion: rendered.templateVersion,
+      promptTemplateKey: result.template.templateKey,
+      promptTemplateVersion: result.template.templateVersion,
     },
   });
 

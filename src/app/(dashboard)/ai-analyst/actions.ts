@@ -19,7 +19,11 @@ export async function askAnalystAction(
   if (!question) return { status: "error", message: "Question is required." };
 
   try {
-    const result = await askAiAnalyst({ question, userId: user.id });
+    const result = await askAiAnalyst({
+      question,
+      userId: user.id,
+      userPermissions: user.permissions,
+    });
     return {
       status: "ok",
       question,
