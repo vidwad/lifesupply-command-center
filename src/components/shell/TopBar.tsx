@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CommandPaletteTrigger } from "./CommandPalette";
 import { ContextSelectors } from "./ContextSelectors";
 import { NotificationBell } from "./NotificationBell";
+import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 
 type Option = { value: string; label: string };
@@ -53,6 +54,7 @@ export function TopBar({
             </Link>
           </Button>
         )}
+        <ThemeToggle />
         <NotificationBell counts={notificationCounts} />
         <UserMenu
           name={user.name}

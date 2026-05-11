@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import "@/styles/globals.css";
 
 // Screen-optimized typography for a long-session management UI.
@@ -47,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${sans.variable} ${mono.variable}`}
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
