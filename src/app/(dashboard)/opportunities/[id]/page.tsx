@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, ExternalLink, Target } from "lucide-react";
+import { ArrowLeft, Bot, Building2, Clock, ExternalLink, Target } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/PageHeader";
-import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { formatCurrency, formatDate, formatDateTime, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import { getLatestOpportunityAnalysis } from "@/server/services/ai";
 import { getOpportunityById } from "@/server/services/opportunities";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
+
+import { AnalyzeOpportunityButton } from "./analyze-button";
 
 export const dynamic = "force-dynamic";
 
@@ -48,10 +51,13 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function OpportunityDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.OPPORTUNITIES_VIEW);
+  const user = await requirePermission(PERMISSIONS.OPPORTUNITIES_VIEW);
   const { id } = await params;
   const opportunity = await getOpportunityById(id);
   if (!opportunity) notFound();
+
+  const canAnalyze = userHasPermission(user, PERMISSIONS.OPPORTUNITIES_AI_ANALYZE);
+  const latestAnalysis = canAnalyze ? await getLatestOpportunityAnalysis(opportunity.id) : null;
 
   return (
     <div>
@@ -93,6 +99,46 @@ export default async function OpportunityDetailPage({ params }: Props) {
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">
                   {opportunity.strategicRationale}
                 </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {canAnalyze && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Bot className="h-4 w-4" /> AI strategic analysis
+                    </CardTitle>
+                    {latestAnalysis ? (
+                      <CardDescription className="mt-1 flex items-center gap-1 text-xs">
+                        <Clock className="h-3 w-3" /> Last run{" "}
+                        {formatDateTime(latestAnalysis.createdAt)} • {latestAnalysis.modelName}
+                      </CardDescription>
+                    ) : (
+                      <CardDescription className="text-xs">
+                        Generate a SWOT-style memo from the data on this page.
+                      </CardDescription>
+                    )}
+                  </div>
+                  <AnalyzeOpportunityButton
+                    opportunityId={opportunity.id}
+                    hasExisting={!!latestAnalysis}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {latestAnalysis ? (
+                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                    {latestAnalysis.output}
+                  </pre>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No analysis generated yet. Click &ldquo;Generate AI analysis&rdquo; to draft one
+                    — output is logged in the audit trail and visible at /automation.
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}

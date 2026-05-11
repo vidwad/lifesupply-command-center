@@ -277,6 +277,176 @@ export async function askAiAnalyst(args: { question: string; userId: string }): 
   return aiOutput;
 }
 
+// -----------------------------------------------------------------------------
+// Opportunity analysis — strategic memo on an Opportunity record
+// -----------------------------------------------------------------------------
+
+const OPPORTUNITY_SYSTEM_PROMPT = `You are the LifeSupply Command Center strategic analyst.
+
+The owner is evaluating a strategic opportunity (acquisition, supplier deal,
+cost reduction, marketing initiative, or similar). Produce a tight memo using
+ONLY the structured data provided.
+
+Voice: direct, owner-to-owner. Pragmatic, not promotional.
+
+Format the output as plain text with these EXACT sections, in this order:
+
+WHY THIS MATTERS
+- 1-2 sentences placing the opportunity in the LifeSupply / Wellmart context.
+
+KEY ASSUMPTIONS
+- 3-5 bullets stating the assumptions underpinning the financial estimates.
+
+RISKS
+- 3-5 bullets, ranked by severity. Reference supplier codes / order numbers
+  when relevant (e.g. concentration on BBM01).
+
+RECOMMENDED NEXT STEPS
+- 2-4 short, concrete bullets the owner can decide on or delegate this week.
+
+Rules:
+- Never invent numbers; only restate what was provided. Mark missing data as
+  "(not supplied)".
+- Distinguish facts from your interpretation.
+- Never instruct anyone to commit capital, sign contracts, or take external
+  action without explicit human approval.`;
+
+export async function analyzeOpportunity(args: {
+  opportunityId: string;
+  userId: string;
+}): Promise<AiOutput> {
+  const client = await getAnthropicClient();
+  if (!client) throw new AiNotConfiguredError();
+
+  const opportunity = await prisma.opportunity.findUnique({
+    where: { id: args.opportunityId },
+    include: { acquisitionTarget: true, owner: { select: { name: true, email: true } } },
+  });
+  if (!opportunity) throw new Error("Opportunity not found.");
+
+  const num = (d: unknown): string => {
+    if (d == null) return "(not supplied)";
+    return Number(d).toLocaleString("en-CA", {
+      style: "currency",
+      currency: "CAD",
+      maximumFractionDigits: 0,
+    });
+  };
+  const pct = (d: unknown): string => {
+    if (d == null) return "(not supplied)";
+    return `${(Number(d) * 100).toFixed(1)}%`;
+  };
+
+  const lines: string[] = [];
+  lines.push(`# Opportunity: ${opportunity.title}`);
+  lines.push("");
+  lines.push(`Type: ${opportunity.opportunityType}`);
+  lines.push(`Status: ${opportunity.status}`);
+  lines.push(`Priority: ${opportunity.priority ?? "(not set)"}`);
+  lines.push(`Risk rating: ${opportunity.riskRating ?? "(not set)"}`);
+  lines.push(`Owner: ${opportunity.owner?.name ?? opportunity.owner?.email ?? "(unassigned)"}`);
+  if (opportunity.dueDate) {
+    lines.push(`Due: ${opportunity.dueDate.toISOString().slice(0, 10)}`);
+  }
+  lines.push("");
+  lines.push("## Estimates");
+  lines.push(`- Revenue impact: ${num(opportunity.estimatedRevenueImpact)}`);
+  lines.push(`- Margin uplift: ${pct(opportunity.estimatedMarginImpact)}`);
+  lines.push(`- Cost / investment: ${num(opportunity.estimatedCost)}`);
+  if (opportunity.strategicRationale) {
+    lines.push("");
+    lines.push("## Strategic rationale");
+    lines.push(opportunity.strategicRationale);
+  }
+  if (opportunity.nextAction) {
+    lines.push("");
+    lines.push(`## Current next action: ${opportunity.nextAction}`);
+  }
+  if (opportunity.acquisitionTarget) {
+    const t = opportunity.acquisitionTarget;
+    lines.push("");
+    lines.push("## Acquisition target");
+    lines.push(`- Company: ${t.companyName}`);
+    if (t.geography) lines.push(`- Geography: ${t.geography}`);
+    lines.push(`- Revenue estimate: ${num(t.revenueEstimate)}`);
+    lines.push(`- EBITDA estimate: ${num(t.ebitdaEstimate)}`);
+    if (t.strategicFit) lines.push(`- Strategic fit: ${t.strategicFit}`);
+    if (t.integrationComplexity) lines.push(`- Integration complexity: ${t.integrationComplexity}`);
+    if (t.diligenceStatus) lines.push(`- Diligence status: ${t.diligenceStatus}`);
+    if (t.valuationNotes) {
+      lines.push("");
+      lines.push("### Valuation notes");
+      lines.push(t.valuationNotes);
+    }
+  }
+  const userPrompt = `${lines.join("\n")}\n\nProduce the memo.`;
+
+  const response = await client.messages.create({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 1024,
+    system: OPPORTUNITY_SYSTEM_PROMPT,
+    messages: [{ role: "user", content: userPrompt }],
+  });
+
+  const output = response.content
+    .map((b) => (b.type === "text" ? b.text : ""))
+    .join("\n")
+    .trim();
+
+  const aiOutput = await prisma.aiOutput.create({
+    data: {
+      userId: args.userId,
+      modelProvider: "anthropic",
+      modelName: response.model,
+      module: "opportunity_analysis",
+      prompt: userPrompt,
+      output,
+      sourceReferences: {
+        opportunityId: opportunity.id,
+        opportunityTitle: opportunity.title,
+        opportunityType: opportunity.opportunityType,
+        acquisitionTargetId: opportunity.acquisitionTarget?.id ?? null,
+      },
+      tokenUsage: {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      },
+      status: "generated",
+    },
+  });
+
+  await writeAudit({
+    actorUserId: args.userId,
+    action: "ai.opportunity_analyzed",
+    entityType: "Opportunity",
+    entityId: opportunity.id,
+    afterData: {
+      module: "opportunity_analysis",
+      model: response.model,
+      aiOutputId: aiOutput.id,
+    },
+  });
+
+  revalidatePath(`/opportunities/${opportunity.id}`);
+  return aiOutput;
+}
+
+export async function getLatestOpportunityAnalysis(opportunityId: string) {
+  const records = await prisma.aiOutput.findMany({
+    where: { module: "opportunity_analysis" },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+  // Filter by sourceReferences.opportunityId at the application layer (JSONB)
+  const match = records.find((r) => {
+    const refs = r.sourceReferences as { opportunityId?: string } | null;
+    return refs?.opportunityId === opportunityId;
+  });
+  return match ?? null;
+}
+
+// -----------------------------------------------------------------------------
+
 export async function listRecentAiOutputs(opts: { module?: string; limit?: number } = {}) {
   return prisma.aiOutput.findMany({
     where: opts.module ? { module: opts.module } : undefined,
