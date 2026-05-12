@@ -11,6 +11,7 @@ import { vaultEnabled } from "@/server/security/secrets";
 import { requirePermission } from "@/server/permissions";
 
 import { IntegrationFieldForm } from "./integration-secret-form";
+import { TestConnectionButton } from "./test-connection-button";
 
 export const metadata = { title: "API & Integrations" };
 export const dynamic = "force-dynamic";
@@ -139,7 +140,8 @@ export default async function IntegrationsSettingsPage() {
                 </div>
                 {i.notes && <CardDescription className="text-xs italic">{i.notes}</CardDescription>}
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="space-y-4 pt-0">
+                <TestConnectionButton integrationId={i.id} />
                 {i.fields.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     This integration has no credential fields.
