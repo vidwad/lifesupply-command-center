@@ -394,6 +394,56 @@ export async function resolveCredentialsBundle(
   return Object.keys(out).length > 0 ? out : null;
 }
 
+/**
+ * Resolve every credential field for a SPECIFIC integration connection
+ * (looked up by ID). Use this for multi-instance integration types where
+ * one type has many connections (e.g. BigCommerce ×3, GA4 ×2). Env vars
+ * still take precedence over the per-connection vault entry, mirroring
+ * the resolveCredential() rule.
+ */
+export async function resolveCredentialsBundleForConnection(
+  connectionId: string,
+): Promise<Record<string, string> | null> {
+  const record = await prisma.integrationConnection.findUnique({
+    where: { id: connectionId },
+    select: { integrationType: true, credentials: true },
+  });
+  if (!record) return null;
+
+  const fields = INTEGRATION_FIELDS[record.integrationType];
+  if (!fields || fields.length === 0) return null;
+
+  const credentials = readCredentials(record.credentials);
+  const out: Record<string, string> = {};
+
+  for (const field of fields) {
+    if (field.envVarName) {
+      const fromEnv = process.env[field.envVarName];
+      if (fromEnv) {
+        out[field.name] = fromEnv;
+        continue;
+      }
+    }
+    const encrypted = credentials[field.name];
+    if (!encrypted || !vaultEnabled()) continue;
+    try {
+      out[field.name] = decryptSecret(encrypted);
+    } catch (err) {
+      if (err instanceof SecretVaultDecryptError) {
+        console.error(
+          `[integrations] Failed to decrypt ${record.integrationType}.${field.name} on connection ${connectionId}:`,
+          err.cause,
+        );
+        continue;
+      }
+      if (err instanceof SecretVaultNotConfiguredError) continue;
+      throw err;
+    }
+  }
+
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 // -----------------------------------------------------------------------------
 // Mutations — gated by ADMIN_MANAGE_INTEGRATIONS at the action layer
 // -----------------------------------------------------------------------------
