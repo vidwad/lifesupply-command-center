@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Key, Lock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, Key, Lock, ShieldCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -112,6 +112,35 @@ export default async function IntegrationsSettingsPage() {
                 , every set / clear is audit-logged. Plaintext is never returned by the API or
                 rendered after save — only the last 4 characters are shown.
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-success/30 bg-success/5">
+          <CardContent className="flex items-start gap-3 py-4 text-sm">
+            <Download className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">
+                Customer export — what's included
+              </p>
+              <p className="text-xs text-muted-foreground">
+                "Download enriched customers (.csv)" produces 26 columns per row including
+                lifetime spend, AOV, recency cohort (0-30 / 31-90 / 91-180 / 181-365 / 365+ /
+                never), customer lifespan, order frequency, funnel gap, largest single order,
+                payment methods, B2B / tax-exempt detection, plus the usual identity + last
+                order fields. Includes guest checkouts (matched by billing email and
+                deduplicated against registered emails).
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Need <strong>per-order product mix</strong>, <strong>refund history</strong>,{" "}
+                <strong>category names</strong>, or <strong>wishlists / abandoned carts</strong>?
+                Those require thousands of additional API calls per store and are too heavy for
+                this worker. Use the local Python tool at{" "}
+                <code className="rounded bg-muted px-1">bc-customer-enrichment/</code>:
+              </p>
+              <pre className="rounded-md border bg-muted/40 p-2 text-xs">
+                {`python -m bc_enrichment.cli --store all \\\n  --include-products --include-refunds --include-engagement -v`}
+              </pre>
             </div>
           </CardContent>
         </Card>

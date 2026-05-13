@@ -101,7 +101,7 @@ export function DownloadCustomersButton({ integrationId, integrationName }: Prop
         )}
         {state.kind === "loading"
           ? `Pulling… ${state.elapsedSec}s`
-          : "Download customers (.csv)"}
+          : "Download enriched customers (.csv)"}
       </Button>
 
       {state.kind === "fail" && (
