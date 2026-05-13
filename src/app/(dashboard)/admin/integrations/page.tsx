@@ -10,6 +10,7 @@ import { listIntegrationSettings } from "@/server/services/integrations";
 import { vaultEnabled } from "@/server/security/secrets";
 import { requirePermission } from "@/server/permissions";
 
+import { DownloadCustomersButton } from "./download-customers-button";
 import { IntegrationFieldForm } from "./integration-secret-form";
 import { TestConnectionButton } from "./test-connection-button";
 
@@ -144,13 +145,7 @@ export default async function IntegrationsSettingsPage() {
                 <div className="flex flex-wrap items-start gap-3">
                   <TestConnectionButton integrationId={i.id} />
                   {i.integrationType === "bigcommerce" && (
-                    <a
-                      href={`/api/integrations/${i.id}/export/customers/xlsx`}
-                      className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent hover:text-accent-foreground"
-                      download
-                    >
-                      Download customers (.xlsx)
-                    </a>
+                    <DownloadCustomersButton integrationId={i.id} integrationName={i.name} />
                   )}
                 </div>
                 {i.fields.length === 0 ? (
