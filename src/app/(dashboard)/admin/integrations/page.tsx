@@ -141,7 +141,18 @@ export default async function IntegrationsSettingsPage() {
                 {i.notes && <CardDescription className="text-xs italic">{i.notes}</CardDescription>}
               </CardHeader>
               <CardContent className="space-y-4 pt-0">
-                <TestConnectionButton integrationId={i.id} />
+                <div className="flex flex-wrap items-start gap-3">
+                  <TestConnectionButton integrationId={i.id} />
+                  {i.integrationType === "bigcommerce" && (
+                    <a
+                      href={`/api/integrations/${i.id}/export/customers/xlsx`}
+                      className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent hover:text-accent-foreground"
+                      download
+                    >
+                      Download customers (.xlsx)
+                    </a>
+                  )}
+                </div>
                 {i.fields.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     This integration has no credential fields.
