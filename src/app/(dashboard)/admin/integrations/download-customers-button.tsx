@@ -41,7 +41,7 @@ export function DownloadCustomersButton({ integrationId, integrationName }: Prop
     }, 1000);
 
     try {
-      const res = await fetch(`/api/integrations/${integrationId}/export/customers/xlsx`, {
+      const res = await fetch(`/api/integrations/${integrationId}/export/customers/csv`, {
         method: "GET",
         cache: "no-store",
       });
@@ -68,7 +68,7 @@ export function DownloadCustomersButton({ integrationId, integrationName }: Prop
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `bc-customers-${slugify(integrationName)}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.download = `bc-customers-${slugify(integrationName)}-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -101,7 +101,7 @@ export function DownloadCustomersButton({ integrationId, integrationName }: Prop
         )}
         {state.kind === "loading"
           ? `Pulling… ${state.elapsedSec}s`
-          : "Download customers (.xlsx)"}
+          : "Download customers (.csv)"}
       </Button>
 
       {state.kind === "fail" && (
