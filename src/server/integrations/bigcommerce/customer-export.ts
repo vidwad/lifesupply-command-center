@@ -24,7 +24,10 @@ const HARD_CAP_CUSTOMERS = 25_000;
 const HARD_CAP_ORDERS = 100_000;
 
 export type CustomerExportRow = {
-  customerId: number;
+  /** BC numeric customer id, or null for guest checkouts. */
+  customerId: number | null;
+  /** "registered" if from /v3/customers, "guest" if synthesized from orders. */
+  source: "registered" | "guest";
   email: string;
   firstName: string;
   lastName: string;
@@ -43,8 +46,14 @@ export type CustomerExportResult =
       ok: true;
       rows: CustomerExportRow[];
       stats: {
+        /** Registered customers from /v3/customers. */
         customers: number;
+        /** Unique guest emails synthesized from /v2/orders where customer_id = 0. */
+        guests: number;
+        /** Total orders scanned. */
         orders: number;
+        /** Subset of orders that were guest checkouts. */
+        guestOrders: number;
         durationMs: number;
         truncated: boolean;
       };
@@ -71,6 +80,14 @@ type BcOrder = {
   customer_id: number;
   date_created: string;
   total_inc_tax: string | number;
+  /** Present on v2 orders by default; some orders (POS, abandoned) may omit. */
+  billing_address?: {
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    company?: string;
+    phone?: string;
+  };
 };
 
 type BcCustomersV3Response = {
@@ -150,11 +167,24 @@ export async function exportBigCommerceCustomersByConnection(
   // ---- Step 2: page through orders (v2), keeping latest per customer ----
   // BC v2 orders supports `sort=date_created:desc`. We walk pages until we
   // either exhaust them, hit our hard cap, or finish covering every customer.
+  // Guest checkouts have customer_id = 0 — we track them separately keyed by
+  // billing email so they show up in the export too.
   const lastOrderByCustomer = new Map<number, BcOrder>();
   const totalOrdersByCustomer = new Map<number, number>();
+  const lastOrderByGuestEmail = new Map<string, BcOrder>();
+  const totalOrdersByGuestEmail = new Map<string, number>();
+  // Map of registered customer id → set of emails we've seen on their orders.
+  // Lets us skip guest-emit when an order's billing email actually belongs to
+  // a registered customer (defensive — same human, two records).
+  const registeredEmails = new Set<string>();
+  for (const c of customers.values()) {
+    if (c.email) registeredEmails.add(c.email.toLowerCase());
+  }
+
   let orderPage = 1;
   let ordersScanned = 0;
   let ordersTruncated = false;
+  let guestOrders = 0;
   while (ordersScanned < HARD_CAP_ORDERS) {
     const url = `${storeRoot}/v2/orders?limit=${PAGE_SIZE}&page=${orderPage}&sort=date_created:desc`;
     const r = await bcFetch(url, apiToken);
@@ -181,10 +211,25 @@ export async function exportBigCommerceCustomersByConnection(
         ordersTruncated = true;
         break;
       }
-      if (!o.customer_id) continue;
       // Sorted desc, so first sighting is the most recent.
-      if (!lastOrderByCustomer.has(o.customer_id)) lastOrderByCustomer.set(o.customer_id, o);
-      totalOrdersByCustomer.set(o.customer_id, (totalOrdersByCustomer.get(o.customer_id) ?? 0) + 1);
+      if (o.customer_id && o.customer_id > 0) {
+        if (!lastOrderByCustomer.has(o.customer_id)) lastOrderByCustomer.set(o.customer_id, o);
+        totalOrdersByCustomer.set(
+          o.customer_id,
+          (totalOrdersByCustomer.get(o.customer_id) ?? 0) + 1,
+        );
+        continue;
+      }
+      // Guest order — key by billing email if present.
+      const rawEmail = o.billing_address?.email?.trim().toLowerCase();
+      if (!rawEmail) continue;
+      if (registeredEmails.has(rawEmail)) continue; // covered by registered row
+      guestOrders++;
+      if (!lastOrderByGuestEmail.has(rawEmail)) lastOrderByGuestEmail.set(rawEmail, o);
+      totalOrdersByGuestEmail.set(
+        rawEmail,
+        (totalOrdersByGuestEmail.get(rawEmail) ?? 0) + 1,
+      );
     }
     if (ordersTruncated) break;
     if (orders.length < PAGE_SIZE) break;
@@ -197,6 +242,7 @@ export async function exportBigCommerceCustomersByConnection(
     const last = lastOrderByCustomer.get(c.id) ?? null;
     rows.push({
       customerId: c.id,
+      source: "registered",
       email: c.email ?? "",
       firstName: c.first_name ?? "",
       lastName: c.last_name ?? "",
@@ -208,6 +254,23 @@ export async function exportBigCommerceCustomersByConnection(
       lastOrderTotal: last ? Number(last.total_inc_tax) : null,
       lastOrderId: last?.id ?? null,
       totalOrders: totalOrdersByCustomer.get(c.id) ?? 0,
+    });
+  }
+  for (const [email, last] of lastOrderByGuestEmail.entries()) {
+    rows.push({
+      customerId: null,
+      source: "guest",
+      email,
+      firstName: last.billing_address?.first_name ?? "",
+      lastName: last.billing_address?.last_name ?? "",
+      company: last.billing_address?.company ?? "",
+      phone: last.billing_address?.phone ?? "",
+      customerGroupId: null,
+      registeredAt: null,
+      lastOrderDate: last.date_created,
+      lastOrderTotal: Number(last.total_inc_tax),
+      lastOrderId: last.id,
+      totalOrders: totalOrdersByGuestEmail.get(email) ?? 1,
     });
   }
 
@@ -224,7 +287,9 @@ export async function exportBigCommerceCustomersByConnection(
     rows,
     stats: {
       customers: customers.size,
+      guests: lastOrderByGuestEmail.size,
       orders: ordersScanned,
+      guestOrders,
       durationMs: Date.now() - startedAt,
       truncated: customersTruncated || ordersTruncated,
     },

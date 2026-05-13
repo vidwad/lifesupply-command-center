@@ -58,6 +58,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const buffer = await buildXlsxWorkbook({
     sheetName: "Customers",
     columns: [
+      { header: "Source", key: "source", width: 12, get: (r) => r.source },
       { header: "Customer ID", key: "customerId", width: 12, get: (r) => r.customerId },
       { header: "Email", key: "email", width: 32, get: (r) => r.email },
       { header: "First Name", key: "firstName", width: 16, get: (r) => r.firstName },
@@ -103,7 +104,10 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     afterData: {
       connectionName: conn.name,
       customers: result.stats.customers,
+      guests: result.stats.guests,
       orders: result.stats.orders,
+      guestOrders: result.stats.guestOrders,
+      rows: result.rows.length,
       durationMs: result.stats.durationMs,
       truncated: result.stats.truncated,
       bytes: buffer.length,
