@@ -13,7 +13,11 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import { listOrders, type ListOrdersFilters } from "@/server/services/orders";
+import {
+  countOrders,
+  listOrders,
+  type ListOrdersFilters,
+} from "@/server/services/orders";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { SyncButtons } from "@/components/sync/SyncButtons";
 
@@ -48,15 +52,23 @@ export default async function OrdersPage({
     exceptionsOnly: params.exceptions === "1",
   };
 
-  const orders = await listOrders(filters);
+  const [orders, totalOrders] = await Promise.all([
+    listOrders(filters),
+    countOrders(filters),
+  ]);
   const activeStatus = filters.status ?? "";
+  const showingCapped = totalOrders > orders.length;
 
   return (
     <div>
       <PageHeader
         title="Orders"
         description="Normalized order management across BigCommerce stores."
-        breadcrumb={`${orders.length} ${orders.length === 1 ? "order" : "orders"}`}
+        breadcrumb={
+          showingCapped
+            ? `${totalOrders.toLocaleString()} orders (showing first ${orders.length.toLocaleString()})`
+            : `${totalOrders.toLocaleString()} ${totalOrders === 1 ? "order" : "orders"}`
+        }
         actions={
           <div className="flex items-center gap-3">
             <SyncButtons entity="orders" />

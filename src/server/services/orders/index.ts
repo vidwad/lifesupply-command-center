@@ -64,6 +64,24 @@ export async function listOrders(filters: ListOrdersFilters = {}) {
 
 export type OrderListRow = Awaited<ReturnType<typeof listOrders>>[number];
 
+/** Total Order rows matching filters (NOT capped — used for the page header). */
+export async function countOrders(filters: ListOrdersFilters = {}): Promise<number> {
+  const where: Prisma.OrderWhereInput = {};
+  if (filters.status) where.status = filters.status;
+  if (filters.storeId) where.storeId = filters.storeId;
+  if (filters.exceptionsOnly) where.exceptionStatus = { in: ["flagged", "in_review"] };
+  if (filters.search) {
+    const q = filters.search.trim();
+    where.OR = [
+      { orderNumber: { contains: q, mode: "insensitive" } },
+      { customer: { email: { contains: q, mode: "insensitive" } } },
+      { customer: { companyName: { contains: q, mode: "insensitive" } } },
+      { customer: { lastName: { contains: q, mode: "insensitive" } } },
+    ];
+  }
+  return prisma.order.count({ where });
+}
+
 export async function getOrderById(id: string) {
   const order = await prisma.order.findUnique({
     where: { id },

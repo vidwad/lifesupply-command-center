@@ -53,6 +53,24 @@ export async function listCustomers(filters: ListCustomersFilters = {}) {
 
 export type CustomerListRow = Awaited<ReturnType<typeof listCustomers>>[number];
 
+/** Total Customer rows matching filters (NOT capped — used for the page header). */
+export async function countCustomers(filters: ListCustomersFilters = {}): Promise<number> {
+  const where: Prisma.CustomerWhereInput = { deletedAt: null };
+  if (filters.customerType) where.customerType = filters.customerType;
+  if (filters.storeId) where.storeId = filters.storeId;
+  if (filters.consent) where.consentStatus = filters.consent;
+  if (filters.search) {
+    const q = filters.search.trim();
+    where.OR = [
+      { email: { contains: q, mode: "insensitive" } },
+      { firstName: { contains: q, mode: "insensitive" } },
+      { lastName: { contains: q, mode: "insensitive" } },
+      { companyName: { contains: q, mode: "insensitive" } },
+    ];
+  }
+  return prisma.customer.count({ where });
+}
+
 export async function getCustomerById(id: string) {
   const customer = await prisma.customer.findUnique({
     where: { id },

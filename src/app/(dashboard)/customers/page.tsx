@@ -8,7 +8,11 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import { listCustomers, type ListCustomersFilters } from "@/server/services/customers";
+import {
+  countCustomers,
+  listCustomers,
+  type ListCustomersFilters,
+} from "@/server/services/customers";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
 import { SyncButtons } from "@/components/sync/SyncButtons";
@@ -55,15 +59,23 @@ export default async function CustomersPage({
     search: params.q?.trim() || undefined,
   };
 
-  const customers = await listCustomers(filters);
+  const [customers, totalCustomers] = await Promise.all([
+    listCustomers(filters),
+    countCustomers(filters),
+  ]);
   const activeType = filters.customerType ?? "";
+  const showingCapped = totalCustomers > customers.length;
 
   return (
     <div>
       <PageHeader
         title="Customers"
         description="B2B clinics, institutional buyers, and retail customers across all stores."
-        breadcrumb={`${customers.length} ${customers.length === 1 ? "customer" : "customers"}`}
+        breadcrumb={
+          showingCapped
+            ? `${totalCustomers.toLocaleString()} customers (showing first ${customers.length.toLocaleString()})`
+            : `${totalCustomers.toLocaleString()} ${totalCustomers === 1 ? "customer" : "customers"}`
+        }
         actions={
           <div className="flex items-center gap-3">
             <SyncButtons entity="customers" />
