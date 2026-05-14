@@ -25,6 +25,10 @@
 import { connect } from "inngest/connect";
 
 import { inngest } from "@/server/inngest/client";
+import {
+  syncBcCustomersFull,
+  syncBcCustomersIncremental,
+} from "@/server/inngest/functions/bigcommerce/sync-customers";
 import { helloWorld } from "@/server/inngest/functions/hello";
 
 async function main(): Promise<void> {
@@ -34,7 +38,8 @@ async function main(): Promise<void> {
         client: inngest,
         functions: [
           helloWorld,
-          // BC sync functions land here in upcoming commits.
+          syncBcCustomersFull,
+          syncBcCustomersIncremental,
         ],
       },
     ],
