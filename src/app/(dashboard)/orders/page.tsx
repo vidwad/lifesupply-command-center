@@ -15,6 +15,7 @@ import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { listOrders, type ListOrdersFilters } from "@/server/services/orders";
 import { requirePermission, userHasPermission } from "@/server/permissions";
+import { SyncButtons } from "@/components/sync/SyncButtons";
 
 export const metadata = { title: "Orders" };
 export const dynamic = "force-dynamic";
@@ -57,11 +58,14 @@ export default async function OrdersPage({
         description="Normalized order management across BigCommerce stores."
         breadcrumb={`${orders.length} ${orders.length === 1 ? "order" : "orders"}`}
         actions={
-          canExport ? (
-            <ExportButton
-              href={`/api/exports/orders${params.status || params.exceptions ? `?${new URLSearchParams({ ...(params.status && { status: params.status }), ...(params.exceptions && { exceptions: params.exceptions }) }).toString()}` : ""}`}
-            />
-          ) : null
+          <div className="flex items-center gap-3">
+            <SyncButtons entity="orders" />
+            {canExport ? (
+              <ExportButton
+                href={`/api/exports/orders${params.status || params.exceptions ? `?${new URLSearchParams({ ...(params.status && { status: params.status }), ...(params.exceptions && { exceptions: params.exceptions }) }).toString()}` : ""}`}
+              />
+            ) : null}
+          </div>
         }
       />
 

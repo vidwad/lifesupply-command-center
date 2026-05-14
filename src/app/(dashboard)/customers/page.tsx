@@ -11,7 +11,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { listCustomers, type ListCustomersFilters } from "@/server/services/customers";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
-import { SyncButtons } from "./sync-buttons";
+import { SyncButtons } from "@/components/sync/SyncButtons";
 
 export const metadata = { title: "Customers" };
 export const dynamic = "force-dynamic";
@@ -66,7 +66,7 @@ export default async function CustomersPage({
         breadcrumb={`${customers.length} ${customers.length === 1 ? "customer" : "customers"}`}
         actions={
           <div className="flex items-center gap-3">
-            <SyncButtons />
+            <SyncButtons entity="customers" />
             {canExport ? (
               <ExportButton
                 href={`/api/exports/customers${params.type || params.consent ? `?${new URLSearchParams({ ...(params.type && { type: params.type }), ...(params.consent && { consent: params.consent }) }).toString()}` : ""}`}

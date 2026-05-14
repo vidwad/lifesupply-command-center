@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * BC sync buttons for the /customers page.
+ * Generic BC sync buttons shared by /customers and /orders.
  *
  * Two actions, fans out to all configured BC stores in parallel:
- *   - Full sync (confirmation-gated; takes minutes; pulls every customer + order)
+ *   - Full sync (confirmation-gated; takes minutes)
  *   - Incremental sync (no confirm; pulls since last successful sync)
  *
- * After the API responds with N queued jobs, polls each one every 2s and
- * shows aggregated progress until all jobs finish.
+ * Pass `entity="customers"` or `entity="orders"` — that's the only
+ * difference between the two pages' button bars.
  */
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Loader2, RefreshCw, XCircle, Zap } from "lucide-react";
@@ -22,6 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+type Entity = "customers" | "orders";
 
 type DispatchedJob = {
   status: "queued" | "skipped";
@@ -66,7 +68,12 @@ type State =
 
 const POLL_INTERVAL_MS = 2_000;
 
-export function SyncButtons() {
+const ENTITY_LABEL: Record<Entity, string> = {
+  customers: "customer",
+  orders: "order",
+};
+
+export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
   const [state, setState] = useState<State>({ kind: "idle" });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -153,7 +160,7 @@ export function SyncButtons() {
   async function dispatch(mode: "full" | "incremental"): Promise<void> {
     setState({ kind: "dispatching", mode });
     try {
-      const res = await fetch(`/api/sync/bigcommerce/customers/${mode}`, {
+      const res = await fetch(`/api/sync/bigcommerce/${entity}/${mode}`, {
         method: "POST",
         cache: "no-store",
       });
@@ -220,13 +227,15 @@ export function SyncButtons() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Run a full BC sync?</DialogTitle>
+            <DialogTitle>Run a full BC {entity} sync?</DialogTitle>
             <DialogDescription>
-              Walks every order and customer from all configured BigCommerce
-              stores. Typically takes 2–10 minutes per store, depending on
-              history. Existing local fields like notes, customer type, and
-              reactivation score are preserved — only BC-owned fields and
-              order-derived aggregates are overwritten.
+              {entity === "customers"
+                ? "Walks every customer + order from all configured BigCommerce stores."
+                : "Walks every order from all configured BigCommerce stores."}{" "}
+              Typically takes 2–10 minutes per store, depending on history.
+              Existing local fields like notes, exception status, and{" "}
+              {entity === "customers" ? "reactivation score" : "estimated margins"}{" "}
+              are preserved — only BC-owned fields are overwritten.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -245,17 +254,25 @@ export function SyncButtons() {
         </DialogContent>
       </Dialog>
 
-      <SyncStatusPanel state={state} />
+      <SyncStatusPanel state={state} entity={entity} />
     </div>
   );
 }
 
-function SyncStatusPanel({ state }: { state: State }): React.JSX.Element | null {
+function SyncStatusPanel({
+  state,
+  entity,
+}: {
+  state: State;
+  entity: Entity;
+}): React.JSX.Element | null {
   if (state.kind === "idle" || state.kind === "dispatching") {
     return state.kind === "dispatching" ? (
       <span className="text-xs text-muted-foreground">Dispatching…</span>
     ) : null;
   }
+
+  const label = ENTITY_LABEL[entity];
 
   if (state.kind === "fail") {
     return (
@@ -278,9 +295,11 @@ function SyncStatusPanel({ state }: { state: State }): React.JSX.Element | null 
     return (
       <span className="text-xs text-muted-foreground">
         {state.mode === "full" ? "Full" : "Incremental"} sync —{" "}
-        {state.jobs.length} store{state.jobs.length === 1 ? "" : "s"},{" "}
-        {totalOrders.toLocaleString()} orders, {totalProcessed.toLocaleString()}{" "}
-        customers · {state.elapsedSec}s elapsed
+        {state.jobs.length} store{state.jobs.length === 1 ? "" : "s"}
+        {entity === "customers" && totalOrders > 0
+          ? `, ${totalOrders.toLocaleString()} orders scanned`
+          : ""}
+        , {totalProcessed.toLocaleString()} {label}s · {state.elapsedSec}s elapsed
       </span>
     );
   }

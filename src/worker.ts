@@ -29,6 +29,10 @@ import {
   syncBcCustomersFull,
   syncBcCustomersIncremental,
 } from "@/server/inngest/functions/bigcommerce/sync-customers";
+import {
+  syncBcOrdersFull,
+  syncBcOrdersIncremental,
+} from "@/server/inngest/functions/bigcommerce/sync-orders";
 import { helloWorld } from "@/server/inngest/functions/hello";
 
 async function main(): Promise<void> {
@@ -40,6 +44,8 @@ async function main(): Promise<void> {
           helloWorld,
           syncBcCustomersFull,
           syncBcCustomersIncremental,
+          syncBcOrdersFull,
+          syncBcOrdersIncremental,
         ],
       },
     ],
