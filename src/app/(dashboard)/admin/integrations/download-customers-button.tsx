@@ -109,7 +109,7 @@ export function DownloadCustomersButton({ integrationId, integrationName }: Prop
           <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
           <div className="space-y-0.5">
             <p className="font-medium text-destructive">Export failed ({state.status})</p>
-            <p className="text-muted-foreground break-all">{state.message}</p>
+            <p className="break-all text-muted-foreground">{state.message}</p>
           </div>
         </div>
       )}

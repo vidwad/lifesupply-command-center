@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  ALL_FEATURE_FLAG_KEYS,
-  FEATURE_FLAGS,
-  FEATURE_FLAG_DESCRIPTIONS,
-} from "./feature-flags";
+import { ALL_FEATURE_FLAG_KEYS, FEATURE_FLAGS, FEATURE_FLAG_DESCRIPTIONS } from "./feature-flags";
 
 describe("FEATURE_FLAGS catalog", () => {
   it("exposes a flag for each high-risk capability called out in CLAUDE.md §16", () => {

@@ -55,9 +55,7 @@ describe("csvResponse", () => {
     const res = csvResponse("test.csv", "a,b\n1,2\n");
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("text/csv; charset=utf-8");
-    expect(res.headers.get("content-disposition")).toBe(
-      'attachment; filename="test.csv"',
-    );
+    expect(res.headers.get("content-disposition")).toBe('attachment; filename="test.csv"');
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(await res.text()).toBe("a,b\n1,2\n");
   });

@@ -205,7 +205,8 @@ export async function setUserRoles(
 ): Promise<UserSummary> {
   if (id === actor.id) {
     // Prevent self-lockout: must keep at least one role.
-    if (roleIds.length === 0) throw new Error("You must keep at least one role assigned to yourself.");
+    if (roleIds.length === 0)
+      throw new Error("You must keep at least one role assigned to yourself.");
   }
   const before = await prisma.userRole.findMany({
     where: { userId: id },
@@ -245,7 +246,9 @@ export async function setUserRoles(
   return mapUser(updated);
 }
 
-export async function listAssignableRoles(): Promise<{ id: string; name: string; description: string | null }[]> {
+export async function listAssignableRoles(): Promise<
+  { id: string; name: string; description: string | null }[]
+> {
   return prisma.role.findMany({
     orderBy: [{ isSystemRole: "desc" }, { name: "asc" }],
     select: { id: true, name: true, description: true },

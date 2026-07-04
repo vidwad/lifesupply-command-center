@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  createCapitalRaiseAction,
-  type CapitalRaiseActionState,
-} from "../actions";
+import { createCapitalRaiseAction, type CapitalRaiseActionState } from "../actions";
 
 const ROUND_TYPES = [
   "seed",
@@ -53,14 +50,7 @@ export function CapitalRaiseCreateForm() {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="targetAmount">Target amount (CAD)</Label>
-          <Input
-            id="targetAmount"
-            name="targetAmount"
-            type="number"
-            min={1}
-            step={1000}
-            required
-          />
+          <Input id="targetAmount" name="targetAmount" type="number" min={1} step={1000} required />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="preMoneyValuation">Pre-money valuation (optional)</Label>

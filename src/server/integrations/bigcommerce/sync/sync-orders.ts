@@ -23,13 +23,8 @@ import { prisma } from "@/server/db/client";
 
 import type { Prisma } from "@prisma/client";
 
-import {
-  mapBcOrderToUpsert,
-  SOURCE_SYSTEM,
-  type BcOrderPayload,
-} from "./order-mapper";
+import { mapBcOrderToUpsert, SOURCE_SYSTEM, type BcOrderPayload } from "./order-mapper";
 
-const BC_BASE = "https://api.bigcommerce.com";
 const PAGE_SIZE = 250;
 const HARD_CAP_ORDERS = 500_000;
 
@@ -101,9 +96,7 @@ async function loadCustomerIdMap(storeId: string): Promise<Map<number, string>> 
   return map;
 }
 
-export async function syncBigCommerceOrders(
-  input: SyncOrdersInput,
-): Promise<SyncOrdersCounts> {
+export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<SyncOrdersCounts> {
   const counts: SyncOrdersCounts = {
     ordersScanned: 0,
     ordersUpserted: 0,
@@ -144,9 +137,7 @@ export async function syncBigCommerceOrders(
       if (counts.ordersScanned > HARD_CAP_ORDERS) break;
       try {
         const customerId =
-          bc.customer_id && bc.customer_id > 0
-            ? (customerIdMap.get(bc.customer_id) ?? null)
-            : null;
+          bc.customer_id && bc.customer_id > 0 ? (customerIdMap.get(bc.customer_id) ?? null) : null;
         if (bc.customer_id > 0 && !customerId) counts.ordersUnlinked++;
 
         const { create, update } = mapBcOrderToUpsert(bc, {

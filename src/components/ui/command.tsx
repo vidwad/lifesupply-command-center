@@ -5,12 +5,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -35,7 +30,13 @@ type CommandDialogProps = {
   children: React.ReactNode;
 };
 
-const CommandDialog = ({ open, onOpenChange, title, description, children }: CommandDialogProps) => (
+const CommandDialog = ({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+}: CommandDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="overflow-hidden p-0" hideClose>
       <DialogTitle className="sr-only">{title ?? "Command palette"}</DialogTitle>

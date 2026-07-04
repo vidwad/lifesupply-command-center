@@ -49,9 +49,7 @@ export type CloseTaskRow = {
   sortOrder: number;
 };
 
-function mapRow(
-  r: Prisma.MonthlyCloseTaskGetPayload<{ include: typeof INCLUDE }>,
-): CloseTaskRow {
+function mapRow(r: Prisma.MonthlyCloseTaskGetPayload<{ include: typeof INCLUDE }>): CloseTaskRow {
   return {
     id: r.id,
     taskKey: r.taskKey,
@@ -117,12 +115,14 @@ export async function seedCloseChecklist(args: {
   });
 }
 
-export async function listCloseTasks(filters: {
-  financialPeriodId?: string;
-  divisionId?: string | null;
-  status?: MonthlyCloseStatus;
-  ownerId?: string;
-} = {}): Promise<CloseTaskRow[]> {
+export async function listCloseTasks(
+  filters: {
+    financialPeriodId?: string;
+    divisionId?: string | null;
+    status?: MonthlyCloseStatus;
+    ownerId?: string;
+  } = {},
+): Promise<CloseTaskRow[]> {
   const where: Prisma.MonthlyCloseTaskWhereInput = {};
   if (filters.financialPeriodId) where.financialPeriodId = filters.financialPeriodId;
   if (filters.divisionId !== undefined) where.divisionId = filters.divisionId;

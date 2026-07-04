@@ -14,7 +14,10 @@ import { requirePermission } from "@/server/permissions";
 export const metadata = { title: "Campaign drafts" };
 export const dynamic = "force-dynamic";
 
-const STATUS_VARIANT: Record<string, "outline" | "warning" | "success" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "outline" | "warning" | "success" | "secondary" | "destructive"
+> = {
   draft: "outline",
   scheduled: "warning",
   sent: "success",
@@ -89,7 +92,7 @@ export default async function CampaignDraftsPage() {
                             {c.name}
                           </Link>
                           {c.subject && (
-                            <div className="text-xs text-muted-foreground line-clamp-1">
+                            <div className="line-clamp-1 text-xs text-muted-foreground">
                               {c.subject}
                             </div>
                           )}
@@ -110,7 +113,9 @@ export default async function CampaignDraftsPage() {
                         </TD>
                         <TD>
                           <Badge
-                            variant={EXPORT_VARIANT[c.mailchimpExportStatus ?? "not_queued"] ?? "outline"}
+                            variant={
+                              EXPORT_VARIANT[c.mailchimpExportStatus ?? "not_queued"] ?? "outline"
+                            }
                           >
                             {(c.mailchimpExportStatus ?? "not_queued").replace(/_/g, " ")}
                           </Badge>

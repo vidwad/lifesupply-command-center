@@ -1,10 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 
 import { seedBuiltinTemplates } from "../../src/server/services/prompt-templates";
-import {
-  ALL_FEATURE_FLAG_KEYS,
-  FEATURE_FLAG_DESCRIPTIONS,
-} from "../../src/lib/feature-flags";
+import { ALL_FEATURE_FLAG_KEYS, FEATURE_FLAG_DESCRIPTIONS } from "../../src/lib/feature-flags";
 
 /**
  * Seed Phase 2A governance rows:

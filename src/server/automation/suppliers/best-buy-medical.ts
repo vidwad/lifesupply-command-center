@@ -49,17 +49,12 @@ export class BbmAuthError extends Error {
   }
 }
 
-const FALLBACK_MOCK_URL =
-  process.env.NEXT_PUBLIC_APP_URL
-    ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/dev/mock-portals/bbm01/index.html`
-    : "http://localhost:3000/dev/mock-portals/bbm01/index.html";
+const FALLBACK_MOCK_URL = process.env.NEXT_PUBLIC_APP_URL
+  ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/dev/mock-portals/bbm01/index.html`
+  : "http://localhost:3000/dev/mock-portals/bbm01/index.html";
 
 export function resolvePortalUrl(creds: BbmCredentials): string {
-  return (
-    creds.loginUrl ??
-    process.env.SUPPLIER_PORTAL_BBM01_URL ??
-    FALLBACK_MOCK_URL
-  );
+  return creds.loginUrl ?? process.env.SUPPLIER_PORTAL_BBM01_URL ?? FALLBACK_MOCK_URL;
 }
 
 /**

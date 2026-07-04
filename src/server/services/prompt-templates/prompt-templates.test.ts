@@ -8,9 +8,9 @@ describe("applyPlaceholders", () => {
   });
 
   it("substitutes multiple occurrences of the same variable", () => {
-    expect(
-      applyPlaceholders("{{x}} and {{x}} again, but not {{y}}", { x: "1" }),
-    ).toBe("1 and 1 again, but not {{y}}");
+    expect(applyPlaceholders("{{x}} and {{x}} again, but not {{y}}", { x: "1" })).toBe(
+      "1 and 1 again, but not {{y}}",
+    );
   });
 
   it("leaves unknown variables in place for visibility", () => {

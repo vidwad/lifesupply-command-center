@@ -17,14 +17,20 @@ import { CommitmentCreateForm } from "./commitment-form";
 
 export const dynamic = "force-dynamic";
 
-const RAISE_STATUS_VARIANT: Record<string, "outline" | "warning" | "success" | "secondary" | "destructive"> = {
+const RAISE_STATUS_VARIANT: Record<
+  string,
+  "outline" | "warning" | "success" | "secondary" | "destructive"
+> = {
   planning: "outline",
   open: "warning",
   closing: "warning",
   closed: "success",
   cancelled: "secondary",
 };
-const COMMITMENT_VARIANT: Record<string, "outline" | "warning" | "success" | "secondary" | "destructive"> = {
+const COMMITMENT_VARIANT: Record<
+  string,
+  "outline" | "warning" | "success" | "secondary" | "destructive"
+> = {
   soft: "outline",
   signed: "warning",
   funded: "success",
@@ -117,7 +123,9 @@ export default async function CapitalRaiseDetailPage({ params }: Props) {
             <ArrowLeft className="h-3 w-3" /> Capital raises
           </Link>
         }
-        actions={<Badge variant={RAISE_STATUS_VARIANT[raise.status] ?? "outline"}>{raise.status}</Badge>}
+        actions={
+          <Badge variant={RAISE_STATUS_VARIANT[raise.status] ?? "outline"}>{raise.status}</Badge>
+        }
       />
 
       <div className="grid gap-6 p-6 lg:grid-cols-3">
@@ -153,7 +161,8 @@ export default async function CapitalRaiseDetailPage({ params }: Props) {
               </div>
               {raise.preMoneyValuation && (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Pre-money valuation: {formatCurrency(Number(raise.preMoneyValuation), raise.currency)}
+                  Pre-money valuation:{" "}
+                  {formatCurrency(Number(raise.preMoneyValuation), raise.currency)}
                 </p>
               )}
             </CardContent>
@@ -227,11 +236,7 @@ export default async function CapitalRaiseDetailPage({ params }: Props) {
                                 <form key={t.value} action={setCommitmentStatusAction}>
                                   <input type="hidden" name="id" value={c.id} />
                                   <input type="hidden" name="status" value={t.value} />
-                                  <input
-                                    type="hidden"
-                                    name="capitalRaiseId"
-                                    value={raise.id}
-                                  />
+                                  <input type="hidden" name="capitalRaiseId" value={raise.id} />
                                   <button
                                     type="submit"
                                     className="rounded border px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -326,7 +331,8 @@ function Stat({
   caption?: string;
   tone?: "success" | "muted";
 }) {
-  const color = tone === "success" ? "text-success" : tone === "muted" ? "text-muted-foreground" : "";
+  const color =
+    tone === "success" ? "text-success" : tone === "muted" ? "text-muted-foreground" : "";
   return (
     <div className="rounded-md border bg-card p-3">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>

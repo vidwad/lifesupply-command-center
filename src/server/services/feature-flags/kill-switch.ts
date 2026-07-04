@@ -30,7 +30,10 @@ export type KillSwitchResult = {
   alreadyOff: FeatureFlagKey[];
 };
 
-export async function tripKillSwitch(args: { actor: { id: string }; reason: string }): Promise<KillSwitchResult> {
+export async function tripKillSwitch(args: {
+  actor: { id: string };
+  reason: string;
+}): Promise<KillSwitchResult> {
   if (!args.reason.trim()) {
     throw new Error("A reason is required to trip the kill-switch (it lands in the audit log).");
   }

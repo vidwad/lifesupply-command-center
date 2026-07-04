@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  AutomationApprovalRequiredError,
-  AutomationDisabledError,
-} from "./runs";
+import { AutomationApprovalRequiredError, AutomationDisabledError } from "./runs";
 
 describe("automation error types", () => {
   it("AutomationDisabledError carries the message", () => {

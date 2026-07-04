@@ -24,12 +24,8 @@ function makeDashboard() {
       cancelledThisPeriod: 1,
     },
     trend: [],
-    topProducts: [
-      { id: "p", name: "Walker", sku: "WK-1", revenue: 500, quantity: 5 },
-    ],
-    lowMarginProducts: [
-      { id: "lm", name: "Cane", sku: "CN-1", revenue: 100, marginPct: 0.2 },
-    ],
+    topProducts: [{ id: "p", name: "Walker", sku: "WK-1", revenue: 500, quantity: 5 }],
+    lowMarginProducts: [{ id: "lm", name: "Cane", sku: "CN-1", revenue: 100, marginPct: 0.2 }],
     exceptions: [],
     priorityTasks: [],
     aiBriefing: null,

@@ -13,13 +13,7 @@ import { requirePermission } from "@/server/permissions";
 
 export type CloseActionState = { error?: string; ok?: string } | undefined;
 
-const VALID_STATUS: MonthlyCloseStatus[] = [
-  "pending",
-  "in_progress",
-  "blocked",
-  "done",
-  "skipped",
-];
+const VALID_STATUS: MonthlyCloseStatus[] = ["pending", "in_progress", "blocked", "done", "skipped"];
 
 export async function seedChecklistAction(formData: FormData): Promise<void> {
   const actor = await requirePermission(PERMISSIONS.FINANCIALS_REVIEW);

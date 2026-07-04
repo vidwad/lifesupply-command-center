@@ -65,9 +65,7 @@ export default async function UsersPage() {
                         <Link href={`/admin/users/${u.id}`} className="font-medium hover:underline">
                           {u.name ?? "(no name)"}
                         </Link>
-                        {u.title && (
-                          <div className="text-xs text-muted-foreground">{u.title}</div>
-                        )}
+                        {u.title && <div className="text-xs text-muted-foreground">{u.title}</div>}
                       </TD>
                       <TD className="text-muted-foreground">{u.email}</TD>
                       <TD>
@@ -81,9 +79,7 @@ export default async function UsersPage() {
                             </Badge>
                           ))}
                           {u.roles.length === 0 && (
-                            <span className="text-xs italic text-muted-foreground">
-                              No roles
-                            </span>
+                            <span className="text-xs italic text-muted-foreground">No roles</span>
                           )}
                         </div>
                         {u.permissionCount > 0 && (
@@ -119,5 +115,7 @@ function StatusBadge({ status }: { status: string }) {
         : status === "suspended"
           ? "destructive"
           : "secondary";
-  return <Badge variant={variant as "success" | "outline" | "destructive" | "secondary"}>{status}</Badge>;
+  return (
+    <Badge variant={variant as "success" | "outline" | "destructive" | "secondary"}>{status}</Badge>
+  );
 }

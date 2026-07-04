@@ -2,10 +2,7 @@
 
 import { useActionState, useState } from "react";
 
-import {
-  setStatusAction,
-  type CloseActionState,
-} from "./actions";
+import { setStatusAction, type CloseActionState } from "./actions";
 
 const TRANSITIONS: Record<string, { value: string; label: string }[]> = {
   pending: [
@@ -26,13 +23,7 @@ const TRANSITIONS: Record<string, { value: string; label: string }[]> = {
   skipped: [{ value: "pending", label: "Reopen" }],
 };
 
-export function CloseTaskStatusForm({
-  id,
-  currentStatus,
-}: {
-  id: string;
-  currentStatus: string;
-}) {
+export function CloseTaskStatusForm({ id, currentStatus }: { id: string; currentStatus: string }) {
   const [state, formAction, pending] = useActionState<CloseActionState, FormData>(
     setStatusAction,
     undefined,

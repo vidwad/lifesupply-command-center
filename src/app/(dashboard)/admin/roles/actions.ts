@@ -4,12 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { PERMISSIONS } from "@/lib/permissions";
-import {
-  createRole,
-  deleteRole,
-  setRolePermissions,
-  updateRole,
-} from "@/server/services/roles";
+import { createRole, deleteRole, setRolePermissions, updateRole } from "@/server/services/roles";
 import { requirePermission } from "@/server/permissions";
 
 export type RoleActionState = { error?: string; ok?: string } | undefined;
@@ -68,7 +63,10 @@ export async function setRolePermissionsAction(
   const actor = await requirePermission(PERMISSIONS.ADMIN_MANAGE_PERMISSIONS);
   const id = String(formData.get("roleId") ?? "");
   if (!id) return { error: "Missing role id." };
-  const permissionIds = formData.getAll("permissionIds").map((v) => String(v)).filter(Boolean);
+  const permissionIds = formData
+    .getAll("permissionIds")
+    .map((v) => String(v))
+    .filter(Boolean);
   try {
     await setRolePermissions(id, permissionIds, { id: actor.id });
   } catch (err) {

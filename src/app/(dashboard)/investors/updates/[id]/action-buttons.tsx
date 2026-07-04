@@ -5,11 +5,7 @@ import { Send, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import {
-  releaseAction,
-  requestApprovalAction,
-  type InvestorUpdateActionState,
-} from "../actions";
+import { releaseAction, requestApprovalAction, type InvestorUpdateActionState } from "../actions";
 
 export function RequestApprovalButton({
   id,

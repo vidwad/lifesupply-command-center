@@ -81,9 +81,7 @@ export default async function BudgetsPage() {
                             <Badge variant="outline">No</Badge>
                           )}
                         </TD>
-                        <TD className="text-xs text-muted-foreground">
-                          {formatDate(b.createdAt)}
-                        </TD>
+                        <TD className="text-xs text-muted-foreground">{formatDate(b.createdAt)}</TD>
                       </TR>
                     ))}
                   </TBody>
@@ -99,7 +97,10 @@ export default async function BudgetsPage() {
           ) : (
             <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
               You can view budgets but not import them. Requires{" "}
-              <code className="rounded bg-muted px-1">{PERMISSIONS.FINANCIALS_MANAGE_ADJUSTMENTS}</code>.
+              <code className="rounded bg-muted px-1">
+                {PERMISSIONS.FINANCIALS_MANAGE_ADJUSTMENTS}
+              </code>
+              .
             </div>
           )}
         </div>

@@ -115,9 +115,7 @@ export async function importBudgetCsv(args: {
       continue;
     }
     if (!account || !VALID_KEYS.has(account.toLowerCase())) {
-      failures.push(
-        `Row ${rowNum}: account must be one of ${BUDGET_ACCOUNT_KEYS.join(", ")}`,
-      );
+      failures.push(`Row ${rowNum}: account must be one of ${BUDGET_ACCOUNT_KEYS.join(", ")}`);
       continue;
     }
     if (amount == null) {
@@ -189,13 +187,10 @@ export async function getBudgetVarianceForPeriod(args: {
   budgetId?: string;
   periodId: string;
   divisionId?: string | null;
-}): Promise<
-  | {
-      budgetName: string;
-      lines: { accountKey: string; budget: number; actual: number; variance: number }[];
-    }
-  | null
-> {
+}): Promise<{
+  budgetName: string;
+  lines: { accountKey: string; budget: number; actual: number; variance: number }[];
+} | null> {
   const budgetLines = args.budgetId
     ? await prisma.budgetLine.findMany({
         where: { budgetId: args.budgetId, periodId: args.periodId },

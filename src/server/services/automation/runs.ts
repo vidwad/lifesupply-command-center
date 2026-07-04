@@ -68,12 +68,14 @@ export type AutomationRunRow = Prisma.AutomationRunGetPayload<{ include: typeof 
 // Listing
 // ---------------------------------------------------------------------------
 
-export async function listAutomationRuns(filters: {
-  supplierId?: string;
-  status?: string;
-  workflow?: AutomationWorkflow;
-  limit?: number;
-} = {}): Promise<AutomationRunRow[]> {
+export async function listAutomationRuns(
+  filters: {
+    supplierId?: string;
+    status?: string;
+    workflow?: AutomationWorkflow;
+    limit?: number;
+  } = {},
+): Promise<AutomationRunRow[]> {
   return prisma.automationRun.findMany({
     where: {
       ...(filters.supplierId ? { supplierId: filters.supplierId } : {}),
@@ -182,10 +184,7 @@ async function recordStep(args: {
  * so the caller can mark the run as failed with a clear message instead of
  * silently degrading to simulation (which would mislead the reviewer).
  */
-async function tryLiveLookup(
-  supplierCode: string,
-  supplierSku: string,
-): Promise<RunResult | null> {
+async function tryLiveLookup(supplierCode: string, supplierSku: string): Promise<RunResult | null> {
   if (supplierCode !== "BBM01") return null;
   const creds = await resolveCredentialsBundle("supplier_portal");
   if (!creds || !creds.username || !creds.password) return null;
@@ -339,9 +338,7 @@ export async function runPriceCheck(args: {
         });
         await writeAudit({
           actorUserId: args.triggeredById,
-          action: succeeded
-            ? "automation.price_check_live"
-            : "automation.price_check_not_found",
+          action: succeeded ? "automation.price_check_live" : "automation.price_check_not_found",
           entityType: "automation_run",
           entityId: runId,
           afterData: {
@@ -499,9 +496,7 @@ export async function runStockCheck(args: {
         });
         await writeAudit({
           actorUserId: args.triggeredById,
-          action: succeeded
-            ? "automation.stock_check_live"
-            : "automation.stock_check_not_found",
+          action: succeeded ? "automation.stock_check_live" : "automation.stock_check_not_found",
           entityType: "automation_run",
           entityId: runId,
           afterData: {
@@ -616,7 +611,8 @@ export async function prepareSupplierOrder(args: {
   const totalAmount = bucket.lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
 
   // Validation: pull supplier cost from SupplierProduct and flag mismatches.
-  const validationFlags: { sku: string | null; reason: string; expected: number; got: number }[] = [];
+  const validationFlags: { sku: string | null; reason: string; expected: number; got: number }[] =
+    [];
   for (const line of bucket.lines) {
     if (!line.sku) continue;
     const mapping = await prisma.supplierProduct.findFirst({
@@ -748,7 +744,14 @@ export async function submitSupplierOrder(args: {
 
   const run = await prisma.automationRun.findUniqueOrThrow({
     where: { id: args.runId },
-    select: { id: true, status: true, approvalId: true, workflow: true, orderId: true, supplierId: true },
+    select: {
+      id: true,
+      status: true,
+      approvalId: true,
+      workflow: true,
+      orderId: true,
+      supplierId: true,
+    },
   });
   if (run.workflow !== "prepare_order") {
     throw new Error("Only prepare_order runs can be submitted.");

@@ -15,7 +15,10 @@ import { SubmitOrderForm } from "./submit-form";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_VARIANT: Record<string, "warning" | "success" | "destructive" | "secondary" | "outline" | "default"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "warning" | "success" | "destructive" | "secondary" | "outline" | "default"
+> = {
   prepared: "outline",
   awaiting_approval: "warning",
   approved: "secondary",
@@ -25,7 +28,10 @@ const STATUS_VARIANT: Record<string, "warning" | "success" | "destructive" | "se
   cancelled: "outline",
 };
 
-const STEP_VARIANT: Record<string, "warning" | "success" | "destructive" | "secondary" | "outline"> = {
+const STEP_VARIANT: Record<
+  string,
+  "warning" | "success" | "destructive" | "secondary" | "outline"
+> = {
   pending: "outline",
   running: "secondary",
   succeeded: "success",

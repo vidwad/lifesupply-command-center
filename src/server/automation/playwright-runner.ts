@@ -55,18 +55,14 @@ export async function withBrowserPage<T>(
   try {
     ({ chromium } = await import("playwright"));
   } catch (err) {
-    throw new PlaywrightUnavailableError(
-      err instanceof Error ? err.message : "import failed",
-    );
+    throw new PlaywrightUnavailableError(err instanceof Error ? err.message : "import failed");
   }
 
   let browser: Browser;
   try {
     browser = await chromium.launch({ headless: options.headless ?? true });
   } catch (err) {
-    throw new PlaywrightUnavailableError(
-      err instanceof Error ? err.message : "launch failed",
-    );
+    throw new PlaywrightUnavailableError(err instanceof Error ? err.message : "launch failed");
   }
 
   const screenshots: { label: string; bytes: Buffer }[] = [];

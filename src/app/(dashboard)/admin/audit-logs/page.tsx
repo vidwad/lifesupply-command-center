@@ -37,7 +37,9 @@ function parseDate(value?: string): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
-function actionTone(action: string): "default" | "secondary" | "destructive" | "warning" | "success" | "outline" {
+function actionTone(
+  action: string,
+): "default" | "secondary" | "destructive" | "warning" | "success" | "outline" {
   if (action.startsWith("auth.")) return "secondary";
   if (action.includes(".deleted") || action.includes(".rejected") || action.includes(".failed"))
     return "destructive";
@@ -140,12 +142,12 @@ export default async function AuditLogsPage({
 
   const hasFilters = Boolean(
     params.actor ||
-      params.action ||
-      params.entityType ||
-      params.entityId ||
-      params.q ||
-      params.from ||
-      params.to,
+    params.action ||
+    params.entityType ||
+    params.entityId ||
+    params.q ||
+    params.from ||
+    params.to,
   );
 
   return (
@@ -350,7 +352,9 @@ export default async function AuditLogsPage({
               </TBody>
             </DataTable>
             <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>{rows.length} row{rows.length === 1 ? "" : "s"} on this page</span>
+              <span>
+                {rows.length} row{rows.length === 1 ? "" : "s"} on this page
+              </span>
               {nextCursor && (
                 <Link
                   href={buildHref({ cursor: nextCursor })}

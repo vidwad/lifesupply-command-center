@@ -40,13 +40,9 @@ export const FEATURE_FLAG_DESCRIPTIONS: Record<FeatureFlagKey, string> = {
     "Submit prepared supplier orders. Requires supplier.automation also on.",
   [FEATURE_FLAGS.EXTERNAL_WRITEBACKS]:
     "Push updates back to BigCommerce (prices, inventory, fulfillment).",
-  [FEATURE_FLAGS.QUICKBOOKS_WRITEBACKS]:
-    "Push journal entries / adjustments to QuickBooks.",
-  [FEATURE_FLAGS.AI_ACTIONS]:
-    "Allow AI to initiate any mutation. AI can always read and draft.",
-  [FEATURE_FLAGS.MAILCHIMP_SEND]:
-    "Send Mailchimp campaigns and export segments.",
-  [FEATURE_FLAGS.INVESTOR_DISTRIBUTION]:
-    "Generate + distribute investor-facing materials.",
+  [FEATURE_FLAGS.QUICKBOOKS_WRITEBACKS]: "Push journal entries / adjustments to QuickBooks.",
+  [FEATURE_FLAGS.AI_ACTIONS]: "Allow AI to initiate any mutation. AI can always read and draft.",
+  [FEATURE_FLAGS.MAILCHIMP_SEND]: "Send Mailchimp campaigns and export segments.",
+  [FEATURE_FLAGS.INVESTOR_DISTRIBUTION]: "Generate + distribute investor-facing materials.",
   [FEATURE_FLAGS.FORECASTING]: "Enable forecasting / scenario routes.",
 };

@@ -117,7 +117,8 @@ than fabricating an estimate.`,
     key: "investor_update",
     version: 1,
     name: "Quarterly investor update",
-    description: "Drafts a concise investor update from approved financial-period figures + operating highlights.",
+    description:
+      "Drafts a concise investor update from approved financial-period figures + operating highlights.",
     provider: "anthropic",
     modelHint: null,
     systemPrompt: `You are the LifeSupply Command Center investor-relations analyst,
@@ -170,7 +171,8 @@ Rules:
     key: "campaign_draft",
     version: 1,
     name: "Reactivation campaign draft",
-    description: "Drafts a short reactivation email body + tone guidance based on a marketer brief and audience snapshot.",
+    description:
+      "Drafts a short reactivation email body + tone guidance based on a marketer brief and audience snapshot.",
     provider: "anthropic",
     modelHint: null,
     systemPrompt: `You are the LifeSupply Command Center marketing analyst, drafting a
@@ -231,10 +233,7 @@ export type RenderedPrompt = {
  * Variables not provided are left as-is so debugging in dev makes a missing
  * variable visible. Exported for unit tests.
  */
-export function applyPlaceholders(
-  template: string,
-  vars: Record<string, string>,
-): string {
+export function applyPlaceholders(template: string, vars: Record<string, string>): string {
   let out = template;
   for (const [name, value] of Object.entries(vars)) {
     out = out.split(`{{${name}}}`).join(value);

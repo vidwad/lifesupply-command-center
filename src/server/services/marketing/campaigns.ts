@@ -40,10 +40,12 @@ const DRAFT_INCLUDE = {
 
 export type CampaignDraftRow = Prisma.CampaignGetPayload<{ include: typeof DRAFT_INCLUDE }>;
 
-export async function listCampaignDrafts(filters: {
-  status?: CampaignStatus;
-  limit?: number;
-} = {}): Promise<CampaignDraftRow[]> {
+export async function listCampaignDrafts(
+  filters: {
+    status?: CampaignStatus;
+    limit?: number;
+  } = {},
+): Promise<CampaignDraftRow[]> {
   return prisma.campaign.findMany({
     where: filters.status ? { status: filters.status } : undefined,
     include: DRAFT_INCLUDE,
@@ -88,9 +90,12 @@ export async function draftReactivationCampaign(
     throw new Error(`No reactivation candidates in the "${input.bucket}" bucket.`);
   }
 
-  const audienceLines = rows.slice(0, 10).map((r, i) =>
-    `${i + 1}. ${r.name}${r.email ? ` <${r.email}>` : ""} — ${r.bucket} score ${r.reactivationScore}, last order ${r.daysSinceLastOrder ?? "?"} days ago, LTV $${r.lifetimeValue.toFixed(0)}`,
-  );
+  const audienceLines = rows
+    .slice(0, 10)
+    .map(
+      (r, i) =>
+        `${i + 1}. ${r.name}${r.email ? ` <${r.email}>` : ""} — ${r.bucket} score ${r.reactivationScore}, last order ${r.daysSinceLastOrder ?? "?"} days ago, LTV $${r.lifetimeValue.toFixed(0)}`,
+    );
 
   const context = [
     `Campaign brief from the marketer:\n${input.brief.trim()}`,
@@ -135,7 +140,12 @@ export async function draftReactivationCampaign(
       tokenUsage: result.tokenUsage,
       status: "generated",
       assumptions: [],
-      warnings: rows.length === cap ? ["Audience hit the recipient cap — widen filters or raise the cap if you expected more."] : [],
+      warnings:
+        rows.length === cap
+          ? [
+              "Audience hit the recipient cap — widen filters or raise the cap if you expected more.",
+            ]
+          : [],
       confidence: null,
       promptTemplateId: result.template.templateId,
       promptTemplateKey: result.template.templateKey,
@@ -280,17 +290,13 @@ export async function exportCampaignToMailchimp(args: {
     throw new MailchimpExportError("Campaign is missing approval metadata — refusing to export.");
   }
   if (campaign.mailchimpExportStatus === "queued" || campaign.mailchimpExportStatus === "sent") {
-    throw new MailchimpExportError(
-      `Campaign export is already ${campaign.mailchimpExportStatus}.`,
-    );
+    throw new MailchimpExportError(`Campaign export is already ${campaign.mailchimpExportStatus}.`);
   }
 
   // Decide live-or-stub at runtime. When all five Mailchimp credential
   // fields are present we hit the real API; otherwise we record a stub
   // export so the UX can still be exercised without credentials.
-  const { getMailchimpClient } = await import(
-    "@/server/integrations/mailchimp/client"
-  );
+  const { getMailchimpClient } = await import("@/server/integrations/mailchimp/client");
   const configured = await getMailchimpClient();
   const audience = Array.isArray(campaign.audienceSnapshot)
     ? (campaign.audienceSnapshot as Array<{ id: string; email: string | null; name: string }>)
@@ -363,10 +369,7 @@ export async function exportCampaignToMailchimp(args: {
           reply_to: string;
         };
       }) => Promise<{ id: string }>;
-      setContent: (
-        id: string,
-        body: { plain_text: string; html?: string },
-      ) => Promise<unknown>;
+      setContent: (id: string, body: { plain_text: string; html?: string }) => Promise<unknown>;
     };
 
     const created = await campaignsApi.create({

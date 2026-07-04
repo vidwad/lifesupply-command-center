@@ -232,10 +232,10 @@ export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
               {entity === "customers"
                 ? "Walks every customer + order from all configured BigCommerce stores."
                 : "Walks every order from all configured BigCommerce stores."}{" "}
-              Typically takes 2–10 minutes per store, depending on history.
-              Existing local fields like notes, exception status, and{" "}
-              {entity === "customers" ? "reactivation score" : "estimated margins"}{" "}
-              are preserved — only BC-owned fields are overwritten.
+              Typically takes 2–10 minutes per store, depending on history. Existing local fields
+              like notes, exception status, and{" "}
+              {entity === "customers" ? "reactivation score" : "estimated margins"} are preserved —
+              only BC-owned fields are overwritten.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -284,18 +284,12 @@ function SyncStatusPanel({
   }
 
   if (state.kind === "running") {
-    const totalProcessed = state.jobs.reduce(
-      (sum, j) => sum + j.recordsProcessed,
-      0,
-    );
-    const totalOrders = state.jobs.reduce(
-      (sum, j) => sum + (j.metadata?.ordersScanned ?? 0),
-      0,
-    );
+    const totalProcessed = state.jobs.reduce((sum, j) => sum + j.recordsProcessed, 0);
+    const totalOrders = state.jobs.reduce((sum, j) => sum + (j.metadata?.ordersScanned ?? 0), 0);
     return (
       <span className="text-xs text-muted-foreground">
-        {state.mode === "full" ? "Full" : "Incremental"} sync —{" "}
-        {state.jobs.length} store{state.jobs.length === 1 ? "" : "s"}
+        {state.mode === "full" ? "Full" : "Incremental"} sync — {state.jobs.length} store
+        {state.jobs.length === 1 ? "" : "s"}
         {entity === "customers" && totalOrders > 0
           ? `, ${totalOrders.toLocaleString()} orders scanned`
           : ""}
@@ -317,8 +311,7 @@ function SyncStatusPanel({
         <CheckCircle2 className="h-3 w-3 text-success" />
       )}
       <span className={anyFailed ? "text-destructive" : "text-muted-foreground"}>
-        Done · {totalCreated.toLocaleString()} created,{" "}
-        {totalUpdated.toLocaleString()} updated
+        Done · {totalCreated.toLocaleString()} created, {totalUpdated.toLocaleString()} updated
         {totalFailed > 0 && `, ${totalFailed.toLocaleString()} failed`} ·{" "}
         {Math.round(state.durationMs / 1000)}s
       </span>

@@ -32,9 +32,7 @@ const ROW_INCLUDE = {
   resolvedBy: { select: { id: true, name: true, email: true } },
 } satisfies Prisma.ExceptionInclude;
 
-function mapRow(
-  row: Prisma.ExceptionGetPayload<{ include: typeof ROW_INCLUDE }>,
-): ExceptionRow {
+function mapRow(row: Prisma.ExceptionGetPayload<{ include: typeof ROW_INCLUDE }>): ExceptionRow {
   const ageMs = Date.now() - row.createdAt.getTime();
   return {
     id: row.id,

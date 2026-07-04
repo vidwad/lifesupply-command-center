@@ -45,7 +45,13 @@ export default async function InvestorUpdateDetailPage({ params }: Props) {
   const distEnabled = await isInvestorDistributionEnabled();
 
   const distribution = Array.isArray(update.distributionSnapshot)
-    ? (update.distributionSnapshot as Array<{ id: string; name: string; email: string | null; organization: string | null; status: string }>)
+    ? (update.distributionSnapshot as Array<{
+        id: string;
+        name: string;
+        email: string | null;
+        organization: string | null;
+        status: string;
+      }>)
     : [];
 
   const pendingApproval = await prisma.approval.findFirst({
@@ -74,7 +80,10 @@ export default async function InvestorUpdateDetailPage({ params }: Props) {
         title={update.title}
         description={update.periodLabel ? `Period: ${update.periodLabel}` : "No period attached."}
         breadcrumb={
-          <Link href="/investors/updates" className="inline-flex items-center gap-1 hover:underline">
+          <Link
+            href="/investors/updates"
+            className="inline-flex items-center gap-1 hover:underline"
+          >
             <ArrowLeft className="h-3 w-3" /> Investor updates
           </Link>
         }
@@ -155,9 +164,7 @@ export default async function InvestorUpdateDetailPage({ params }: Props) {
             </CardHeader>
             <CardContent>
               <dl className="space-y-2 text-sm">
-                <Row label="Period status">
-                  {update.financialPeriod?.status ?? "—"}
-                </Row>
+                <Row label="Period status">{update.financialPeriod?.status ?? "—"}</Row>
                 <Row label="Prepared by">
                   {update.preparedBy?.name ?? update.preparedBy?.email ?? "—"}
                 </Row>
@@ -215,9 +222,7 @@ export default async function InvestorUpdateDetailPage({ params }: Props) {
                       <span className="truncate">
                         {d.name}
                         {d.organization && (
-                          <span className="ml-1 text-muted-foreground">
-                            ({d.organization})
-                          </span>
+                          <span className="ml-1 text-muted-foreground">({d.organization})</span>
                         )}
                       </span>
                       <span className="text-[10px] text-muted-foreground">{d.status}</span>

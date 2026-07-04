@@ -16,8 +16,10 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const consentParam = searchParams.get("consent");
   const typeParam = searchParams.get("type");
-  const consent = consentParam && VALID_CONSENT.has(consentParam) ? (consentParam as ConsentStatus) : undefined;
-  const customerType = typeParam && VALID_TYPES.has(typeParam) ? (typeParam as CustomerType) : undefined;
+  const consent =
+    consentParam && VALID_CONSENT.has(consentParam) ? (consentParam as ConsentStatus) : undefined;
+  const customerType =
+    typeParam && VALID_TYPES.has(typeParam) ? (typeParam as CustomerType) : undefined;
 
   const where: Prisma.CustomerWhereInput = {
     deletedAt: null,

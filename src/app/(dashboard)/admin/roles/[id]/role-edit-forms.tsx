@@ -6,11 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  setRolePermissionsAction,
-  updateRoleAction,
-  type RoleActionState,
-} from "../actions";
+import { setRolePermissionsAction, updateRoleAction, type RoleActionState } from "../actions";
 
 type Role = {
   id: string;
@@ -116,12 +112,7 @@ export function RolePermissionsForm({
       <input type="hidden" name="roleId" value={role.id} />
       <div className="space-y-4">
         {[...grouped.entries()].map(([module, perms]) => (
-          <ModuleBlock
-            key={module}
-            module={module}
-            permissions={perms}
-            assigned={assigned}
-          />
+          <ModuleBlock key={module} module={module} permissions={perms} assigned={assigned} />
         ))}
       </div>
       {state?.error && (

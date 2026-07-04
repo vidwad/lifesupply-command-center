@@ -4,10 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { PERMISSIONS } from "@/lib/permissions";
-import {
-  AiNotConfiguredError,
-  AiProviderNotConfiguredError,
-} from "@/server/services/ai";
+import { AiNotConfiguredError, AiProviderNotConfiguredError } from "@/server/services/ai";
 import {
   draftInvestorUpdate,
   InvestorUpdateError,
@@ -33,10 +30,7 @@ export async function draftAction(
 
   let id: string;
   try {
-    id = await draftInvestorUpdate(
-      { title, brief, financialPeriodId },
-      { id: actor.id },
-    );
+    id = await draftInvestorUpdate({ title, brief, financialPeriodId }, { id: actor.id });
   } catch (err) {
     if (
       err instanceof AiNotConfiguredError ||

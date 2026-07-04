@@ -16,9 +16,11 @@ const RAISE_INCLUDE = {
 
 export type CapitalRaiseDetail = Prisma.CapitalRaiseGetPayload<{ include: typeof RAISE_INCLUDE }>;
 
-export async function listCapitalRaises(filters: {
-  status?: CapitalRaiseStatus;
-} = {}): Promise<
+export async function listCapitalRaises(
+  filters: {
+    status?: CapitalRaiseStatus;
+  } = {},
+): Promise<
   (Prisma.CapitalRaiseGetPayload<object> & {
     committedAmount: number;
     fundedAmount: number;

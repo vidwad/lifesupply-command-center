@@ -1,10 +1,4 @@
-import {
-  Document,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-} from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type { ReportSnapshot } from "./index";
 
@@ -202,11 +196,7 @@ function SnapshotBody({ snapshot }: { snapshot: ReportSnapshot }) {
         />
         {f.cash != null && <FinRow label="Cash" cur={f.cash} prev={p?.cash ?? null} />}
         {f.workingCapital != null && (
-          <FinRow
-            label="Working capital"
-            cur={f.workingCapital}
-            prev={p?.workingCapital ?? null}
-          />
+          <FinRow label="Working capital" cur={f.workingCapital} prev={p?.workingCapital ?? null} />
         )}
       </View>
 
@@ -218,9 +208,7 @@ function SnapshotBody({ snapshot }: { snapshot: ReportSnapshot }) {
         <Text style={styles.twoColItem}>
           Awaiting supplier: {snapshot.operations.awaitingSupplier}
         </Text>
-        <Text style={styles.twoColItem}>
-          Open exceptions: {snapshot.operations.exceptionsOpen}
-        </Text>
+        <Text style={styles.twoColItem}>Open exceptions: {snapshot.operations.exceptionsOpen}</Text>
         <Text style={styles.twoColItem}>
           Order revenue: {fmtCurrency(snapshot.operations.grossOrderRevenue)}
         </Text>

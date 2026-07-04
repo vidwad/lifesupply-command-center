@@ -50,9 +50,7 @@ async function runCustomerSync(args: {
     resolveCredentialsBundleForConnection(connectionId),
   ]);
   if (!bundle?.storeHash || !bundle?.apiToken) {
-    throw new Error(
-      `BC connection ${connectionId} missing storeHash or apiToken`,
-    );
+    throw new Error(`BC connection ${connectionId} missing storeHash or apiToken`);
   }
 
   // ---- Determine since (incremental only) ----
@@ -118,8 +116,7 @@ async function runCustomerSync(args: {
   }
 
   // ---- Finalize sync log ----
-  const status: "success" | "partial" =
-    counts.customersFailed > 0 ? "partial" : "success";
+  const status: "success" | "partial" = counts.customersFailed > 0 ? "partial" : "success";
   await prisma.integrationSyncLog.update({
     where: { id: syncLogId },
     data: {
@@ -130,9 +127,7 @@ async function runCustomerSync(args: {
       recordsUpdated: counts.customersUpdated,
       recordsFailed: counts.customersFailed,
       errorSummary:
-        counts.errorMessages.length > 0
-          ? counts.errorMessages.slice(0, 10).join("\n")
-          : null,
+        counts.errorMessages.length > 0 ? counts.errorMessages.slice(0, 10).join("\n") : null,
       metadata: {
         ordersScanned: counts.ordersScanned,
         mode: args.mode,

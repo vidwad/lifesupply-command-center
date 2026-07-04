@@ -65,10 +65,12 @@ function mapRow(
   };
 }
 
-export async function listAdjustments(filters: {
-  periodId?: string;
-  divisionId?: string;
-} = {}): Promise<AdjustmentRow[]> {
+export async function listAdjustments(
+  filters: {
+    periodId?: string;
+    divisionId?: string;
+  } = {},
+): Promise<AdjustmentRow[]> {
   const rows = await prisma.financialAdjustment.findMany({
     where: {
       ...(filters.periodId ? { financialPeriodId: filters.periodId } : {}),
@@ -134,10 +136,7 @@ export async function createAdjustment(
   return row.id;
 }
 
-export async function approveAdjustment(
-  id: string,
-  actor: { id: string },
-): Promise<void> {
+export async function approveAdjustment(id: string, actor: { id: string }): Promise<void> {
   const before = await prisma.financialAdjustment.findUniqueOrThrow({
     where: { id },
     select: { approvalStatus: true, financialPeriod: { select: { status: true } } },

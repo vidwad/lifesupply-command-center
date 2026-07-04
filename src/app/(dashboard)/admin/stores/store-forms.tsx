@@ -7,11 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  createStoreAction,
-  updateStoreAction,
-  type StoreActionState,
-} from "./actions";
+import { createStoreAction, updateStoreAction, type StoreActionState } from "./actions";
 
 type Store = {
   id: string;
@@ -27,11 +23,7 @@ type Store = {
 const PLATFORMS = ["bigcommerce", "amazon", "manual", "other"] as const;
 const STATUSES = ["active", "inactive", "archived"] as const;
 
-export function CreateStoreForm({
-  divisions,
-}: {
-  divisions: { id: string; name: string }[];
-}) {
+export function CreateStoreForm({ divisions }: { divisions: { id: string; name: string }[] }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<StoreActionState, FormData>(
     createStoreAction,

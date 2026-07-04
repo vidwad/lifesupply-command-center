@@ -97,7 +97,9 @@ function StatusBadge({ status }: { status: string }) {
         : status === "suspended"
           ? "destructive"
           : "secondary";
-  return <Badge variant={variant as "success" | "outline" | "destructive" | "secondary"}>{status}</Badge>;
+  return (
+    <Badge variant={variant as "success" | "outline" | "destructive" | "secondary"}>{status}</Badge>
+  );
 }
 
 function StatusForm({
@@ -123,7 +125,7 @@ function StatusForm({
       <button
         type="submit"
         disabled={isCurrent}
-        className="rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+        className="rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isCurrent ? `Currently ${target}` : labels[target]}
       </button>

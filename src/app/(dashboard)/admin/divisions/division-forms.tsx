@@ -7,11 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  createDivisionAction,
-  updateDivisionAction,
-  type DivisionActionState,
-} from "./actions";
+import { createDivisionAction, updateDivisionAction, type DivisionActionState } from "./actions";
 
 type Division = {
   id: string;
@@ -25,11 +21,7 @@ type Division = {
 
 const TYPE_OPTIONS = ["operating", "holding", "geographic", "consolidated"] as const;
 
-export function CreateDivisionForm({
-  parents,
-}: {
-  parents: { id: string; name: string }[];
-}) {
+export function CreateDivisionForm({ parents }: { parents: { id: string; name: string }[] }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<DivisionActionState, FormData>(
     createDivisionAction,

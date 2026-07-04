@@ -14,10 +14,7 @@ type Props = {
   showStoreSelect?: boolean;
   stores?: { id: string; name: string }[];
   fileAccept?: string;
-  action: (
-    prev: ImportActionState,
-    formData: FormData,
-  ) => Promise<ImportActionState>;
+  action: (prev: ImportActionState, formData: FormData) => Promise<ImportActionState>;
 };
 
 export function ImportForm({
@@ -54,10 +51,7 @@ export function ImportForm({
         </Label>
         <div className="flex flex-wrap gap-1">
           {expectedColumns.map((col) => (
-            <code
-              key={col}
-              className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px]"
-            >
+            <code key={col} className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px]">
               {col}
             </code>
           ))}
@@ -135,9 +129,7 @@ export function ImportForm({
                 {state.warnings.slice(0, 25).map((w, i) => (
                   <li key={i}>{w}</li>
                 ))}
-                {state.warnings.length > 25 && (
-                  <li>… {state.warnings.length - 25} more</li>
-                )}
+                {state.warnings.length > 25 && <li>… {state.warnings.length - 25} more</li>}
               </ul>
             </details>
           )}

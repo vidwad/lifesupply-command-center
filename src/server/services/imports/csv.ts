@@ -21,9 +21,7 @@ export function parseCsv(text: string): CsvParseResult {
     transform: (v) => (typeof v === "string" ? v.trim() : v),
   });
 
-  const warnings = result.errors.map(
-    (e) => `Row ${e.row != null ? e.row + 2 : "?"}: ${e.message}`,
-  );
+  const warnings = result.errors.map((e) => `Row ${e.row != null ? e.row + 2 : "?"}: ${e.message}`);
   const headers = (result.meta.fields ?? []).map((h) => h.trim()).filter(Boolean);
 
   return {

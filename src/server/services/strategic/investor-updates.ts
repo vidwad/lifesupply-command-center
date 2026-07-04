@@ -32,7 +32,9 @@ export class InvestorUpdateError extends Error {
 }
 
 const INCLUDE = {
-  financialPeriod: { select: { id: true, name: true, status: true, startDate: true, endDate: true } },
+  financialPeriod: {
+    select: { id: true, name: true, status: true, startDate: true, endDate: true },
+  },
   preparedBy: { select: { id: true, name: true, email: true } },
   approvedBy: { select: { id: true, name: true, email: true } },
   aiOutput: { select: { id: true, modelName: true, warnings: true, assumptions: true } },
@@ -40,10 +42,12 @@ const INCLUDE = {
 
 export type InvestorUpdateRow = Prisma.InvestorUpdateGetPayload<{ include: typeof INCLUDE }>;
 
-export async function listInvestorUpdates(filters: {
-  status?: InvestorUpdateStatus;
-  limit?: number;
-} = {}): Promise<InvestorUpdateRow[]> {
+export async function listInvestorUpdates(
+  filters: {
+    status?: InvestorUpdateStatus;
+    limit?: number;
+  } = {},
+): Promise<InvestorUpdateRow[]> {
   return prisma.investorUpdate.findMany({
     where: filters.status ? { status: filters.status } : undefined,
     include: INCLUDE,
@@ -106,7 +110,9 @@ export async function draftInvestorUpdate(
 
   const lines: string[] = [];
   lines.push(`# Period: ${period.name} (${period.status})`);
-  lines.push(`Period dates: ${period.startDate.toISOString().slice(0, 10)} – ${period.endDate.toISOString().slice(0, 10)}`);
+  lines.push(
+    `Period dates: ${period.startDate.toISOString().slice(0, 10)} – ${period.endDate.toISOString().slice(0, 10)}`,
+  );
   lines.push("");
   lines.push("## Financial summary by division");
   for (const s of summaries) {
@@ -142,7 +148,9 @@ export async function draftInvestorUpdate(
   // Surface explicit warnings so the approver sees them in the UI.
   const warnings: string[] = [];
   if (period.status !== "approved") {
-    warnings.push(`Financial period "${period.name}" is "${period.status}" — figures are not yet approved.`);
+    warnings.push(
+      `Financial period "${period.name}" is "${period.status}" — figures are not yet approved.`,
+    );
   }
   const unapprovedSummaries = summaries.filter((s) => s.approvalStatus !== "approved");
   if (unapprovedSummaries.length > 0) {
@@ -151,7 +159,9 @@ export async function draftInvestorUpdate(
     );
   }
   if (investors.length === 0) {
-    warnings.push("No investors are in engaged/committed/closed status — distribution list is empty.");
+    warnings.push(
+      "No investors are in engaged/committed/closed status — distribution list is empty.",
+    );
   }
 
   const aiOutput = await prisma.aiOutput.create({
@@ -339,8 +349,7 @@ export async function releaseInvestorUpdate(args: {
       }>)
     : [];
   const validRecipients = recipients.filter(
-    (r): r is typeof r & { email: string } =>
-      typeof r.email === "string" && r.email.includes("@"),
+    (r): r is typeof r & { email: string } => typeof r.email === "string" && r.email.includes("@"),
   );
 
   // Decide live-or-stub at runtime. Resend creds present → real send.

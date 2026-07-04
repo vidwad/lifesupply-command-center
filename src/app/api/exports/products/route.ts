@@ -14,7 +14,8 @@ export async function GET(req: Request) {
   const actor = await requirePermission(PERMISSIONS.PRODUCTS_EXPORT);
   const { searchParams } = new URL(req.url);
   const statusParam = searchParams.get("status");
-  const status = statusParam && VALID_STATUSES.has(statusParam) ? (statusParam as ProductStatus) : undefined;
+  const status =
+    statusParam && VALID_STATUSES.has(statusParam) ? (statusParam as ProductStatus) : undefined;
   const storeId = searchParams.get("store") ?? undefined;
 
   const where: Prisma.ProductWhereInput = {

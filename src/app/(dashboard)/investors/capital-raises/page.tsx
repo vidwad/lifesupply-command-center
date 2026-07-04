@@ -14,7 +14,10 @@ import { requirePermission, userHasPermission } from "@/server/permissions";
 export const metadata = { title: "Capital raises" };
 export const dynamic = "force-dynamic";
 
-const STATUS_VARIANT: Record<string, "outline" | "warning" | "success" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "outline" | "warning" | "success" | "secondary" | "destructive"
+> = {
   planning: "outline",
   open: "warning",
   closing: "warning",
@@ -75,7 +78,10 @@ export default async function CapitalRaisesPage() {
                 <TBody>
                   {raises.map((r) => {
                     const target = Number(r.targetAmount);
-                    const pct = target > 0 ? Math.min(100, Math.round((r.committedAmount / target) * 100)) : 0;
+                    const pct =
+                      target > 0
+                        ? Math.min(100, Math.round((r.committedAmount / target) * 100))
+                        : 0;
                     return (
                       <TR key={r.id}>
                         <TD>
@@ -99,9 +105,7 @@ export default async function CapitalRaisesPage() {
                           {r.roundType}
                         </TD>
                         <TD>
-                          <Badge variant={STATUS_VARIANT[r.status] ?? "outline"}>
-                            {r.status}
-                          </Badge>
+                          <Badge variant={STATUS_VARIANT[r.status] ?? "outline"}>{r.status}</Badge>
                         </TD>
                         <TD align="right" className="font-medium tabular-nums">
                           {formatCurrency(target, r.currency)}
