@@ -65,8 +65,18 @@ describe("mapBcOrderToUpsert", () => {
       { id: 2, expected: { status: "shipped", payment: "paid", fulfillment: "fulfilled" } },
       { id: 5, expected: { status: "cancelled", payment: "failed", fulfillment: "unfulfilled" } },
       { id: 10, expected: { status: "completed", payment: "paid", fulfillment: "fulfilled" } },
-      { id: 12, expected: { status: "awaiting_human_review", payment: "pending", fulfillment: "unfulfilled" } },
-      { id: 14, expected: { status: "processing", payment: "partially_refunded", fulfillment: "fulfilled" } },
+      {
+        id: 12,
+        expected: {
+          status: "awaiting_human_review",
+          payment: "pending",
+          fulfillment: "unfulfilled",
+        },
+      },
+      {
+        id: 14,
+        expected: { status: "processing", payment: "partially_refunded", fulfillment: "fulfilled" },
+      },
     ];
     for (const c of cases) {
       const { create } = mapBcOrderToUpsert(

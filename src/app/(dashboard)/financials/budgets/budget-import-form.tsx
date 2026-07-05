@@ -18,11 +18,7 @@ const ACCOUNT_KEYS = [
   "ebitda",
 ];
 
-export function BudgetImportForm({
-  divisions,
-}: {
-  divisions: { id: string; name: string }[];
-}) {
+export function BudgetImportForm({ divisions }: { divisions: { id: string; name: string }[] }) {
   const [state, formAction, pending] = useActionState<BudgetImportState, FormData>(
     importBudgetAction,
     undefined,
@@ -50,9 +46,7 @@ export function BudgetImportForm({
             </code>
           ))}
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          account ∈ {ACCOUNT_KEYS.join(", ")}
-        </p>
+        <p className="text-[11px] text-muted-foreground">account ∈ {ACCOUNT_KEYS.join(", ")}</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">

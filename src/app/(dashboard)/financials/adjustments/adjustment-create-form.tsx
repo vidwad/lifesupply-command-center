@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  createAdjustmentAction,
-  type AdjustmentActionState,
-} from "./actions";
+import { createAdjustmentAction, type AdjustmentActionState } from "./actions";
 
 const CATEGORIES = [
   { value: "ebitda_addback", label: "EBITDA addback" },

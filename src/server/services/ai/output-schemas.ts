@@ -50,10 +50,7 @@ export type ValidationResult =
  * Output may arrive as raw JSON, or as JSON wrapped in a ```json fence (the
  * model's choice). Both are accepted.
  */
-export function validateAiOutput(
-  templateKey: string,
-  rawOutput: string,
-): ValidationResult {
+export function validateAiOutput(templateKey: string, rawOutput: string): ValidationResult {
   const schema = SCHEMAS[templateKey];
   if (!schema) return { ok: true, parsed: null };
 

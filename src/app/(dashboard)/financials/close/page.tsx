@@ -10,10 +10,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/server/db/client";
-import {
-  closeChecklistSummary,
-  listCloseTasks,
-} from "@/server/services/finance/close-tasks";
+import { closeChecklistSummary, listCloseTasks } from "@/server/services/finance/close-tasks";
 import { requirePermission } from "@/server/permissions";
 
 import { seedChecklistAction } from "./actions";
@@ -24,7 +21,10 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = { period?: string };
 
-const STATUS_VARIANT: Record<MonthlyCloseStatus, "warning" | "success" | "secondary" | "outline" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  MonthlyCloseStatus,
+  "warning" | "success" | "secondary" | "outline" | "destructive"
+> = {
   pending: "outline",
   in_progress: "warning",
   blocked: "destructive",
@@ -32,11 +32,7 @@ const STATUS_VARIANT: Record<MonthlyCloseStatus, "warning" | "success" | "second
   skipped: "secondary",
 };
 
-export default async function ClosePage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>;
-}) {
+export default async function ClosePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await requirePermission(PERMISSIONS.FINANCIALS_REVIEW);
   const params = await searchParams;
 
@@ -155,7 +151,9 @@ export default async function ClosePage({
                         </code>
                       </TD>
                       <TD>
-                        <Badge variant={STATUS_VARIANT[t.status]}>{t.status.replace("_", " ")}</Badge>
+                        <Badge variant={STATUS_VARIANT[t.status]}>
+                          {t.status.replace("_", " ")}
+                        </Badge>
                       </TD>
                       <TD className="text-xs text-muted-foreground">{t.ownerLabel ?? "—"}</TD>
                       <TD className="text-xs text-muted-foreground">

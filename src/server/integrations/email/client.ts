@@ -63,8 +63,7 @@ export function getEmailClient(): ConfiguredEmail | null {
         throw new Error(`Resend rejected the message: ${result.error.message}`);
       }
       const id = result.data?.id ?? "unknown";
-      const recipientCount =
-        (envelope.to?.length ?? 0) + (envelope.bcc?.length ?? 0);
+      const recipientCount = (envelope.to?.length ?? 0) + (envelope.bcc?.length ?? 0);
       return { providerId: id, recipientCount };
     },
   };

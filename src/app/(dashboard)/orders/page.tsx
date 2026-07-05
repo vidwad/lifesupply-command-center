@@ -13,11 +13,7 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import {
-  countOrders,
-  listOrders,
-  type ListOrdersFilters,
-} from "@/server/services/orders";
+import { countOrders, listOrders, type ListOrdersFilters } from "@/server/services/orders";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { SyncButtons } from "@/components/sync/SyncButtons";
 
@@ -52,10 +48,7 @@ export default async function OrdersPage({
     exceptionsOnly: params.exceptions === "1",
   };
 
-  const [orders, totalOrders] = await Promise.all([
-    listOrders(filters),
-    countOrders(filters),
-  ]);
+  const [orders, totalOrders] = await Promise.all([listOrders(filters), countOrders(filters)]);
   const activeStatus = filters.status ?? "";
   const showingCapped = totalOrders > orders.length;
 

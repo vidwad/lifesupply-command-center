@@ -2,10 +2,7 @@
 
 import { useActionState } from "react";
 
-import {
-  toggleFeatureFlagAction,
-  type FeatureFlagActionState,
-} from "./actions";
+import { toggleFeatureFlagAction, type FeatureFlagActionState } from "./actions";
 
 type Props = {
   flagKey: string;

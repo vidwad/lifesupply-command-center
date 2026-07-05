@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  createCommitmentAction,
-  type CapitalRaiseActionState,
-} from "../actions";
+import { createCommitmentAction, type CapitalRaiseActionState } from "../actions";
 
 const COMMITMENT_STATUSES = ["soft", "signed", "funded"];
 

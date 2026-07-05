@@ -61,7 +61,8 @@ const QUICK_ACTIONS: ActionItem[] = [
 export function CommandPaletteTrigger({ permissions }: Props) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const isMac = typeof navigator !== "undefined" && navigator.platform.toLowerCase().includes("mac");
+  const isMac =
+    typeof navigator !== "undefined" && navigator.platform.toLowerCase().includes("mac");
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -93,9 +94,7 @@ export function CommandPaletteTrigger({ permissions }: Props) {
         aria-label="Search and navigation"
       >
         <Search className="h-4 w-4" />
-        <span className="hidden flex-1 truncate sm:inline">
-          Search modules, jump to actions…
-        </span>
+        <span className="hidden flex-1 truncate sm:inline">Search modules, jump to actions…</span>
         <kbd className="pointer-events-none ml-auto hidden select-none items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
           {isMac ? "⌘" : "Ctrl"}K
         </kbd>
@@ -130,11 +129,7 @@ export function CommandPaletteTrigger({ permissions }: Props) {
           )}
           <CommandGroup heading="Navigation">
             {navItems.map((item) => (
-              <CommandItem
-                key={item.href}
-                value={item.label}
-                onSelect={() => go(item.href)}
-              >
+              <CommandItem key={item.href} value={item.label} onSelect={() => go(item.href)}>
                 <item.icon className="text-muted-foreground" />
                 <span>{item.label}</span>
               </CommandItem>

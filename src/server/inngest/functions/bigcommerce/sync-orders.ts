@@ -38,9 +38,7 @@ async function runOrderSync(args: {
     resolveCredentialsBundleForConnection(connectionId),
   ]);
   if (!bundle?.storeHash || !bundle?.apiToken) {
-    throw new Error(
-      `BC connection ${connectionId} missing storeHash or apiToken`,
-    );
+    throw new Error(`BC connection ${connectionId} missing storeHash or apiToken`);
   }
 
   const conn = await prisma.integrationConnection.findUniqueOrThrow({
@@ -104,8 +102,7 @@ async function runOrderSync(args: {
     throw err;
   }
 
-  const status: "success" | "partial" =
-    counts.ordersFailed > 0 ? "partial" : "success";
+  const status: "success" | "partial" = counts.ordersFailed > 0 ? "partial" : "success";
   await prisma.integrationSyncLog.update({
     where: { id: syncLogId },
     data: {
@@ -116,9 +113,7 @@ async function runOrderSync(args: {
       recordsUpdated: counts.ordersUpdated,
       recordsFailed: counts.ordersFailed,
       errorSummary:
-        counts.errorMessages.length > 0
-          ? counts.errorMessages.slice(0, 10).join("\n")
-          : null,
+        counts.errorMessages.length > 0 ? counts.errorMessages.slice(0, 10).join("\n") : null,
       metadata: {
         ordersScanned: counts.ordersScanned,
         ordersUnlinked: counts.ordersUnlinked,

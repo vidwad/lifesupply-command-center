@@ -10,10 +10,7 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { prisma } from "@/server/db/client";
-import {
-  diligenceSummary,
-  listDiligenceItems,
-} from "@/server/services/strategic/diligence";
+import { diligenceSummary, listDiligenceItems } from "@/server/services/strategic/diligence";
 import { requirePermission } from "@/server/permissions";
 
 import { seedChecklistAction } from "./actions";
@@ -21,7 +18,10 @@ import { DiligenceStatusForm } from "./status-form";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_VARIANT: Record<DiligenceStatus, "outline" | "warning" | "success" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  DiligenceStatus,
+  "outline" | "warning" | "success" | "secondary" | "destructive"
+> = {
   pending: "outline",
   in_progress: "warning",
   blocked: "destructive",
@@ -79,7 +79,10 @@ export default async function OpportunityDiligencePage({ params }: Props) {
         title={`Diligence — ${opportunity.title}`}
         description={`${opportunity.opportunityType.replace(/_/g, " ")} · status: ${opportunity.status}`}
         breadcrumb={
-          <Link href={`/opportunities/${id}`} className="inline-flex items-center gap-1 hover:underline">
+          <Link
+            href={`/opportunities/${id}`}
+            className="inline-flex items-center gap-1 hover:underline"
+          >
             <ArrowLeft className="h-3 w-3" /> Opportunity
           </Link>
         }
@@ -141,7 +144,9 @@ export default async function OpportunityDiligencePage({ params }: Props) {
                           <TD>
                             <div className="font-medium">{item.title}</div>
                             {item.description && (
-                              <div className="text-xs text-muted-foreground">{item.description}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {item.description}
+                              </div>
                             )}
                             <code className="mt-0.5 block text-[10px] text-muted-foreground">
                               {item.itemKey}

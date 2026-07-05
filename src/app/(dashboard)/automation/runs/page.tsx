@@ -19,7 +19,10 @@ import { PrepareOrderForm, PriceCheckForm, StockCheckForm } from "./trigger-form
 export const metadata = { title: "Automation runs" };
 export const dynamic = "force-dynamic";
 
-const STATUS_VARIANT: Record<string, "warning" | "success" | "destructive" | "secondary" | "outline" | "default"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "warning" | "success" | "destructive" | "secondary" | "outline" | "default"
+> = {
   prepared: "outline",
   awaiting_approval: "warning",
   approved: "secondary",
@@ -128,14 +131,12 @@ export default async function AutomationRunsPage() {
                             {r.workflow.replace(/_/g, " ")}
                           </Link>
                           {r.summary && (
-                            <div className="text-xs text-muted-foreground line-clamp-1">
+                            <div className="line-clamp-1 text-xs text-muted-foreground">
                               {r.summary}
                             </div>
                           )}
                         </TD>
-                        <TD className="text-xs text-muted-foreground">
-                          {r.supplier?.code ?? "—"}
-                        </TD>
+                        <TD className="text-xs text-muted-foreground">{r.supplier?.code ?? "—"}</TD>
                         <TD className="text-xs text-muted-foreground">
                           {r.order?.orderNumber ?? "—"}
                         </TD>

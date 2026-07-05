@@ -51,19 +51,16 @@ async function main(): Promise<void> {
     ],
   });
 
-  // eslint-disable-next-line no-console
   console.log("[worker] connected to Inngest, awaiting work…");
 
   // Block forever until the connection is closed (SIGINT/SIGTERM are
   // handled by the SDK automatically and trigger graceful shutdown).
   await connection.closed;
 
-  // eslint-disable-next-line no-console
   console.log("[worker] connection closed, exiting.");
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error("[worker] fatal:", err);
   process.exit(1);
 });

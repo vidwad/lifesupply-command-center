@@ -52,7 +52,7 @@ export default async function DivisionsPage() {
                     <TH>Parent</TH>
                     <TH align="right">Stores</TH>
                     <TH>Status</TH>
-                    <TH>{" "}</TH>
+                    <TH> </TH>
                   </tr>
                 </THead>
                 <TBody>

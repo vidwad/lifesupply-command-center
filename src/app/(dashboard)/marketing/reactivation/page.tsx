@@ -8,7 +8,10 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import { listReactivationCandidates, type ReactivationBucket } from "@/server/services/marketing/reactivation";
+import {
+  listReactivationCandidates,
+  type ReactivationBucket,
+} from "@/server/services/marketing/reactivation";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
 import { CampaignDraftForm } from "./draft-form";
@@ -27,7 +30,10 @@ const BUCKET_LABEL: Record<ReactivationBucket, string> = {
   deep_freeze: "Deep freeze",
 };
 
-const BUCKET_VARIANT: Record<ReactivationBucket, "destructive" | "warning" | "secondary" | "outline"> = {
+const BUCKET_VARIANT: Record<
+  ReactivationBucket,
+  "destructive" | "warning" | "secondary" | "outline"
+> = {
   hot: "destructive",
   warm: "warning",
   cold: "secondary",
@@ -77,10 +83,34 @@ export default async function ReactivationPage({
         <div className="space-y-4 lg:col-span-2">
           {/* Bucket pills */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <BucketStat label="Hot" count={summary.hot} active={bucket === "hot"} href="/marketing/reactivation?bucket=hot" tone="destructive" />
-            <BucketStat label="Warm" count={summary.warm} active={bucket === "warm"} href="/marketing/reactivation?bucket=warm" tone="warning" />
-            <BucketStat label="Cold" count={summary.cold} active={bucket === "cold"} href="/marketing/reactivation?bucket=cold" tone="secondary" />
-            <BucketStat label="Deep freeze" count={summary.deepFreeze} active={bucket === "deep_freeze"} href="/marketing/reactivation?bucket=deep_freeze" tone="outline" />
+            <BucketStat
+              label="Hot"
+              count={summary.hot}
+              active={bucket === "hot"}
+              href="/marketing/reactivation?bucket=hot"
+              tone="destructive"
+            />
+            <BucketStat
+              label="Warm"
+              count={summary.warm}
+              active={bucket === "warm"}
+              href="/marketing/reactivation?bucket=warm"
+              tone="warning"
+            />
+            <BucketStat
+              label="Cold"
+              count={summary.cold}
+              active={bucket === "cold"}
+              href="/marketing/reactivation?bucket=cold"
+              tone="secondary"
+            />
+            <BucketStat
+              label="Deep freeze"
+              count={summary.deepFreeze}
+              active={bucket === "deep_freeze"}
+              href="/marketing/reactivation?bucket=deep_freeze"
+              tone="outline"
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -95,7 +125,10 @@ export default async function ReactivationPage({
               />
             </form>
             {bucket && (
-              <Link href="/marketing/reactivation" className="text-xs text-muted-foreground hover:underline">
+              <Link
+                href="/marketing/reactivation"
+                className="text-xs text-muted-foreground hover:underline"
+              >
                 Clear filters
               </Link>
             )}
@@ -141,9 +174,7 @@ export default async function ReactivationPage({
                         </TD>
                         <TD className="text-xs text-muted-foreground">{r.customerType}</TD>
                         <TD>
-                          <Badge
-                            variant={r.consentStatus === "subscribed" ? "success" : "outline"}
-                          >
+                          <Badge variant={r.consentStatus === "subscribed" ? "success" : "outline"}>
                             {r.consentStatus}
                           </Badge>
                         </TD>
@@ -167,9 +198,7 @@ export default async function ReactivationPage({
                           {r.reactivationScore}
                         </TD>
                         <TD>
-                          <Badge variant={BUCKET_VARIANT[r.bucket]}>
-                            {BUCKET_LABEL[r.bucket]}
-                          </Badge>
+                          <Badge variant={BUCKET_VARIANT[r.bucket]}>{BUCKET_LABEL[r.bucket]}</Badge>
                         </TD>
                       </TR>
                     ))}

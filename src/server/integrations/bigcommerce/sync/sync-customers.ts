@@ -26,7 +26,6 @@ import {
   type SlimOrderAggregate,
 } from "./customer-mapper";
 
-const BC_BASE = "https://api.bigcommerce.com";
 const PAGE_SIZE = 250;
 const HARD_CAP_ORDERS = 500_000;
 const HARD_CAP_CUSTOMERS = 250_000;
@@ -101,9 +100,7 @@ async function buildOrderAggregates(args: {
   sinceIso?: string;
 }): Promise<{ aggByCustomer: Map<number, SlimOrderAggregate>; ordersScanned: number }> {
   const aggByCustomer = new Map<number, SlimOrderAggregate>();
-  const sinceParam = args.sinceIso
-    ? `&min_date_modified=${encodeURIComponent(args.sinceIso)}`
-    : "";
+  const sinceParam = args.sinceIso ? `&min_date_modified=${encodeURIComponent(args.sinceIso)}` : "";
   let page = 1;
   let ordersScanned = 0;
 
@@ -160,15 +157,12 @@ async function walkAndUpsertCustomers(args: {
   counts: SyncCustomersCounts;
   onProgress?: (counts: SyncCustomersCounts) => void | Promise<void>;
 }): Promise<void> {
-  const sinceParam = args.sinceIso
-    ? `&date_modified:min=${encodeURIComponent(args.sinceIso)}`
-    : "";
+  const sinceParam = args.sinceIso ? `&date_modified:min=${encodeURIComponent(args.sinceIso)}` : "";
   let page = 1;
   let customersScanned = 0;
 
   while (customersScanned < HARD_CAP_CUSTOMERS) {
-    const url =
-      `${args.storeRoot}/v3/customers?limit=${PAGE_SIZE}&page=${page}${sinceParam}`;
+    const url = `${args.storeRoot}/v3/customers?limit=${PAGE_SIZE}&page=${page}${sinceParam}`;
     const r = await bcFetch(url, args.apiToken);
     if (!r.ok) {
       throw new Error(`Customers page ${page}: HTTP ${r.status} — ${r.body}`);

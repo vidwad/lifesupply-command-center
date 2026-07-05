@@ -40,8 +40,7 @@ export default async function ReportDetailPage({ params }: Props) {
   const snapshot = report.metadata as unknown as ReportSnapshot | null;
   const canExport = userHasPermission(user, PERMISSIONS.REPORTS_EXPORT);
   const canRequestApproval = userHasPermission(user, PERMISSIONS.REPORTS_GENERATE);
-  const isApprovableState =
-    report.status === "generated" || report.status === "under_review";
+  const isApprovableState = report.status === "generated" || report.status === "under_review";
 
   return (
     <div>
@@ -71,10 +70,7 @@ export default async function ReportDetailPage({ params }: Props) {
               </Button>
             )}
             {canRequestApproval && (
-              <RequestApprovalButton
-                reportId={report.id}
-                disabled={!isApprovableState}
-              />
+              <RequestApprovalButton reportId={report.id} disabled={!isApprovableState} />
             )}
           </div>
         }

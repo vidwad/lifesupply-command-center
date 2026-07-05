@@ -89,9 +89,7 @@ export default async function InvestorUpdatesPage() {
                         <TD className="text-xs text-muted-foreground">
                           {u.periodLabel ?? "—"}
                           {u.financialPeriod && (
-                            <div className="text-[10px]">
-                              {u.financialPeriod.status}
-                            </div>
+                            <div className="text-[10px]">{u.financialPeriod.status}</div>
                           )}
                         </TD>
                         <TD>
@@ -135,7 +133,8 @@ export default async function InvestorUpdatesPage() {
           ) : (
             <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
               You can view investor updates but not draft them. Requires{" "}
-              <code className="rounded bg-muted px-1">{PERMISSIONS.INVESTORS_GENERATE_UPDATE}</code>.
+              <code className="rounded bg-muted px-1">{PERMISSIONS.INVESTORS_GENERATE_UPDATE}</code>
+              .
             </div>
           )}
         </div>

@@ -30,11 +30,7 @@ function isoDate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-export function DateRangePicker({
-  fromParam = "from",
-  toParam = "to",
-  defaultPreset,
-}: Props) {
+export function DateRangePicker({ fromParam = "from", toParam = "to", defaultPreset }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

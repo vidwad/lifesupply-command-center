@@ -78,12 +78,12 @@ export async function importQuickBooksPnl(args: {
       const divisionCode = pick(row, ["division", "Division", "division_code"]);
       let divisionId: string | null = null;
       if (divisionCode) {
-        const div = await prisma.division.findUnique({ where: { code: divisionCode.toUpperCase() } });
+        const div = await prisma.division.findUnique({
+          where: { code: divisionCode.toUpperCase() },
+        });
         if (!div) {
           failed++;
-          errorWarnings.push(
-            `Row ${index + 2}: division code "${divisionCode}" not found`,
-          );
+          errorWarnings.push(`Row ${index + 2}: division code "${divisionCode}" not found`);
           continue;
         }
         divisionId = div.id;
@@ -98,7 +98,11 @@ export async function importQuickBooksPnl(args: {
       const ebitda = pickNumber(row, ["ebitda", "EBITDA"]);
       const adjustedEbitda = pickNumber(row, ["adjusted_ebitda", "Adjusted EBITDA"]);
       const cash = pickNumber(row, ["cash", "Cash"]);
-      const accountsReceivable = pickNumber(row, ["accounts_receivable", "AR", "Accounts Receivable"]);
+      const accountsReceivable = pickNumber(row, [
+        "accounts_receivable",
+        "AR",
+        "Accounts Receivable",
+      ]);
       const accountsPayable = pickNumber(row, ["accounts_payable", "AP", "Accounts Payable"]);
       const workingCapital = pickNumber(row, ["working_capital", "Working Capital"]);
       const currency = pick(row, ["currency", "Currency"]) ?? "CAD";

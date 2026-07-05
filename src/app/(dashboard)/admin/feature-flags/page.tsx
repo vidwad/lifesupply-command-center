@@ -52,7 +52,7 @@ export default async function FeatureFlagsPage() {
                   <TH>Description</TH>
                   <TH>Status</TH>
                   <TH>Last changed</TH>
-                  <TH>{" "}</TH>
+                  <TH> </TH>
                 </tr>
               </THead>
               <TBody>
@@ -85,8 +85,8 @@ export default async function FeatureFlagsPage() {
         </Card>
         <p className="text-xs text-muted-foreground">
           Flags governing supplier writes, AI mutations, BigCommerce/QuickBooks write-backs, and
-          outbound Mailchimp campaigns must remain off until the related workflow has been
-          reviewed and approved per docs/14 §16 and docs/16 §16.
+          outbound Mailchimp campaigns must remain off until the related workflow has been reviewed
+          and approved per docs/14 §16 and docs/16 §16.
         </p>
       </div>
     </div>

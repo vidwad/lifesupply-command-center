@@ -417,9 +417,7 @@ function emitRow(
       ? Math.max(daysBetween(lastMs, firstMs), 0)
       : 0;
   const orderFreq =
-    totalOrders > 1 && lifespan > 0
-      ? (lifespan / (totalOrders - 1)).toFixed(1)
-      : "";
+    totalOrders > 1 && lifespan > 0 ? (lifespan / (totalOrders - 1)).toFixed(1) : "";
   let funnelGap: number | "" = "";
   if (c.date_created && firstMs !== undefined && Number.isFinite(firstMs)) {
     const regMs = new Date(c.date_created).getTime();
@@ -441,7 +439,7 @@ function emitRow(
     c.phone ?? "",
     isoDate(firstMs ?? Number.NaN),
     isoDate(lastMs ?? Number.NaN),
-    hasOrders ? (a!.lastTotal).toFixed(2) : "",
+    hasOrders ? a!.lastTotal.toFixed(2) : "",
     a?.lastOrderId || "",
     totalOrders,
     hasOrders ? totalSpend.toFixed(2) : "0.00",
@@ -451,7 +449,7 @@ function emitRow(
     orderFreq,
     bucket,
     funnelGap,
-    hasOrders ? (a!.largest).toFixed(2) : "",
+    hasOrders ? a!.largest.toFixed(2) : "",
     paymentMethods,
     isB2B ? "true" : "false",
     taxExempt ? "true" : "false",
@@ -466,18 +464,14 @@ function emitGuestRow(email: string, a: GuestAgg, todayMs: number): string {
   const totalOrders = a.count;
   const totalSpend = a.spend;
   const aov = totalOrders > 0 ? totalSpend / totalOrders : 0;
-  const daysSince = Number.isFinite(a.lastMs)
-    ? Math.max(daysBetween(todayMs, a.lastMs), 0)
-    : null;
+  const daysSince = Number.isFinite(a.lastMs) ? Math.max(daysBetween(todayMs, a.lastMs), 0) : null;
   const bucket = recencyBucket(daysSince);
   const lifespan =
     Number.isFinite(a.firstMs) && Number.isFinite(a.lastMs)
       ? Math.max(daysBetween(a.lastMs, a.firstMs), 0)
       : 0;
   const orderFreq =
-    totalOrders > 1 && lifespan > 0
-      ? (lifespan / (totalOrders - 1)).toFixed(1)
-      : "";
+    totalOrders > 1 && lifespan > 0 ? (lifespan / (totalOrders - 1)).toFixed(1) : "";
   const isB2B = !!(a.company && a.company.trim());
   const paymentMethods = Array.from(a.paymentMethods).sort().join("|");
 

@@ -2,10 +2,7 @@
 
 import { useActionState, useState } from "react";
 
-import {
-  setStatusAction,
-  type ExceptionActionState,
-} from "./actions";
+import { setStatusAction, type ExceptionActionState } from "./actions";
 
 type Props = {
   id: string;
@@ -56,9 +53,7 @@ export function ExceptionStatusForm({ id, currentStatus }: Props) {
           onChange={(e) => setNotes(e.target.value)}
           required={requireNotes}
           rows={2}
-          placeholder={
-            requireNotes ? "Resolution notes (required)" : "Notes (optional)"
-          }
+          placeholder={requireNotes ? "Resolution notes (required)" : "Notes (optional)"}
           className="w-full rounded border bg-background px-2 py-1 text-xs"
         />
         <div className="flex gap-1">

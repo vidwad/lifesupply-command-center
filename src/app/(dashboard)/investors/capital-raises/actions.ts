@@ -15,8 +15,20 @@ import { requirePermission } from "@/server/permissions";
 
 export type CapitalRaiseActionState = { error?: string; ok?: string } | undefined;
 
-const VALID_RAISE_STATUS: CapitalRaiseStatus[] = ["planning", "open", "closing", "closed", "cancelled"];
-const VALID_COMMITMENT_STATUS: CommitmentStatus[] = ["soft", "signed", "funded", "withdrawn", "declined"];
+const VALID_RAISE_STATUS: CapitalRaiseStatus[] = [
+  "planning",
+  "open",
+  "closing",
+  "closed",
+  "cancelled",
+];
+const VALID_COMMITMENT_STATUS: CommitmentStatus[] = [
+  "soft",
+  "signed",
+  "funded",
+  "withdrawn",
+  "declined",
+];
 
 export async function createCapitalRaiseAction(
   _prev: CapitalRaiseActionState,

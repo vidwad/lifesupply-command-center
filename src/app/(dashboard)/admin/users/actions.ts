@@ -24,7 +24,10 @@ function parseStatus(value: FormDataEntryValue | null): UserStatus | null {
 }
 
 function parseRoleIds(formData: FormData): string[] {
-  return formData.getAll("roleIds").map((v) => String(v)).filter(Boolean);
+  return formData
+    .getAll("roleIds")
+    .map((v) => String(v))
+    .filter(Boolean);
 }
 
 export async function createUserAction(

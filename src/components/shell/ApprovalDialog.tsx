@@ -49,12 +49,7 @@ export function ApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="contents"
-        aria-label={title}
-      >
+      <button type="button" onClick={() => setOpen(true)} className="contents" aria-label={title}>
         {trigger}
       </button>
       <DialogContent className="sm:max-w-md">
@@ -73,10 +68,7 @@ export function ApprovalDialog({
         >
           {requireReason && (
             <div className="space-y-1.5">
-              <label
-                htmlFor="approval-reason"
-                className="text-sm font-medium leading-none"
-              >
+              <label htmlFor="approval-reason" className="text-sm font-medium leading-none">
                 {reasonLabel}
               </label>
               <textarea

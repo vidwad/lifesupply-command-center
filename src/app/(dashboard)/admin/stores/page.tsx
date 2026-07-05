@@ -54,7 +54,7 @@ export default async function StoresPage() {
                     <TH>External ID</TH>
                     <TH>URL</TH>
                     <TH>Status</TH>
-                    <TH>{" "}</TH>
+                    <TH> </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -113,11 +113,6 @@ export default async function StoresPage() {
 }
 
 function StoreStatusBadge({ status }: { status: string }) {
-  const variant =
-    status === "active"
-      ? "success"
-      : status === "inactive"
-        ? "secondary"
-        : "outline";
+  const variant = status === "active" ? "success" : status === "inactive" ? "secondary" : "outline";
   return <Badge variant={variant as "success" | "secondary" | "outline"}>{status}</Badge>;
 }

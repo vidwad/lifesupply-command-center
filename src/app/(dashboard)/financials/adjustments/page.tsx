@@ -92,7 +92,7 @@ export default async function AdjustmentsPage({
                     <TH>Description</TH>
                     <TH>Status</TH>
                     <TH>Created</TH>
-                    <TH>{" "}</TH>
+                    <TH> </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -102,9 +102,7 @@ export default async function AdjustmentsPage({
                         <div className="font-medium">{r.periodName}</div>
                         <div className="text-xs text-muted-foreground">{r.periodStatus}</div>
                       </TD>
-                      <TD className="text-muted-foreground">
-                        {r.divisionName ?? "Consolidated"}
-                      </TD>
+                      <TD className="text-muted-foreground">{r.divisionName ?? "Consolidated"}</TD>
                       <TD className="text-xs uppercase tracking-wide text-muted-foreground">
                         {r.category.replace(/_/g, " ")}
                       </TD>
@@ -131,9 +129,7 @@ export default async function AdjustmentsPage({
                       </TD>
                       <TD className="text-xs text-muted-foreground">
                         {formatDate(r.createdAt)}
-                        {r.createdByLabel && (
-                          <div className="text-[10px]">{r.createdByLabel}</div>
-                        )}
+                        {r.createdByLabel && <div className="text-[10px]">{r.createdByLabel}</div>}
                       </TD>
                       <TD>
                         {canApprove && r.approvalStatus === "pending" && (

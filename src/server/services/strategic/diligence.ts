@@ -10,24 +10,64 @@ const STANDARD_CHECKLIST: {
   description?: string;
 }[] = [
   // ---- financial
-  { category: "financial", itemKey: "fin_audited_statements", title: "Obtain audited statements (last 3 years)" },
-  { category: "financial", itemKey: "fin_management_accounts", title: "Review monthly management accounts (last 24 months)" },
-  { category: "financial", itemKey: "fin_revenue_concentration", title: "Top-10 customer concentration analysis" },
-  { category: "financial", itemKey: "fin_working_capital", title: "Working capital + cash flow review" },
+  {
+    category: "financial",
+    itemKey: "fin_audited_statements",
+    title: "Obtain audited statements (last 3 years)",
+  },
+  {
+    category: "financial",
+    itemKey: "fin_management_accounts",
+    title: "Review monthly management accounts (last 24 months)",
+  },
+  {
+    category: "financial",
+    itemKey: "fin_revenue_concentration",
+    title: "Top-10 customer concentration analysis",
+  },
+  {
+    category: "financial",
+    itemKey: "fin_working_capital",
+    title: "Working capital + cash flow review",
+  },
   // ---- legal
-  { category: "legal", itemKey: "legal_corp_records", title: "Corporate records + shareholder register" },
-  { category: "legal", itemKey: "legal_contracts", title: "Material contracts (top customers + top suppliers)" },
+  {
+    category: "legal",
+    itemKey: "legal_corp_records",
+    title: "Corporate records + shareholder register",
+  },
+  {
+    category: "legal",
+    itemKey: "legal_contracts",
+    title: "Material contracts (top customers + top suppliers)",
+  },
   { category: "legal", itemKey: "legal_ip", title: "IP + trademark + domain ownership" },
   { category: "legal", itemKey: "legal_litigation", title: "Open / threatened litigation" },
   // ---- operational
-  { category: "operational", itemKey: "ops_supplier_agreements", title: "Supplier agreements + pricing" },
-  { category: "operational", itemKey: "ops_inventory", title: "Inventory levels + valuation method" },
+  {
+    category: "operational",
+    itemKey: "ops_supplier_agreements",
+    title: "Supplier agreements + pricing",
+  },
+  {
+    category: "operational",
+    itemKey: "ops_inventory",
+    title: "Inventory levels + valuation method",
+  },
   { category: "operational", itemKey: "ops_systems", title: "Systems + tooling inventory" },
   // ---- commercial
   { category: "commercial", itemKey: "comm_pipeline", title: "Sales pipeline + win-rate trends" },
-  { category: "commercial", itemKey: "comm_customer_references", title: "Customer references (3 active, 1 lost)" },
+  {
+    category: "commercial",
+    itemKey: "comm_customer_references",
+    title: "Customer references (3 active, 1 lost)",
+  },
   // ---- regulatory
-  { category: "regulatory", itemKey: "reg_licenses", title: "Health-canada / FDA registrations + product licenses" },
+  {
+    category: "regulatory",
+    itemKey: "reg_licenses",
+    title: "Health-canada / FDA registrations + product licenses",
+  },
   { category: "regulatory", itemKey: "reg_data_privacy", title: "PIPEDA + HIPAA posture review" },
   // ---- HR
   { category: "hr", itemKey: "hr_org_chart", title: "Org chart + key-employee retention plan" },
@@ -42,11 +82,13 @@ const INCLUDE = {
 
 export type DiligenceItemRow = Prisma.DiligenceItemGetPayload<{ include: typeof INCLUDE }>;
 
-export async function listDiligenceItems(filters: {
-  opportunityId?: string;
-  status?: DiligenceStatus;
-  ownerId?: string;
-} = {}): Promise<DiligenceItemRow[]> {
+export async function listDiligenceItems(
+  filters: {
+    opportunityId?: string;
+    status?: DiligenceStatus;
+    ownerId?: string;
+  } = {},
+): Promise<DiligenceItemRow[]> {
   return prisma.diligenceItem.findMany({
     where: {
       ...(filters.opportunityId ? { opportunityId: filters.opportunityId } : {}),

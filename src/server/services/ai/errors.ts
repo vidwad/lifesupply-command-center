@@ -26,9 +26,7 @@ export class AiOutputValidationError extends Error {
     public readonly templateKey: string,
     public readonly issues: string[],
   ) {
-    super(
-      `AI output for template "${templateKey}" failed schema validation: ${issues.join(", ")}`,
-    );
+    super(`AI output for template "${templateKey}" failed schema validation: ${issues.join(", ")}`);
     this.name = "AiOutputValidationError";
   }
 }

@@ -4,13 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { PERMISSIONS } from "@/lib/permissions";
-import {
-  AiNotConfiguredError,
-  AiProviderNotConfiguredError,
-} from "@/server/services/ai";
-import {
-  draftReactivationCampaign,
-} from "@/server/services/marketing/campaigns";
+import { AiNotConfiguredError, AiProviderNotConfiguredError } from "@/server/services/ai";
+import { draftReactivationCampaign } from "@/server/services/marketing/campaigns";
 import { requirePermission } from "@/server/permissions";
 
 export type DraftActionState = { error?: string; ok?: string; campaignId?: string } | undefined;

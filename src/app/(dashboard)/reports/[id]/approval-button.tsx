@@ -40,10 +40,7 @@ export function RequestApprovalButton({
   }
 
   return (
-    <form
-      action={formAction}
-      className="flex flex-col gap-2 rounded-md border bg-card p-3 text-sm"
-    >
+    <form action={formAction} className="flex flex-col gap-2 rounded-md border bg-card p-3 text-sm">
       <input type="hidden" name="reportId" value={reportId} />
       <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Notes for reviewer (optional)

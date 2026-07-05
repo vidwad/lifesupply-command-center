@@ -5,10 +5,7 @@ import { ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import {
-  tripKillSwitchAction,
-  type KillSwitchState,
-} from "./kill-switch-actions";
+import { tripKillSwitchAction, type KillSwitchState } from "./kill-switch-actions";
 
 export function KillSwitchPanel({ riskyEnabledCount }: { riskyEnabledCount: number }) {
   const [open, setOpen] = useState(false);
@@ -27,9 +24,9 @@ export function KillSwitchPanel({ riskyEnabledCount }: { riskyEnabledCount: numb
           <p className="mt-1 text-xs text-muted-foreground">
             One click to flip OFF: <code>supplier.automation</code>,{" "}
             <code>supplier.order_submit</code>, <code>external.writebacks</code>,{" "}
-            <code>quickbooks.writebacks</code>, <code>ai.actions</code>,{" "}
-            <code>mailchimp.send</code>, <code>investor.distribution</code>. Read-only flags are
-            untouched. Action is audit-logged with the reason.
+            <code>quickbooks.writebacks</code>, <code>ai.actions</code>, <code>mailchimp.send</code>
+            , <code>investor.distribution</code>. Read-only flags are untouched. Action is
+            audit-logged with the reason.
           </p>
           {riskyEnabledCount > 0 && (
             <p className="mt-2 text-xs font-medium text-destructive">
@@ -41,12 +38,7 @@ export function KillSwitchPanel({ riskyEnabledCount }: { riskyEnabledCount: numb
       </div>
       {!open ? (
         <div className="mt-3 flex justify-end">
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={() => setOpen(true)}
-          >
+          <Button type="button" variant="destructive" size="sm" onClick={() => setOpen(true)}>
             Trip kill-switch
           </Button>
         </div>
@@ -89,8 +81,8 @@ export function KillSwitchPanel({ riskyEnabledCount }: { riskyEnabledCount: numb
           )}
           {state?.ok && (
             <p role="status" className="text-xs text-success">
-              Tripped. {state.flippedCount} flag{state.flippedCount === 1 ? "" : "s"} flipped off
-              ({state.alreadyOffCount} already off).
+              Tripped. {state.flippedCount} flag{state.flippedCount === 1 ? "" : "s"} flipped off (
+              {state.alreadyOffCount} already off).
             </p>
           )}
         </form>

@@ -235,7 +235,9 @@ export async function askAiAnalyst(args: {
   const warnings: string[] = [];
   if (data.period == null) warnings.push("No open financial period — answers may use stale data.");
   if (filtered.redactedSections.length > 0) {
-    warnings.push(`Some sections were hidden from the AI per your role: ${filtered.redactedSections.join(", ")}.`);
+    warnings.push(
+      `Some sections were hidden from the AI per your role: ${filtered.redactedSections.join(", ")}.`,
+    );
   }
 
   const aiOutput = await prisma.aiOutput.create({

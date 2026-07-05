@@ -29,13 +29,7 @@ type Props = {
   signOutAction: () => Promise<void>;
 };
 
-export function TopBar({
-  user,
-  divisions,
-  periods,
-  notificationCounts,
-  signOutAction,
-}: Props) {
+export function TopBar({ user, divisions, periods, notificationCounts, signOutAction }: Props) {
   const canUseAi = user.permissions.includes("ai.use");
   return (
     <header className="flex h-14 items-center justify-between gap-4 border-b bg-background px-4">

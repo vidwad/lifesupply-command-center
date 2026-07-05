@@ -15,7 +15,10 @@ import { ExportToMailchimpButton, RequestApprovalButton } from "./action-buttons
 
 export const dynamic = "force-dynamic";
 
-const STATUS_VARIANT: Record<string, "outline" | "warning" | "success" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "outline" | "warning" | "success" | "secondary" | "destructive"
+> = {
   draft: "outline",
   scheduled: "warning",
   sent: "success",
@@ -59,7 +62,12 @@ export default async function CampaignDetailPage({ params }: Props) {
   });
 
   const audience = Array.isArray(campaign.audienceSnapshot)
-    ? (campaign.audienceSnapshot as Array<{ id: string; email: string | null; name: string; score: number }>)
+    ? (campaign.audienceSnapshot as Array<{
+        id: string;
+        email: string | null;
+        name: string;
+        score: number;
+      }>)
     : [];
   const audienceCount = audience.length;
 
@@ -86,7 +94,10 @@ export default async function CampaignDetailPage({ params }: Props) {
         title={campaign.name}
         description={campaign.subject ?? "No subject set."}
         breadcrumb={
-          <Link href="/marketing/campaigns" className="inline-flex items-center gap-1 hover:underline">
+          <Link
+            href="/marketing/campaigns"
+            className="inline-flex items-center gap-1 hover:underline"
+          >
             <ArrowLeft className="h-3 w-3" /> Campaigns
           </Link>
         }
@@ -185,13 +196,17 @@ export default async function CampaignDetailPage({ params }: Props) {
                 <Row label="Audience">{campaign.audienceSummary ?? "—"}</Row>
                 <Row label="Recipients">{audienceCount}</Row>
                 <Row label="Approved by">
-                  {campaign.approvedById ? (campaign.approvedAt ? formatDateTime(campaign.approvedAt) : "yes") : "—"}
+                  {campaign.approvedById
+                    ? campaign.approvedAt
+                      ? formatDateTime(campaign.approvedAt)
+                      : "yes"
+                    : "—"}
                 </Row>
-                <Row label="Mailchimp ID">
-                  {campaign.mailchimpExternalId ?? "—"}
-                </Row>
+                <Row label="Mailchimp ID">{campaign.mailchimpExternalId ?? "—"}</Row>
                 <Row label="Mailchimp queued at">
-                  {campaign.mailchimpExportedAt ? formatDateTime(campaign.mailchimpExportedAt) : "—"}
+                  {campaign.mailchimpExportedAt
+                    ? formatDateTime(campaign.mailchimpExportedAt)
+                    : "—"}
                 </Row>
                 {campaign.mailchimpExportError && (
                   <div>
@@ -254,9 +269,7 @@ export default async function CampaignDetailPage({ params }: Props) {
                           <span className="ml-1 text-muted-foreground">&lt;{a.email}&gt;</span>
                         )}
                       </span>
-                      <span className="font-mono text-[10px] text-muted-foreground">
-                        {a.score}
-                      </span>
+                      <span className="font-mono text-[10px] text-muted-foreground">{a.score}</span>
                     </li>
                   ))}
                   {audience.length > 25 && (

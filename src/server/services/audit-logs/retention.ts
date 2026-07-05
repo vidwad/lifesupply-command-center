@@ -71,7 +71,9 @@ export type RetentionReport = {
  * older than the cutoff are touched, and the never-prune list is enforced
  * inside the WHERE clause.
  */
-export async function runAuditRetention(args: { actor?: { id: string } } = {}): Promise<RetentionReport> {
+export async function runAuditRetention(
+  args: { actor?: { id: string } } = {},
+): Promise<RetentionReport> {
   const startedAt = Date.now();
   const retentionDays = getRetentionDays();
   const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);

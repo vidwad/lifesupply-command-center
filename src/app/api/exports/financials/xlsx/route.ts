@@ -34,7 +34,12 @@ export async function GET(req: Request) {
     sheetName: "Financial Summary",
     columns: [
       { header: "Period", key: "period", width: 14, get: (s) => s.financialPeriod.name },
-      { header: "Period Status", key: "periodStatus", width: 12, get: (s) => s.financialPeriod.status },
+      {
+        header: "Period Status",
+        key: "periodStatus",
+        width: 12,
+        get: (s) => s.financialPeriod.status,
+      },
       {
         header: "Period Start",
         key: "periodStart",
@@ -53,20 +58,73 @@ export async function GET(req: Request) {
         width: 20,
         get: (s) => s.division?.name ?? "Consolidated",
       },
-      { header: "Division Code", key: "divisionCode", width: 12, get: (s) => s.division?.code ?? "" },
+      {
+        header: "Division Code",
+        key: "divisionCode",
+        width: 12,
+        get: (s) => s.division?.code ?? "",
+      },
       { header: "Currency", key: "currency", width: 10, get: (s) => s.currency },
-      { header: "Revenue", key: "revenue", width: 16, numFmt: "$#,##0.00", get: (s) => D(s.revenue) },
+      {
+        header: "Revenue",
+        key: "revenue",
+        width: 16,
+        numFmt: "$#,##0.00",
+        get: (s) => D(s.revenue),
+      },
       { header: "COGS", key: "cogs", width: 16, numFmt: "$#,##0.00", get: (s) => D(s.cogs) },
-      { header: "Gross Profit", key: "grossProfit", width: 16, numFmt: "$#,##0.00", get: (s) => D(s.grossProfit) },
-      { header: "Gross Margin", key: "grossMargin", width: 14, numFmt: "0.0%", get: (s) => D(s.grossMargin) },
-      { header: "Operating Expenses", key: "opex", width: 18, numFmt: "$#,##0.00", get: (s) => D(s.operatingExpenses) },
-      { header: "Operating Income", key: "opIncome", width: 18, numFmt: "$#,##0.00", get: (s) => D(s.operatingIncome) },
+      {
+        header: "Gross Profit",
+        key: "grossProfit",
+        width: 16,
+        numFmt: "$#,##0.00",
+        get: (s) => D(s.grossProfit),
+      },
+      {
+        header: "Gross Margin",
+        key: "grossMargin",
+        width: 14,
+        numFmt: "0.0%",
+        get: (s) => D(s.grossMargin),
+      },
+      {
+        header: "Operating Expenses",
+        key: "opex",
+        width: 18,
+        numFmt: "$#,##0.00",
+        get: (s) => D(s.operatingExpenses),
+      },
+      {
+        header: "Operating Income",
+        key: "opIncome",
+        width: 18,
+        numFmt: "$#,##0.00",
+        get: (s) => D(s.operatingIncome),
+      },
       { header: "EBITDA", key: "ebitda", width: 16, numFmt: "$#,##0.00", get: (s) => D(s.ebitda) },
-      { header: "Adjusted EBITDA", key: "adjEbitda", width: 18, numFmt: "$#,##0.00", get: (s) => D(s.adjustedEbitda) },
+      {
+        header: "Adjusted EBITDA",
+        key: "adjEbitda",
+        width: 18,
+        numFmt: "$#,##0.00",
+        get: (s) => D(s.adjustedEbitda),
+      },
       { header: "Cash", key: "cash", width: 16, numFmt: "$#,##0.00", get: (s) => D(s.cash) },
-      { header: "AR", key: "ar", width: 16, numFmt: "$#,##0.00", get: (s) => D(s.accountsReceivable) },
+      {
+        header: "AR",
+        key: "ar",
+        width: 16,
+        numFmt: "$#,##0.00",
+        get: (s) => D(s.accountsReceivable),
+      },
       { header: "AP", key: "ap", width: 16, numFmt: "$#,##0.00", get: (s) => D(s.accountsPayable) },
-      { header: "Working Capital", key: "wc", width: 18, numFmt: "$#,##0.00", get: (s) => D(s.workingCapital) },
+      {
+        header: "Working Capital",
+        key: "wc",
+        width: 18,
+        numFmt: "$#,##0.00",
+        get: (s) => D(s.workingCapital),
+      },
       { header: "Approval Status", key: "approval", width: 14, get: (s) => s.approvalStatus },
       { header: "Source System", key: "source", width: 14, get: (s) => s.sourceSystem ?? "" },
     ],
@@ -80,8 +138,5 @@ export async function GET(req: Request) {
     afterData: { rows: summaries.length, periodId, divisionId, bytes: buffer.length },
   });
 
-  return xlsxResponse(
-    `financial-summary-${new Date().toISOString().slice(0, 10)}.xlsx`,
-    buffer,
-  );
+  return xlsxResponse(`financial-summary-${new Date().toISOString().slice(0, 10)}.xlsx`, buffer);
 }

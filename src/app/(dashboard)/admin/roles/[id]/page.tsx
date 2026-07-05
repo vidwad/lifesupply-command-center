@@ -60,15 +60,10 @@ export default async function RoleDetailPage({ params }: { params: Promise<{ id:
                 <ul className="space-y-2 text-sm">
                   {role.users.map((u) => (
                     <li key={u.id}>
-                      <Link
-                        href={`/admin/users/${u.id}`}
-                        className="font-medium hover:underline"
-                      >
+                      <Link href={`/admin/users/${u.id}`} className="font-medium hover:underline">
                         {u.name ?? u.email}
                       </Link>
-                      {u.name && (
-                        <div className="text-xs text-muted-foreground">{u.email}</div>
-                      )}
+                      {u.name && <div className="text-xs text-muted-foreground">{u.email}</div>}
                     </li>
                   ))}
                 </ul>
@@ -77,7 +72,10 @@ export default async function RoleDetailPage({ params }: { params: Promise<{ id:
           </Card>
 
           {!role.isSystemRole && role.userCount === 0 && (
-            <form action={deleteRoleAction} className="rounded-md border border-destructive/30 bg-card p-4">
+            <form
+              action={deleteRoleAction}
+              className="rounded-md border border-destructive/30 bg-card p-4"
+            >
               <h2 className="text-sm font-medium">Delete role</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 Custom roles can be deleted only when no users are assigned.

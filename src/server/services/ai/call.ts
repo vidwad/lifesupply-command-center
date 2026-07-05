@@ -140,4 +140,3 @@ async function invokeOpenAi(
     },
   };
 }
-

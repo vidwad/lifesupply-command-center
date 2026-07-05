@@ -49,10 +49,7 @@ export async function GET(
     id: log.id,
     syncType: log.syncType,
     status: log.status,
-    isFinished:
-      log.status === "success" ||
-      log.status === "failed" ||
-      log.status === "partial",
+    isFinished: log.status === "success" || log.status === "failed" || log.status === "partial",
     startedAt: log.startedAt.toISOString(),
     completedAt: log.completedAt?.toISOString() ?? null,
     durationMs,

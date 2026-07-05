@@ -27,9 +27,7 @@ export async function isFeatureOn(key: FeatureFlagKey): Promise<boolean> {
 /**
  * Read multiple flags in one query. Missing rows resolve to false.
  */
-export async function getFeatureFlags(
-  keys: FeatureFlagKey[],
-): Promise<Record<string, boolean>> {
+export async function getFeatureFlags(keys: FeatureFlagKey[]): Promise<Record<string, boolean>> {
   const rows = await prisma.featureFlag.findMany({
     where: { key: { in: keys as string[] } },
   });

@@ -12,7 +12,13 @@ import { requirePermission } from "@/server/permissions";
 
 export type DiligenceActionState = { error?: string; ok?: string } | undefined;
 
-const VALID_STATUS: DiligenceStatus[] = ["pending", "in_progress", "blocked", "done", "not_applicable"];
+const VALID_STATUS: DiligenceStatus[] = [
+  "pending",
+  "in_progress",
+  "blocked",
+  "done",
+  "not_applicable",
+];
 
 export async function seedChecklistAction(formData: FormData): Promise<void> {
   const actor = await requirePermission(PERMISSIONS.OPPORTUNITIES_UPDATE);

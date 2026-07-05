@@ -22,8 +22,8 @@ export function InvestorUpdateDraftForm({
       <div>
         <h2 className="text-sm font-medium">Draft an investor update with AI</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Pulls the chosen financial period&rsquo;s figures + investor distribution snapshot. The draft
-          is saved in <code>draft</code>; approval + the <code>investor.distribution</code>{" "}
+          Pulls the chosen financial period&rsquo;s figures + investor distribution snapshot. The
+          draft is saved in <code>draft</code>; approval + the <code>investor.distribution</code>{" "}
           feature flag are required to release.
         </p>
       </div>

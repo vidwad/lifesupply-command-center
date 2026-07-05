@@ -93,7 +93,7 @@ export function TestConnectionButton({ integrationId }: Props) {
                   ? "Not yet supported"
                   : `Failed (${state.status})`}
             </p>
-            <p className="text-muted-foreground break-all">{state.message}</p>
+            <p className="break-all text-muted-foreground">{state.message}</p>
           </div>
         </div>
       )}

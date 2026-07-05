@@ -1,10 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
-import type {
-  ExceptionSeverity,
-  ExceptionState,
-  ExceptionType,
-} from "@prisma/client";
+import type { ExceptionSeverity, ExceptionState, ExceptionType } from "@prisma/client";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,7 +50,9 @@ const TYPE_VALUES: ExceptionType[] = [
   "other",
 ];
 
-function severityVariant(s: ExceptionSeverity): "destructive" | "warning" | "secondary" | "outline" {
+function severityVariant(
+  s: ExceptionSeverity,
+): "destructive" | "warning" | "secondary" | "outline" {
   switch (s) {
     case "urgent":
       return "destructive";
@@ -67,7 +65,9 @@ function severityVariant(s: ExceptionSeverity): "destructive" | "warning" | "sec
   }
 }
 
-function statusVariant(s: ExceptionState): "destructive" | "warning" | "success" | "secondary" | "outline" {
+function statusVariant(
+  s: ExceptionState,
+): "destructive" | "warning" | "success" | "secondary" | "outline" {
   switch (s) {
     case "open":
       return "destructive";
@@ -228,7 +228,7 @@ export default async function ExceptionsPage({
                         <TD>
                           <div className="font-medium">{r.title}</div>
                           {r.description && (
-                            <div className="text-xs text-muted-foreground line-clamp-2">
+                            <div className="line-clamp-2 text-xs text-muted-foreground">
                               {r.description}
                             </div>
                           )}
@@ -240,7 +240,10 @@ export default async function ExceptionsPage({
                         </TD>
                         <TD>
                           {href ? (
-                            <Link href={href} className="font-mono text-xs text-primary hover:underline">
+                            <Link
+                              href={href}
+                              className="font-mono text-xs text-primary hover:underline"
+                            >
                               {r.entityType}/{r.entityId?.slice(0, 8)}…
                             </Link>
                           ) : r.entityId ? (
@@ -258,14 +261,12 @@ export default async function ExceptionsPage({
                           <Badge variant={statusVariant(r.status)}>{r.status}</Badge>
                         </TD>
                         <TD className="text-xs text-muted-foreground">
-                          {r.ageHours < 24
-                            ? `${r.ageHours}h`
-                            : `${Math.floor(r.ageHours / 24)}d`}
+                          {r.ageHours < 24 ? `${r.ageHours}h` : `${Math.floor(r.ageHours / 24)}d`}
                           <div className="text-[10px]">{formatDateTime(r.createdAt)}</div>
                         </TD>
                         <TD className="text-xs">
                           {r.assignedTo ? (
-                            r.assignedTo.name ?? r.assignedTo.email
+                            (r.assignedTo.name ?? r.assignedTo.email)
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}

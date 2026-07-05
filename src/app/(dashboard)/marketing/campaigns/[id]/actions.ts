@@ -43,10 +43,7 @@ export async function exportToMailchimpAction(
   try {
     await exportCampaignToMailchimp({ campaignId, actor: { id: actor.id } });
   } catch (err) {
-    if (
-      err instanceof FeatureDisabledError ||
-      err instanceof MailchimpExportError
-    ) {
+    if (err instanceof FeatureDisabledError || err instanceof MailchimpExportError) {
       return { error: err.message };
     }
     return { error: err instanceof Error ? err.message : "Failed to export." };

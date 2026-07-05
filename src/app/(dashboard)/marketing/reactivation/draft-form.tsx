@@ -26,8 +26,8 @@ export function CampaignDraftForm({ initialBucket }: { initialBucket?: string })
         <h2 className="text-sm font-medium">Draft a reactivation campaign with AI</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           The AI drafts an email body from your brief + the chosen audience bucket. The draft is
-          saved as a Campaign in <code>draft</code> status. Approval is required before the
-          campaign can be exported to Mailchimp.
+          saved as a Campaign in <code>draft</code> status. Approval is required before the campaign
+          can be exported to Mailchimp.
         </p>
       </div>
       <div className="grid gap-3 md:grid-cols-2">

@@ -10,10 +10,7 @@ import { requirePermission } from "@/server/permissions";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET(
-  _req: Request,
-  ctx: { params: Promise<{ id: string }> },
-) {
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const actor = await requirePermission(PERMISSIONS.REPORTS_EXPORT);
   const { id } = await ctx.params;
 
