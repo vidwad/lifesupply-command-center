@@ -14,7 +14,7 @@ import { isFeatureOn } from "@/server/services/feature-flags";
 import { listAutomationRuns } from "@/server/services/automation/runs";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
-import { PrepareOrderForm, PriceCheckForm, StockCheckForm } from "./trigger-forms";
+import { PrepareOrderForm, PriceCheckForm, SkuCheckForm, StockCheckForm } from "./trigger-forms";
 
 export const metadata = { title: "Automation runs" };
 export const dynamic = "force-dynamic";
@@ -32,12 +32,32 @@ const STATUS_VARIANT: Record<
   cancelled: "outline",
 };
 
-export default async function AutomationRunsPage() {
+const WORKFLOWS = ["price_check", "stock_check", "sku_check", "prepare_order", "submit_order"];
+const STATUSES = [
+  "running",
+  "succeeded",
+  "failed",
+  "awaiting_approval",
+  "cancelled",
+  "prepared",
+  "approved",
+];
+
+type SearchParams = Promise<{ workflow?: string; status?: string }>;
+
+export default async function AutomationRunsPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requirePermission(PERMISSIONS.SUPPLIERS_VIEW);
   const canRun = userHasPermission(user, PERMISSIONS.SUPPLIERS_RUN_AUTOMATION);
+  const params = await searchParams;
+  const workflowFilter = WORKFLOWS.includes(params.workflow ?? "") ? params.workflow : undefined;
+  const statusFilter = STATUSES.includes(params.status ?? "") ? params.status : undefined;
 
   const [runs, mappings, orders, automationOn, submissionOn] = await Promise.all([
-    listAutomationRuns({ limit: 50 }),
+    listAutomationRuns({
+      limit: 50,
+      workflow: workflowFilter as never,
+      status: statusFilter,
+    }),
     prisma.supplierProduct.findMany({
       where: { supplier: { status: "active" } },
       include: {
@@ -70,7 +90,7 @@ export default async function AutomationRunsPage() {
     <div>
       <PageHeader
         title="Automation runs"
-        description="Supplier-portal workflow runs. Today: simulated checks + prepared orders. No live portal hits — gated by supplier.automation."
+        description="Read-only supplier checks run in the background worker (live BBM01 when credentials are configured). Mismatches raise exceptions. Order submission stays disabled."
         breadcrumb={
           <Link href="/automation" className="inline-flex items-center gap-1 hover:underline">
             <ArrowLeft className="h-3 w-3" /> Automation
@@ -100,6 +120,56 @@ export default async function AutomationRunsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
+              <form
+                method="get"
+                className="flex flex-wrap items-end gap-2 border-b px-4 py-3 text-xs"
+              >
+                <label className="flex flex-col gap-1">
+                  <span className="font-medium uppercase tracking-wide text-muted-foreground">
+                    Workflow
+                  </span>
+                  <select
+                    name="workflow"
+                    defaultValue={workflowFilter ?? ""}
+                    className="h-8 rounded-md border bg-background px-2"
+                  >
+                    <option value="">All</option>
+                    {WORKFLOWS.map((w) => (
+                      <option key={w} value={w}>
+                        {w.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="font-medium uppercase tracking-wide text-muted-foreground">
+                    Status
+                  </span>
+                  <select
+                    name="status"
+                    defaultValue={statusFilter ?? ""}
+                    className="h-8 rounded-md border bg-background px-2"
+                  >
+                    <option value="">All</option>
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="submit"
+                  className="h-8 rounded-md border bg-background px-3 font-medium hover:bg-muted"
+                >
+                  Filter
+                </button>
+                {(workflowFilter || statusFilter) && (
+                  <Link href="/automation/runs" className="h-8 px-2 leading-8 hover:underline">
+                    Clear
+                  </Link>
+                )}
+              </form>
               {runs.length === 0 ? (
                 <div className="p-6">
                   <EmptyState
@@ -174,6 +244,7 @@ export default async function AutomationRunsPage() {
             <>
               <PriceCheckForm mappings={mappingOptions} />
               <StockCheckForm mappings={mappingOptions} />
+              <SkuCheckForm mappings={mappingOptions} />
               <PrepareOrderForm orders={orderOptions} />
             </>
           ) : (

@@ -39,6 +39,35 @@ const STEP_VARIANT: Record<
   skipped: "outline",
 };
 
+const VERDICT_VARIANT: Record<string, "warning" | "success" | "destructive" | "outline"> = {
+  ok: "success",
+  warn: "warning",
+  mismatch: "destructive",
+  unknown: "outline",
+};
+
+type ComparisonFlagView = {
+  rule: string;
+  verdict: string;
+  detail: string;
+  expected: string | number | null;
+  captured: string | number | null;
+};
+
+function isComparisonFlags(value: unknown): value is ComparisonFlagView[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(
+      (f) =>
+        f != null &&
+        typeof f === "object" &&
+        typeof (f as { rule?: unknown }).rule === "string" &&
+        typeof (f as { verdict?: unknown }).verdict === "string",
+    )
+  );
+}
+
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props) {
@@ -67,6 +96,22 @@ export default async function AutomationRunDetailPage({ params }: Props) {
     run.workflow === "prepare_order" &&
     run.status === "awaiting_approval" &&
     approval?.status === "approved";
+
+  // Exceptions raised by this run (Phase 7 checks record their ids).
+  const resultObj =
+    run.result && typeof run.result === "object" && !Array.isArray(run.result)
+      ? (run.result as { exceptionIds?: unknown })
+      : null;
+  const exceptionIds = Array.isArray(resultObj?.exceptionIds)
+    ? resultObj.exceptionIds.filter((v): v is string => typeof v === "string")
+    : [];
+  const exceptionLinks =
+    exceptionIds.length > 0
+      ? await prisma.exception.findMany({
+          where: { id: { in: exceptionIds } },
+          select: { id: true, title: true, severity: true, status: true, recurringKey: true },
+        })
+      : [];
 
   return (
     <div>
@@ -116,12 +161,68 @@ export default async function AutomationRunDetailPage({ params }: Props) {
           {Array.isArray(run.validationFlags) && run.validationFlags.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Validation flags</CardTitle>
+                <CardTitle className="text-sm">Comparison / validation flags</CardTitle>
               </CardHeader>
               <CardContent>
-                <pre className="max-h-60 overflow-auto rounded bg-muted p-3 text-[11px]">
-                  {JSON.stringify(run.validationFlags, null, 2)}
-                </pre>
+                {isComparisonFlags(run.validationFlags) ? (
+                  <ul className="space-y-2">
+                    {run.validationFlags.map((flag, i) => (
+                      <li key={i} className="rounded-md border p-3">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <code className="text-xs font-medium">{flag.rule}</code>
+                          <Badge variant={VERDICT_VARIANT[flag.verdict] ?? "outline"}>
+                            {flag.verdict}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">{flag.detail}</p>
+                        {(flag.expected != null || flag.captured != null) && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            Expected: <code>{String(flag.expected ?? "—")}</code> · Portal:{" "}
+                            <code>{String(flag.captured ?? "—")}</code>
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <pre className="max-h-60 overflow-auto rounded bg-muted p-3 text-[11px]">
+                    {JSON.stringify(run.validationFlags, null, 2)}
+                  </pre>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {exceptionLinks.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Exceptions raised</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {exceptionLinks.map((ex) => (
+                    <li key={ex.id} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="truncate">{ex.title}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <Badge
+                          variant={
+                            ex.severity === "high" || ex.severity === "urgent"
+                              ? "destructive"
+                              : "warning"
+                          }
+                        >
+                          {ex.severity}
+                        </Badge>
+                        <Link
+                          href={`/operations/exceptions?q=${ex.recurringKey ?? run.id}`}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Open →
+                        </Link>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           )}
@@ -230,14 +331,42 @@ export default async function AutomationRunDetailPage({ params }: Props) {
               <CardHeader>
                 <CardTitle className="text-sm">Evidence</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-1 text-xs text-muted-foreground">
-                  {run.evidence.map((e) => (
-                    <li key={e.id}>
-                      <span className="font-mono">{e.kind}</span> · {e.label ?? e.storageRef}
-                    </li>
-                  ))}
-                </ul>
+              <CardContent className="space-y-3">
+                {run.evidence.map((e) => {
+                  const viewable = e.storageRef.startsWith("db:");
+                  return (
+                    <figure key={e.id} className="space-y-1">
+                      {viewable && e.kind === "screenshot" ? (
+                        <a
+                          href={`/api/automation/evidence/${e.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Open full size"
+                        >
+                          {/* Authenticated dynamic route serves the bytes — next/image
+                              optimization would break the session-gated fetch. */}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`/api/automation/evidence/${e.id}`}
+                            alt={e.label ?? "Automation evidence screenshot"}
+                            className="max-h-48 w-full rounded-md border object-contain"
+                          />
+                        </a>
+                      ) : null}
+                      <figcaption className="text-xs text-muted-foreground">
+                        <span className="font-mono">{e.kind}</span> · {e.label ?? e.storageRef}
+                        {e.bytes != null && <> · {(e.bytes / 1024).toFixed(0)} KB</>}
+                        {e.contentHash && (
+                          <>
+                            {" "}
+                            · <span title={e.contentHash}>sha256:{e.contentHash.slice(0, 8)}…</span>
+                          </>
+                        )}
+                        {!viewable && " · (metadata only)"}
+                      </figcaption>
+                    </figure>
+                  );
+                })}
               </CardContent>
             </Card>
           )}

@@ -47,6 +47,20 @@ export type WorkflowContext = {
   capture: (label: string) => Promise<void>;
 };
 
+const ERROR_SCREENSHOTS = Symbol("workflowScreenshots");
+
+/**
+ * Screenshots captured before a workflow threw. The runner attaches them to
+ * the error object so failure evidence (login rejected, selector missing)
+ * still reaches durable storage — reviewers need the failure frame most.
+ */
+export function errorScreenshots(err: unknown): { label: string; bytes: Buffer }[] {
+  if (err && typeof err === "object" && ERROR_SCREENSHOTS in err) {
+    return (err as Record<symbol, { label: string; bytes: Buffer }[]>)[ERROR_SCREENSHOTS] ?? [];
+  }
+  return [];
+}
+
 export async function withBrowserPage<T>(
   workflow: (ctx: WorkflowContext) => Promise<T>,
   options: RunOptions = {},
@@ -71,15 +85,22 @@ export async function withBrowserPage<T>(
     const page = await context.newPage();
     page.setDefaultTimeout(options.defaultTimeoutMs ?? 15_000);
 
-    const data = await workflow({
-      page,
-      context,
-      capture: async (label) => {
-        const bytes = await page.screenshot({ type: "png", fullPage: true });
-        screenshots.push({ label, bytes });
-      },
-    });
-    return { data, screenshots };
+    try {
+      const data = await workflow({
+        page,
+        context,
+        capture: async (label) => {
+          const bytes = await page.screenshot({ type: "png", fullPage: true });
+          screenshots.push({ label, bytes });
+        },
+      });
+      return { data, screenshots };
+    } catch (err) {
+      if (err && typeof err === "object") {
+        (err as Record<symbol, unknown>)[ERROR_SCREENSHOTS] = screenshots;
+      }
+      throw err;
+    }
   } finally {
     // Always close — even on error — so a runaway workflow doesn't leak
     // chromium processes on the worker host.
