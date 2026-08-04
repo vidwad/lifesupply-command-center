@@ -97,6 +97,7 @@ export async function getOrderById(id: string) {
           supplierProduct: { select: { id: true, supplierSku: true, cost: true } },
         },
       },
+      shipments: { orderBy: { shippedAt: "asc" } },
     },
   });
   if (!order) return null;
@@ -104,6 +105,7 @@ export async function getOrderById(id: string) {
   return {
     ...order,
     grandTotal: num(order.grandTotal),
+    refundedTotal: num(order.refundedTotal),
     subtotal: num(order.subtotal),
     shippingTotal: num(order.shippingTotal),
     taxTotal: num(order.taxTotal),

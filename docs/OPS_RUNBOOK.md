@@ -419,6 +419,43 @@ Update this section when production hosting is selected.
 
 ---
 
+## 9.5 Operations workflows (Phase 8)
+
+### Delayed-order sweep
+The worker runs `operations-delay-sweep` every 6 hours (also on demand via
+the **Run delay sweep now** button on `/operations`, permission
+`orders.manage_exceptions`). Rules live in
+`src/server/services/operations/delay-rules.ts` (thresholds pinned by
+tests): unshipped orders warn at 3 days and are delayed at 7; orders stuck
+in `awaiting_human_review` are delayed at 2 days; shipped orders with no
+delivered/completed status are delayed 14 days after the latest shipment.
+
+For each delayed order the sweep raises an `order_delay` exception (deduped
+per order via recurringKey `order:<id>:delay`) and flags the order —
+without overwriting an existing human flag. When an order stops being
+delayed, the sweep auto-resolves its own *untouched open* exception (once a
+human moves it to investigating/blocked, resolution is theirs) and clears
+the order flag only if the sweep set it.
+
+### Exception → task routing
+On `/operations/exceptions`, active exceptions can be assigned inline, and
+**Create task** turns one exception into an assigned task (priority from
+severity, linked entity, sourceType `exception` + sourceId for the audit
+trail); the exception moves to `investigating`. Bulk creation is capped at
+20 per run and skips closed or already-tasked exceptions, so it can be
+re-run safely. Note: `tasks.relatedEntityId` is now a polymorphic
+reference (the FK to orders was dropped in the Phase 8 migration);
+`createTask` validates the referenced entity exists per type.
+
+### Saved views
+`/operations` and `/operations/exceptions` have per-user saved views
+(filter the queue, name it, save). Views are plain query-param links stored
+in `saved_views` — max 20 per page per user.
+
+### Daily operations summary
+The card at the top of `/operations` is deterministic — computed from the
+delay rules, the Exception table, and the task queue. No AI is involved.
+
 ## 10. Background worker — stalled sync jobs
 
 BigCommerce customer/order sync runs on the **`lifesupply-cc-worker`**

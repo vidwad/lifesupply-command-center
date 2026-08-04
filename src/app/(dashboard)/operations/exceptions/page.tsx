@@ -7,12 +7,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { SavedViewsBar } from "@/components/views/SavedViewsBar";
 import { formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { listExceptions, type ExceptionFilters } from "@/server/services/exceptions";
-import { requirePermission } from "@/server/permissions";
+import { listAssignableUsers } from "@/server/services/tasks";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
+import { assignAction } from "./actions";
 import { ExceptionStatusForm } from "./status-form";
+import { BulkTaskBar, CreateTaskButton } from "./task-actions";
 
 export const metadata = { title: "Exceptions" };
 export const dynamic = "force-dynamic";
@@ -105,7 +109,9 @@ export default async function ExceptionsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.ORDERS_VIEW);
+  const user = await requirePermission(PERMISSIONS.ORDERS_VIEW);
+  const canCreateTasks = userHasPermission(user, PERMISSIONS.TASKS_CREATE);
+  const canManage = userHasPermission(user, PERMISSIONS.ORDERS_MANAGE_EXCEPTIONS);
   const params = await searchParams;
 
   const filters: ExceptionFilters = {
@@ -121,7 +127,10 @@ export default async function ExceptionsPage({
     search: params.q?.trim() || undefined,
   };
 
-  const rows = await listExceptions(filters);
+  const [rows, assignableUsers] = await Promise.all([
+    listExceptions(filters),
+    canManage ? listAssignableUsers() : Promise.resolve([]),
+  ]);
   const activeStatus = filters.status ?? "active";
 
   return (
@@ -137,6 +146,17 @@ export default async function ExceptionsPage({
       />
 
       <div className="space-y-4 p-6">
+        <SavedViewsBar
+          userId={user.id}
+          page="operations/exceptions"
+          currentParams={{
+            status: params.status,
+            severity: params.severity,
+            type: params.type,
+            q: params.q,
+          }}
+        />
+
         <div className="flex flex-wrap items-center gap-2">
           {STATUS_FILTERS.map((s) => {
             const next = new URLSearchParams();
@@ -195,6 +215,8 @@ export default async function ExceptionsPage({
           </form>
         </div>
 
+        {canCreateTasks && rows.length > 0 && <BulkTaskBar />}
+
         {rows.length === 0 ? (
           <EmptyState
             icon={AlertTriangle}
@@ -207,6 +229,7 @@ export default async function ExceptionsPage({
               <DataTable className="border-0">
                 <THead>
                   <tr>
+                    {canCreateTasks && <TH className="w-8"> </TH>}
                     <TH>Type</TH>
                     <TH>Title</TH>
                     <TH>Entity</TH>
@@ -220,8 +243,24 @@ export default async function ExceptionsPage({
                 <TBody>
                   {rows.map((r) => {
                     const href = entityHref(r.entityType, r.entityId);
+                    const isActive =
+                      r.status === "open" || r.status === "investigating" || r.status === "blocked";
                     return (
                       <TR key={r.id}>
+                        {canCreateTasks && (
+                          <TD>
+                            {isActive ? (
+                              <input
+                                type="checkbox"
+                                name="exceptionIds"
+                                value={r.id}
+                                form="bulk-task-form"
+                                aria-label={`Select exception ${r.title}`}
+                                className="h-4 w-4 rounded border"
+                              />
+                            ) : null}
+                          </TD>
+                        )}
                         <TD className="text-xs uppercase tracking-wide text-muted-foreground">
                           {r.exceptionType.replace(/_/g, " ")}
                         </TD>
@@ -265,7 +304,29 @@ export default async function ExceptionsPage({
                           <div className="text-[10px]">{formatDateTime(r.createdAt)}</div>
                         </TD>
                         <TD className="text-xs">
-                          {r.assignedTo ? (
+                          {canManage && isActive ? (
+                            <form action={assignAction} className="flex items-center gap-1">
+                              <input type="hidden" name="id" value={r.id} />
+                              <select
+                                name="assignedToId"
+                                defaultValue={r.assignedTo?.id ?? ""}
+                                className="h-7 max-w-32 rounded-md border bg-background px-1 text-xs"
+                              >
+                                <option value="">Unassigned</option>
+                                {assignableUsers.map((u) => (
+                                  <option key={u.id} value={u.id}>
+                                    {u.name ?? u.email}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                type="submit"
+                                className="rounded border px-1.5 py-0.5 text-[10px] hover:bg-accent"
+                              >
+                                Set
+                              </button>
+                            </form>
+                          ) : r.assignedTo ? (
                             (r.assignedTo.name ?? r.assignedTo.email)
                           ) : (
                             <span className="text-muted-foreground">—</span>
@@ -277,7 +338,10 @@ export default async function ExceptionsPage({
                           )}
                         </TD>
                         <TD>
-                          <ExceptionStatusForm id={r.id} currentStatus={r.status} />
+                          <div className="space-y-1">
+                            <ExceptionStatusForm id={r.id} currentStatus={r.status} />
+                            {canCreateTasks && isActive && <CreateTaskButton id={r.id} />}
+                          </div>
                         </TD>
                       </TR>
                     );

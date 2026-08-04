@@ -10,7 +10,8 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getSupplierById } from "@/server/services/suppliers";
-import { requirePermission } from "@/server/permissions";
+import { listTasksForEntity } from "@/server/services/tasks";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +24,13 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SupplierDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.SUPPLIERS_VIEW);
+  const user = await requirePermission(PERMISSIONS.SUPPLIERS_VIEW);
+  const canCreateTasks = userHasPermission(user, PERMISSIONS.TASKS_CREATE);
   const { id } = await params;
   const supplier = await getSupplierById(id);
   if (!supplier) notFound();
+
+  const supplierTasks = await listTasksForEntity("Supplier", supplier.id);
 
   return (
     <div>
@@ -240,6 +244,41 @@ export default async function SupplierDetailPage({ params }: Props) {
                     Visit <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base">Follow-up tasks</CardTitle>
+              {canCreateTasks && (
+                <Link
+                  href={`/tasks/new?relatedEntityType=Supplier&relatedEntityId=${supplier.id}&title=${encodeURIComponent(`Supplier follow-up: ${supplier.name}`)}`}
+                  className="rounded-md border px-2 py-1 text-xs font-medium hover:bg-accent"
+                >
+                  + New task
+                </Link>
+              )}
+            </CardHeader>
+            <CardContent>
+              {supplierTasks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No tasks linked to this supplier.</p>
+              ) : (
+                <ul className="divide-y">
+                  {supplierTasks.map((t) => (
+                    <li key={t.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                      <Link
+                        href={`/tasks/${t.id}`}
+                        className="truncate font-medium hover:underline"
+                      >
+                        {t.title}
+                      </Link>
+                      <Badge variant={t.status === "completed" ? "success" : "outline"}>
+                        {t.status.replace(/_/g, " ")}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
               )}
             </CardContent>
           </Card>

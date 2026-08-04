@@ -72,6 +72,7 @@ model User {
   preparedInvestorUpdates     InvestorUpdate[]      @relation("InvestorUpdatePreparer")
   approvedInvestorUpdates     InvestorUpdate[]      @relation("InvestorUpdateApprover")
   reconciliationRuns          ReconciliationReport[] @relation("ReconciliationTriggeredBy")
+  savedViews                  SavedView[]            @relation("SavedViewOwner")
 
   @@index([status])
   @@map("users")
@@ -481,7 +482,6 @@ model Order {
   customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items          OrderItem[]
   shipments      OrderShipment[]
-  tasks          Task[]          @relation("OrderTasks")
   automationRuns AutomationRun[]
 
   @@unique([sourceSystem, sourceId])
@@ -988,9 +988,14 @@ model Task {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  assignedTo   User?  @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
-  createdBy    User?  @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  relatedOrder Order? @relation("OrderTasks", fields: [relatedEntityId], references: [id], onDelete: NoAction, map: "tasks_related_order_fk")
+  assignedTo User? @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy  User? @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  // NOTE (Phase 8): relatedEntityId is deliberately NOT a foreign key. It is a
+  // polymorphic reference whose target table depends on relatedEntityType
+  // (Order, Customer, Product, Supplier, …); the old tasks_related_order_fk
+  // made every non-null value an order id, which blocked customer-service and
+  // supplier follow-up tasks. createTask() validates the referenced entity
+  // exists for the declared type instead.
 
   @@index([status])
   @@index([priority])
@@ -1364,6 +1369,28 @@ enum ExceptionSeverity {
   medium
   high
   urgent
+}
+
+// =============================================================================
+// Saved views — per-user named filter presets for operations queues (Phase 8).
+// `page` is the dashboard route key ("operations", "operations/exceptions",
+// "orders", "tasks"); `params` stores the sanitized query-string filters.
+// =============================================================================
+
+model SavedView {
+  id        String   @id @default(cuid())
+  userId    String
+  page      String
+  name      String
+  params    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation("SavedViewOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, page, name])
+  @@index([userId, page])
+  @@map("saved_views")
 }
 
 enum ExceptionState {

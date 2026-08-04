@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { ArrowLeft, ClipboardList, Mail, Phone } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/data/OrderBadges";
@@ -10,7 +10,8 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getCustomerById } from "@/server/services/customers";
-import { requirePermission } from "@/server/permissions";
+import { listTasksForEntity } from "@/server/services/tasks";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +32,24 @@ const CONSENT_BADGE: Record<string, "success" | "destructive" | "secondary" | "o
   unknown: "outline",
 };
 
+const TASK_STATUS_BADGE: Record<string, "success" | "warning" | "destructive" | "outline"> = {
+  open: "outline",
+  in_progress: "warning",
+  blocked: "destructive",
+  awaiting_approval: "warning",
+  completed: "success",
+  cancelled: "outline",
+};
+
 export default async function CustomerDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.CUSTOMERS_VIEW);
+  const user = await requirePermission(PERMISSIONS.CUSTOMERS_VIEW);
+  const canCreateTasks = userHasPermission(user, PERMISSIONS.TASKS_CREATE);
   const { id } = await params;
   const customer = await getCustomerById(id);
   if (!customer) notFound();
+
+  const tasks = await listTasksForEntity("Customer", customer.id);
+  const newTaskHref = `/tasks/new?relatedEntityType=Customer&relatedEntityId=${customer.id}&title=${encodeURIComponent(`Customer service: ${customer.displayName}`)}`;
 
   return (
     <div>
@@ -100,6 +114,50 @@ export default async function CustomerDetailPage({ params }: Props) {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ClipboardList className="h-4 w-4" /> Customer service tasks
+              </CardTitle>
+              {canCreateTasks && (
+                <Link
+                  href={newTaskHref}
+                  className="rounded-md border px-2 py-1 text-xs font-medium hover:bg-accent"
+                >
+                  + New task
+                </Link>
+              )}
+            </CardHeader>
+            <CardContent>
+              {tasks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No tasks linked to this customer yet.
+                </p>
+              ) : (
+                <ul className="divide-y">
+                  {tasks.map((t) => (
+                    <li key={t.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                      <Link
+                        href={`/tasks/${t.id}`}
+                        className="truncate font-medium hover:underline"
+                      >
+                        {t.title}
+                      </Link>
+                      <span className="flex shrink-0 items-center gap-2 text-xs">
+                        <Badge variant={TASK_STATUS_BADGE[t.status] ?? "outline"}>
+                          {t.status.replace(/_/g, " ")}
+                        </Badge>
+                        <span className="text-muted-foreground">
+                          {t.assignedTo?.name ?? t.assignedTo?.email ?? "unassigned"}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
           {customer.notes && (
             <Card>
               <CardHeader className="pb-3">
@@ -152,6 +210,35 @@ export default async function CustomerDetailPage({ params }: Props) {
                 />
                 {customer.reactivationScore != null && (
                   <Row label="Reactivation score" value={String(customer.reactivationScore)} />
+                )}
+              </dl>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Consent (CASL)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-2 text-sm">
+                <Row label="Status" value={customer.consentStatus} />
+                <Row label="Basis" value={customer.consentBasis ?? "—"} />
+                <Row label="Source" value={customer.consentSource ?? "—"} />
+                <Row
+                  label="Obtained"
+                  value={customer.consentObtainedAt ? formatDate(customer.consentObtainedAt) : "—"}
+                />
+                <Row
+                  label="Expires"
+                  value={
+                    customer.consentExpiresAt ? formatDate(customer.consentExpiresAt) : "no expiry"
+                  }
+                />
+                {customer.suppressionReason && (
+                  <Row
+                    label="Suppressed"
+                    value={`${customer.suppressionReason}${customer.suppressedAt ? ` (${formatDate(customer.suppressedAt)})` : ""}`}
+                  />
                 )}
               </dl>
             </CardContent>
