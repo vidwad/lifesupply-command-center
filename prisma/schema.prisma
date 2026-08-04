@@ -1602,6 +1602,7 @@ model AutomationRun {
 enum AutomationWorkflow {
   price_check
   stock_check
+  sku_check
   prepare_order
   submit_order
 }
@@ -1640,14 +1641,18 @@ model AutomationEvidence {
   runId        String
   stepId       String?
   kind         String // screenshot, html, json, file
-  /// Storage reference. For local dev we may use a data URL or relative path;
-  /// production uses S3-style signed URLs via STORAGE_BUCKET.
+  /// Storage reference. `db:<sha256>` when the payload lives in `data`;
+  /// S3-style refs can replace this later without a schema change.
   storageRef   String
   /// Display label for the UI.
   label        String?
   description  String?  @db.Text
   contentHash  String?
   bytes        Int?
+  /// Durable payload (Phase 7). Screenshots are small PNGs; runs are low
+  /// volume, so Postgres is the honest durable store until S3 lands.
+  data         Bytes?
+  contentType  String?
   capturedAt   DateTime @default(now())
 
   run AutomationRun @relation(fields: [runId], references: [id], onDelete: Cascade)

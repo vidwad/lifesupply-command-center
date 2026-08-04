@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   prepareOrderAction,
   runPriceCheckAction,
+  runSkuCheckAction,
   runStockCheckAction,
   type AutomationActionState,
 } from "./actions";
@@ -22,14 +23,14 @@ export function PriceCheckForm({ mappings }: { mappings: Mapping[] }) {
   );
   return (
     <TriggerCard
-      title="Run price check (simulated)"
-      description="Capture the latest mapped supplier cost. No live portal hit yet."
+      title="Run price check"
+      description="Worker logs into the portal (live when credentials are configured; simulated otherwise), captures the price, and compares it to the mapped cost."
       state={state}
     >
       <form action={formAction} className="space-y-2">
         <SupplierProductSelect mappings={mappings} />
         <Button type="submit" size="sm" disabled={pending}>
-          {pending ? "Running…" : "Run price check"}
+          {pending ? "Dispatching…" : "Run price check"}
         </Button>
       </form>
     </TriggerCard>
@@ -43,14 +44,35 @@ export function StockCheckForm({ mappings }: { mappings: Mapping[] }) {
   );
   return (
     <TriggerCard
-      title="Run stock check (simulated)"
-      description="Capture the last-known availability status from the SupplierProduct table."
+      title="Run stock check"
+      description="Worker captures portal availability and compares it to the recorded availability status."
       state={state}
     >
       <form action={formAction} className="space-y-2">
         <SupplierProductSelect mappings={mappings} />
         <Button type="submit" size="sm" disabled={pending}>
-          {pending ? "Running…" : "Run stock check"}
+          {pending ? "Dispatching…" : "Run stock check"}
+        </Button>
+      </form>
+    </TriggerCard>
+  );
+}
+
+export function SkuCheckForm({ mappings }: { mappings: Mapping[] }) {
+  const [state, formAction, pending] = useActionState<AutomationActionState, FormData>(
+    runSkuCheckAction,
+    undefined,
+  );
+  return (
+    <TriggerCard
+      title="Run SKU check"
+      description="Verify the mapped SKU exists in the portal and the product name matches. Also the selector-validation probe for the live portal."
+      state={state}
+    >
+      <form action={formAction} className="space-y-2">
+        <SupplierProductSelect mappings={mappings} />
+        <Button type="submit" size="sm" disabled={pending}>
+          {pending ? "Dispatching…" : "Run SKU check"}
         </Button>
       </form>
     </TriggerCard>

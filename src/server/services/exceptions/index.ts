@@ -149,6 +149,45 @@ export async function createException(
   return created.id;
 }
 
+/**
+ * Create an exception unless an ACTIVE one already exists for the same
+ * recurringKey — in that case refresh the existing row (title/description/
+ * severity/metadata + audit) instead of flooding the queue with duplicates.
+ * Used by recurring detectors (supplier checks, reconciliation-style jobs).
+ * Returns the exception id and whether it was newly created.
+ */
+export async function createOrTouchException(
+  input: CreateExceptionInput & { recurringKey: string },
+  actor?: { id: string },
+): Promise<{ id: string; created: boolean }> {
+  const existing = await prisma.exception.findFirst({
+    where: { recurringKey: input.recurringKey, status: { in: ACTIVE_STATES } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+  if (!existing) {
+    const id = await createException(input, actor);
+    return { id, created: true };
+  }
+  await prisma.exception.update({
+    where: { id: existing.id },
+    data: {
+      title: input.title,
+      description: input.description ?? null,
+      severity: input.severity ?? "medium",
+      metadata: input.metadata ?? Prisma.JsonNull,
+    },
+  });
+  await writeAudit({
+    actorUserId: actor?.id ?? null,
+    action: "exception.recurred",
+    entityType: "exception",
+    entityId: existing.id,
+    afterData: { recurringKey: input.recurringKey, title: input.title },
+  });
+  return { id: existing.id, created: false };
+}
+
 export async function assignException(
   id: string,
   assignedToId: string | null,

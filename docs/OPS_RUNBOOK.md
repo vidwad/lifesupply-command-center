@@ -314,23 +314,60 @@ INVESTOR_FROM_NAME=LifeSupply  # optional, defaults to "LifeSupply"
 When unset, `releaseInvestorUpdate()` falls back to the stub path so the
 workflow remains testable without email infra.
 
-### Supplier portal automation (BBM01)
+### Supplier portal automation (BBM01) — read-only checks (Phase 7)
 1. Configure credentials via **Admin → API & Integrations → Supplier portal**:
    - `username`, `password`, optional `loginUrl` override.
-2. Install browsers (one-time per host):
+2. Install browsers **on the worker host** (one-time):
    ```sh
    pnpm exec playwright install chromium
    ```
+   Checks run in the background worker (`lifesupply-cc-worker`), never in a
+   web request — the web process only creates the run and dispatches the
+   `supplier/check.requested` Inngest event, so the worker must be up.
 3. Set `SUPPLIER_PORTAL_BBM01_URL` to the live BBM01 portal URL. Without
    it, the runner hits the in-repo mock portal at
-   `/dev/mock-portals/bbm01/index.html` — only useful in dev.
-4. Enable the `supplier.automation` feature flag.
-5. Trigger a price/stock check from `/automation/runs`. The run records
-   per-step output + screenshot evidence rows.
+   `/dev/mock-portals/bbm01/index.html` — only useful in dev. Run detail
+   shows `mockPortal: true` in the result so mock captures can't be
+   mistaken for live evidence.
+4. Enable the `supplier.automation` feature flag (turning it OFF also
+   cancels queued checks at pickup — the worker re-checks the flag).
+5. Trigger a price / stock / SKU check from `/automation/runs`. Each run
+   records per-step output, durable screenshot evidence, comparison flags,
+   and any exceptions raised.
+
+**Selector validation against the real portal.** All selectors live in one
+map: `BBM01_SELECTORS` in
+`src/server/automation/suppliers/best-buy-medical.ts`. To validate:
+1. Point `SUPPLIER_PORTAL_BBM01_URL` at the live portal (staging worker).
+2. Run a **SKU check** for a known-good mapping — it exercises login,
+   search, and result parsing without comparing prices/stock.
+3. If a selector no longer matches, the run fails with
+   `SelectorNotFoundError` naming the selector key + CSS + stage, captures
+   a screenshot of the offending page, and raises a high-severity
+   `portal_layout_changed` exception. Fix the entry in `BBM01_SELECTORS`
+   and re-run.
+
+**Comparison rules + exceptions.** Live captures are compared to Command
+Center records (`src/server/automation/suppliers/comparison.ts`, thresholds
+pinned by tests, from docs/10 §8.2): price within 2% = ok, 2–5% = warn
+(medium exception), >5% = mismatch (high exception); portal stock is
+normalized and contradictions (out-of-stock vs in-stock) are high-severity;
+a SKU missing from the portal is always a mismatch. Exceptions dedupe on
+`supplier:<code>:<rule>:<sku>` — a repeat finding refreshes the open
+exception instead of creating another. Simulated runs (no credentials)
+skip comparison entirely rather than comparing a record to itself.
+
+**Evidence.** Screenshots are stored durably in Postgres
+(`automation_evidence.data`, sha256-hashed, `storageRef db:<hash>`), viewable
+on the run page and served by `/api/automation/evidence/<id>`
+(suppliers.view permission). Failure screenshots (login rejected, selector
+missing) are preserved too. Payloads over 5 MB keep metadata only. An
+S3-style bucket can replace this later without a schema change.
 
 When the live runner can't launch (e.g. chromium binaries missing), the
-run is marked failed with a clear `errorSummary` instead of silently
-falling back to simulation.
+run is marked failed with a clear `errorSummary` — and an exception — instead
+of silently falling back to simulation. **Order submission remains disabled**:
+`supplier.order_submit` stays OFF and the submit path still fails fast.
 
 ---
 

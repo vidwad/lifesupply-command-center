@@ -7,10 +7,12 @@ import {
   AutomationApprovalRequiredError,
   AutomationDisabledError,
   prepareSupplierOrder,
-  runPriceCheck,
-  runStockCheck,
   submitSupplierOrder,
 } from "@/server/services/automation/runs";
+import {
+  startSupplierCheck,
+  type SupplierCheckWorkflow,
+} from "@/server/services/automation/checks";
 import { FeatureDisabledError } from "@/server/services/feature-flags";
 import { requirePermission } from "@/server/permissions";
 
@@ -27,36 +29,45 @@ function describeError(err: unknown): string {
   return err instanceof Error ? err.message : "Automation failed.";
 }
 
-export async function runPriceCheckAction(
-  _prev: AutomationActionState,
+async function dispatchCheck(
+  workflow: SupplierCheckWorkflow,
   formData: FormData,
 ): Promise<AutomationActionState> {
   const actor = await requirePermission(PERMISSIONS.SUPPLIERS_RUN_AUTOMATION);
   const supplierProductId = String(formData.get("supplierProductId") ?? "");
   if (!supplierProductId) return { error: "Choose a supplier product." };
   try {
-    const runId = await runPriceCheck({ supplierProductId, triggeredById: actor.id });
+    const runId = await startSupplierCheck({
+      workflow,
+      supplierProductId,
+      triggeredById: actor.id,
+    });
     revalidatePath("/automation/runs");
-    return { ok: "Price check captured.", runId };
+    return { ok: "Check dispatched to the worker. Open the run to follow progress.", runId };
   } catch (err) {
     return { error: describeError(err) };
   }
+}
+
+export async function runPriceCheckAction(
+  _prev: AutomationActionState,
+  formData: FormData,
+): Promise<AutomationActionState> {
+  return dispatchCheck("price_check", formData);
 }
 
 export async function runStockCheckAction(
   _prev: AutomationActionState,
   formData: FormData,
 ): Promise<AutomationActionState> {
-  const actor = await requirePermission(PERMISSIONS.SUPPLIERS_RUN_AUTOMATION);
-  const supplierProductId = String(formData.get("supplierProductId") ?? "");
-  if (!supplierProductId) return { error: "Choose a supplier product." };
-  try {
-    const runId = await runStockCheck({ supplierProductId, triggeredById: actor.id });
-    revalidatePath("/automation/runs");
-    return { ok: "Stock check captured.", runId };
-  } catch (err) {
-    return { error: describeError(err) };
-  }
+  return dispatchCheck("stock_check", formData);
+}
+
+export async function runSkuCheckAction(
+  _prev: AutomationActionState,
+  formData: FormData,
+): Promise<AutomationActionState> {
+  return dispatchCheck("sku_check", formData);
 }
 
 export async function prepareOrderAction(

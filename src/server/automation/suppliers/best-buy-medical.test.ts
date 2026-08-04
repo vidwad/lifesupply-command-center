@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePrice, resolvePortalUrl } from "./best-buy-medical";
+import { errorScreenshots } from "@/server/automation/playwright-runner";
+
+import {
+  BBM01_SELECTORS,
+  isMockPortalUrl,
+  parsePrice,
+  resolvePortalUrl,
+  SelectorNotFoundError,
+} from "./best-buy-medical";
 
 describe("parsePrice", () => {
   it("parses dollar-sign + decimals", () => {
@@ -56,5 +64,36 @@ describe("resolvePortalUrl", () => {
     else process.env.SUPPLIER_PORTAL_BBM01_URL = originalEnv;
     if (originalApp === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
     else process.env.NEXT_PUBLIC_APP_URL = originalApp;
+  });
+});
+
+describe("isMockPortalUrl", () => {
+  it("recognizes the in-repo mock and rejects live URLs", () => {
+    expect(isMockPortalUrl("http://localhost:3000/dev/mock-portals/bbm01/index.html")).toBe(true);
+    expect(isMockPortalUrl("https://portal.bestbuymedical.example.com/login")).toBe(false);
+  });
+});
+
+describe("SelectorNotFoundError", () => {
+  it("names the selector key + CSS + stage for operators", () => {
+    const err = new SelectorNotFoundError(
+      "resultCard",
+      BBM01_SELECTORS.resultCard,
+      "search results",
+    );
+    expect(err.name).toBe("SelectorNotFoundError");
+    expect(err.selectorKey).toBe("resultCard");
+    expect(err.message).toContain("resultCard");
+    expect(err.message).toContain(BBM01_SELECTORS.resultCard);
+    expect(err.message).toContain("search results");
+    expect(err.message).toMatch(/layout may have changed/);
+  });
+});
+
+describe("errorScreenshots", () => {
+  it("returns an empty list for errors without attached screenshots", () => {
+    expect(errorScreenshots(new Error("plain"))).toEqual([]);
+    expect(errorScreenshots(null)).toEqual([]);
+    expect(errorScreenshots("string error")).toEqual([]);
   });
 });
