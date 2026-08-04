@@ -79,7 +79,7 @@ export function planBigCommerceDispatch(
 }
 
 export async function dispatchBigCommerceSync(args: {
-  entity: "customers" | "orders";
+  entity: "customers" | "orders" | "products";
   mode: "full" | "incremental";
   actorUserId: string;
 }): Promise<DispatchedJob[]> {
