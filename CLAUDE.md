@@ -3,7 +3,7 @@
 **Project:** LifeSupply Command Center  
 **Document status:** Current Claude Code project memory and development control file  
 **Originally prepared:** May 9, 2026  
-**Last updated:** August 3, 2026  
+**Last updated:** August 4, 2026  
 **Primary audience:** Claude Code, Codex, developers, technical leads, product owner
 
 ---
@@ -20,23 +20,31 @@ The system should help management aggregate fragmented business information, und
 
 ## 2. Current Development Control Plan — READ FIRST
 
-Before doing any additional development, read the current roadmap:
+Phases 1–10 in the original post-MVP roadmap have been implemented and merged through PR #17. The repository is now a release candidate, but it has **not** yet been declared production-ready.
+
+Before doing any additional development, read:
 
 ```text
-docs/19_CURRENT_DEVELOPMENT_ROADMAP.md
+docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md
 ```
 
-That document is the active phase-by-phase development plan as of August 2026. It reflects the current codebase state and supersedes any older generic sequencing where there is a conflict.
+That document is the active development and launch-control plan as of August 4, 2026. The earlier roadmap remains available at `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` as historical implementation evidence.
+
+Phase 11 status, evidence, blockers, and sign-off are tracked in:
+
+```text
+docs/RELEASE_READINESS_STATUS.md
+```
 
 The immediate next phase is:
 
 ```text
-Phase 1 — Production worker and deployment foundation
+Phase 11 — Deployment Readiness, Integration Validation, and Controlled Production Launch
 ```
 
-Do not jump ahead to marketing automation, AI agents, forecasting, supplier order submission, or advanced financial integrations until the earlier phases have been completed or explicitly skipped by the product owner.
+Run **one Phase 11 work package at a time**, beginning with Phase 11A. Freeze new feature expansion except for defects or changes required to pass a Phase 11 launch gate. Do not repeat Phases 1–10 unless the product owner explicitly reopens a completed phase.
 
-Claude Code must run **one phase at a time**. When the product owner asks for a phase, use only the instructions for that phase from `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md`.
+**Baseline:** `main` at `6db79b24d88a2a267fae839d9e7f962bfbb68c63` (merge of PR #17), CI run `30952484455` green on both jobs. The repository is a release candidate and is **not** production-ready. Only the product owner records acceptance of a launch gate; Claude Code may propose "Ready for Review" but must never mark a gate accepted, nor describe the application as production-ready.
 
 ---
 
@@ -110,7 +118,9 @@ Before making architecture or implementation decisions, read the documents relev
 Always read:
 
 1. `CLAUDE.md`
-2. `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md`
+2. `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md`
+3. `docs/RELEASE_READINESS_STATUS.md`
+4. `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` when historical implementation context is relevant
 
 For foundational context, read as needed:
 
@@ -142,7 +152,7 @@ Do not proceed with major code generation until the relevant documents have been
 
 ## 7. Current Codebase Status Summary
 
-As of August 2026, the app is best described as an **advanced MVP / early post-MVP platform**.
+As of August 4, 2026, the app is best described as a **release candidate entering controlled deployment-readiness validation**.
 
 Already built in meaningful form:
 
@@ -170,26 +180,17 @@ Already built in meaningful form:
 - Audit logs, feature flags, and kill switches.
 - CI, Docker, Render, and Vercel configuration.
 
-Important gaps still to complete:
+The active gaps are deployment-readiness gaps rather than missing strategic modules:
 
-- Production worker deployment and verification.
-- Explicit store-to-integration mapping.
-- Guest customer identity and guest order linking.
-- BigCommerce order item sync.
-- BigCommerce product, variant, and category sync.
-- BigCommerce fulfillment, refund, and transaction sync.
-- Reconciliation against BigCommerce source totals.
-- Pagination and scale improvements for large customer/order tables.
-- Stronger CASL-safe consent model.
-- Mailchimp subscriber/suppression/metrics read sync.
-- Full Campaign Builder for LifeSupply customer reactivation.
-- QuickBooks Online read-only API sync.
-- GA4 read-only API sync.
-- Production supplier automation hardening.
-- Forecasting and scenario planning.
-- Phase 3 AI agent operating layer.
+- Production-like staging infrastructure and repeatable release pipeline.
+- Security, privacy, authentication, and role-boundary verification.
+- Live read-only integration certification for BigCommerce, Mailchimp, QuickBooks, GA4, and approved supplier portals.
+- Source-system reconciliation using representative operating data.
+- Migration rehearsal, performance testing, monitoring, backup restoration, rollback, and disaster-recovery evidence.
+- Business-user acceptance testing, operating ownership, training, and controlled production cutover.
+- A two-week stabilization period before enabling any broader production scope.
 
-Use `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` for the full breakdown.
+Use `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` for the complete active breakdown.
 
 ---
 
@@ -275,28 +276,34 @@ If a command fails, fix the failure within the phase scope. If the fix is out of
 
 ## 9. Active Phase Sequence
 
-Follow the phase sequence in `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md`:
+Phases 1–10 in `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` are code-complete and merged. They are retained as historical implementation evidence and must not be rerun by default.
 
-1. **Phase 1 — Production worker and deployment foundation**
-2. **Phase 2 — Store, integration, and sync reconciliation**
-3. **Phase 3 — Complete BigCommerce commerce data foundation**
-4. **Phase 4 — Customer identity, consent, and Mailchimp suppression sync**
-5. **Phase 5 — Full LifeSupply Campaign Builder**
-6. **Phase 6 — QuickBooks and GA4 read-only API integrations**
-7. **Phase 7 — Supplier automation production hardening**
-8. **Phase 8 — Operations, fulfillment, and customer-service workflow depth**
-9. **Phase 9 — Management reporting, forecasting, and scenario planning**
-10. **Phase 10 — Phase 3 AI agent operating layer**
+The sole active workstream is **Phase 11 — Deployment Readiness, Integration Validation, and Controlled Production Launch**:
 
-Non-negotiable sequencing reminders:
+1. **Phase 11A — Baseline freeze and development-control update**
+2. **Phase 11B — Staging infrastructure and release pipeline**
+3. **Phase 11C — Security, privacy, and permissions verification**
+4. **Phase 11D — Integration certification and data reconciliation**
+5. **Phase 11E — Reliability, performance, backup, and disaster recovery**
+6. **Phase 11F — User acceptance, training, and operating model**
+7. **Phase 11G — Controlled production cutover and stabilization**
 
-- Worker deployment before deeper sync.
-- Store mapping before multi-store reconciliation.
-- Complete BigCommerce data before campaign automation.
-- Consent and suppression before marketing sends.
-- QuickBooks read sync before advanced financial forecasting.
-- Supplier read-only validation before supplier order submission.
-- Workflow maturity before AI agents.
+Non-negotiable execution reminders:
+
+- Run one work package at a time.
+- Keep external write-backs, distributions, campaign sends, supplier ordering, and autonomous AI actions disabled.
+- Require evidence for every launch gate.
+- Do not declare production readiness until security, reconciliation, recovery, UAT, and cutover gates are signed.
+- Do not add new strategic modules during Phase 11 unless the product owner explicitly changes scope.
+
+### Release branch and tag convention
+
+Defined in `docs/RELEASE_READINESS_STATUS.md` §4 and not yet exercised — no release branch has been cut and no tag exists.
+
+- Work packages branch as `agent/*` or `claude/*`, one package per branch.
+- Staging releases cut `release/phase-11-staging` and tag `v0.9.N-staging`.
+- `release/phase-11-production` and `v1.0.0` are reserved for after the launch gates are accepted.
+- A `-staging` tag never implies production readiness.
 
 ---
 
@@ -316,7 +323,7 @@ The MVP was successful when the application could:
 - Create and assign tasks linked to operating exceptions.
 - Export a basic management report.
 
-The repository has moved beyond this MVP definition. Future work must follow the active phase sequence above.
+The repository has moved beyond this MVP definition. Current work must follow the active Phase 11 plan.
 
 ---
 

@@ -3,7 +3,15 @@
 **Project:** LifeSupply Command Center  
 **Document status:** Batch 2 post-MVP requirements  
 **Prepared:** May 10, 2026  
+**Reconciled:** August 4, 2026 (Phase 11A)  
 **Primary audience:** Claude Code, developers, technical lead, product owner
+
+> **Phase 11A reconciliation.** This document states deployment *requirements*. Where it originally
+> named a candidate platform or example variable names, it has been aligned with the implemented
+> configuration. Two corrections were applied: §3 now records Render as the selected platform, and
+> §7 now defers to `.env.example` for authoritative variable names. Active launch control lives in
+> `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md`; readiness status lives in
+> `docs/RELEASE_READINESS_STATUS.md`.
 
 ---
 
@@ -59,10 +67,19 @@ Purpose:
 
 ## 3. Recommended Deployment Architecture
 
+**Selected platform: Render.** The original text below offered "Vercel or equivalent" as a generic
+option. Render is the platform actually configured and deployed, because the architecture requires a
+continuously running background worker (Inngest Connect) and Playwright/Chromium for supplier
+automation, neither of which suits a request-scoped serverless model. Evidence: `render.yaml`
+defines the web, worker, and cron services plus the managed Postgres instance; the `Dockerfile`
+builds from the Playwright base image. See `docs/DEPLOYMENT_RENDER.md` for the runbook and
+`docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` §3 for the staging/production topology.
+`docs/DEPLOYMENT_VERCEL.md` is retained only as a non-selected alternative.
+
 A practical architecture:
 
 ```text
-Vercel or equivalent
+Render web service (selected) — or equivalent host
   -> Next.js web application
 
 Managed PostgreSQL
@@ -182,29 +199,29 @@ Secrets must be environment-specific and never committed to the repository.
 - Email service credentials.
 - Supplier credentials or vault references.
 
-### Example `.env.example`
+### Authoritative variable list
 
-```text
-DATABASE_URL=
-NEXTAUTH_SECRET=
-APP_URL=
-BIGCOMMERCE_STORE_HASH=
-BIGCOMMERCE_CLIENT_ID=
-BIGCOMMERCE_CLIENT_SECRET=
-BIGCOMMERCE_ACCESS_TOKEN=
-QUICKBOOKS_CLIENT_ID=
-QUICKBOOKS_CLIENT_SECRET=
-QUICKBOOKS_REDIRECT_URI=
-MAILCHIMP_API_KEY=
-MAILCHIMP_SERVER_PREFIX=
-GA4_PROPERTY_ID=
-GOOGLE_APPLICATION_CREDENTIALS_JSON=
-OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
-STORAGE_BUCKET=
-STORAGE_ACCESS_KEY_ID=
-STORAGE_SECRET_ACCESS_KEY=
-```
+The authoritative, current list of environment variables is **`.env.example` in the repository
+root**, validated by the schema in `src/lib/env.ts`. Do not copy variable names from this document
+into configuration — they drift. Use `.env.example`.
+
+**Phase 11A correction.** The illustrative list previously printed here had drifted from the
+implemented schema. Corrected mapping:
+
+| Name previously documented here | Actual implemented name |
+|---|---|
+| `NEXTAUTH_SECRET` | `AUTH_SECRET` (Auth.js v5) |
+| `APP_URL` | `NEXT_PUBLIC_APP_URL` (plus `AUTH_URL`) |
+| `BIGCOMMERCE_CLIENT_SECRET`, `BIGCOMMERCE_ACCESS_TOKEN` | `BIGCOMMERCE_API_TOKEN` (with `BIGCOMMERCE_STORE_HASH`, `BIGCOMMERCE_CLIENT_ID`) |
+| `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY` | `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (plus `S3_ENDPOINT`, `S3_REGION`) |
+| *(absent)* | `DIRECT_URL` — direct connection used by `prisma migrate`; required by `prisma/schema.prisma` |
+| *(absent)* | `MASTER_ENCRYPTION_KEY` — encrypted credential vault |
+| *(absent)* | `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY` — background job queue |
+| *(absent)* | `AUDIT_RETENTION_DAYS`, `RESEND_API_KEY`, `SUPPLIER_PORTAL_BBM01_URL` |
+
+Most integration credentials may alternatively be held in the encrypted vault and managed from
+`/admin/integrations`, in which case the environment variable is left unset. Environment values win
+where both are present.
 
 ---
 

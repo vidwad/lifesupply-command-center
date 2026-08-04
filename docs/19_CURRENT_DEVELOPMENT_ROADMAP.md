@@ -2,26 +2,34 @@
 
 **Prepared:** August 3, 2026  
 **Audience:** Claude Code, Codex, developers, project owner  
-**Status:** Current controlling post-MVP development plan  
+**Last updated:** August 4, 2026  
+**Status:** Historical Phase 1–10 implementation record; superseded for active work by `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md`  
 **Scope:** LifeSupply Command Center repository `vidwad/lifesupply-command-center`
 
 ---
 
-## 1. Purpose of this document
+## 1. Purpose and implementation status
 
-This document exists to get development back on track after the initial MVP and early post-MVP work.
+This document records the Phase 1–10 post-MVP development sequence that has now been implemented and merged through PR #17. It is retained as historical implementation evidence and as a reference for the requirements, guardrails, and acceptance criteria used during those phases.
 
-The repository now contains a meaningful application. It is not a blank scaffold and it is not merely a documentation package. Future work must therefore be sequenced carefully so Claude Code does not jump into attractive but premature work such as AI agents, supplier order automation, advanced forecasting, or broad marketing campaigns before the operating data foundation is complete.
+The language below describing limitations, required work, or a "next phase" reflects the pre-implementation baseline as of August 3, 2026. It must not be treated as the current repository status.
 
-Use this file as the **current active development roadmap**. It supplements the original Batch 1 and Batch 2 planning documents and should be treated as the controlling phase plan unless the product owner explicitly changes the sequence.
+The active controlling plan, and the register that tracks its status, are:
 
-When the product owner asks Claude Code to run a phase, Claude must run only that phase, create a dedicated branch, complete the defined scope, run the required verification, commit the work, push it to GitHub, and report exactly what changed and what remains.
+```text
+docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md
+docs/RELEASE_READINESS_STATUS.md
+```
+
+Phase 11 is the sole active workstream. New feature development is frozen except for defects or changes required to pass a Phase 11 launch gate. Claude Code must not rerun Phases 1–10 unless the product owner explicitly reopens one of them.
 
 ---
 
-## 2. Current codebase state — what has already been built
+## 2. Historical pre-implementation baseline — retained for reference
 
-The current application is best described as an **advanced MVP / early post-MVP operating platform**.
+> **Archived baseline:** This section describes the repository before Phases 1–10 were completed. Its limitations are not a current gap assessment. Use `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` for current readiness gaps.
+
+At the start of the archived roadmap, the application was best described as an **advanced MVP / early post-MVP operating platform**.
 
 ### 2.1 Core platform
 
@@ -250,9 +258,9 @@ Do not build advanced AI agents, supplier ordering, broad marketing automation, 
 
 ---
 
-## 4. Phase sequence overview
+## 4. Completed Phase 1–10 sequence
 
-The required development should proceed in this order:
+The following development sequence is complete and merged:
 
 1. **Phase 1 — Production worker and deployment foundation**
 2. **Phase 2 — Store, integration, and sync reconciliation**
@@ -265,7 +273,7 @@ The required development should proceed in this order:
 9. **Phase 9 — Management reporting, forecasting, and scenario planning**
 10. **Phase 10 — Phase 3 AI agent operating layer**
 
-Phase 1 is the immediate next phase.
+The detailed phase instructions below are archived. Do not execute them unless the product owner explicitly reopens a completed phase. The immediate next phase is Phase 11 under `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md`.
 
 ---
 
@@ -908,13 +916,16 @@ Review AI services, permissions, feature flags, tasks, approvals, reports, marke
 
 ## 5. Current immediate next action
 
-The next phase to run is:
+Phase 11A — Baseline freeze and development-control update is **delivered in PR #18 and awaiting
+product-owner acceptance**. Subject to that acceptance, the next work package to run is:
 
 ```text
-Phase 1 — Production worker and deployment foundation
+Phase 11B — Staging infrastructure and release pipeline
 ```
 
-Do not start with marketing, AI agents, supplier ordering, forecasting, or QuickBooks API sync until Phase 1 is complete and verified.
+Use `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` as the controlling instruction and record status
+in `docs/RELEASE_READINESS_STATUS.md`. Do not restart Phase 1 or add new feature modules. Proceed
+through the remaining Phase 11 work packages one at a time.
 
 ---
 
@@ -961,7 +972,7 @@ If a phase cannot be completed, Claude must stop and report the blocker rather t
 
 ---
 
-## 7. Non-negotiable sequencing reminders
+## 7. Historical sequencing reminders
 
 - Worker deployment before deeper sync.
 - Store mapping before multi-store reconciliation.
@@ -971,4 +982,4 @@ If a phase cannot be completed, Claude must stop and report the blocker rather t
 - Supplier read-only validation before supplier order submission.
 - Workflow maturity before AI agents.
 
-This sequencing exists to protect data integrity, customer privacy, financial accuracy, and management confidence in the Command Center.
+These reminders explain the dependency order used to implement Phases 1–10. Current execution and launch gates are controlled by `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md`.
