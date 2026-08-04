@@ -33,6 +33,7 @@ import {
   normalizeEmail,
   resolveOrderCustomerLink,
 } from "./guest-customer";
+import { mapBcOrderProductToUpsert, type BcOrderProduct } from "./order-item-mapper";
 import { mapBcOrderToUpsert, SOURCE_SYSTEM, type BcOrderPayload } from "./order-mapper";
 
 const PAGE_SIZE = 250;
@@ -46,6 +47,12 @@ export type SyncOrdersInput = {
   mode: "full" | "incremental";
   /** ISO timestamp; only used when mode === "incremental". */
   sinceIso?: string;
+  /**
+   * Sync each order's line items via /v2/orders/{id}/products (Phase 3B).
+   * Defaults to true. One extra API call per order — disable for a fast
+   * header-only sync.
+   */
+  syncItems?: boolean;
   /** Optional callback invoked after each order page is processed. */
   onProgress?: (counts: SyncOrdersCounts) => void | Promise<void>;
 };
@@ -61,6 +68,10 @@ export type SyncOrdersCounts = {
   guestOrdersLinked: number; // guest orders linked to a guest Customer
   guestOrdersDeduped: number; // guest orders whose email matched a registered customer
   guestOrdersNoEmail: number; // guest orders with no billing email → left unlinked
+  itemsCreated: number; // order line items created
+  itemsUpdated: number; // order line items updated in place
+  itemsDeleted: number; // stale BC line items removed
+  itemsFailed: number; // orders whose item sync raised
   errorMessages: string[];
 };
 
@@ -131,6 +142,110 @@ async function loadCustomerMaps(storeId: string): Promise<CustomerMaps> {
     }
   }
   return maps;
+}
+
+type ProductMaps = {
+  /** BC product_id → Prisma Product.id (for this store). */
+  productBySourceId: Map<string, string>;
+  /** BC variant_id → Prisma ProductVariant.id (for this store's products). */
+  variantBySourceId: Map<string, string>;
+};
+
+/**
+ * Pre-load the store's synced products + variants so line items can link to
+ * them. Empty until product sync (Phase 3C) runs — items still sync, just
+ * with productId/productVariantId null.
+ */
+async function loadProductMaps(storeId: string): Promise<ProductMaps> {
+  const [products, variants] = await Promise.all([
+    prisma.product.findMany({
+      where: { storeId, sourceSystem: SOURCE_SYSTEM },
+      select: { id: true, sourceId: true },
+    }),
+    prisma.productVariant.findMany({
+      where: { sourceSystem: SOURCE_SYSTEM, product: { storeId } },
+      select: { id: true, sourceId: true },
+    }),
+  ]);
+  const maps: ProductMaps = { productBySourceId: new Map(), variantBySourceId: new Map() };
+  for (const p of products) if (p.sourceId) maps.productBySourceId.set(p.sourceId, p.id);
+  for (const v of variants) if (v.sourceId) maps.variantBySourceId.set(v.sourceId, v.id);
+  return maps;
+}
+
+/**
+ * Sync one order's line items from /v2/orders/{id}/products: upsert the current
+ * items (keyed by BC order-product id) and remove stale BC items that no longer
+ * exist upstream. Manually-added items (sourceSystem null) are left untouched.
+ * Mutates the item counts; throws on fetch/parse failure so the caller can mark
+ * the order's item sync failed without aborting the whole run.
+ */
+async function syncOrderItemsForOrder(args: {
+  storeRoot: string;
+  apiToken: string;
+  bcOrderId: number;
+  orderId: string;
+  productMaps: ProductMaps;
+  counts: SyncOrdersCounts;
+}): Promise<void> {
+  const { storeRoot, apiToken, bcOrderId, orderId, productMaps, counts } = args;
+
+  const seenSourceIds: string[] = [];
+  let page = 1;
+  while (true) {
+    const url = `${storeRoot}/v2/orders/${bcOrderId}/products?limit=${PAGE_SIZE}&page=${page}`;
+    const r = await bcFetch(url, apiToken);
+    if (!r.ok) {
+      if (r.status === 404) break; // no products / past last page
+      throw new Error(`Order ${bcOrderId} products page ${page}: HTTP ${r.status} — ${r.body}`);
+    }
+    if (r.status === 204 || r.body.trim() === "") break;
+    let items: BcOrderProduct[];
+    try {
+      items = JSON.parse(r.body) as BcOrderProduct[];
+    } catch {
+      break;
+    }
+    if (!Array.isArray(items) || items.length === 0) break;
+
+    for (const item of items) {
+      const productId = item.product_id
+        ? (productMaps.productBySourceId.get(String(item.product_id)) ?? null)
+        : null;
+      const productVariantId = item.variant_id
+        ? (productMaps.variantBySourceId.get(String(item.variant_id)) ?? null)
+        : null;
+      const { create, update } = mapBcOrderProductToUpsert(item, {
+        orderId,
+        productId,
+        productVariantId,
+      });
+      const result = await prisma.orderItem.upsert({
+        where: {
+          sourceSystem_sourceId: { sourceSystem: SOURCE_SYSTEM, sourceId: String(item.id) },
+        },
+        create,
+        update,
+      });
+      seenSourceIds.push(String(item.id));
+      if (result.createdAt.getTime() === result.updatedAt.getTime()) counts.itemsCreated++;
+      else counts.itemsUpdated++;
+    }
+
+    if (items.length < PAGE_SIZE) break;
+    page++;
+  }
+
+  // Remove BC line items that no longer exist upstream for this order. Leaves
+  // manually-added items (sourceSystem null) untouched.
+  const del = await prisma.orderItem.deleteMany({
+    where: {
+      orderId,
+      sourceSystem: SOURCE_SYSTEM,
+      ...(seenSourceIds.length > 0 ? { sourceId: { notIn: seenSourceIds } } : {}),
+    },
+  });
+  counts.itemsDeleted += del.count;
 }
 
 /**
@@ -205,10 +320,21 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
     guestOrdersLinked: 0,
     guestOrdersDeduped: 0,
     guestOrdersNoEmail: 0,
+    itemsCreated: 0,
+    itemsUpdated: 0,
+    itemsDeleted: 0,
+    itemsFailed: 0,
     errorMessages: [],
   };
 
+  const syncItems = input.syncItems !== false;
   const maps = await loadCustomerMaps(input.storeId);
+  const productMaps = syncItems
+    ? await loadProductMaps(input.storeId)
+    : {
+        productBySourceId: new Map<string, string>(),
+        variantBySourceId: new Map<string, string>(),
+      };
 
   const sinceParam = input.sinceIso
     ? `&min_date_modified=${encodeURIComponent(input.sinceIso)}`
@@ -260,6 +386,27 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
           counts.ordersCreated++;
         } else {
           counts.ordersUpdated++;
+        }
+
+        // Item sync failures are isolated: a bad line-item fetch must not mark
+        // the whole order failed or abort the run.
+        if (syncItems) {
+          try {
+            await syncOrderItemsForOrder({
+              storeRoot: input.storeRoot,
+              apiToken: input.apiToken,
+              bcOrderId: bc.id,
+              orderId: result.id,
+              productMaps,
+              counts,
+            });
+          } catch (itemErr) {
+            counts.itemsFailed++;
+            const msg = itemErr instanceof Error ? itemErr.message : "unknown error";
+            if (counts.errorMessages.length < 20) {
+              counts.errorMessages.push(`Order ${bc.id} items: ${msg}`);
+            }
+          }
         }
       } catch (err) {
         counts.ordersFailed++;
