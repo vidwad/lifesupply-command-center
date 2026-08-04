@@ -147,6 +147,16 @@ Stores (Admin → Stores), set each connection's credentials, then map each
 connection to its Store. Confirm each connection shows its Store name (not
 "Not mapped") before running a sync.
 
+**Guest checkouts (Phase 3A):** order sync creates first-class Customer rows
+for guest buyers (BigCommerce `customer_id = 0`), keyed by normalized billing
+email under `sourceSystem = "bigcommerce_guest"`. A guest whose email matches
+an already-synced registered customer is deduped (the order links to the
+registered customer; no guest row). Guest counts appear in the order sync log
+metadata (`guestsCreated`, `guestOrdersLinked`, `guestOrdersDeduped`,
+`guestOrdersNoEmail`). Guests carry `metadata.guest = true`. Note: guest
+lifetime-value / order-count rollups are not yet computed (a later sub-phase);
+guest identity + order linking are.
+
 > Migration note: deployments created before the Phase 2 mapping change are
 > auto-backfilled from the old `BigCommerce — <Store name>` naming
 > convention, so existing connections keep syncing. Any connection whose name
