@@ -821,6 +821,12 @@ model Campaign {
   /// Consent-eligibility snapshot taken at draft time (Phase 4). Approval is
   /// refused when absent — approvers must see the compliance posture.
   eligibilitySnapshot Json?
+  /// Structured campaign-builder plan (Phase 5): objective, streams, cleanup +
+  /// consent review, product/offer strategy, sequences, calendar, task refs.
+  plan Json?
+  /// Program → track link (Phase 5): consumer/B2B track campaigns point at
+  /// their parent reactivation-program record.
+  parentCampaignId String?
   /// Mailchimp export lifecycle. "not_queued" by default; only flips after
   /// approval + the mailchimp.send feature flag is on.
   mailchimpExportStatus  String?  @default("not_queued") // not_queued, queued, sent, failed
@@ -835,12 +841,15 @@ model Campaign {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  metrics  CampaignMetrics[]
-  aiOutput AiOutput?         @relation(fields: [aiOutputId], references: [id], onDelete: SetNull)
+  metrics        CampaignMetrics[]
+  aiOutput       AiOutput?         @relation(fields: [aiOutputId], references: [id], onDelete: SetNull)
+  parentCampaign Campaign?         @relation("CampaignTracks", fields: [parentCampaignId], references: [id], onDelete: SetNull)
+  trackCampaigns Campaign[]        @relation("CampaignTracks")
 
   @@unique([sourceSystem, sourceId])
   @@index([status])
   @@index([mailchimpExportStatus])
+  @@index([parentCampaignId])
   @@map("campaigns")
 }
 

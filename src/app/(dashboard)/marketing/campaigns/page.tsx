@@ -46,6 +46,14 @@ export default async function CampaignDraftsPage() {
             <ArrowLeft className="h-3 w-3" /> Marketing
           </Link>
         }
+        actions={
+          <Link
+            href="/marketing/campaigns/builder"
+            className="inline-flex h-9 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Campaign Builder
+          </Link>
+        }
       />
       <div className="space-y-4 p-6">
         {drafts.length === 0 ? (
