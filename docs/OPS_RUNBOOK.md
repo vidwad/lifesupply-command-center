@@ -209,6 +209,40 @@ guest identity + order linking are.
 > convention, so existing connections keep syncing. Any connection whose name
 > didn't match a Store shows **Not mapped** and must be mapped by hand.
 
+### QuickBooks Online read sync (Phase 6)
+
+Read-only — the app NEVER writes to QuickBooks.
+
+1. Create an Intuit app (developer.intuit.com), redirect URI
+   `https://<your-domain>/api/auth/quickbooks/callback`.
+2. In **Admin → API & Integrations → QuickBooks**, set `clientId`,
+   `clientSecret`, `redirectUri`, and `environment` (sandbox/production).
+3. Click **Connect QuickBooks** and approve on Intuit's consent screen.
+   OAuth tokens (access/refresh/realm) are stored AES-encrypted on the
+   connection and rotate automatically on refresh.
+4. Click **Sync reports (read-only)** — the worker pulls P&L, balance
+   sheet, and A/R–A/P agings for the last 2 monthly periods (auto-created
+   as `YYYY-MM`) into consolidated `FinancialSummary` rows
+   (`sourceSystem: quickbooks`, `sourceImportId` = sync log, so every
+   figure traces to its run). Existing summaries keep their approval
+   status — API refresh never re-approves a reviewed period. Per-division
+   class mapping remains on the CSV import path for now.
+
+### GA4 daily metric read sync (Phase 6)
+
+1. Create a Google Cloud service account, enable the Analytics Data API,
+   and grant the service-account email Viewer access on each GA4 property.
+2. Per GA4 connection in **Admin → API & Integrations**, set `propertyId`
+   and paste the full `serviceAccountJson` key file.
+3. **Map each GA4 property to its Store** (Store mapping panel — GA4
+   properties may map to any store, e.g. Amazon). Unmapped properties are
+   skipped with a reason.
+4. Click **Sync GA4 metrics (30d)** — the worker upserts daily
+   `WebsiteMetric` rows (users, sessions, page/product views, add-to-carts,
+   checkouts, purchases, revenue, conversion rate) keyed (store, date),
+   plus a top source/medium attribution summary stored on the latest day's
+   metadata + the sync log.
+
 ### Mailchimp campaigns
 Configure these via **Admin → API & Integrations → Mailchimp**:
 - `apiKey` (secret)

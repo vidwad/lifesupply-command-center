@@ -6,12 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import { listBigCommerceStores, listIntegrationSettings } from "@/server/services/integrations";
+import {
+  listActiveStores,
+  listBigCommerceStores,
+  listIntegrationSettings,
+} from "@/server/services/integrations";
+import { isQboConnected } from "@/server/integrations/quickbooks/client";
 import { vaultEnabled } from "@/server/security/secrets";
 import { requirePermission } from "@/server/permissions";
 
 import { DownloadCustomersButton } from "./download-customers-button";
+import { Ga4SyncButton } from "./ga4-sync-button";
 import { IntegrationFieldForm } from "./integration-secret-form";
+import { QuickBooksControls } from "./quickbooks-controls";
 import { StoreMappingForm } from "./store-mapping-form";
 import { TestConnectionButton } from "./test-connection-button";
 
@@ -50,8 +57,12 @@ const SOURCE_TONE: Record<string, string> = {
 
 export default async function IntegrationsSettingsPage() {
   await requirePermission(PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
-  const integrations = await listIntegrationSettings();
-  const bcStores = await listBigCommerceStores();
+  const [integrations, bcStores, allStores, qboConnected] = await Promise.all([
+    listIntegrationSettings(),
+    listBigCommerceStores(),
+    listActiveStores(),
+    isQboConnected(),
+  ]);
   const isVaultEnabled = vaultEnabled();
 
   return (
@@ -157,7 +168,7 @@ export default async function IntegrationsSettingsPage() {
                     <CardTitle className="text-base">{i.name}</CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
-                    {i.integrationType === "bigcommerce" && (
+                    {(i.integrationType === "bigcommerce" || i.integrationType === "ga4") && (
                       <Badge variant={i.mappedStore ? "outline" : "warning"}>
                         <Store className="mr-1 h-3 w-3" />
                         {i.mappedStore ? i.mappedStore.name : "Not mapped"}
@@ -182,21 +193,26 @@ export default async function IntegrationsSettingsPage() {
                   {i.integrationType === "bigcommerce" && (
                     <DownloadCustomersButton integrationId={i.id} integrationName={i.name} />
                   )}
+                  {i.integrationType === "quickbooks" && (
+                    <QuickBooksControls connected={qboConnected} />
+                  )}
+                  {i.integrationType === "ga4" && <Ga4SyncButton />}
                 </div>
-                {i.integrationType === "bigcommerce" && (
+                {(i.integrationType === "bigcommerce" || i.integrationType === "ga4") && (
                   <div className="rounded-md border p-3">
                     <div className="flex items-center gap-2">
                       <Store className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">Store mapping</span>
                     </div>
                     <p className="mb-2 mt-1 text-xs text-muted-foreground">
-                      Which Store this connection syncs. Sync is skipped for unmapped connections —
-                      matching no longer relies on the connection name.
+                      {i.integrationType === "bigcommerce"
+                        ? "Which Store this connection syncs. Sync is skipped for unmapped connections — matching no longer relies on the connection name."
+                        : "Which Store this GA4 property's daily metrics belong to. Sync is skipped for unmapped properties."}
                     </p>
                     <StoreMappingForm
                       integrationId={i.id}
                       currentStoreId={i.mappedStore?.id ?? null}
-                      stores={bcStores}
+                      stores={i.integrationType === "bigcommerce" ? bcStores : allStores}
                     />
                   </div>
                 )}

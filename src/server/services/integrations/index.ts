@@ -359,21 +359,36 @@ export async function listBigCommerceStores(): Promise<{ id: string; name: strin
   return stores;
 }
 
+/** All active stores — mapping targets for GA4 properties (Phase 6). */
+export async function listActiveStores(): Promise<{ id: string; name: string }[]> {
+  return prisma.store.findMany({
+    where: { status: "active" },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+/** Integration types that carry a Store mapping. */
+export const STORE_MAPPABLE_TYPES: IntegrationType[] = ["bigcommerce", "ga4"];
+
 /**
  * Pure validation for a store-mapping change. Kept separate so it can be
  * unit-tested without a DB. A null store means "unmap" (always allowed for a
- * BigCommerce connection). Only BigCommerce connections may carry a mapping,
- * and the target must be a BigCommerce store.
+ * mappable connection type). BigCommerce connections must map to a
+ * BigCommerce-platform store; GA4 properties may map to any store (Phase 6).
  */
 export function validateStoreMappingSelection(args: {
   integrationType: IntegrationType;
   store: { id: string; platform: string } | null;
 }): { ok: true } | { ok: false; error: string } {
-  if (args.integrationType !== "bigcommerce") {
-    return { ok: false, error: "Only BigCommerce integrations can be mapped to a store." };
+  if (!STORE_MAPPABLE_TYPES.includes(args.integrationType)) {
+    return {
+      ok: false,
+      error: "Only BigCommerce and GA4 integrations can be mapped to a store.",
+    };
   }
   if (args.store === null) return { ok: true }; // unmap
-  if (args.store.platform !== "bigcommerce") {
+  if (args.integrationType === "bigcommerce" && args.store.platform !== "bigcommerce") {
     return { ok: false, error: "The selected store is not a BigCommerce store." };
   }
   return { ok: true };
