@@ -44,6 +44,14 @@ export type BcOrderPayload = {
   total_tax?: string | number;
   total_inc_tax?: string | number;
   currency_code?: string;
+  /** Present on /v2/orders; the buyer identity for guest checkouts. */
+  billing_address?: {
+    email?: string | null;
+    first_name?: string | null;
+    last_name?: string | null;
+    company?: string | null;
+    phone?: string | null;
+  };
 };
 
 export type OrderUpsertPayloads = {

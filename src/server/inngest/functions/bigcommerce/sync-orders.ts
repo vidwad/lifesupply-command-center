@@ -70,6 +70,9 @@ async function runOrderSync(args: {
             metadata: {
               ordersScanned: c.ordersScanned,
               ordersUnlinked: c.ordersUnlinked,
+              guestsCreated: c.guestsCreated,
+              guestOrdersLinked: c.guestOrdersLinked,
+              guestOrdersDeduped: c.guestOrdersDeduped,
               currentErrors: c.errorMessages.slice(0, 5),
             },
           },
@@ -117,6 +120,10 @@ async function runOrderSync(args: {
       metadata: {
         ordersScanned: counts.ordersScanned,
         ordersUnlinked: counts.ordersUnlinked,
+        guestsCreated: counts.guestsCreated,
+        guestOrdersLinked: counts.guestOrdersLinked,
+        guestOrdersDeduped: counts.guestOrdersDeduped,
+        guestOrdersNoEmail: counts.guestOrdersNoEmail,
         mode: args.mode,
         sinceIso: sinceIso ?? null,
       },
@@ -145,6 +152,10 @@ async function runOrderSync(args: {
         ordersUpdated: counts.ordersUpdated,
         ordersFailed: counts.ordersFailed,
         ordersUnlinked: counts.ordersUnlinked,
+        guestsCreated: counts.guestsCreated,
+        guestOrdersLinked: counts.guestOrdersLinked,
+        guestOrdersDeduped: counts.guestOrdersDeduped,
+        guestOrdersNoEmail: counts.guestOrdersNoEmail,
       },
     });
   }

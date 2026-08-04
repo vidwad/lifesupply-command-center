@@ -2,18 +2,22 @@
  * Core BC → Postgres order sync walker.
  *
  * Walks /v2/orders for the store, upserting each into the Order table.
- * Each order's BC customer_id is resolved against the Customer table
- * (sourceSystem='bigcommerce', sourceId=String(customer_id)) and the
- * resolved Customer.id is written to Order.customerId. Guest orders
- * (customer_id=0) and orders whose customer hasn't been synced yet
- * leave customerId null.
+ * Each order's buyer is resolved to a Customer.id and written to
+ * Order.customerId:
+ *   - Registered orders (customer_id > 0) resolve against synced
+ *     Customer rows (sourceSystem='bigcommerce').
+ *   - Guest orders (customer_id = 0) resolve by normalized billing email
+ *     (Phase 3A): matched to a registered customer when the email is known,
+ *     otherwise a first-class guest Customer (sourceSystem='bigcommerce_guest')
+ *     is created/reused so the order links to a real buyer instead of null.
+ *   - Orders whose registered customer isn't synced yet, or guest orders with
+ *     no billing email, are left unlinked.
  *
- * Pre-loads a (BC customer_id) → (Prisma Customer.id) map up front, so
- * the per-row upsert doesn't need to do an extra DB roundtrip.
+ * Pre-loads the customer lookup maps up front so the per-row resolve doesn't
+ * need an extra DB roundtrip.
  *
  * Order LINE ITEMS are not touched in this version (mirrors the existing
- * CSV import in services/imports/bigcommerce.ts: "Orders import (header-
- * only — items not handled in CSV path)"). Items can be a follow-up.
+ * CSV import in services/imports/bigcommerce.ts). Items are Phase 3B.
  *
  * Modes:
  *   - "full"        — walks ALL orders for the store
@@ -23,6 +27,12 @@ import { prisma } from "@/server/db/client";
 
 import type { Prisma } from "@prisma/client";
 
+import {
+  buildGuestCustomerUpsert,
+  GUEST_SOURCE_SYSTEM,
+  normalizeEmail,
+  resolveOrderCustomerLink,
+} from "./guest-customer";
 import { mapBcOrderToUpsert, SOURCE_SYSTEM, type BcOrderPayload } from "./order-mapper";
 
 const PAGE_SIZE = 250;
@@ -46,9 +56,19 @@ export type SyncOrdersCounts = {
   ordersCreated: number;
   ordersUpdated: number;
   ordersFailed: number;
-  ordersUnlinked: number; // BC customer_id had no matching Customer row
+  ordersUnlinked: number; // registered customer_id had no matching Customer row
+  guestsCreated: number; // new guest Customer rows created
+  guestOrdersLinked: number; // guest orders linked to a guest Customer
+  guestOrdersDeduped: number; // guest orders whose email matched a registered customer
+  guestOrdersNoEmail: number; // guest orders with no billing email → left unlinked
   errorMessages: string[];
 };
+
+function trimOrNull(v: string | null | undefined): string | null {
+  if (v == null) return null;
+  const s = v.trim();
+  return s.length === 0 ? null : s;
+}
 
 async function bcFetch(
   url: string,
@@ -76,24 +96,101 @@ async function bcFetch(
   return { ok: true, status: res.status, body };
 }
 
+type CustomerMaps = {
+  registeredByBcId: Map<number, string>;
+  registeredByEmail: Map<string, string>;
+  guestByEmail: Map<string, string>;
+};
+
 /**
- * Pre-load all BC-sourced Customer rows for THIS store so the walker can
- * resolve BC customer_id → Customer.id without per-row DB queries.
+ * Pre-load the store's synced customers (registered + guest) into lookup maps
+ * so the walker resolves each order's buyer without per-row DB queries.
  *
- * Memory: ~50B per row × N customers. For 100k customers ≈ 5MB. Fine.
+ * Memory: ~60B per row. For 100k customers ≈ 6MB. Fine.
  */
-async function loadCustomerIdMap(storeId: string): Promise<Map<number, string>> {
+async function loadCustomerMaps(storeId: string): Promise<CustomerMaps> {
   const rows = await prisma.customer.findMany({
-    where: { storeId, sourceSystem: SOURCE_SYSTEM },
-    select: { id: true, sourceId: true },
+    where: { storeId, sourceSystem: { in: [SOURCE_SYSTEM, GUEST_SOURCE_SYSTEM] } },
+    select: { id: true, sourceSystem: true, sourceId: true, email: true },
   });
-  const map = new Map<number, string>();
+  const maps: CustomerMaps = {
+    registeredByBcId: new Map(),
+    registeredByEmail: new Map(),
+    guestByEmail: new Map(),
+  };
   for (const r of rows) {
-    if (!r.sourceId) continue;
-    const bcId = Number(r.sourceId);
-    if (Number.isFinite(bcId) && bcId > 0) map.set(bcId, r.id);
+    if (r.sourceSystem === SOURCE_SYSTEM) {
+      const bcId = Number(r.sourceId);
+      if (Number.isFinite(bcId) && bcId > 0) maps.registeredByBcId.set(bcId, r.id);
+      const email = normalizeEmail(r.email);
+      if (email) maps.registeredByEmail.set(email, r.id);
+    } else if (r.sourceSystem === GUEST_SOURCE_SYSTEM) {
+      // Guest sourceId IS the normalized email; email column mirrors it.
+      const email = normalizeEmail(r.email) ?? normalizeEmail(r.sourceId);
+      if (email) maps.guestByEmail.set(email, r.id);
+    }
   }
-  return map;
+  return maps;
+}
+
+/**
+ * Resolve the Customer.id for one order, creating a guest Customer on demand.
+ * Mutates `maps.guestByEmail` when a new guest is created so later orders in
+ * the same run reuse it. Returns null when the order can't be linked.
+ */
+async function resolveCustomerIdForOrder(
+  bc: BcOrderPayload,
+  input: SyncOrdersInput,
+  maps: CustomerMaps,
+  counts: SyncOrdersCounts,
+): Promise<string | null> {
+  const link = resolveOrderCustomerLink({
+    bcCustomerId: bc.customer_id,
+    billingEmail: bc.billing_address?.email,
+    registeredByBcId: maps.registeredByBcId,
+    registeredByEmail: maps.registeredByEmail,
+    guestByEmail: maps.guestByEmail,
+  });
+
+  switch (link.kind) {
+    case "registered":
+      return link.customerId;
+    case "guest-registered-dedup":
+      counts.guestOrdersDeduped++;
+      return link.customerId;
+    case "guest-existing":
+      counts.guestOrdersLinked++;
+      return link.customerId;
+    case "guest-create": {
+      const { create, update } = buildGuestCustomerUpsert({
+        email: link.email,
+        identity: {
+          firstName: trimOrNull(bc.billing_address?.first_name),
+          lastName: trimOrNull(bc.billing_address?.last_name),
+          companyName: trimOrNull(bc.billing_address?.company),
+          phone: trimOrNull(bc.billing_address?.phone),
+        },
+        storeId: input.storeId,
+        divisionId: input.divisionId,
+        sourceOrderId: bc.id,
+      });
+      const guest = await prisma.customer.upsert({
+        where: {
+          sourceSystem_sourceId: { sourceSystem: GUEST_SOURCE_SYSTEM, sourceId: link.email },
+        },
+        create,
+        update,
+      });
+      maps.guestByEmail.set(link.email, guest.id);
+      if (guest.createdAt.getTime() === guest.updatedAt.getTime()) counts.guestsCreated++;
+      counts.guestOrdersLinked++;
+      return guest.id;
+    }
+    case "unlinked":
+      if (link.reason === "customer-not-synced") counts.ordersUnlinked++;
+      else counts.guestOrdersNoEmail++;
+      return null;
+  }
 }
 
 export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<SyncOrdersCounts> {
@@ -104,10 +201,14 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
     ordersUpdated: 0,
     ordersFailed: 0,
     ordersUnlinked: 0,
+    guestsCreated: 0,
+    guestOrdersLinked: 0,
+    guestOrdersDeduped: 0,
+    guestOrdersNoEmail: 0,
     errorMessages: [],
   };
 
-  const customerIdMap = await loadCustomerIdMap(input.storeId);
+  const maps = await loadCustomerMaps(input.storeId);
 
   const sinceParam = input.sinceIso
     ? `&min_date_modified=${encodeURIComponent(input.sinceIso)}`
@@ -136,9 +237,7 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
       counts.ordersScanned++;
       if (counts.ordersScanned > HARD_CAP_ORDERS) break;
       try {
-        const customerId =
-          bc.customer_id && bc.customer_id > 0 ? (customerIdMap.get(bc.customer_id) ?? null) : null;
-        if (bc.customer_id > 0 && !customerId) counts.ordersUnlinked++;
+        const customerId = await resolveCustomerIdForOrder(bc, input, maps, counts);
 
         const { create, update } = mapBcOrderToUpsert(bc, {
           storeId: input.storeId,
