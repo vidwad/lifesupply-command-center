@@ -1,17 +1,18 @@
 import Link from "next/link";
-import { ArrowLeft, Download, Key, Lock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, Key, Lock, ShieldCheck, Store } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import { listIntegrationSettings } from "@/server/services/integrations";
+import { listBigCommerceStores, listIntegrationSettings } from "@/server/services/integrations";
 import { vaultEnabled } from "@/server/security/secrets";
 import { requirePermission } from "@/server/permissions";
 
 import { DownloadCustomersButton } from "./download-customers-button";
 import { IntegrationFieldForm } from "./integration-secret-form";
+import { StoreMappingForm } from "./store-mapping-form";
 import { TestConnectionButton } from "./test-connection-button";
 
 export const metadata = { title: "API & Integrations" };
@@ -50,6 +51,7 @@ const SOURCE_TONE: Record<string, string> = {
 export default async function IntegrationsSettingsPage() {
   await requirePermission(PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
   const integrations = await listIntegrationSettings();
+  const bcStores = await listBigCommerceStores();
   const isVaultEnabled = vaultEnabled();
 
   return (
@@ -155,6 +157,12 @@ export default async function IntegrationsSettingsPage() {
                     <CardTitle className="text-base">{i.name}</CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
+                    {i.integrationType === "bigcommerce" && (
+                      <Badge variant={i.mappedStore ? "outline" : "warning"}>
+                        <Store className="mr-1 h-3 w-3" />
+                        {i.mappedStore ? i.mappedStore.name : "Not mapped"}
+                      </Badge>
+                    )}
                     {i.fields.length > 0 && (
                       <Badge variant={i.fullyConfigured ? "success" : "outline"}>
                         {i.fields.filter((f) => f.effectiveSource !== "none").length} of{" "}
@@ -175,6 +183,23 @@ export default async function IntegrationsSettingsPage() {
                     <DownloadCustomersButton integrationId={i.id} integrationName={i.name} />
                   )}
                 </div>
+                {i.integrationType === "bigcommerce" && (
+                  <div className="rounded-md border p-3">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Store mapping</span>
+                    </div>
+                    <p className="mb-2 mt-1 text-xs text-muted-foreground">
+                      Which Store this connection syncs. Sync is skipped for unmapped connections —
+                      matching no longer relies on the connection name.
+                    </p>
+                    <StoreMappingForm
+                      integrationId={i.id}
+                      currentStoreId={i.mappedStore?.id ?? null}
+                      stores={bcStores}
+                    />
+                  </div>
+                )}
                 {i.fields.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     This integration has no credential fields.

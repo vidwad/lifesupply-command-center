@@ -122,6 +122,36 @@ Rules:
 
 ## 5.5 Live integrations — credentials cheat sheet
 
+### BigCommerce stores — credentials + store mapping
+
+LifeSupply runs multiple BigCommerce storefronts (LifeSupply.ca,
+WellmartMedical.com, and a planned Balkowitsch Worldwide / U.S. store). Each
+gets its own `BigCommerce — <name>` connection under **Admin → API &
+Integrations**.
+
+For every BigCommerce connection:
+
+1. Set `storeHash` + `apiToken` (per-connection, via the vault).
+2. **Map the connection to a Store.** In the connection's **Store mapping**
+   panel, pick the matching Store and click **Save mapping**. This is a real
+   foreign key — sync no longer guesses the store from the connection's
+   display name.
+   - The mapping target list only shows Stores whose platform is
+     `bigcommerce`. Create the Store first under **Admin → Stores** if it's
+     missing (e.g. the Balkowitsch/U.S. store).
+   - A connection with a **Not mapped** badge is **skipped** by sync with a
+     clear operator message — it will not sync until mapped.
+
+To configure the three stores end to end: create the three `bigcommerce`
+Stores (Admin → Stores), set each connection's credentials, then map each
+connection to its Store. Confirm each connection shows its Store name (not
+"Not mapped") before running a sync.
+
+> Migration note: deployments created before the Phase 2 mapping change are
+> auto-backfilled from the old `BigCommerce — <Store name>` naming
+> convention, so existing connections keep syncing. Any connection whose name
+> didn't match a Store shows **Not mapped** and must be mapped by hand.
+
 ### Mailchimp campaigns
 Configure these via **Admin → API & Integrations → Mailchimp**:
 - `apiKey` (secret)
