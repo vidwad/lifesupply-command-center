@@ -221,6 +221,32 @@ When all five are present + `mailchimp.send` flag is on, the export creates
 a Mailchimp segment + draft campaign. Sending is still done from inside
 Mailchimp — the application never auto-sends.
 
+### Mailchimp consent + suppression read sync (Phase 4)
+
+**Marketing → Reactivation → "Sync Mailchimp consent"** (or
+`POST /api/sync/mailchimp/members`, permission `marketing.sync_mailchimp`)
+pulls the audience's members + abuse reports on the background worker.
+Read-only toward Mailchimp; only `apiKey` + `serverPrefix` + `audienceListId`
+are needed. Effects:
+
+- Every member is mirrored into `MarketingContact` (raw status, tags, merge
+  fields, status-changed date).
+- Matched customers (by normalized email — registered and guest) get CASL
+  evidence fields: `subscribed` → express consent (source `mailchimp`, opt-in
+  date); `unsubscribed`/`cleaned` → suppressed with reason + date; abuse
+  reports → `complained` (suppression always wins). Archiving a member in
+  Mailchimp does NOT change consent.
+- Counts land in the sync log; the run itself is audit-logged.
+
+**Eligibility policy (casl-v1)** — enforced by
+`services/marketing/marketing-eligibility.ts` and used by reactivation +
+campaign drafting: suppressed/pending are never eligible; express consent is
+eligible (no expiry); implied consent is eligible inside its window (recorded
+expiry, or 24 months after last purchase — CASL existing-business-relationship);
+everything else is ineligible. Campaign approval is refused when the draft has
+no eligibility snapshot. Run the Mailchimp sync before drafting reactivation
+campaigns so suppression is fresh.
+
 ### Investor email distribution
 Env-only (Resend):
 ```

@@ -24,6 +24,7 @@ import { aiCall } from "@/server/services/ai/call";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { isFeatureOn, requireFeature } from "@/server/services/feature-flags";
 
+import { ELIGIBILITY_POLICY_VERSION, type EligibilityCode } from "./marketing-eligibility";
 import { listReactivationCandidates, type ReactivationBucket } from "./reactivation";
 
 export class CampaignTransitionError extends Error {
@@ -121,7 +122,24 @@ export async function draftReactivationCampaign(
     email: r.email,
     name: r.name,
     score: r.reactivationScore,
+    eligibilityCode: r.eligibilityCode,
   }));
+
+  // Eligibility snapshot (Phase 4): the compliance posture of this audience
+  // at draft time. Approval is refused without it, so the approver always
+  // sees who was excluded and why.
+  const byCode: Partial<Record<EligibilityCode, number>> = {};
+  for (const r of rows) byCode[r.eligibilityCode] = (byCode[r.eligibilityCode] ?? 0) + 1;
+  const eligibilitySnapshot = {
+    policy: ELIGIBILITY_POLICY_VERSION,
+    evaluatedAt: new Date().toISOString(),
+    total: rows.length,
+    eligible: rows.length, // candidates are pre-filtered to eligible-only
+    ineligible: 0,
+    byCode,
+    excludedFromPool: summary.excludedByCode,
+    excludedDueToConsent: summary.excludedDueToConsent,
+  };
 
   // Persist the AiOutput first (required for FK).
   const aiOutput = await prisma.aiOutput.create({
@@ -161,6 +179,7 @@ export async function draftReactivationCampaign(
       bodyDraft: result.output,
       audienceSummary: `Reactivation · ${input.bucket} · ${rows.length} recipients`,
       audienceSnapshot: audienceSnapshot as unknown as Prisma.InputJsonValue,
+      eligibilitySnapshot: eligibilitySnapshot as unknown as Prisma.InputJsonValue,
       aiOutputId: aiOutput.id,
       status: "draft",
       createdById: actor.id,
@@ -195,7 +214,14 @@ export async function requestCampaignApproval(args: {
 }) {
   const campaign = await prisma.campaign.findUniqueOrThrow({
     where: { id: args.campaignId },
-    select: { id: true, name: true, status: true, audienceSummary: true, bodyDraft: true },
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      audienceSummary: true,
+      bodyDraft: true,
+      eligibilitySnapshot: true,
+    },
   });
   if (campaign.status !== "draft") {
     throw new CampaignTransitionError(
@@ -204,6 +230,19 @@ export async function requestCampaignApproval(args: {
   }
   if (!campaign.bodyDraft || !campaign.bodyDraft.trim()) {
     throw new CampaignTransitionError("Campaign has no body — generate or write copy first.");
+  }
+  // Phase 4 acceptance: campaigns cannot be approved without an eligibility
+  // snapshot. Older drafts predating the snapshot must be re-drafted so the
+  // approver sees the compliance posture.
+  const snapshot = campaign.eligibilitySnapshot as {
+    policy?: string;
+    eligible?: number;
+    excludedDueToConsent?: number;
+  } | null;
+  if (!snapshot || typeof snapshot.eligible !== "number") {
+    throw new CampaignTransitionError(
+      "Campaign has no consent-eligibility snapshot — re-draft it so approvers can see the compliance posture.",
+    );
   }
   const existing = await prisma.approval.findFirst({
     where: {
@@ -225,6 +264,7 @@ export async function requestCampaignApproval(args: {
       requestSummary: [
         `Approve campaign: ${campaign.name}`,
         campaign.audienceSummary ? `Audience: ${campaign.audienceSummary}` : null,
+        `Eligibility (${snapshot.policy ?? "casl-v1"}): ${snapshot.eligible} eligible recipients; ${snapshot.excludedDueToConsent ?? 0} lapsed customers excluded by consent policy.`,
         args.notes ? `\n${args.notes}` : null,
       ]
         .filter(Boolean)

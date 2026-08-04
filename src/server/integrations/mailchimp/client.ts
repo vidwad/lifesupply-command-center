@@ -27,6 +27,26 @@ export type ConfiguredMailchimp = {
  * credential is missing — callers must handle the null case (typically by
  * falling back to a stub send-intent record).
  */
+export type ConfiguredMailchimpRead = {
+  client: typeof mailchimp;
+  audienceListId: string;
+};
+
+/**
+ * Read-only client for subscriber/suppression sync (Phase 4). Needs only the
+ * apiKey + serverPrefix + audienceListId — the from-name/from-email fields
+ * required for sending are irrelevant to reads.
+ */
+export async function getMailchimpReadClient(): Promise<ConfiguredMailchimpRead | null> {
+  const apiKey = await resolveCredential("mailchimp", "apiKey");
+  const serverPrefix = await resolveCredential("mailchimp", "serverPrefix");
+  const audienceListId = await resolveCredential("mailchimp", "audienceListId");
+  if (!apiKey || !serverPrefix || !audienceListId) return null;
+
+  mailchimp.setConfig({ apiKey, server: serverPrefix });
+  return { client: mailchimp, audienceListId };
+}
+
 export async function getMailchimpClient(): Promise<ConfiguredMailchimp | null> {
   const apiKey = await resolveCredential("mailchimp", "apiKey");
   const serverPrefix = await resolveCredential("mailchimp", "serverPrefix");
