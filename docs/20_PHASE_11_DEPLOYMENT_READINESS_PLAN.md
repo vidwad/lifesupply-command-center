@@ -4,8 +4,9 @@
 
 **Prepared:** August 4, 2026  
 **Repository:** `vidwad/lifesupply-command-center`  
-**Current baseline:** `main` at or after commit `6db79b24d88a2a267fae839d9e7f962bfbb68c63`  
-**Status:** Recommended next-stage development and deployment plan
+**Authoritative baseline:** `main` at commit `6db79b24d88a2a267fae839d9e7f962bfbb68c63` (merge of PR #17)  
+**Status:** Active controlling plan. Phase 11 is the sole active workstream.  
+**Readiness register:** `docs/RELEASE_READINESS_STATUS.md`
 
 ---
 
@@ -50,16 +51,23 @@ Recent merged work demonstrates that the original roadmap sequence has been comp
 
 The latest follow-up reports 313 passing tests and a successful production build. That is a strong development baseline, but it is not yet proof of production readiness.
 
-### 2.2 Documentation that is now stale
+### 2.2 Documentation that was stale — resolved in Phase 11A
 
-`CLAUDE.md` and `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` still describe Phase 1 as the immediate next phase even though Phases 1–10 and post-roadmap follow-ups are already merged. This is now a development-control risk. A new Claude session could repeat completed work or misunderstand the current priority.
+> **Resolved 2026-08-04 (Phase 11A).** `CLAUDE.md` and `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` previously described Phase 1 as the immediate next phase even though Phases 1–10 and post-roadmap follow-ups were already merged. That was a development-control risk: a new agent session could have repeated completed work. Both documents now state the current position, and a repository-wide check finds no remaining "Phase 1 is next" statement.
 
-The first Phase 11 task must therefore update the controlling documents so they state:
+The controlling documents state, and must continue to state:
 
-- Phases 1–10 are code-complete and merged.
-- The application is not yet declared production-ready.
+- Phases 1–10 are code-complete and merged, and are retained as historical implementation evidence.
+- The application is code-complete for the original roadmap but is **not** yet declared production-ready.
 - Phase 11 is the sole active workstream.
 - Feature expansion is frozen except for defects or changes required to pass a Phase 11 launch gate.
+- Work proceeds one Phase 11 work package at a time.
+
+Further documentation reconciled during Phase 11A:
+
+- `docs/16_DEPLOYMENT_AND_ENVIRONMENT.md` — deployment platform and environment-variable names aligned with the implemented configuration.
+- `docs/DEPLOYMENT_VERCEL.md` — marked as a non-selected alternative rather than *the* production runbook.
+- `docs/OPS_RUNBOOK.md` §8 — hosting rows completed from deployment evidence; human contacts remain `TBD`.
 
 ### 2.3 Main readiness gaps
 
@@ -118,6 +126,10 @@ Staging and production must never share databases, Inngest keys, storage buckets
 
 ## 11A — Baseline freeze and development-control update
 
+**Delivery:** branch `agent/phase-11-deployment-readiness-plan`, PR #18. Phase 11A is delivered on the
+existing Phase 11 branch rather than a new one, to avoid a duplicate plan document and a second
+pull request.
+
 ### Objective
 
 Create an authoritative code and documentation baseline for deployment readiness.
@@ -139,6 +151,12 @@ Create an authoritative code and documentation baseline for deployment readiness
 - Every Phase 11 gate has an evidence owner and status.
 - CI passes on the recorded baseline.
 - Release scope and out-of-scope items are explicit.
+
+### Scope boundary
+
+Phase 11A is documentation and development control only. It does not provision infrastructure, cut a
+release branch, create a tag, configure credentials, or change product behaviour. The branch and tag
+convention is *defined* in `docs/RELEASE_READINESS_STATUS.md` §4 and deliberately left unexercised.
 
 ## 11B — Staging infrastructure and release pipeline
 
@@ -387,14 +405,19 @@ This is an indicative eight-to-nine-week program. It can be compressed if infras
 
 Claude Code should run one work package at a time on a dedicated branch. It should not implement all of Phase 11 in one session.
 
-### Prompt 1 — Baseline and control-document update
+### Prompt 1 — Baseline and control-document update — COMPLETE
+
+> Delivered on branch `agent/phase-11-deployment-readiness-plan` via PR #18 on 2026-08-04. Retained
+> for the record. The original text proposed a new branch `claude/phase-11a-readiness-baseline`;
+> the product owner directed delivery on the existing Phase 11 branch instead, so no second branch
+> or duplicate pull request was created.
 
 ```text
 Read CLAUDE.md, docs/19_CURRENT_DEVELOPMENT_ROADMAP.md, the merged PRs #3 through #17, docs/16_DEPLOYMENT_AND_ENVIRONMENT.md, docs/DEPLOYMENT_RENDER.md, docs/OPS_RUNBOOK.md, docs/06_SECURITY_AND_PERMISSIONS.md, and docs/15_TESTING_AND_QA_PLAN.md.
 
 The prior roadmap phases are complete. Run Phase 11A only: reconcile the controlling documentation with the current main branch, add docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md and docs/RELEASE_READINESS_STATUS.md, mark Phases 1–10 implemented, and declare Phase 11 the active workstream. Do not add product features.
 
-Create branch claude/phase-11a-readiness-baseline. Run the required verification, commit, push, and open a PR. Report the baseline SHA, documents changed, verification results, and any conflict between documentation and code.
+Run the required verification, commit, push, and update the PR. Report the baseline SHA, documents changed, verification results, and any conflict between documentation and code.
 ```
 
 ### Prompt 2 — Staging infrastructure

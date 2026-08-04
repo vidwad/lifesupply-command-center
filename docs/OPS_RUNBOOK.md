@@ -404,10 +404,15 @@ flag flip rather than a redeploy.
 
 - Owner: Vid Wadhwani (`vidwadhwani@gmail.com`)
 - Tech lead: TBD
-- Hosting (DB): TBD
-- Hosting (web): TBD
+- Hosting (DB): Render — managed Postgres, service `lifesupply-cc-db` (`render.yaml`)
+- Hosting (web): Render — `lifesupply-cc-web`; worker `lifesupply-cc-worker`; cron `lifesupply-cc-audit-retention`
+- Incident owner: TBD
+- Incident backup: TBD
 
-Update this section when production hosting is selected.
+Hosting rows were completed on 2026-08-04 (Phase 11A) from the deployment configuration.
+
+**Named incident owner and backup remain outstanding.** This is launch gate `GATE-07` in
+`docs/RELEASE_READINESS_STATUS.md` — production is a no-go until they are assigned.
 
 ---
 

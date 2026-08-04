@@ -30,6 +30,12 @@ docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md
 
 That document is the active development and launch-control plan as of August 4, 2026. The earlier roadmap remains available at `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` as historical implementation evidence.
 
+Phase 11 status, evidence, blockers, and sign-off are tracked in:
+
+```text
+docs/RELEASE_READINESS_STATUS.md
+```
+
 The immediate next phase is:
 
 ```text
@@ -37,6 +43,10 @@ Phase 11 — Deployment Readiness, Integration Validation, and Controlled Produc
 ```
 
 Run **one Phase 11 work package at a time**, beginning with Phase 11A. Freeze new feature expansion except for defects or changes required to pass a Phase 11 launch gate. Do not repeat Phases 1–10 unless the product owner explicitly reopens a completed phase.
+
+**Baseline:** `main` at `6db79b24d88a2a267fae839d9e7f962bfbb68c63` (merge of PR #17), CI run `30952484455` green on both jobs. The repository is a release candidate and is **not** production-ready. Only the product owner records acceptance of a launch gate; Claude Code may propose "Ready for Review" but must never mark a gate accepted, nor describe the application as production-ready.
+
+---
 
 ## 3. Operating Context
 
@@ -109,7 +119,8 @@ Always read:
 
 1. `CLAUDE.md`
 2. `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md`
-3. `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` when historical implementation context is relevant
+3. `docs/RELEASE_READINESS_STATUS.md`
+4. `docs/19_CURRENT_DEVELOPMENT_ROADMAP.md` when historical implementation context is relevant
 
 For foundational context, read as needed:
 
@@ -284,6 +295,17 @@ Non-negotiable execution reminders:
 - Require evidence for every launch gate.
 - Do not declare production readiness until security, reconciliation, recovery, UAT, and cutover gates are signed.
 - Do not add new strategic modules during Phase 11 unless the product owner explicitly changes scope.
+
+### Release branch and tag convention
+
+Defined in `docs/RELEASE_READINESS_STATUS.md` §4 and not yet exercised — no release branch has been cut and no tag exists.
+
+- Work packages branch as `agent/*` or `claude/*`, one package per branch.
+- Staging releases cut `release/phase-11-staging` and tag `v0.9.N-staging`.
+- `release/phase-11-production` and `v1.0.0` are reserved for after the launch gates are accepted.
+- A `-staging` tag never implies production readiness.
+
+---
 
 ## 10. Original MVP Definition
 

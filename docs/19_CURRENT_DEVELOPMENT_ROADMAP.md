@@ -14,10 +14,11 @@ This document records the Phase 1–10 post-MVP development sequence that has no
 
 The language below describing limitations, required work, or a "next phase" reflects the pre-implementation baseline as of August 3, 2026. It must not be treated as the current repository status.
 
-The active controlling plan is:
+The active controlling plan, and the register that tracks its status, are:
 
 ```text
 docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md
+docs/RELEASE_READINESS_STATUS.md
 ```
 
 Phase 11 is the sole active workstream. New feature development is frozen except for defects or changes required to pass a Phase 11 launch gate. Claude Code must not rerun Phases 1–10 unless the product owner explicitly reopens one of them.
@@ -915,13 +916,16 @@ Review AI services, permissions, feature flags, tasks, approvals, reports, marke
 
 ## 5. Current immediate next action
 
-The next phase to run is:
+Phase 11A — Baseline freeze and development-control update is **delivered in PR #18 and awaiting
+product-owner acceptance**. Subject to that acceptance, the next work package to run is:
 
 ```text
-Phase 11A — Baseline freeze and development-control update
+Phase 11B — Staging infrastructure and release pipeline
 ```
 
-Use `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` as the controlling instruction. Do not restart Phase 1 or add new feature modules. After Phase 11A is accepted, proceed through the remaining Phase 11 work packages one at a time.
+Use `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` as the controlling instruction and record status
+in `docs/RELEASE_READINESS_STATUS.md`. Do not restart Phase 1 or add new feature modules. Proceed
+through the remaining Phase 11 work packages one at a time.
 
 ---
 

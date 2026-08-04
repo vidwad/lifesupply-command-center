@@ -1,7 +1,17 @@
 # Deploying to Vercel
 
-This is the production-deployment runbook for putting LifeSupply Command
-Center on Vercel + Neon Postgres. Estimated first-time setup: 20 minutes.
+> **Status: alternative platform — NOT selected.** Reconciled 2026-08-04 (Phase 11A).
+> Render is the selected deployment platform for both staging and production; see
+> `docs/DEPLOYMENT_RENDER.md` for the active runbook and
+> `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` §3 for the topology. This document is retained
+> for comparison only and must not be treated as the production runbook.
+>
+> Vercel was not selected because the architecture needs a continuously running background worker
+> (Inngest Connect) and Playwright/Chromium for supplier automation. `vercel.json` remains in the
+> repository as an unused alternative configuration.
+
+This document describes how the application *would* be deployed on Vercel + Neon Postgres.
+Estimated first-time setup: 20 minutes.
 
 ---
 
