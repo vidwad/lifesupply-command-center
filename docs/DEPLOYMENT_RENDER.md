@@ -32,6 +32,8 @@ web service + database + nightly cron in one apply.
 4. Render reads `render.yaml` and shows you the resources it will create:
    - `lifesupply-cc-db` (Postgres 16, Basic 256 MB plan, $6/mo)
    - `lifesupply-cc-web` (Docker web service, Starter $7/mo)
+   - `lifesupply-cc-worker` (Docker **background worker**, Starter $7/mo) —
+     runs `pnpm worker` to process BigCommerce sync jobs via Inngest
    - `lifesupply-cc-audit-retention` (Cron Docker service, runs 03:15 UTC daily, $7/mo)
 5. Click **Apply**. Render provisions the DB first, then builds + deploys
    the web service (~6 minutes for the first build because Chromium is
@@ -64,6 +66,72 @@ For the cron service (`lifesupply-cc-audit-retention`), copy
 `MASTER_ENCRYPTION_KEY` from the web service into the cron's env so it
 can decrypt audit-relevant credentials when needed. Set
 `AUDIT_RETENTION_DAYS` if you want to override the 365-day default.
+
+The **worker** (`lifesupply-cc-worker`) also needs
+`MASTER_ENCRYPTION_KEY` copied from the web service (same value — it
+decrypts BigCommerce credentials from the vault) plus the two Inngest
+keys. See §2.5.
+
+---
+
+## 2.5 Inngest + the background worker
+
+BigCommerce customer/order sync runs as **background jobs**, not inside
+the web request. The web service publishes an event; the
+`lifesupply-cc-worker` service picks it up and does the work. Both talk to
+[Inngest](https://www.inngest.com), which brokers the events. Without the
+worker + keys configured, the sync buttons in `/admin/integrations` will
+create sync-log rows that hang in `running` forever.
+
+### a. Create the Inngest app + keys
+
+1. Sign up at https://app.inngest.com (free tier is plenty).
+2. Create an app / environment for LifeSupply (e.g. **Production**).
+3. **Manage → Keys** → copy:
+   - **Event Key** → `INNGEST_EVENT_KEY`
+   - **Signing Key** → `INNGEST_SIGNING_KEY`
+
+You do **not** configure a "sync URL" or webhook endpoint — the worker
+uses **Inngest Connect**, opening an outbound WebSocket to Inngest and
+registering itself on boot. There is no inbound URL to fill in.
+
+### b. Set the keys on both services
+
+| Service | `INNGEST_EVENT_KEY` | `INNGEST_SIGNING_KEY` | `MASTER_ENCRYPTION_KEY` |
+|---|---|---|---|
+| `lifesupply-cc-web` | ✅ (to publish events) | — | generated at apply |
+| `lifesupply-cc-worker` | ✅ | ✅ (to register) | ✅ copy web's value |
+
+In **lifesupply-cc-worker → Environment**, paste the same
+`INNGEST_EVENT_KEY` you set on the web service, add `INNGEST_SIGNING_KEY`,
+and copy `MASTER_ENCRYPTION_KEY` from the web service. Save — Render
+redeploys the worker.
+
+### c. Verify the worker is live
+
+1. **lifesupply-cc-worker → Logs** should show:
+   `[worker] connected to Inngest, awaiting work…`
+2. In the Inngest dashboard, the app **lifesupply-command-center** and its
+   functions (`bc-sync-customers-full/incremental`,
+   `bc-sync-orders-full/incremental`) appear under **Functions**.
+3. In the app, go to `/admin/integrations`, pick a configured BigCommerce
+   store, and click **Sync customers (incremental)**.
+4. Watch the run at `/automation` (or `/admin/integrations`): the
+   `IntegrationSyncLog` should move `running → success` (or `partial` /
+   `failed`) rather than hanging. The same run appears in the Inngest
+   dashboard under **Runs**.
+
+### d. Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Sync log stuck in `running`, nothing in Inngest **Runs** | Worker not connected, or web `INNGEST_EVENT_KEY` unset/mismatched | Check worker logs for the "connected" line; confirm the **same** event key on web + worker |
+| Worker log: connects then exits / crash-loops | Missing `DATABASE_URL` or `INNGEST_SIGNING_KEY` | Set them on the worker; Render redeploys |
+| Run fails with "missing storeHash or apiToken" | `MASTER_ENCRYPTION_KEY` on worker ≠ web's value, so vault decrypt fails | Copy the web service's exact `MASTER_ENCRYPTION_KEY` to the worker |
+| Functions never appear in Inngest | Worker never booted (build/start failure) | Check the worker's Deploy logs; the start command must be `pnpm worker` |
+
+See also `docs/OPS_RUNBOOK.md` §10 for the ongoing "stalled sync job"
+runbook.
 
 ---
 
@@ -216,7 +284,7 @@ builds (most pushes) take 2–3 min. If you want faster builds:
 `prisma migrate deploy` before booting Next, so schema changes ship
 with the code (idempotent — safe to re-run).
 
-For high-risk schema changes use expand-contract (see `docs/OPS_RUNBOOK.md` §10).
+For high-risk schema changes use expand-contract (see `docs/OPS_RUNBOOK.md` §5).
 
 ---
 
@@ -225,13 +293,14 @@ For high-risk schema changes use expand-contract (see `docs/OPS_RUNBOOK.md` §10
 | Plan | Monthly |
 |---|---|
 | Web service Starter | $7 |
+| Worker Starter | $7 |
 | Postgres Basic 256 MB | $6 |
 | Cron Starter | $7 |
-| **Subtotal** | **$20** |
+| **Subtotal** | **$27** |
 | Anthropic | $5–50 (usage) |
 | Resend Free | $0 (3k emails/mo) |
 
-Total: **$25–70/mo** depending on AI volume.
+Total: **$32–77/mo** depending on AI volume.
 
 Bump web service to Standard ($25, 2 GB RAM) and DB to Basic 1 GB ($19)
 for headroom: +$31/mo.

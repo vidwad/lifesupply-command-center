@@ -12,6 +12,13 @@ const envSchema = z.object({
   // Encrypted credential vault — see docs/06 §8
   MASTER_ENCRYPTION_KEY: z.string().optional(),
 
+  // Inngest background job queue. Read directly by the Inngest SDK; declared
+  // here so the contract is explicit. Keyless in local dev (dev server);
+  // required in production — web needs the event key to publish, the worker
+  // needs both to register + receive. See .env.example.
+  INNGEST_EVENT_KEY: z.string().optional(),
+  INNGEST_SIGNING_KEY: z.string().optional(),
+
   BIGCOMMERCE_STORE_HASH: z.string().optional(),
   BIGCOMMERCE_API_TOKEN: z.string().optional(),
   BIGCOMMERCE_CLIENT_ID: z.string().optional(),

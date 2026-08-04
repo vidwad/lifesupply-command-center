@@ -65,6 +65,16 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
 
+      # ---- Inngest — background job queue ----
+      # The web service SENDS events (BigCommerce sync triggers); the
+      # worker below PROCESSES them. Publishing events only needs the
+      # event key. Create an app at https://app.inngest.com and copy its
+      # keys (Manage → Keys). sync:false = paste manually; not generated.
+      # This MUST be set or sync buttons will dispatch into the void in
+      # production.
+      - key: INNGEST_EVENT_KEY
+        sync: false
+
       # ---- domain-dependent: set after first deploy ----
       # AUTH_URL and NEXT_PUBLIC_APP_URL must match the public domain.
       # Add them in the Render dashboard once the service has a URL.
@@ -88,6 +98,64 @@ services:
       # ---- optional: BBM01 supplier portal — leave unset to use mock ----
       - key: SUPPLIER_PORTAL_BBM01_URL
         sync: false
+
+  # -------------------------------------------------------------------------
+  # Background worker — processes Inngest jobs (BigCommerce customer + order
+  # sync). Uses the SAME Docker image as the web service; only the start
+  # command differs. Connects OUT to Inngest via Connect (a persistent
+  # WebSocket), so it needs no inbound URL, port, or health check — Render
+  # keeps a Background Worker running without exposing it publicly.
+  #
+  # Without this service, the sync buttons create IntegrationSyncLog rows in
+  # `running` state and send Inngest events that nothing ever handles, so
+  # the logs hang forever. This service is what moves them to
+  # success / partial / failed.
+  # -------------------------------------------------------------------------
+  - type: worker
+    name: lifesupply-cc-worker
+    runtime: docker
+    plan: starter # $7/mo Starter; 0.5 CPU / 512 MB is enough for sync I/O
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    # Overrides the Dockerfile CMD (which runs migrations + `next start`).
+    # The worker does not serve HTTP and must not run migrations — the web
+    # service already applies them on deploy.
+    dockerCommand: pnpm worker
+    envVars:
+      # ---- database (same instance as the web service) ----
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lifesupply-cc-db
+          property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: lifesupply-cc-db
+          property: connectionString
+
+      # ---- vault master key ----
+      # MUST equal the web service's MASTER_ENCRYPTION_KEY, or the worker
+      # cannot decrypt BigCommerce credentials from the vault. The web
+      # service generates this at first apply; copy that value here.
+      # sync:false stops the blueprint from generating a second,
+      # mismatched key.
+      - key: MASTER_ENCRYPTION_KEY
+        sync: false
+
+      # ---- Inngest — same values as the web service ----
+      # The worker registers functions and receives invocations over
+      # Connect. It needs BOTH keys. Paste the same values used on
+      # lifesupply-cc-web.
+      - key: INNGEST_EVENT_KEY
+        sync: false
+      - key: INNGEST_SIGNING_KEY
+        sync: false
+
+      # ---- always set ----
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
 
   # -------------------------------------------------------------------------
   # Cron — daily audit log retention sweep.
