@@ -6,6 +6,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import {
   clearIntegrationField,
   setIntegrationField,
+  setIntegrationStore,
   updateIntegrationNotes,
 } from "@/server/services/integrations";
 import { SecretVaultNotConfiguredError } from "@/server/security/secrets";
@@ -47,6 +48,27 @@ export async function clearFieldAction(formData: FormData): Promise<void> {
   await clearIntegrationField({ integrationId, fieldName, actorUserId: user.id });
   revalidatePath("/admin/integrations");
   revalidatePath("/automation");
+}
+
+export async function setStoreMappingAction(
+  _prev: FieldActionState,
+  formData: FormData,
+): Promise<FieldActionState> {
+  const user = await requirePermission(PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
+  const integrationId = String(formData.get("integrationId") ?? "");
+  const rawStoreId = String(formData.get("storeId") ?? "");
+  const storeId = rawStoreId.trim() === "" ? null : rawStoreId;
+  if (!integrationId) return { error: "Integration is required." };
+
+  try {
+    await setIntegrationStore({ integrationId, storeId, actorUserId: user.id });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to update store mapping." };
+  }
+
+  revalidatePath("/admin/integrations");
+  revalidatePath("/automation");
+  return { ok: storeId ? "Store mapping saved." : "Store mapping cleared." };
 }
 
 export async function updateNotesAction(formData: FormData): Promise<void> {

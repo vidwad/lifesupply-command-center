@@ -915,6 +915,8 @@ type IntegrationSeed = {
   name: string;
   status: "configured" | "not_configured" | "error" | "disabled";
   notes?: string;
+  /** Store.externalStoreId this BigCommerce connection maps to (Phase 2). */
+  storeExternalId?: string;
   lastSuccessfulSyncDaysAgo?: number;
   syncs?: {
     syncType: string;
@@ -930,6 +932,7 @@ const INTEGRATIONS: IntegrationSeed[] = [
     type: "bigcommerce",
     name: "BigCommerce — LifeSupply.ca",
     status: "configured",
+    storeExternalId: "lifesupply-ca",
     lastSuccessfulSyncDaysAgo: 0,
     syncs: [
       { syncType: "orders", status: "success", daysAgo: 0, recordsProcessed: 12 },
@@ -940,6 +943,7 @@ const INTEGRATIONS: IntegrationSeed[] = [
     type: "bigcommerce",
     name: "BigCommerce — WellmartMedical.com",
     status: "configured",
+    storeExternalId: "wellmartmedical-com",
     lastSuccessfulSyncDaysAgo: 0,
     syncs: [
       { syncType: "orders", status: "success", daysAgo: 0, recordsProcessed: 5 },
@@ -988,6 +992,15 @@ async function seedIntegrations(prisma: PrismaClient) {
   console.log("→ Integration connections & sync logs");
   let syncCount = 0;
   for (const i of INTEGRATIONS) {
+    // Phase 2: resolve the explicit Store mapping for BigCommerce connections.
+    const store = i.storeExternalId
+      ? await prisma.store.findFirst({
+          where: { externalStoreId: i.storeExternalId },
+          select: { id: true },
+        })
+      : null;
+    const storeMapping = store ? { storeId: store.id } : {};
+
     const conn = await prisma.integrationConnection.upsert({
       where: { integrationType_name: { integrationType: i.type, name: i.name } },
       create: {
@@ -995,6 +1008,7 @@ async function seedIntegrations(prisma: PrismaClient) {
         name: i.name,
         status: i.status,
         notes: i.notes,
+        ...storeMapping,
         lastSuccessfulSyncAt:
           i.lastSuccessfulSyncDaysAgo != null ? daysAgo(i.lastSuccessfulSyncDaysAgo) : null,
         lastSyncAt:
@@ -1003,6 +1017,7 @@ async function seedIntegrations(prisma: PrismaClient) {
       update: {
         status: i.status,
         notes: i.notes,
+        ...storeMapping,
         lastSuccessfulSyncAt:
           i.lastSuccessfulSyncDaysAgo != null ? daysAgo(i.lastSuccessfulSyncDaysAgo) : null,
         lastSyncAt:

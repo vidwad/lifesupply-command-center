@@ -239,6 +239,8 @@ export type IntegrationSettingsRow = {
   fields: IntegrationFieldStatus[];
   /** True iff every defined field has a source. */
   fullyConfigured: boolean;
+  /** Explicitly mapped Store (BigCommerce only). Null when unmapped. */
+  mappedStore: { id: string; name: string } | null;
 };
 
 export async function listIntegrationSettings(): Promise<IntegrationSettingsRow[]> {
@@ -274,6 +276,7 @@ export async function listIntegrationSettings(): Promise<IntegrationSettingsRow[
 
   const records = await prisma.integrationConnection.findMany({
     orderBy: [{ integrationType: "asc" }, { name: "asc" }],
+    include: { store: { select: { id: true, name: true } } },
   });
 
   // Resolve setBy user names in one query
@@ -337,8 +340,91 @@ export async function listIntegrationSettings(): Promise<IntegrationSettingsRow[
       lastSuccessfulSyncAt: r.lastSuccessfulSyncAt?.toISOString() ?? null,
       fields,
       fullyConfigured,
+      mappedStore: r.store ? { id: r.store.id, name: r.store.name } : null,
     };
   });
+}
+
+// -----------------------------------------------------------------------------
+// Store mapping (Phase 2) — explicit Store ↔ BigCommerce connection link
+// -----------------------------------------------------------------------------
+
+/** BigCommerce stores selectable as a connection's mapping target. */
+export async function listBigCommerceStores(): Promise<{ id: string; name: string }[]> {
+  const stores = await prisma.store.findMany({
+    where: { platform: "bigcommerce" },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+  return stores;
+}
+
+/**
+ * Pure validation for a store-mapping change. Kept separate so it can be
+ * unit-tested without a DB. A null store means "unmap" (always allowed for a
+ * BigCommerce connection). Only BigCommerce connections may carry a mapping,
+ * and the target must be a BigCommerce store.
+ */
+export function validateStoreMappingSelection(args: {
+  integrationType: IntegrationType;
+  store: { id: string; platform: string } | null;
+}): { ok: true } | { ok: false; error: string } {
+  if (args.integrationType !== "bigcommerce") {
+    return { ok: false, error: "Only BigCommerce integrations can be mapped to a store." };
+  }
+  if (args.store === null) return { ok: true }; // unmap
+  if (args.store.platform !== "bigcommerce") {
+    return { ok: false, error: "The selected store is not a BigCommerce store." };
+  }
+  return { ok: true };
+}
+
+/**
+ * Set (or clear, when storeId is null) the Store a BigCommerce connection
+ * syncs. Validated + audit-logged. Gated by ADMIN_MANAGE_INTEGRATIONS at the
+ * action layer.
+ */
+export async function setIntegrationStore(args: {
+  integrationId: string;
+  storeId: string | null;
+  actorUserId: string;
+}) {
+  const conn = await prisma.integrationConnection.findUnique({
+    where: { id: args.integrationId },
+    select: { id: true, name: true, integrationType: true, storeId: true },
+  });
+  if (!conn) throw new Error("Integration not found.");
+
+  const store = args.storeId
+    ? await prisma.store.findUnique({
+        where: { id: args.storeId },
+        select: { id: true, name: true, platform: true },
+      })
+    : null;
+  if (args.storeId && !store) throw new Error("Store not found.");
+
+  const validation = validateStoreMappingSelection({
+    integrationType: conn.integrationType,
+    store,
+  });
+  if (!validation.ok) throw new Error(validation.error);
+
+  const updated = await prisma.integrationConnection.update({
+    where: { id: conn.id },
+    data: { storeId: store?.id ?? null },
+    select: { id: true, name: true, storeId: true },
+  });
+
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: store ? "integration.store_mapped" : "integration.store_unmapped",
+    entityType: "IntegrationConnection",
+    entityId: updated.id,
+    beforeData: { storeId: conn.storeId },
+    afterData: { storeId: updated.storeId, storeName: store?.name ?? null },
+  });
+
+  return updated;
 }
 
 // -----------------------------------------------------------------------------

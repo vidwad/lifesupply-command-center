@@ -207,12 +207,13 @@ model Store {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  division       Division        @relation(fields: [divisionId], references: [id], onDelete: Restrict)
-  customers      Customer[]
-  categories     Category[]
-  products       Product[]
-  orders         Order[]
-  websiteMetrics WebsiteMetric[]
+  division               Division                @relation(fields: [divisionId], references: [id], onDelete: Restrict)
+  customers              Customer[]
+  categories             Category[]
+  products               Product[]
+  orders                 Order[]
+  websiteMetrics         WebsiteMetric[]
+  integrationConnections IntegrationConnection[]
 
   @@unique([sourceSystem, externalStoreId])
   @@index([divisionId])
@@ -1015,13 +1016,19 @@ model IntegrationConnection {
   lastSyncAt           DateTime?
   lastSuccessfulSyncAt DateTime?
   notes                String?
+  /// Explicit link to the Store this connection syncs. Set for BigCommerce
+  /// connections so sync dispatch never depends on display-name matching
+  /// (docs/19 Phase 2). Null for non-store integrations and unmapped BC rows.
+  storeId              String?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
+  store    Store?               @relation(fields: [storeId], references: [id], onDelete: SetNull)
   syncLogs IntegrationSyncLog[]
 
   @@unique([integrationType, name])
   @@index([status])
+  @@index([storeId])
   @@map("integration_connections")
 }
 
