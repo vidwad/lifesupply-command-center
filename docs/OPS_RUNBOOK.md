@@ -238,6 +238,28 @@ are needed. Effects:
   Mailchimp does NOT change consent.
 - Counts land in the sync log; the run itself is audit-logged.
 
+### Campaign Builder (Phase 5)
+
+**Marketing → Campaigns → Campaign Builder** creates the LifeSupply
+Customer Reactivation & Replenishment program as a structured record:
+
+- One **program** campaign (type `reactivation_program`) holding the plan —
+  objective, data-source/cleanup + consent review, streams, product/offer
+  strategy, sequences, calendar, high-value task refs.
+- Separated **consumer** and **B2B** email-track campaigns (children of the
+  program). Each track carries its own audience + eligibility snapshot and
+  goes through the standard approval → flag-gated draft-only Mailchimp
+  export individually.
+- **High-value accounts** (LTV ≥ $5k) become personal outreach **tasks**
+  (capped at 25/run) — never bulk sends.
+- **Deep-lapsed** (366–730d) audiences are flagged "consent review
+  required"; **dormant** (>730d / never purchased) are never emailed —
+  counted in the plan as suppression/research only.
+- Streams follow precedence high-value → B2B → recency, and every email
+  audience passes the casl-v1 eligibility policy.
+- Performance: record metrics manually on any campaign's detail page
+  (Performance card) until a Mailchimp metric read-sync exists.
+
 **Eligibility policy (casl-v1)** — enforced by
 `services/marketing/marketing-eligibility.ts` and used by reactivation +
 campaign drafting: suppressed/pending are never eligible; express consent is

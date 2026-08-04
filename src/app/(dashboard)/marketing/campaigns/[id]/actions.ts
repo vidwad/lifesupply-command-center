@@ -9,6 +9,7 @@ import {
   MailchimpExportError,
   requestCampaignApproval,
 } from "@/server/services/marketing/campaigns";
+import { recordCampaignMetrics } from "@/server/services/marketing/campaign-metrics";
 import { FeatureDisabledError } from "@/server/services/feature-flags";
 import { requirePermission } from "@/server/permissions";
 
@@ -31,6 +32,35 @@ export async function requestApprovalAction(
   revalidatePath(`/marketing/campaigns/${campaignId}`);
   revalidatePath("/approvals");
   return { ok: "Approval requested." };
+}
+
+export async function recordMetricsAction(
+  _prev: CampaignActionState,
+  formData: FormData,
+): Promise<CampaignActionState> {
+  const actor = await requirePermission(PERMISSIONS.MARKETING_DRAFT_CAMPAIGN);
+  const campaignId = String(formData.get("campaignId") ?? "");
+  if (!campaignId) return { error: "Missing campaign id." };
+  const num = (name: string) => Number(formData.get(name) ?? 0);
+  try {
+    await recordCampaignMetrics(
+      {
+        campaignId,
+        sentCount: num("sentCount"),
+        openCount: num("openCount"),
+        clickCount: num("clickCount"),
+        conversionCount: num("conversionCount"),
+        attributedRevenue: num("attributedRevenue"),
+        unsubscribeCount: num("unsubscribeCount"),
+        bounceCount: num("bounceCount"),
+      },
+      { id: actor.id },
+    );
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to record metrics." };
+  }
+  revalidatePath(`/marketing/campaigns/${campaignId}`);
+  return { ok: "Metrics recorded." };
 }
 
 export async function exportToMailchimpAction(
