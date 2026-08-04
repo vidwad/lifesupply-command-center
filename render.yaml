@@ -12,6 +12,15 @@
 # integration vault keys, etc.) are added manually in the dashboard after
 # the blueprint applies. Run `MASTER_ENCRYPTION_KEY` and `AUTH_SECRET`
 # generation locally with `openssl rand -base64 32` and paste them in.
+#
+# PHASE 11B NOTE (BLK-01 / DEC-12 — production auto-deploy): the three
+# services below currently set `autoDeploy: true` on `main`, so every merge
+# deploys the live environment. Phase 11B requires stopping that; the two
+# candidate changes (disable autoDeploy vs. repoint to a release branch)
+# are written up with exact diffs in docs/21_STAGING_ENVIRONMENT_GUIDE.md §7.
+# This file is deliberately unchanged until the product owner records
+# decision DEC-12 — do not flip these values as a side effect of other work.
+# Staging has its own blueprint: render.staging.yaml.
 
 databases:
   - name: lifesupply-cc-db

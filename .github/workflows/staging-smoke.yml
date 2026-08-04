@@ -1,0 +1,71 @@
+# Staging smoke test (Phase 11B — row 11B-07).
+#
+# Run manually (workflow_dispatch) against a deployed staging URL after
+# every staging deploy, or wire it into the release process later. It is
+# deliberately credential-free: it exercises only the public health
+# endpoint and asserts the environment posture. The authenticated checks
+# in docs/21_STAGING_ENVIRONMENT_GUIDE.md §5 complement this workflow and
+# are performed by an operator.
+#
+# The workflow FAILS when:
+#   - /api/health is unreachable or returns "failing"
+#   - the responding stack does not identify itself as "staging"
+#     (guards against accidentally pointing this at production)
+#   - any high-risk feature flag is reported ON
+#   - the response body contains anything that looks like a secret
+
+name: Staging smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Staging base URL (e.g. https://lifesupply-cc-staging-web.onrender.com)"
+        required: true
+        type: string
+
+jobs:
+  smoke:
+    name: Health + posture checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch /api/health
+        run: |
+          set -euo pipefail
+          BASE="${{ inputs.base_url }}"
+          BODY=$(curl -sS --max-time 30 "${BASE%/}/api/health")
+          echo "$BODY" | tee health.json
+
+      - name: Assert overall status is ok or degraded
+        run: |
+          STATUS=$(jq -r '.status' health.json)
+          echo "status=$STATUS"
+          test "$STATUS" = "ok" -o "$STATUS" = "degraded"
+
+      - name: Assert the responding stack is staging
+        run: |
+          ENVIRONMENT=$(jq -r '.environment' health.json)
+          echo "environment=$ENVIRONMENT"
+          test "$ENVIRONMENT" = "staging"
+
+      - name: Assert database check is ok
+        run: |
+          DB=$(jq -r '.checks[] | select(.name == "database") | .status' health.json)
+          echo "database=$DB"
+          test "$DB" = "ok"
+
+      - name: Assert no high-risk feature flag is on
+        run: |
+          DETAIL=$(jq -r '.checks[] | select(.name == "feature_flags") | .detail' health.json)
+          echo "feature_flags=$DETAIL"
+          case "$DETAIL" in
+            *"high-risk ON"*) echo "High-risk flags are enabled in staging"; exit 1 ;;
+            *) exit 0 ;;
+          esac
+
+      - name: Assert the body contains no secret-shaped values
+        run: |
+          # Health must never leak keys. Look for common secret prefixes.
+          if grep -Eq 'sk-ant-|sk-[A-Za-z0-9]{20}|signkey-|AKIA[0-9A-Z]{16}|postgres(ql)?://[^ ]+:[^ ]+@' health.json; then
+            echo "Response body contains a secret-shaped value"; exit 1
+          fi

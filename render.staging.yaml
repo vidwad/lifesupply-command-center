@@ -1,0 +1,190 @@
+# LifeSupply Command Center — STAGING Render blueprint (Phase 11B).
+#
+# Apply this file as a SEPARATE Render Blueprint from render.yaml. It
+# provisions the staging stack described in
+# docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md §3 and the provisioning
+# runbook in docs/21_STAGING_ENVIRONMENT_GUIDE.md:
+#
+#   1. lifesupply-cc-staging-db               (dedicated Postgres 16)
+#   2. lifesupply-cc-staging-web              (Next.js + Playwright image)
+#   3. lifesupply-cc-staging-worker           (Inngest Connect worker)
+#   4. lifesupply-cc-staging-audit-retention  (daily cron)
+#
+# ISOLATION RULES (docs/20 §3 — non-negotiable):
+# Staging must NEVER share with production: the database, Inngest keys or
+# environment, storage bucket, AUTH_SECRET, MASTER_ENCRYPTION_KEY, supplier
+# credentials, email audiences, or OAuth redirect registrations. Every
+# generated secret below is generated fresh for staging; every sync:false
+# value must be a STAGING-ONLY value (sandbox/test credentials), never a
+# copy of a production secret.
+#
+# BRANCH: staging tracks `release/phase-11-staging` per the release
+# convention in docs/RELEASE_READINESS_STATUS.md §4.1. Cut that branch from
+# an accepted main baseline before applying this blueprint. Auto-deploy is
+# ON for staging (fast iteration is the point of staging); production
+# auto-deploy policy is decision DEC-12 and is NOT changed by this file.
+#
+# Storage (BLK-07 / DEC-03): the S3_* variables are declared sync:false so
+# the blueprint reserves them, but no storage provider is chosen yet.
+# Leave them unset until DEC-03 is decided; the app treats them as optional.
+
+databases:
+  - name: lifesupply-cc-staging-db
+    databaseName: lifesupply_cc_staging
+    user: lifesupply_cc_staging
+    plan: basic-256mb
+    postgresMajorVersion: 16
+
+services:
+  # -------------------------------------------------------------------------
+  # Staging web — same image as production; migrations apply on container
+  # start via the Dockerfile CMD (prisma migrate deploy && next start).
+  # -------------------------------------------------------------------------
+  - type: web
+    name: lifesupply-cc-staging-web
+    runtime: docker
+    plan: starter
+    branch: release/phase-11-staging
+    healthCheckPath: /api/health
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    envVars:
+      # ---- generated fresh for staging; NEVER copied from production ----
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: MASTER_ENCRYPTION_KEY
+        generateValue: true
+
+      # ---- staging database only ----
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lifesupply-cc-staging-db
+          property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: lifesupply-cc-staging-db
+          property: connectionString
+
+      # ---- always set ----
+      - key: NODE_ENV
+        value: production
+      - key: DEPLOY_ENV
+        value: staging
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      - key: AUDIT_RETENTION_DAYS
+        value: "365"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+
+      # ---- Inngest — DEDICATED STAGING ENVIRONMENT ----
+      # Create a separate Inngest environment (or app) for staging and
+      # paste ITS keys. Reusing production Inngest keys would route
+      # staging events to the production worker and vice versa.
+      - key: INNGEST_EVENT_KEY
+        sync: false
+
+      # ---- domain-dependent: set after first deploy ----
+      - key: AUTH_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+
+      # ---- AI provider (staging may reuse a low-limit key; still set
+      #      manually so rotation is independent of production) ----
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+      # ---- object storage — pending DEC-03; leave unset until decided ----
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+
+      # ---- optional integrations — STAGING/SANDBOX credentials only ----
+      # QuickBooks: sandbox app with a staging-only redirect URI (DEC-06).
+      # Mailchimp: a non-customer test audience only (11D-09).
+      # Supplier portal: leave unset to use the in-repo mock portal.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: INVESTOR_FROM_EMAIL
+        sync: false
+      - key: INVESTOR_FROM_NAME
+        value: LifeSupply (staging)
+      - key: SUPPLIER_PORTAL_BBM01_URL
+        sync: false
+
+  # -------------------------------------------------------------------------
+  # Staging worker — same image; Inngest Connect out, no inbound URL.
+  # Does NOT run migrations (web applies them on deploy).
+  # -------------------------------------------------------------------------
+  - type: worker
+    name: lifesupply-cc-staging-worker
+    runtime: docker
+    plan: starter
+    branch: release/phase-11-staging
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    dockerCommand: pnpm worker
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lifesupply-cc-staging-db
+          property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: lifesupply-cc-staging-db
+          property: connectionString
+
+      # MUST equal lifesupply-cc-staging-web's MASTER_ENCRYPTION_KEY
+      # (copy the value the blueprint generated for staging web — NOT the
+      # production key).
+      - key: MASTER_ENCRYPTION_KEY
+        sync: false
+
+      # Staging Inngest environment keys — same values as staging web.
+      - key: INNGEST_EVENT_KEY
+        sync: false
+      - key: INNGEST_SIGNING_KEY
+        sync: false
+
+      - key: NODE_ENV
+        value: production
+      - key: DEPLOY_ENV
+        value: staging
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+
+  # -------------------------------------------------------------------------
+  # Staging cron — daily audit retention sweep (03:45 UTC, offset from
+  # production's 03:15 so provider-side logs are easy to tell apart).
+  # -------------------------------------------------------------------------
+  - type: cron
+    name: lifesupply-cc-staging-audit-retention
+    runtime: docker
+    plan: starter
+    branch: release/phase-11-staging
+    schedule: "45 3 * * *"
+    dockerfilePath: ./Dockerfile
+    dockerCommand: pnpm tsx scripts/cron/audit-retention.ts
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lifesupply-cc-staging-db
+          property: connectionString
+      - key: DIRECT_URL
+        fromDatabase:
+          name: lifesupply-cc-staging-db
+          property: connectionString
+      - key: AUDIT_RETENTION_DAYS
+        value: "365"
+      - key: MASTER_ENCRYPTION_KEY
+        sync: false
+      - key: DEPLOY_ENV
+        value: staging

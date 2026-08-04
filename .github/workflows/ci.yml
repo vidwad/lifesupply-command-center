@@ -15,6 +15,11 @@ env:
   # Schema-only DATABASE_URL — the build runs prisma generate which needs a
   # well-formed url present, but it does not need to connect.
   DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+  # Schema-only DIRECT_URL (BLK-03): prisma/schema.prisma declares
+  # `directUrl = env("DIRECT_URL")`, and any future CI step that invokes
+  # `prisma validate` / `prisma migrate` resolves it and fails with P1012
+  # when it is unset. No connection is ever made in CI.
+  DIRECT_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
   AUTH_SECRET: ci-only-32byte-base64-value-not-real-AAAAAAAAAA
   AUTH_URL: http://localhost:3000
   NEXT_PUBLIC_APP_URL: http://localhost:3000

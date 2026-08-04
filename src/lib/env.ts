@@ -2,6 +2,12 @@ import { z } from "zod";
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  /**
+   * Which deployed environment this process belongs to ("staging",
+   * "production"). Set by the Render blueprints; surfaced by /api/health so
+   * an operator can always confirm which stack answered (Phase 11B).
+   */
+  DEPLOY_ENV: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
 
   DATABASE_URL: z.string().url().optional(),
