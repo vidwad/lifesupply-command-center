@@ -533,6 +533,19 @@ Audit actions: `agent.run_started/succeeded/failed`,
 the builtin template registry (DB rows override builtins per the normal
 template versioning).
 
+**AI output review** (`/ai-analyst/outputs`): every AI generation — agents,
+briefings, analyst Q&A, drafts — is listed with module/status filters.
+Viewing needs `ai.view_logs`; decisions need `ai.approve_output`.
+Transitions: generated → reviewed/approved/rejected → archived; rejection
+requires a reason; approval stamps approver + timestamp; everything is
+audited (`ai_output.<decision>`). Approve AI content here before any
+external use.
+
+**Accounting Close Assistant** is the seventh agent: reads the latest
+month's close checklist, pending adjustments, and budget variance
+(`financials.view_detail`); drafts close commentary and follow-ups but
+never records or modifies financial data.
+
 ## 10. Background worker — stalled sync jobs
 
 BigCommerce customer/order sync runs on the **`lifesupply-cc-worker`**

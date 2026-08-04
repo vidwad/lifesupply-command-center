@@ -10,6 +10,7 @@ export const AGENT_KEYS = [
   "marketing_analyst",
   "customer_service_draft",
   "governance_guardrail",
+  "accounting_close",
 ] as const;
 
 export type AgentKey = (typeof AGENT_KEYS)[number];

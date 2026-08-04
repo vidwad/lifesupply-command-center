@@ -13,7 +13,13 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import { countOrders, listOrders, type ListOrdersFilters } from "@/server/services/orders";
+import {
+  countOrders,
+  listOrders,
+  ORDERS_PAGE_SIZE,
+  type ListOrdersFilters,
+} from "@/server/services/orders";
+import { Pagination } from "@/components/data/Pagination";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { SyncButtons } from "@/components/sync/SyncButtons";
 
@@ -29,7 +35,7 @@ const STATUS_FILTERS = [
   { label: "Cancelled", value: "cancelled" },
 ] as const;
 
-type SearchParams = { status?: string; q?: string; exceptions?: string };
+type SearchParams = { status?: string; q?: string; exceptions?: string; page?: string };
 
 export default async function OrdersPage({
   searchParams,
@@ -40,28 +46,25 @@ export default async function OrdersPage({
   const params = await searchParams;
   const canExport = userHasPermission(user, PERMISSIONS.ORDERS_EXPORT);
 
+  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
   const filters: ListOrdersFilters = {
     status: STATUS_FILTERS.some((s) => s.value === params.status)
       ? (params.status as ListOrdersFilters["status"])
       : undefined,
     search: params.q?.trim() || undefined,
     exceptionsOnly: params.exceptions === "1",
+    page,
   };
 
   const [orders, totalOrders] = await Promise.all([listOrders(filters), countOrders(filters)]);
   const activeStatus = filters.status ?? "";
-  const showingCapped = totalOrders > orders.length;
 
   return (
     <div>
       <PageHeader
         title="Orders"
         description="Normalized order management across BigCommerce stores."
-        breadcrumb={
-          showingCapped
-            ? `${totalOrders.toLocaleString()} orders (showing first ${orders.length.toLocaleString()})`
-            : `${totalOrders.toLocaleString()} ${totalOrders === 1 ? "order" : "orders"}`
-        }
+        breadcrumb={`${totalOrders.toLocaleString()} ${totalOrders === 1 ? "order" : "orders"}`}
         actions={
           <div className="flex items-center gap-3">
             <SyncButtons entity="orders" />
@@ -181,6 +184,14 @@ export default async function OrdersPage({
             </TBody>
           </DataTable>
         )}
+
+        <Pagination
+          basePath="/orders"
+          page={page}
+          pageSize={ORDERS_PAGE_SIZE}
+          totalCount={totalOrders}
+          params={{ status: params.status, q: params.q, exceptions: params.exceptions }}
+        />
       </div>
     </div>
   );

@@ -7,9 +7,13 @@ export type ListCustomersFilters = {
   storeId?: string;
   consent?: "subscribed" | "unsubscribed" | "transactional";
   search?: string;
+  /** 1-based page (post-roadmap pagination). */
+  page?: number;
 };
 
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
+
+export const CUSTOMERS_PAGE_SIZE = 50;
 
 export async function listCustomers(filters: ListCustomersFilters = {}) {
   const where: Prisma.CustomerWhereInput = { deletedAt: null };
@@ -30,7 +34,8 @@ export async function listCustomers(filters: ListCustomersFilters = {}) {
   const customers = await prisma.customer.findMany({
     where,
     orderBy: [{ lastOrderAt: "desc" }, { createdAt: "desc" }],
-    take: 100,
+    skip: (Math.max(1, filters.page ?? 1) - 1) * CUSTOMERS_PAGE_SIZE,
+    take: CUSTOMERS_PAGE_SIZE,
     include: {
       store: { select: { id: true, name: true } },
     },

@@ -6,10 +6,12 @@ import { ExportButton } from "@/components/data/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { Pagination } from "@/components/data/Pagination";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   countCustomers,
+  CUSTOMERS_PAGE_SIZE,
   listCustomers,
   type ListCustomersFilters,
 } from "@/server/services/customers";
@@ -37,7 +39,7 @@ const CONSENT_BADGE: Record<string, "success" | "destructive" | "secondary" | "o
   unknown: "outline",
 };
 
-type SearchParams = { type?: string; consent?: string; q?: string };
+type SearchParams = { type?: string; consent?: string; q?: string; page?: string };
 
 export default async function CustomersPage({
   searchParams,
@@ -57,6 +59,7 @@ export default async function CustomersPage({
         ? params.consent
         : undefined,
     search: params.q?.trim() || undefined,
+    page: Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1),
   };
 
   const [customers, totalCustomers] = await Promise.all([
@@ -64,18 +67,13 @@ export default async function CustomersPage({
     countCustomers(filters),
   ]);
   const activeType = filters.customerType ?? "";
-  const showingCapped = totalCustomers > customers.length;
 
   return (
     <div>
       <PageHeader
         title="Customers"
         description="B2B clinics, institutional buyers, and retail customers across all stores."
-        breadcrumb={
-          showingCapped
-            ? `${totalCustomers.toLocaleString()} customers (showing first ${customers.length.toLocaleString()})`
-            : `${totalCustomers.toLocaleString()} ${totalCustomers === 1 ? "customer" : "customers"}`
-        }
+        breadcrumb={`${totalCustomers.toLocaleString()} ${totalCustomers === 1 ? "customer" : "customers"}`}
         actions={
           <div className="flex items-center gap-3">
             <SyncButtons entity="customers" />
@@ -182,6 +180,14 @@ export default async function CustomersPage({
             </TBody>
           </DataTable>
         )}
+
+        <Pagination
+          basePath="/customers"
+          page={Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1)}
+          pageSize={CUSTOMERS_PAGE_SIZE}
+          totalCount={totalCustomers}
+          params={{ type: params.type, consent: params.consent, q: params.q }}
+        />
       </div>
     </div>
   );

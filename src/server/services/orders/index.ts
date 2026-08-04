@@ -10,7 +10,11 @@ export type ListOrdersFilters = {
   storeId?: string;
   exceptionsOnly?: boolean;
   search?: string;
+  /** 1-based page (Phase-8 follow-up pagination). */
+  page?: number;
 };
+
+export const ORDERS_PAGE_SIZE = 50;
 
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
 
@@ -30,10 +34,13 @@ export async function listOrders(filters: ListOrdersFilters = {}) {
     ];
   }
 
+  const pageSize = ORDERS_PAGE_SIZE;
+  const page = Math.max(1, filters.page ?? 1);
   const orders = await prisma.order.findMany({
     where,
     orderBy: { orderDate: "desc" },
-    take: 100,
+    skip: (page - 1) * pageSize,
+    take: pageSize,
     include: {
       store: { select: { id: true, name: true } },
       customer: {

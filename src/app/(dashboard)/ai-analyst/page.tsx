@@ -57,12 +57,20 @@ export default async function AiAnalystPage() {
         description="Ask questions about your operating, financial, marketing, and customer data. Server-side only — prompts and outputs are logged."
         breadcrumb="Powered by Anthropic Claude"
         actions={
-          <Link
-            href="/ai-analyst/agents"
-            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
-          >
-            <Bot className="h-4 w-4" /> AI agents
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/ai-analyst/agents"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              <Bot className="h-4 w-4" /> AI agents
+            </Link>
+            <Link
+              href="/ai-analyst/outputs"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Output review
+            </Link>
+          </div>
         }
       />
 
