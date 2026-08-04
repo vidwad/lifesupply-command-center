@@ -16,6 +16,8 @@ import { getDashboardData } from "@/server/services/dashboard";
 import { filterDashboardForAi } from "@/server/services/ai";
 import { getOperationsSummary } from "@/server/services/operations";
 import { listExceptions } from "@/server/services/exceptions";
+import { closeChecklistSummary } from "@/server/services/finance/close-tasks";
+import { getBudgetVarianceForPeriod } from "@/server/services/finance/budgets";
 
 export type ToolContext = {
   userId: string;
@@ -214,6 +216,41 @@ export const AGENT_TOOLS: Record<string, AgentTool> = {
           refundedTotal: Number(order.refundedTotal),
         },
         source: `order ${order.orderNumber} (status, shipments, items; first name only)`,
+      };
+    },
+  },
+
+  close_status: {
+    key: "close_status",
+    description:
+      "Monthly close status: latest period state, close-checklist progress, pending adjustments, budget variance.",
+    permission: PERMISSIONS.FINANCIALS_VIEW_DETAIL,
+    readonly: true,
+    collect: async () => {
+      const period = await prisma.financialPeriod.findFirst({
+        where: { periodType: "month" },
+        orderBy: { startDate: "desc" },
+        select: { id: true, name: true, status: true },
+      });
+      if (!period) {
+        return { data: { note: "No financial periods exist yet." }, source: "financial periods" };
+      }
+      const [checklist, pendingAdjustments, variance] = await Promise.all([
+        closeChecklistSummary(period.id),
+        prisma.financialAdjustment.count({
+          where: { financialPeriodId: period.id, approvalStatus: "pending" },
+        }),
+        getBudgetVarianceForPeriod({ periodId: period.id, divisionId: null }),
+      ]);
+      return {
+        data: {
+          period: period.name,
+          periodStatus: period.status,
+          closeChecklist: checklist,
+          pendingAdjustments,
+          budgetVariance: variance,
+        },
+        source: `monthly close status for ${period.name} (checklist, adjustments, budget variance)`,
       };
     },
   },

@@ -96,6 +96,16 @@ export const AGENT_DEFINITIONS: Record<AgentKey, AgentDefinition> = {
       },
     ],
   },
+  accounting_close: {
+    key: "accounting_close",
+    name: "Accounting Close Assistant",
+    description:
+      "Reviews the monthly close: checklist progress, pending adjustments, and budget variance. Drafts commentary and follow-ups — it never records or modifies financial data.",
+    runPermission: PERMISSIONS.FINANCIALS_VIEW_DETAIL,
+    toolKeys: ["close_status", "dashboard_summary"],
+    templateKey: agentTemplateKey("accounting_close"),
+    params: [],
+  },
   governance_guardrail: {
     key: "governance_guardrail",
     name: "Governance / Approval Guardrail Agent",

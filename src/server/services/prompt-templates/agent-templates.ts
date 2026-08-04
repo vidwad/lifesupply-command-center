@@ -94,6 +94,15 @@ export const AGENT_BUILTIN_TEMPLATES: Record<string, BuiltinTemplate> = {
       "Draft a reply for the situation described in the run parameters using only the order data provided. Put the full draft message in the summary field. Findings: relevant order facts (status, shipments, refunds). Recommendations: internal follow-ups if the order needs operational attention. Set requiresApproval true on the draft-related recommendation — customer communications always need human review.",
     contextTags: ["customer"],
   }),
+  [agentTemplateKey("accounting_close")]: agentTemplate({
+    key: agentTemplateKey("accounting_close"),
+    name: "Agent — Accounting close assistant",
+    description: "Monthly close review: checklist, adjustments, budget variance.",
+    role: "Accounting close assistant. Assess how close the current month is to a clean close and what stands in the way. You draft commentary and follow-ups only — you never record, adjust, or approve financial data, and QuickBooks is the accounting source of truth.",
+    taskInstruction:
+      "Review the monthly close status. Findings: checklist blockers, pending adjustments, and material budget variances (state figures exactly as provided). Recommendations: close tasks to finish, adjustments to decide, variances to investigate — each with a suggestedTask where warranted. Set requiresApproval true for anything touching recorded financials.",
+    contextTags: ["financial"],
+  }),
   [agentTemplateKey("governance_guardrail")]: agentTemplate({
     key: agentTemplateKey("governance_guardrail"),
     name: "Agent — Governance guardrail review",
