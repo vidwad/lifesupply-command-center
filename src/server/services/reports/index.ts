@@ -93,11 +93,16 @@ export type ReportSnapshot = {
   priorityTasks: { id: string; title: string; priority: string; status: string }[];
 };
 
-export async function generateMonthlyManagementReport(args: {
-  periodId: string;
-  divisionCode?: string;
-  preparedById: string;
-}): Promise<Report> {
+/**
+ * Shared snapshot builder for all report generators (Phase 9). Collects the
+ * financial, operations, product, marketing, and task picture for one
+ * period + division.
+ */
+async function buildSnapshotForPeriod(args: { periodId: string; divisionCode?: string }): Promise<{
+  snapshot: ReportSnapshot;
+  period: { id: string; name: string; startDate: Date; endDate: Date; status: string };
+  division: { id: string; code: string; name: string };
+}> {
   const period = await prisma.financialPeriod.findUniqueOrThrow({ where: { id: args.periodId } });
   const division = await prisma.division.findUniqueOrThrow({
     where: { code: args.divisionCode ?? "CONS" },
@@ -265,31 +270,248 @@ export async function generateMonthlyManagementReport(args: {
     priorityTasks: priorityTaskRecords,
   };
 
-  const summaryText = buildSummaryText(snapshot);
+  return { snapshot, period, division };
+}
 
+/**
+ * Source references + freshness stamp for every generated report
+ * (docs/19 §9 acceptance: "reports cite source periods and data freshness";
+ * docs/11 §8 controls: closed?/unaudited/QuickBooks sync timestamp).
+ */
+async function buildSourceReferences(period: { id: string; name: string; status: string }) {
+  const qbo = await prisma.integrationConnection.findFirst({
+    where: { integrationType: "quickbooks" },
+    orderBy: { updatedAt: "desc" },
+    select: { lastSuccessfulSyncAt: true },
+  });
+  const periodClosed = period.status === "approved" || period.status === "closed";
+  return {
+    sourcePeriods: [{ id: period.id, name: period.name, status: period.status }],
+    dataFreshness: {
+      qboLastSuccessfulSyncAt: qbo?.lastSuccessfulSyncAt?.toISOString() ?? null,
+      periodClosed,
+      unaudited: true,
+      generatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+type GeneratedReportInput = {
+  title: string;
+  reportType: string;
+  period: { id: string; name: string; startDate: Date; endDate: Date; status: string };
+  division: { code: string };
+  preparedById: string;
+  summary: string;
+  metadata: Prisma.InputJsonValue;
+};
+
+async function createGeneratedReport(input: GeneratedReportInput): Promise<Report> {
+  const sourceReferences = await buildSourceReferences(input.period);
   const report = await prisma.report.create({
     data: {
-      title: `Monthly Management Report — ${period.name} (${division.code})`,
-      reportType: "monthly_management",
-      periodStart: period.startDate,
-      periodEnd: period.endDate,
+      title: input.title,
+      reportType: input.reportType,
+      periodStart: input.period.startDate,
+      periodEnd: input.period.endDate,
       status: "generated",
-      preparedById: args.preparedById,
-      summary: summaryText,
-      metadata: snapshot as unknown as Prisma.InputJsonValue,
+      preparedById: input.preparedById,
+      summary: input.summary,
+      metadata: input.metadata,
+      sourceReferences: sourceReferences as unknown as Prisma.InputJsonValue,
     },
   });
-
   await writeAudit({
-    actorUserId: args.preparedById,
+    actorUserId: input.preparedById,
     action: "report.generate",
     entityType: "Report",
     entityId: report.id,
-    afterData: { reportType: "monthly_management", period: period.name, division: division.code },
+    afterData: {
+      reportType: input.reportType,
+      period: input.period.name,
+      division: input.division.code,
+    },
   });
-
   revalidatePath("/reports");
   return report;
+}
+
+export async function generateMonthlyManagementReport(args: {
+  periodId: string;
+  divisionCode?: string;
+  preparedById: string;
+}): Promise<Report> {
+  const { snapshot, period, division } = await buildSnapshotForPeriod(args);
+  return createGeneratedReport({
+    title: `Monthly Management Report — ${period.name} (${division.code})`,
+    reportType: "monthly_management",
+    period,
+    division,
+    preparedById: args.preparedById,
+    summary: buildSummaryText(snapshot),
+    metadata: snapshot as unknown as Prisma.InputJsonValue,
+  });
+}
+
+/**
+ * Board report (docs/11 §9): the management snapshot plus board-level
+ * context — revenue trend, capital raise status, open opportunities, and
+ * risk signals. Consolidated only. Approval required before external use;
+ * distribution stays manual.
+ */
+export async function generateBoardReport(args: {
+  periodId: string;
+  preparedById: string;
+}): Promise<Report> {
+  const { snapshot, period, division } = await buildSnapshotForPeriod({
+    periodId: args.periodId,
+  });
+
+  const [trendPeriods, highExceptions, capitalRaises, openOpportunities] = await Promise.all([
+    prisma.financialPeriod.findMany({
+      where: { periodType: "month", startDate: { lte: period.startDate } },
+      orderBy: { startDate: "desc" },
+      take: 6,
+      select: {
+        name: true,
+        summaries: {
+          where: { OR: [{ divisionId: null }, { division: { code: "CONS" } }] },
+          select: { divisionId: true, revenue: true, grossProfit: true },
+        },
+      },
+    }),
+    prisma.exception.count({
+      where: {
+        status: { in: ["open", "investigating", "blocked"] },
+        severity: { in: ["high", "urgent"] },
+      },
+    }),
+    prisma.capitalRaise.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, name: true, status: true, targetAmount: true },
+    }),
+    prisma.opportunity.count({ where: { status: { notIn: ["closed_won", "closed_lost"] } } }),
+  ]);
+
+  const trend = trendPeriods
+    .reverse()
+    .map((tp) => {
+      const s = tp.summaries.find((x) => x.divisionId === null) ?? tp.summaries[0];
+      return s
+        ? { period: tp.name, revenue: num(s.revenue), grossProfit: num(s.grossProfit) }
+        : null;
+    })
+    .filter((x): x is NonNullable<typeof x> => x != null);
+
+  const boardExtras = {
+    revenueTrend: trend,
+    highSeverityExceptions: highExceptions,
+    capitalRaises: capitalRaises.map((c) => ({
+      id: c.id,
+      name: c.name,
+      status: c.status,
+      targetAmount: num(c.targetAmount),
+    })),
+    openOpportunities,
+  };
+
+  const summary =
+    `Board report for ${period.name} (consolidated, unaudited). ` +
+    buildSummaryText(snapshot) +
+    ` Risk signals: ${highExceptions} high/urgent exceptions open. ` +
+    `Capital: ${capitalRaises.length} raise${capitalRaises.length === 1 ? "" : "s"} on record; ` +
+    `${openOpportunities} open strategic opportunit${openOpportunities === 1 ? "y" : "ies"}. ` +
+    `Distribution requires approval; this document is not auto-distributed.`;
+
+  return createGeneratedReport({
+    title: `Board Report — ${period.name}`,
+    reportType: "board",
+    period,
+    division,
+    preparedById: args.preparedById,
+    summary,
+    metadata: { ...snapshot, boardExtras } as unknown as Prisma.InputJsonValue,
+  });
+}
+
+/**
+ * Investor / lender package (docs/11 §10): concise external-facing package —
+ * consolidated financial highlights, trailing-twelve-month revenue, and
+ * capital raise status. Deliberately EXCLUDES internal task lists and any
+ * customer-identifiable data. Must be approved before external use and is
+ * never auto-distributed (investor.distribution flag governs release
+ * elsewhere).
+ */
+export async function generateInvestorLenderPackage(args: {
+  periodId: string;
+  preparedById: string;
+}): Promise<Report> {
+  const { snapshot, period, division } = await buildSnapshotForPeriod({
+    periodId: args.periodId,
+  });
+
+  const ttmPeriods = await prisma.financialPeriod.findMany({
+    where: { periodType: "month", startDate: { lte: period.startDate } },
+    orderBy: { startDate: "desc" },
+    take: 12,
+    select: {
+      name: true,
+      summaries: {
+        where: { OR: [{ divisionId: null }, { division: { code: "CONS" } }] },
+        select: { divisionId: true, revenue: true, grossProfit: true },
+      },
+    },
+  });
+  let ttmRevenue = 0;
+  let ttmGrossProfit = 0;
+  let ttmMonths = 0;
+  for (const tp of ttmPeriods) {
+    const s = tp.summaries.find((x) => x.divisionId === null) ?? tp.summaries[0];
+    if (!s) continue;
+    ttmRevenue += num(s.revenue);
+    ttmGrossProfit += num(s.grossProfit);
+    ttmMonths++;
+  }
+
+  const capitalRaises = await prisma.capitalRaise.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    select: { name: true, status: true, targetAmount: true },
+  });
+
+  // External package: strip internal task list from the stored snapshot.
+  const externalSnapshot = { ...snapshot, priorityTasks: [] };
+  const investorExtras = {
+    trailingTwelveMonths: {
+      months: ttmMonths,
+      revenue: Math.round(ttmRevenue * 100) / 100,
+      grossProfit: Math.round(ttmGrossProfit * 100) / 100,
+    },
+    capitalRaises: capitalRaises.map((c) => ({
+      name: c.name,
+      status: c.status,
+      targetAmount: num(c.targetAmount),
+    })),
+  };
+
+  const summary =
+    `Investor/lender package for ${period.name} (consolidated, unaudited management figures). ` +
+    `Revenue ${snapshot.financial.revenue.toFixed(0)} with gross profit ${snapshot.financial.grossProfit.toFixed(0)} in the period; ` +
+    `trailing ${ttmMonths} months: revenue ${ttmRevenue.toFixed(0)}, gross profit ${ttmGrossProfit.toFixed(0)}. ` +
+    `Working capital ${snapshot.financial.workingCapital?.toFixed(0) ?? "n/a"}; cash ${snapshot.financial.cash?.toFixed(0) ?? "n/a"}. ` +
+    `Figures are internal management numbers pending accountant review. ` +
+    `APPROVAL REQUIRED before sharing externally; distribution is manual and governed separately.`;
+
+  return createGeneratedReport({
+    title: `Investor & Lender Package — ${period.name}`,
+    reportType: "investor",
+    period,
+    division,
+    preparedById: args.preparedById,
+    summary,
+    metadata: { ...externalSnapshot, investorExtras } as unknown as Prisma.InputJsonValue,
+  });
 }
 
 // -----------------------------------------------------------------------------

@@ -456,6 +456,42 @@ in `saved_views` — max 20 per page per user.
 The card at the top of `/operations` is deterministic — computed from the
 delay rules, the Exception table, and the task queue. No AI is involved.
 
+## 9.6 Forecasting, scenarios, and management reports (Phase 9)
+
+### Forecast scenarios
+`/financials/forecasting` (permission `financials.view_detail`; creation
+needs `financials.review`) — gated by the **`forecasting.enabled`** feature
+flag, which is OFF by default. Baselines extrapolate the longest contiguous
+run of consolidated monthly `FinancialSummary` actuals (QBO-synced
+`divisionId null` rows preferred, `CONS` division rows as fallback; at
+least 3 contiguous months required). Methods: trailing average, linear
+trend, seasonal naive (engine in
+`src/server/services/financials/forecast-engine.ts`, math pinned by tests).
+
+Scenario overlays: monthly revenue growth, gross-margin delta, supplier
+cost increase, reactivation revenue × marketing-ROI multiplier, financing
+injection, acquisition revenue. Scenarios are **versioned by name** (saving
+again creates v2, v3, …) and every scenario stores its inputs, assumptions,
+source periods, QBO data-freshness stamp, and the standing limitations
+list. **Forecasts are never actuals** and never write to financial records.
+
+Approval for external use: "Request approval" raises an Approval of type
+`forecast`, decided by a `financials.approve` holder in `/approvals`
+(approve → scenario `approved`; reject → back to `draft`). CSV export
+(`financials.export`) appends assumptions, sources, freshness, and
+limitations as footer rows so an exported file can't pass as actuals.
+
+### Board + investor/lender reports
+`/reports/new` now offers three types: monthly management (per division),
+**board report** (consolidated + revenue trend, capital raises, open
+opportunities, high-severity exception count), and **investor & lender
+package** (consolidated + trailing-twelve-month figures; internal task
+lists stripped). All reports stamp `sourceReferences` (source period +
+status, QBO last-sync, `unaudited: true`). Board/investor reports must be
+approved (`reports.approve`) before external use — nothing is ever
+distributed automatically; investor release remains separately governed by
+the `investor.distribution` flag.
+
 ## 10. Background worker — stalled sync jobs
 
 BigCommerce customer/order sync runs on the **`lifesupply-cc-worker`**
