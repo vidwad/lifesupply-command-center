@@ -147,6 +147,17 @@ Stores (Admin → Stores), set each connection's credentials, then map each
 connection to its Store. Confirm each connection shows its Store name (not
 "Not mapped") before running a sync.
 
+**Catalog — products / variants / categories (Phase 3C):** the **Products**
+page has its own sync buttons (full / incremental) that walk
+`/v3/catalog/categories` (hierarchy resolved), `/v3/catalog/brands`, and
+`/v3/catalog/products?include=variants`, upserting `Category`, `Product`, and
+`ProductVariant`. Local-only fields (featured / rockstar flags) are preserved;
+BC-owned catalog fields (name, price, SKU, status, image/description quality
+signals) overwrite on sync. Once products are synced, **re-running an order
+sync backfills** the `productId` / `productVariantId` links on order items
+(Phase 3B). Counts appear in the sync log (`categoriesUpserted`,
+`productsScanned`, `variantsUpserted/Deleted`).
+
 **Order line items (Phase 3B):** order sync also pulls each order's line items
 from `/v2/orders/{id}/products` and upserts `OrderItem` rows (keyed by BC
 order-product id, so re-syncs preserve CC-owned cost/margin/supplier fields).

@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type Entity = "customers" | "orders";
+type Entity = "customers" | "orders" | "products";
 
 type DispatchedJob = {
   status: "queued" | "skipped";
@@ -71,6 +71,7 @@ const POLL_INTERVAL_MS = 2_000;
 const ENTITY_LABEL: Record<Entity, string> = {
   customers: "customer",
   orders: "order",
+  products: "product",
 };
 
 export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
@@ -231,11 +232,17 @@ export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
             <DialogDescription>
               {entity === "customers"
                 ? "Walks every customer + order from all configured BigCommerce stores."
-                : "Walks every order from all configured BigCommerce stores."}{" "}
-              Typically takes 2–10 minutes per store, depending on history. Existing local fields
-              like notes, exception status, and{" "}
-              {entity === "customers" ? "reactivation score" : "estimated margins"} are preserved —
-              only BC-owned fields are overwritten.
+                : entity === "products"
+                  ? "Walks every category, product, and variant from all configured BigCommerce stores."
+                  : "Walks every order from all configured BigCommerce stores."}{" "}
+              Typically takes 2–10 minutes per store, depending on catalog size. Existing local
+              fields like notes, exception status, and{" "}
+              {entity === "customers"
+                ? "reactivation score"
+                : entity === "products"
+                  ? "featured / rockstar flags"
+                  : "estimated margins"}{" "}
+              are preserved — only BC-owned fields are overwritten.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

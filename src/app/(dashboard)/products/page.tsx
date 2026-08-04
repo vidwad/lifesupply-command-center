@@ -10,6 +10,7 @@ import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { listProducts, type ListProductsFilters } from "@/server/services/products";
 import { requirePermission, userHasPermission } from "@/server/permissions";
+import { SyncButtons } from "@/components/sync/SyncButtons";
 
 export const metadata = { title: "Products & Catalog" };
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export default async function ProductsPage({
   const user = await requirePermission(PERMISSIONS.PRODUCTS_VIEW);
   const params = await searchParams;
   const canExport = userHasPermission(user, PERMISSIONS.PRODUCTS_EXPORT);
+  const canSync = userHasPermission(user, PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
 
   const filters: ListProductsFilters = {
     search: params.q?.trim() || undefined,
@@ -43,7 +45,12 @@ export default async function ProductsPage({
         title="Products & Catalog"
         description="Catalog quality, supplier mapping, margin, and featured selection."
         breadcrumb={`${products.length} ${products.length === 1 ? "product" : "products"}`}
-        actions={canExport ? <ExportButton href="/api/exports/products" /> : null}
+        actions={
+          <div className="flex items-center gap-3">
+            {canSync ? <SyncButtons entity="products" /> : null}
+            {canExport ? <ExportButton href="/api/exports/products" /> : null}
+          </div>
+        }
       />
 
       <div className="space-y-4 p-6">
