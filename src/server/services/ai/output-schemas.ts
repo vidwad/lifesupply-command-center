@@ -15,24 +15,16 @@
  * lists) can opt-in to schema validation by adding an entry here.
  */
 
-import { z } from "zod";
+import type { z } from "zod";
 
 import type { AiOutputValidationError } from "./errors";
-
-// Keep `z` referenced so the import is not flagged as type-only before any
-// schema is registered. Once a real schema is added below this line can go.
-void z;
+import { agentOutputSchema } from "./agents/output-schema";
+import { AGENT_KEYS } from "./agents/keys";
 
 const SCHEMAS: Record<string, z.ZodTypeAny | undefined> = {
-  // Example for future use — uncomment and add fields when building
-  // structured AI features:
-  //
-  // exception_classification: z.object({
-  //   exceptionType: z.enum(["order_delay", "supplier_stock", ...]),
-  //   severity: z.enum(["low", "medium", "high", "urgent"]),
-  //   reason: z.string().min(5),
-  //   confidence: z.number().min(0).max(1),
-  // }),
+  // Phase 10 agents all emit the shared structured envelope; the template
+  // key convention is `agent_<agentKey>`.
+  ...Object.fromEntries(AGENT_KEYS.map((key) => [`agent_${key}`, agentOutputSchema])),
 };
 
 export type ValidationResult =

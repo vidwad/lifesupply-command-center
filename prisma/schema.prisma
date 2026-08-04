@@ -75,6 +75,7 @@ model User {
   savedViews                  SavedView[]            @relation("SavedViewOwner")
   forecastsCreated            ForecastScenario[]     @relation("ForecastCreator")
   forecastsApproved           ForecastScenario[]     @relation("ForecastApprover")
+  agentRuns                   AgentRun[]             @relation("AgentRunTrigger")
 
   @@index([status])
   @@map("users")
@@ -945,6 +946,7 @@ model AiOutput {
   reports         Report[]
   campaigns       Campaign[]
   investorUpdates InvestorUpdate[]
+  agentRuns       AgentRun[]       @relation("AgentRunOutput")
 
   @@index([userId])
   @@index([module])
@@ -1371,6 +1373,47 @@ enum ExceptionSeverity {
   medium
   high
   urgent
+}
+
+// =============================================================================
+// Agent runs — Phase 10 AI agent operating layer (docs/19 §10, docs/09).
+// One row per agent invocation. Agents only read/analyze/draft/recommend;
+// the structured output lives here (and in the linked AiOutput), and any
+// task created from a recommendation is an explicit human action recorded
+// in createdTaskIds. Tool skips (missing permissions) are preserved so a
+// reviewer can see exactly what the agent did and did not have access to.
+// =============================================================================
+
+model AgentRun {
+  id            String    @id @default(cuid())
+  agentKey      String
+  status        String // running, succeeded, failed
+  triggeredById String?
+  /// Run parameters supplied by the user (e.g. orderId for service drafts).
+  params        Json?
+  /// Tool keys whose data was collected for this run.
+  toolKeysUsed  String[]
+  /// Tools skipped because the triggering user lacked their permission.
+  skippedTools  Json?
+  /// Source descriptions per collected tool (docs/09 §12 grounding).
+  sourceReferences Json?
+  /// Validated structured output (agentOutputSchema envelope).
+  outputJson    Json?
+  summary       String?   @db.Text
+  errorSummary  String?   @db.Text
+  aiOutputId    String?
+  /// Tasks a human created from this run's recommendations.
+  createdTaskIds String[]
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  triggeredBy User?     @relation("AgentRunTrigger", fields: [triggeredById], references: [id], onDelete: SetNull)
+  aiOutput    AiOutput? @relation("AgentRunOutput", fields: [aiOutputId], references: [id], onDelete: SetNull)
+
+  @@index([agentKey, startedAt])
+  @@index([status])
+  @@index([triggeredById])
+  @@map("agent_runs")
 }
 
 // =============================================================================

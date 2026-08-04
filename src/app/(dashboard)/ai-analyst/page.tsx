@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bot, Clock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,12 @@ const SUGGESTED_PROMPTS = [
 
 const MODULE_LABEL: Record<string, string> = {
   analyst_query: "Q&A",
+  agent_management_briefing: "Agent: briefing",
+  agent_fulfillment_exception: "Agent: exceptions",
+  agent_product_margin: "Agent: product margin",
+  agent_marketing_analyst: "Agent: marketing",
+  agent_customer_service_draft: "Agent: service draft",
+  agent_governance_guardrail: "Agent: governance",
   dashboard_briefing: "Daily briefing",
   financial_commentary: "Financial commentary",
   reactivation_summary: "Reactivation",
@@ -49,6 +56,14 @@ export default async function AiAnalystPage() {
         title="AI Analyst"
         description="Ask questions about your operating, financial, marketing, and customer data. Server-side only — prompts and outputs are logged."
         breadcrumb="Powered by Anthropic Claude"
+        actions={
+          <Link
+            href="/ai-analyst/agents"
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+          >
+            <Bot className="h-4 w-4" /> AI agents
+          </Link>
+        }
       />
 
       <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">

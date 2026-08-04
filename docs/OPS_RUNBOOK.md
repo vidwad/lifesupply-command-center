@@ -492,6 +492,47 @@ approved (`reports.approve`) before external use — nothing is ever
 distributed automatically; investor release remains separately governed by
 the `investor.distribution` flag.
 
+## 9.7 AI agent operating layer (Phase 10)
+
+`/ai-analyst/agents` (permission `ai.use`; each agent additionally requires
+its own run permission). Six agents: management briefing, fulfillment
+exception triage, product & margin, marketing analyst, customer-service
+drafting (per order), and governance guardrail review.
+
+**What agents can and cannot do.** Agents read, analyze, draft, classify,
+and recommend — nothing else. They have no write tools: every registry tool
+is a read-only collector executed server-side before the model call, and a
+canary test fails the build if a tool or the runner ever writes to anything
+except the `AgentRun`/`AiOutput` records themselves. Turning a
+recommendation into a Task is an explicit human click (`tasks.create`),
+recorded with `sourceType: ai_recommendation` and a link back to the run.
+All prohibited external actions (customer sends, supplier orders, price
+changes, QuickBooks entries, investor distribution) keep their existing
+approval + feature-flag gates; the `ai.actions` kill switch remains OFF and
+unused by this layer because agents initiate no mutations.
+
+**Permissions shape what agents see.** Tool data is collected with the
+triggering user's permissions: the dashboard tool applies the same
+redaction as the AI analyst, and a missing tool permission SKIPS the tool —
+the skip is stored on the run and surfaced as a limitation, never silently
+widened. Customer/marketing tools return aggregates only (no contact PII);
+the service-draft tool exposes the customer's first name only.
+
+**Prompt injection defense** (docs/09 §18): all tool data is fenced in
+`<<<BEGIN/END UNTRUSTED DATA>>>` markers with lookalike sequences defused,
+and every agent system prompt instructs the model to treat fenced content
+strictly as data. Output must match the shared structured envelope
+(summary/findings/recommendations/assumptions/limitations/confidence),
+enforced by zod — non-conforming output fails the run rather than flowing
+onward.
+
+**Reviewing runs.** Every run stores tools used, skips, source references,
+the validated output, and the linked `ai_outputs` row (model, tokens).
+Audit actions: `agent.run_started/succeeded/failed`,
+`agent.recommendation_accepted`. Prompt templates are the `agent_*` keys in
+the builtin template registry (DB rows override builtins per the normal
+template versioning).
+
 ## 10. Background worker — stalled sync jobs
 
 BigCommerce customer/order sync runs on the **`lifesupply-cc-worker`**
