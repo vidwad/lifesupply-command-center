@@ -38,6 +38,7 @@ import {
   syncBcProductsIncremental,
 } from "@/server/inngest/functions/bigcommerce/sync-products";
 import { reconcileBcStore } from "@/server/inngest/functions/bigcommerce/reconcile";
+import { syncMailchimpSubscribers } from "@/server/inngest/functions/mailchimp/sync-members";
 import { helloWorld } from "@/server/inngest/functions/hello";
 
 async function main(): Promise<void> {
@@ -54,6 +55,7 @@ async function main(): Promise<void> {
           syncBcProductsFull,
           syncBcProductsIncremental,
           reconcileBcStore,
+          syncMailchimpSubscribers,
         ],
       },
     ],

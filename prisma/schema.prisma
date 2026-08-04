@@ -241,6 +241,13 @@ model Customer {
   billingAddress    Json?
   shippingAddress   Json?
   consentStatus     ConsentStatus @default(unknown)
+  /// CASL evidence fields (Phase 4): why we may (or may not) email this person.
+  consentBasis      ConsentBasis  @default(unknown)
+  consentSource     String? // mailchimp, checkout_optin, manual, order_history
+  consentObtainedAt DateTime?
+  consentExpiresAt  DateTime?
+  suppressionReason String? // mailchimp_unsubscribed, mailchimp_cleaned_bounced, mailchimp_abuse_complaint, manual
+  suppressedAt      DateTime?
   mailchimpStatus   String?
   lifetimeValue     Decimal       @default(0) @db.Decimal(14, 2)
   orderCount        Int           @default(0)
@@ -283,6 +290,17 @@ enum ConsentStatus {
   cleaned
   transactional
   pending
+  unknown
+  complained
+}
+
+/// CASL consent basis (Phase 4 — docs/19). Marketing sends require documented
+/// express consent, or implied consent inside its validity window. Everything
+/// else is ineligible — never assume eligibility without evidence.
+enum ConsentBasis {
+  express
+  implied
+  transactional_only
   unknown
 }
 
@@ -764,6 +782,9 @@ model MarketingContact {
   status             String        @default("subscribed")
   consentStatus      ConsentStatus @default(unknown)
   tags               Json?
+  mergeFields        Json?
+  /// Mailchimp last_changed — when the member's status last moved.
+  statusChangedAt    DateTime?
   lastCampaignSentAt DateTime?
   lastOpenedAt       DateTime?
   lastClickedAt      DateTime?
@@ -797,6 +818,9 @@ model Campaign {
   audienceSnapshot Json?
   /// Pointer to the AiOutput row that drafted this campaign, when AI-drafted.
   aiOutputId      String?
+  /// Consent-eligibility snapshot taken at draft time (Phase 4). Approval is
+  /// refused when absent — approvers must see the compliance posture.
+  eligibilitySnapshot Json?
   /// Mailchimp export lifecycle. "not_queued" by default; only flips after
   /// approval + the mailchimp.send feature flag is on.
   mailchimpExportStatus  String?  @default("not_queued") // not_queued, queued, sent, failed

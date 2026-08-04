@@ -6,14 +6,22 @@
  * so the marketing team can audit who gets included in a reactivation
  * campaign before it lands in front of an approver.
  *
- * Per docs/13 §6.3 + §16, only marketable + non-archived customers are
- * eligible for reactivation. Unsubscribed/cleaned/archived customers are
- * always excluded — even from the list — to make compliance posture clear.
+ * Phase 4: every candidate passes through the CASL eligibility evaluator
+ * (marketing-eligibility.ts). Suppressed / unevidenced customers are excluded
+ * from the candidate list entirely — even before scoring — and each included
+ * row carries its eligibility verdict so the UI can explain the compliance
+ * posture alongside the score.
  */
 
 import { type Prisma } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
+
+import {
+  evaluateMarketingEligibility,
+  type EligibilityCode,
+  type EligibilityVerdict,
+} from "./marketing-eligibility";
 
 export type ReactivationCustomer = {
   id: string;
@@ -29,6 +37,9 @@ export type ReactivationCustomer = {
   reactivationScore: number;
   bucket: ReactivationBucket;
   reasons: string[];
+  /** CASL eligibility verdict (Phase 4) — always eligible=true for listed rows. */
+  eligibilityCode: EligibilityCode;
+  eligibilityReasons: string[];
 };
 
 export type ReactivationBucket = "hot" | "warm" | "cold" | "deep_freeze";
@@ -47,11 +58,14 @@ export type ReactivationSummary = {
   warm: number;
   cold: number;
   deepFreeze: number;
-  /** Marketable customers excluded due to consent. */
+  /** Lapsed customers excluded by the CASL eligibility policy. */
   excludedDueToConsent: number;
+  /** Breakdown of exclusions by eligibility code. */
+  excludedByCode: Partial<Record<EligibilityCode, number>>;
 };
 
-const MARKETABLE_CONSENT = ["subscribed", "transactional"] as const;
+/** Statuses that are hard-suppressed — excluded at the query level. */
+const SUPPRESSED_STATUSES = ["unsubscribed", "cleaned", "complained"] as const;
 
 function bucketize(score: number): ReactivationBucket {
   if (score >= 70) return "hot";
@@ -141,7 +155,10 @@ export async function listReactivationCandidates(
 ): Promise<{ rows: ReactivationCustomer[]; summary: ReactivationSummary }> {
   const where: Prisma.CustomerWhereInput = {
     deletedAt: null,
-    consentStatus: { in: MARKETABLE_CONSENT as unknown as string[] as never },
+    // Hard suppressions excluded at query level; the eligibility evaluator
+    // handles the softer cases (pending, unknown, expired implied consent).
+    consentStatus: { notIn: SUPPRESSED_STATUSES as unknown as never },
+    email: { not: null },
     lastOrderAt: { not: null, lte: daysAgo(60) },
     ...(filters.storeId ? { storeId: filters.storeId } : {}),
     ...(filters.minLifetimeValue ? { lifetimeValue: { gte: filters.minLifetimeValue } } : {}),
@@ -157,15 +174,35 @@ export async function listReactivationCandidates(
       : {}),
   };
 
+  const limit = filters.limit ?? 500;
   const customers = await prisma.customer.findMany({
     where,
     orderBy: [{ lifetimeValue: "desc" }, { lastOrderAt: "asc" }],
-    take: filters.limit ?? 500,
+    // Over-fetch so eligibility filtering doesn't starve the list.
+    take: Math.min(limit * 2, 2_000),
     include: { store: { select: { name: true } } },
   });
 
   const now = Date.now();
-  const rows: ReactivationCustomer[] = customers.map((c) => {
+  const excludedByCode: Partial<Record<EligibilityCode, number>> = {};
+  const rows: ReactivationCustomer[] = [];
+
+  for (const c of customers) {
+    const verdict: EligibilityVerdict = evaluateMarketingEligibility({
+      email: c.email,
+      consentStatus: c.consentStatus,
+      consentBasis: c.consentBasis,
+      consentObtainedAt: c.consentObtainedAt,
+      consentExpiresAt: c.consentExpiresAt,
+      suppressionReason: c.suppressionReason,
+      lastOrderAt: c.lastOrderAt,
+      deletedAt: c.deletedAt,
+    });
+    if (!verdict.eligible) {
+      excludedByCode[verdict.code] = (excludedByCode[verdict.code] ?? 0) + 1;
+      continue;
+    }
+
     const ltv = Number(c.lifetimeValue);
     const days = c.lastOrderAt
       ? Math.floor((now - c.lastOrderAt.getTime()) / (1000 * 60 * 60 * 24))
@@ -178,7 +215,7 @@ export async function listReactivationCandidates(
     });
     const fullName = [c.firstName, c.lastName].filter(Boolean).join(" ").trim();
     const name = c.companyName || fullName || c.email || "(unnamed)";
-    return {
+    rows.push({
       id: c.id,
       email: c.email,
       name,
@@ -191,29 +228,35 @@ export async function listReactivationCandidates(
       lastOrderAt: c.lastOrderAt,
       reactivationScore: score,
       bucket: bucketize(score),
-      reasons,
-    };
-  });
+      reasons: [...reasons, ...verdict.reasons],
+      eligibilityCode: verdict.code,
+      eligibilityReasons: verdict.reasons,
+    });
+  }
 
-  const filtered = filters.bucket ? rows.filter((r) => r.bucket === filters.bucket) : rows;
+  const capped = rows.slice(0, limit);
+  const filtered = filters.bucket ? capped.filter((r) => r.bucket === filters.bucket) : capped;
   filtered.sort((a, b) => b.reactivationScore - a.reactivationScore);
 
-  // Excluded count: marketable but explicitly unsubscribed-after-consent.
-  const excluded = await prisma.customer.count({
+  // Hard-suppressed lapsed customers (excluded at the query level).
+  const suppressed = await prisma.customer.count({
     where: {
       deletedAt: null,
-      consentStatus: { in: ["unsubscribed", "cleaned"] },
+      consentStatus: { in: SUPPRESSED_STATUSES as unknown as never },
       lastOrderAt: { not: null },
     },
   });
+  const softExcluded = Object.values(excludedByCode).reduce((a, b) => a + b, 0);
+  excludedByCode.suppressed = (excludedByCode.suppressed ?? 0) + suppressed;
 
   const summary: ReactivationSummary = {
-    total: rows.length,
-    hot: rows.filter((r) => r.bucket === "hot").length,
-    warm: rows.filter((r) => r.bucket === "warm").length,
-    cold: rows.filter((r) => r.bucket === "cold").length,
-    deepFreeze: rows.filter((r) => r.bucket === "deep_freeze").length,
-    excludedDueToConsent: excluded,
+    total: capped.length,
+    hot: capped.filter((r) => r.bucket === "hot").length,
+    warm: capped.filter((r) => r.bucket === "warm").length,
+    cold: capped.filter((r) => r.bucket === "cold").length,
+    deepFreeze: capped.filter((r) => r.bucket === "deep_freeze").length,
+    excludedDueToConsent: suppressed + softExcluded,
+    excludedByCode,
   };
 
   return { rows: filtered, summary };

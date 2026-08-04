@@ -12,9 +12,11 @@ import {
   listReactivationCandidates,
   type ReactivationBucket,
 } from "@/server/services/marketing/reactivation";
+import { getConsentSummary } from "@/server/services/marketing/consent-summary";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
 import { CampaignDraftForm } from "./draft-form";
+import { MailchimpSyncButton } from "./mailchimp-sync-button";
 
 export const metadata = { title: "Customer reactivation" };
 export const dynamic = "force-dynamic";
@@ -48,22 +50,26 @@ export default async function ReactivationPage({
   const user = await requirePermission(PERMISSIONS.CUSTOMERS_VIEW);
   const params = await searchParams;
   const canDraft = userHasPermission(user, PERMISSIONS.MARKETING_DRAFT_CAMPAIGN);
+  const canSyncMailchimp = userHasPermission(user, PERMISSIONS.MARKETING_SYNC_MAILCHIMP);
 
   const bucket = VALID_BUCKETS.includes(params.bucket as ReactivationBucket)
     ? (params.bucket as ReactivationBucket)
     : undefined;
 
-  const { rows, summary } = await listReactivationCandidates({
-    bucket,
-    search: params.q?.trim() || undefined,
-    limit: 200,
-  });
+  const [{ rows, summary }, consent] = await Promise.all([
+    listReactivationCandidates({
+      bucket,
+      search: params.q?.trim() || undefined,
+      limit: 200,
+    }),
+    getConsentSummary(),
+  ]);
 
   return (
     <div>
       <PageHeader
         title="Customer reactivation"
-        description="Marketable customers ranked by reactivation potential. Unsubscribed and cleaned customers are excluded."
+        description="Customers ranked by reactivation potential. Only CASL-eligible customers are listed — suppressed, unevidenced, and expired-consent customers are excluded."
         breadcrumb={
           <Link href="/marketing" className="inline-flex items-center gap-1 hover:underline">
             <ArrowLeft className="h-3 w-3" /> Marketing
@@ -228,6 +234,56 @@ export default async function ReactivationPage({
               Review, edit, and request approval for AI-drafted campaigns.
             </p>
           </Link>
+
+          {/* Consent & suppression posture (Phase 4) */}
+          <div className="rounded-md border bg-card p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-medium">Consent &amp; suppression</div>
+              <Badge variant="outline">{consent.customersTotal.toLocaleString()} customers</Badge>
+            </div>
+            <div className="mt-3 space-y-3 text-xs">
+              <div>
+                <div className="mb-1 uppercase tracking-wide text-muted-foreground">Status</div>
+                {consent.byStatus.map((s) => (
+                  <div key={s.status} className="flex justify-between">
+                    <span>{s.status}</span>
+                    <span className="tabular-nums">{s.count.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="mb-1 uppercase tracking-wide text-muted-foreground">
+                  Consent basis (CASL)
+                </div>
+                {consent.byBasis.map((b) => (
+                  <div key={b.basis} className="flex justify-between">
+                    <span>{b.basis}</span>
+                    <span className="tabular-nums">{b.count.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+              {consent.suppressed.length > 0 && (
+                <div>
+                  <div className="mb-1 uppercase tracking-wide text-muted-foreground">
+                    Suppression reasons
+                  </div>
+                  {consent.suppressed.map((s) => (
+                    <div key={s.reason} className="flex justify-between">
+                      <span>{s.reason}</span>
+                      <span className="tabular-nums">{s.count.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="border-t pt-2 text-muted-foreground">
+                {consent.mailchimpContacts.toLocaleString()} Mailchimp contacts mirrored
+                {consent.lastMailchimpSyncAt
+                  ? ` · last sync ${formatDate(consent.lastMailchimpSyncAt)}`
+                  : " · never synced"}
+              </div>
+              {canSyncMailchimp && <MailchimpSyncButton />}
+            </div>
+          </div>
         </div>
       </div>
     </div>
