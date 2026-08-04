@@ -71,6 +71,7 @@ model User {
   completedDiligenceItems     DiligenceItem[]       @relation("DiligenceCompleter")
   preparedInvestorUpdates     InvestorUpdate[]      @relation("InvestorUpdatePreparer")
   approvedInvestorUpdates     InvestorUpdate[]      @relation("InvestorUpdateApprover")
+  reconciliationRuns          ReconciliationReport[] @relation("ReconciliationTriggeredBy")
 
   @@index([status])
   @@map("users")
@@ -214,6 +215,7 @@ model Store {
   orders                 Order[]
   websiteMetrics         WebsiteMetric[]
   integrationConnections IntegrationConnection[]
+  reconciliationReports  ReconciliationReport[]
 
   @@unique([sourceSystem, externalStoreId])
   @@index([divisionId])
@@ -471,6 +473,29 @@ model Order {
   @@index([exceptionStatus])
   @@index([customerId])
   @@map("orders")
+}
+
+/// A point-in-time comparison of Command Center totals against BigCommerce
+/// source totals for one store (Phase 3E — docs/19). `metrics` is an array of
+/// { metric, ccValue, bcValue, delta, deltaPct, material, note } rows; material
+/// discrepancies also raise Exception rows so gaps surface instead of hiding.
+model ReconciliationReport {
+  id               String   @id @default(cuid())
+  storeId          String
+  triggeredById    String?
+  rangeStart       DateTime
+  rangeEnd         DateTime
+  status           String // ok | discrepancies | failed
+  metrics          Json?
+  discrepancyCount Int      @default(0)
+  errorSummary     String?  @db.Text
+  createdAt        DateTime @default(now())
+
+  store       Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  triggeredBy User? @relation("ReconciliationTriggeredBy", fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([storeId, createdAt])
+  @@map("reconciliation_reports")
 }
 
 /// A shipment/fulfillment record for an order (Phase 3D — docs/19). Imported

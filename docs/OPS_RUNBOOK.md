@@ -158,6 +158,19 @@ sync backfills** the `productId` / `productVariantId` links on order items
 (Phase 3B). Counts appear in the sync log (`categoriesUpserted`,
 `productsScanned`, `variantsUpserted/Deleted`).
 
+**Reconciliation (Phase 3E):** **Admin → Reconciliation** compares Command
+Center totals against BigCommerce source totals per store — lifetime counts
+(customers, orders, products — three cheap count calls) plus a 30-day range
+walk (order count, revenue, refunds, item units). Runs execute on the
+background worker (`syncType: reconciliation` in the sync log). A gap is
+**material** only when it exceeds both an absolute floor and a percentage
+threshold (counts: ≥3 and ≥0.5%; money: ≥$25 and ≥0.5% — constants in
+`reconciliation-evaluator.ts`); material gaps raise `integration_sync`
+Exceptions keyed `reconciliation:<storeId>:<metric>` so repeats group.
+Guest-customer counts are informational (BC has no comparable total). Run a
+reconciliation after any full sync, and investigate material rows via the
+report + exceptions rather than re-syncing blindly.
+
 **Fulfillments + refunds (Phase 3D):** order sync captures payment/refund
 reporting fields straight from the order header (`Order.paymentMethod`,
 `Order.refundedTotal` — no extra API calls) and refines

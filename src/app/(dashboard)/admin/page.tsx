@@ -3,6 +3,7 @@ import {
   Building2,
   Flag,
   Key,
+  Scale,
   ScrollText,
   ShieldCheck,
   Sparkles,
@@ -69,6 +70,13 @@ const TILES: AdminTile[] = [
     title: "API & Integrations",
     description: "Manage credentials per integration. Encrypted at rest in the vault.",
     icon: Key,
+    permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
+  },
+  {
+    href: "/admin/reconciliation",
+    title: "Reconciliation",
+    description: "Command Center totals vs BigCommerce source totals, by store.",
+    icon: Scale,
     permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
   },
   {
