@@ -137,6 +137,91 @@ describe("mapBcOrderToUpsert", () => {
     expect(meta.bcSyncedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
+  // ---- Phase 3D — payment method, refunds, fulfillment refinement ----
+
+  it("maps payment_method and refunded_amount onto the order", () => {
+    const { create, update } = mapBcOrderToUpsert(
+      { ...baseBc, payment_method: " Visa ", refunded_amount: "20.00" },
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(create.paymentMethod).toBe("Visa");
+    expect(create.refundedTotal).toBe(20);
+    expect(update.paymentMethod).toBe("Visa");
+    expect(update.refundedTotal).toBe(20);
+  });
+
+  it("defaults paymentMethod null and refundedTotal 0 when absent", () => {
+    const { create } = mapBcOrderToUpsert(baseBc, {
+      storeId: "s1",
+      divisionId: null,
+      customerId: null,
+    });
+    expect(create.paymentMethod).toBeNull();
+    expect(create.refundedTotal).toBe(0);
+  });
+
+  it("a partial refund amount forces partially_refunded regardless of other signals", () => {
+    const { create } = mapBcOrderToUpsert(
+      { ...baseBc, payment_status: "captured", refunded_amount: "50.00" }, // < 116.50 total
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(create.paymentStatus).toBe("partially_refunded");
+  });
+
+  it("a full refund amount forces refunded", () => {
+    const { create } = mapBcOrderToUpsert(
+      { ...baseBc, refunded_amount: "116.50" },
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(create.paymentStatus).toBe("refunded");
+  });
+
+  it("zero refunded_amount leaves the derived payment status untouched", () => {
+    const { create } = mapBcOrderToUpsert(
+      { ...baseBc, refunded_amount: "0.00" },
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(create.paymentStatus).toBe("paid"); // from payment_status "captured"
+  });
+
+  it("shipment counters refine fulfillment to partially_fulfilled / fulfilled", () => {
+    const partial = mapBcOrderToUpsert(
+      { ...baseBc, status_id: 11, items_total: 4, items_shipped: 2 },
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(partial.create.fulfillmentStatus).toBe("partially_fulfilled");
+
+    const full = mapBcOrderToUpsert(
+      { ...baseBc, status_id: 11, items_total: 4, items_shipped: 4 },
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(full.create.fulfillmentStatus).toBe("fulfilled");
+  });
+
+  it("zero shipped items keeps the status_id-derived fulfillment", () => {
+    const { create } = mapBcOrderToUpsert(
+      { ...baseBc, status_id: 11, items_total: 4, items_shipped: 0 },
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(create.fulfillmentStatus).toBe("unfulfilled");
+  });
+
+  it("never downgrades a returned order via shipment counters", () => {
+    const { create } = mapBcOrderToUpsert(
+      { ...baseBc, status_id: 4, payment_status: undefined, items_total: 4, items_shipped: 4 },
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(create.fulfillmentStatus).toBe("returned"); // status_id 4 = Refunded
+  });
+
+  it("ignores shipment counters when either is missing", () => {
+    const { create } = mapBcOrderToUpsert(
+      { ...baseBc, status_id: 11, items_shipped: 2 }, // items_total absent
+      { storeId: "s1", divisionId: null, customerId: null },
+    );
+    expect(create.fulfillmentStatus).toBe("unfulfilled");
+  });
+
   it("handles missing/zero monetary fields gracefully", () => {
     const { create } = mapBcOrderToUpsert(
       {

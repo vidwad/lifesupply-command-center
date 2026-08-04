@@ -16,8 +16,12 @@
  * Pre-loads the customer lookup maps up front so the per-row resolve doesn't
  * need an extra DB roundtrip.
  *
- * Order LINE ITEMS are not touched in this version (mirrors the existing
- * CSV import in services/imports/bigcommerce.ts). Items are Phase 3B.
+ * Per order, the walker also syncs:
+ *   - LINE ITEMS via /v2/orders/{id}/products (Phase 3B, `syncItems`).
+ *   - SHIPMENTS via /v2/orders/{id}/shipments (Phase 3D, `syncShipments`),
+ *     fetched only when the header reports shipped items. The header's
+ *     payment_method / refunded_amount / items_shipped feed the order's
+ *     payment + fulfillment reporting fields.
  *
  * Modes:
  *   - "full"        — walks ALL orders for the store
@@ -35,6 +39,7 @@ import {
 } from "./guest-customer";
 import { mapBcOrderProductToUpsert, type BcOrderProduct } from "./order-item-mapper";
 import { mapBcOrderToUpsert, SOURCE_SYSTEM, type BcOrderPayload } from "./order-mapper";
+import { mapBcShipmentToUpsert, type BcShipment } from "./shipment-mapper";
 
 const PAGE_SIZE = 250;
 const HARD_CAP_ORDERS = 500_000;
@@ -53,6 +58,12 @@ export type SyncOrdersInput = {
    * header-only sync.
    */
   syncItems?: boolean;
+  /**
+   * Sync shipments (tracking refs) via /v2/orders/{id}/shipments (Phase 3D).
+   * Defaults to true. Fetched only for orders whose header reports shipped
+   * items, so the extra API cost is limited to fulfilled orders.
+   */
+  syncShipments?: boolean;
   /** Optional callback invoked after each order page is processed. */
   onProgress?: (counts: SyncOrdersCounts) => void | Promise<void>;
 };
@@ -72,6 +83,9 @@ export type SyncOrdersCounts = {
   itemsUpdated: number; // order line items updated in place
   itemsDeleted: number; // stale BC line items removed
   itemsFailed: number; // orders whose item sync raised
+  shipmentsUpserted: number; // shipment rows created/updated
+  shipmentsDeleted: number; // stale BC shipment rows removed
+  shipmentsFailed: number; // orders whose shipment sync raised
   errorMessages: string[];
 };
 
@@ -249,6 +263,63 @@ async function syncOrderItemsForOrder(args: {
 }
 
 /**
+ * Sync one order's shipments from /v2/orders/{id}/shipments (Phase 3D):
+ * upsert each (keyed by BC shipment id) and remove stale BC shipments.
+ * Throws on fetch failure so the caller can count it without aborting the run.
+ */
+async function syncShipmentsForOrder(args: {
+  storeRoot: string;
+  apiToken: string;
+  bcOrderId: number;
+  orderId: string;
+  counts: SyncOrdersCounts;
+}): Promise<void> {
+  const { storeRoot, apiToken, bcOrderId, orderId, counts } = args;
+
+  const seen: string[] = [];
+  let page = 1;
+  while (true) {
+    const url = `${storeRoot}/v2/orders/${bcOrderId}/shipments?limit=${PAGE_SIZE}&page=${page}`;
+    const r = await bcFetch(url, apiToken);
+    if (!r.ok) {
+      if (r.status === 404) break; // no shipments / past last page
+      throw new Error(`Order ${bcOrderId} shipments page ${page}: HTTP ${r.status} — ${r.body}`);
+    }
+    if (r.status === 204 || r.body.trim() === "") break;
+    let shipments: BcShipment[];
+    try {
+      shipments = JSON.parse(r.body) as BcShipment[];
+    } catch {
+      break;
+    }
+    if (!Array.isArray(shipments) || shipments.length === 0) break;
+
+    for (const s of shipments) {
+      const { create, update } = mapBcShipmentToUpsert(s, { orderId });
+      await prisma.orderShipment.upsert({
+        where: { sourceSystem_sourceId: { sourceSystem: SOURCE_SYSTEM, sourceId: String(s.id) } },
+        create,
+        update,
+      });
+      seen.push(String(s.id));
+      counts.shipmentsUpserted++;
+    }
+
+    if (shipments.length < PAGE_SIZE) break;
+    page++;
+  }
+
+  const del = await prisma.orderShipment.deleteMany({
+    where: {
+      orderId,
+      sourceSystem: SOURCE_SYSTEM,
+      ...(seen.length > 0 ? { sourceId: { notIn: seen } } : {}),
+    },
+  });
+  counts.shipmentsDeleted += del.count;
+}
+
+/**
  * Resolve the Customer.id for one order, creating a guest Customer on demand.
  * Mutates `maps.guestByEmail` when a new guest is created so later orders in
  * the same run reuse it. Returns null when the order can't be linked.
@@ -324,10 +395,14 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
     itemsUpdated: 0,
     itemsDeleted: 0,
     itemsFailed: 0,
+    shipmentsUpserted: 0,
+    shipmentsDeleted: 0,
+    shipmentsFailed: 0,
     errorMessages: [],
   };
 
   const syncItems = input.syncItems !== false;
+  const syncShipments = input.syncShipments !== false;
   const maps = await loadCustomerMaps(input.storeId);
   const productMaps = syncItems
     ? await loadProductMaps(input.storeId)
@@ -405,6 +480,27 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
             const msg = itemErr instanceof Error ? itemErr.message : "unknown error";
             if (counts.errorMessages.length < 20) {
               counts.errorMessages.push(`Order ${bc.id} items: ${msg}`);
+            }
+          }
+        }
+
+        // Shipments carry the tracking references (Phase 3D). Only fetched
+        // when the header reports shipped items, so unshipped orders cost
+        // nothing extra. Failures are isolated like item failures.
+        if (syncShipments && (bc.items_shipped ?? 0) > 0) {
+          try {
+            await syncShipmentsForOrder({
+              storeRoot: input.storeRoot,
+              apiToken: input.apiToken,
+              bcOrderId: bc.id,
+              orderId: result.id,
+              counts,
+            });
+          } catch (shipErr) {
+            counts.shipmentsFailed++;
+            const msg = shipErr instanceof Error ? shipErr.message : "unknown error";
+            if (counts.errorMessages.length < 20) {
+              counts.errorMessages.push(`Order ${bc.id} shipments: ${msg}`);
             }
           }
         }
