@@ -2,6 +2,8 @@ import type { OrderStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
 
+import { evaluateOrderDelay } from "./delay-rules";
+
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
 
 function customerLabel(
@@ -303,4 +305,109 @@ export async function listActiveStores() {
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });
+}
+
+// ---------------------------------------------------------------------------
+// Daily operations summary (Phase 8) — deterministic management snapshot of
+// what needs attention and why. No AI involved; numbers come straight from
+// the delay rules, the Exception table, and the task queue.
+// ---------------------------------------------------------------------------
+
+export type OperationsSummary = {
+  generatedAt: Date;
+  delayedOrders: number;
+  warningOrders: number;
+  openExceptionsBySeverity: { severity: string; count: number }[];
+  oldestOpenExceptionHours: number | null;
+  overdueTasks: number;
+  unassignedOpenTasks: number;
+  headline: string;
+};
+
+export async function getOperationsSummary(): Promise<OperationsSummary> {
+  const now = new Date();
+
+  const activeOrders = await prisma.order.findMany({
+    where: {
+      status: {
+        in: [
+          "received",
+          "processing",
+          "awaiting_supplier",
+          "in_supplier_queue",
+          "awaiting_human_review",
+          "shipped",
+        ],
+      },
+    },
+    select: {
+      status: true,
+      orderDate: true,
+      shipments: { select: { shippedAt: true } },
+    },
+    take: 2000,
+  });
+
+  let delayedOrders = 0;
+  let warningOrders = 0;
+  for (const order of activeOrders) {
+    const verdict = evaluateOrderDelay({
+      status: order.status,
+      orderDate: order.orderDate,
+      shipmentDates: order.shipments.map((s) => s.shippedAt),
+      now,
+    });
+    if (verdict.delayed) delayedOrders++;
+    else if (verdict.warning) warningOrders++;
+  }
+
+  const [severityGroups, oldestOpen, overdueTasks, unassignedOpenTasks] = await Promise.all([
+    prisma.exception.groupBy({
+      by: ["severity"],
+      where: { status: { in: ["open", "investigating", "blocked"] } },
+      _count: { _all: true },
+    }),
+    prisma.exception.findFirst({
+      where: { status: { in: ["open", "investigating", "blocked"] } },
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true },
+    }),
+    prisma.task.count({
+      where: {
+        status: { in: ["open", "in_progress", "blocked"] },
+        dueDate: { lt: now },
+      },
+    }),
+    prisma.task.count({
+      where: { status: "open", assignedToId: null },
+    }),
+  ]);
+
+  const openExceptionsBySeverity = ["urgent", "high", "medium", "low"]
+    .map((severity) => ({
+      severity,
+      count: severityGroups.find((g) => g.severity === severity)?._count._all ?? 0,
+    }))
+    .filter((g) => g.count > 0);
+  const totalOpenExceptions = openExceptionsBySeverity.reduce((s, g) => s + g.count, 0);
+
+  const headline =
+    delayedOrders === 0 && totalOpenExceptions === 0 && overdueTasks === 0
+      ? "All clear: no delayed orders, open exceptions, or overdue tasks."
+      : `${delayedOrders} delayed order${delayedOrders === 1 ? "" : "s"}, ` +
+        `${totalOpenExceptions} open exception${totalOpenExceptions === 1 ? "" : "s"}, ` +
+        `${overdueTasks} overdue task${overdueTasks === 1 ? "" : "s"}.`;
+
+  return {
+    generatedAt: now,
+    delayedOrders,
+    warningOrders,
+    openExceptionsBySeverity,
+    oldestOpenExceptionHours: oldestOpen
+      ? Math.floor((now.getTime() - oldestOpen.createdAt.getTime()) / 3_600_000)
+      : null,
+    overdueTasks,
+    unassignedOpenTasks,
+    headline,
+  };
 }

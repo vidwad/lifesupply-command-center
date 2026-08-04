@@ -20,15 +20,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { SavedViewsBar } from "@/components/views/SavedViewsBar";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import {
   getOperationsDashboard,
+  getOperationsSummary,
   listActiveStores,
   type OperationsView,
 } from "@/server/services/operations";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
+
+import { SweepButton } from "./sweep-button";
 
 export const metadata = { title: "Operations Control Center" };
 export const dynamic = "force-dynamic";
@@ -51,16 +55,18 @@ export default async function OperationsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.DASHBOARD_OPERATIONS_VIEW);
+  const user = await requirePermission(PERMISSIONS.DASHBOARD_OPERATIONS_VIEW);
+  const canManageExceptions = userHasPermission(user, PERMISSIONS.ORDERS_MANAGE_EXCEPTIONS);
   const params = await searchParams;
 
   const view = (VALID_VIEWS as string[]).includes(params.view ?? "")
     ? (params.view as OperationsView)
     : "needs_attention";
 
-  const [data, stores] = await Promise.all([
+  const [data, stores, summary] = await Promise.all([
     getOperationsDashboard({ view, storeId: params.store || undefined }),
     listActiveStores(),
+    getOperationsSummary(),
   ]);
 
   const tabs: {
@@ -117,6 +123,61 @@ export default async function OperationsPage({
       />
 
       <div className="space-y-6 p-6">
+        {/* Daily operations summary — deterministic, from delay rules +
+            exception + task queues. */}
+        <Card>
+          <CardHeader className="flex-row items-start justify-between space-y-0">
+            <div>
+              <CardTitle className="text-sm">Today&apos;s operations summary</CardTitle>
+              <CardDescription className="text-xs">{summary.headline}</CardDescription>
+            </div>
+            {canManageExceptions && <SweepButton />}
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-6">
+              <SummaryStat
+                label="Delayed orders"
+                value={summary.delayedOrders}
+                tone={summary.delayedOrders > 0 ? "destructive" : undefined}
+              />
+              <SummaryStat
+                label="Aging (warn)"
+                value={summary.warningOrders}
+                tone={summary.warningOrders > 0 ? "warning" : undefined}
+              />
+              <SummaryStat
+                label="Open exceptions"
+                value={summary.openExceptionsBySeverity.reduce((s, g) => s + g.count, 0)}
+                detail={summary.openExceptionsBySeverity
+                  .map((g) => `${g.count} ${g.severity}`)
+                  .join(" · ")}
+              />
+              <SummaryStat
+                label="Oldest exception"
+                value={
+                  summary.oldestOpenExceptionHours == null
+                    ? "—"
+                    : summary.oldestOpenExceptionHours < 24
+                      ? `${summary.oldestOpenExceptionHours}h`
+                      : `${Math.floor(summary.oldestOpenExceptionHours / 24)}d`
+                }
+              />
+              <SummaryStat
+                label="Overdue tasks"
+                value={summary.overdueTasks}
+                tone={summary.overdueTasks > 0 ? "warning" : undefined}
+              />
+              <SummaryStat label="Unassigned open tasks" value={summary.unassignedOpenTasks} />
+            </dl>
+          </CardContent>
+        </Card>
+
+        <SavedViewsBar
+          userId={user.id}
+          page="operations"
+          currentParams={{ view: params.view, store: params.store }}
+        />
+
         {/* Status summary cards */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
           {[
@@ -433,6 +494,34 @@ export default async function OperationsPage({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryStat({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: number | string;
+  detail?: string;
+  tone?: "warning" | "destructive";
+}) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dd
+        className={cn(
+          "text-lg font-semibold",
+          tone === "destructive" && "text-destructive",
+          tone === "warning" && "text-warning-foreground",
+        )}
+      >
+        {value}
+      </dd>
+      {detail && <dd className="text-[10px] text-muted-foreground">{detail}</dd>}
     </div>
   );
 }

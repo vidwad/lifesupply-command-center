@@ -177,12 +177,44 @@ const createTaskSchema = z.object({
 export type CreateTaskInput = z.input<typeof createTaskSchema> & {
   createdById: string;
   assignedToId?: string | null;
+  /** Origin of the task (manual, exception, ai_recommendation, workflow). */
+  sourceType?: string;
+  /** Id of the originating record (e.g. the Exception id). */
+  sourceId?: string | null;
+  metadata?: Record<string, unknown> | null;
 };
+
+/**
+ * relatedEntityId is a polymorphic reference (the hard FK to orders was
+ * dropped in Phase 8), so referential integrity is enforced here: the
+ * referenced row must exist in the table matching relatedEntityType.
+ */
+async function assertRelatedEntityExists(
+  type: string | null | undefined,
+  id: string | null | undefined,
+): Promise<void> {
+  if (!type || !id) return;
+  const lookup: Record<string, () => Promise<{ id: string } | null>> = {
+    Order: () => prisma.order.findUnique({ where: { id }, select: { id: true } }),
+    Customer: () => prisma.customer.findUnique({ where: { id }, select: { id: true } }),
+    Product: () => prisma.product.findUnique({ where: { id }, select: { id: true } }),
+    Supplier: () => prisma.supplier.findUnique({ where: { id }, select: { id: true } }),
+    Campaign: () => prisma.campaign.findUnique({ where: { id }, select: { id: true } }),
+    Report: () => prisma.report.findUnique({ where: { id }, select: { id: true } }),
+  };
+  const find = lookup[type];
+  if (!find) return;
+  const found = await find();
+  if (!found) {
+    throw new Error(`Related ${type} ${id} does not exist.`);
+  }
+}
 
 export async function createTask(input: CreateTaskInput) {
   const parsed = createTaskSchema.parse(input);
 
   const dueDate = parsed.dueDate ? new Date(parsed.dueDate) : null;
+  await assertRelatedEntityExists(parsed.relatedEntityType, parsed.relatedEntityId);
 
   const task = await prisma.task.create({
     data: {
@@ -193,7 +225,9 @@ export async function createTask(input: CreateTaskInput) {
       dueDate,
       relatedEntityType: parsed.relatedEntityType ?? null,
       relatedEntityId: parsed.relatedEntityId ?? null,
-      sourceType: "manual",
+      sourceType: input.sourceType ?? "manual",
+      sourceId: input.sourceId ?? null,
+      metadata: (input.metadata ?? undefined) as Prisma.InputJsonValue | undefined,
       assignedToId: input.assignedToId ?? input.createdById,
       createdById: input.createdById,
     },
@@ -219,6 +253,16 @@ export async function createTask(input: CreateTaskInput) {
   }
 
   return task;
+}
+
+/** Tasks linked to any entity (Order, Customer, Supplier, …) — Phase 8. */
+export async function listTasksForEntity(relatedEntityType: string, relatedEntityId: string) {
+  return prisma.task.findMany({
+    where: { relatedEntityType, relatedEntityId },
+    include: { assignedTo: { select: { id: true, name: true, email: true } } },
+    orderBy: [{ status: "asc" }, { priority: "desc" }, { createdAt: "desc" }],
+    take: 20,
+  });
 }
 
 const updateStatusSchema = z.object({

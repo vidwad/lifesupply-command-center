@@ -17,6 +17,8 @@ import { formatCurrency, formatDate, formatDateTime, formatPercent } from "@/lib
 import { PERMISSIONS } from "@/lib/permissions";
 import { customerDisplayName } from "@/server/services/customers";
 import { getOrderById, getRelatedTasks, type OrderNote } from "@/server/services/orders";
+import { buildFulfillmentTimeline } from "@/server/services/orders/timeline";
+import { evaluateOrderDelay } from "@/server/services/operations/delay-rules";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
 import { AddNoteForm, ResolveExceptionForm, UpdateStatusForm } from "./order-actions";
@@ -46,6 +48,21 @@ export default async function OrderDetailPage({ params }: Props) {
   const metadata = (order.metadata ?? null) as { notes?: OrderNote[] } | null;
   const notes: OrderNote[] = Array.isArray(metadata?.notes) ? metadata.notes : [];
 
+  const delay = evaluateOrderDelay({
+    status: order.status,
+    orderDate: order.orderDate,
+    shipmentDates: order.shipments.map((s) => s.shippedAt),
+  });
+  const timeline = buildFulfillmentTimeline({
+    orderDate: order.orderDate,
+    status: order.status,
+    fulfillmentStatus: order.fulfillmentStatus,
+    paymentStatus: order.paymentStatus,
+    refundedTotal: order.refundedTotal,
+    currency: order.currency,
+    shipments: order.shipments,
+  });
+
   return (
     <div>
       <PageHeader
@@ -63,6 +80,16 @@ export default async function OrderDetailPage({ params }: Props) {
             <FulfillmentStatusBadge status={order.fulfillmentStatus} />
             <SupplierStatusBadge status={order.supplierStatus} />
             <ExceptionStatusBadge status={order.exceptionStatus} />
+            {delay.delayed && (
+              <Badge variant="destructive" title={delay.reason ?? undefined}>
+                Delayed · {delay.daysOutstanding}d
+              </Badge>
+            )}
+            {!delay.delayed && delay.warning && (
+              <Badge variant="warning" title={delay.reason ?? undefined}>
+                Aging · {delay.daysOutstanding}d
+              </Badge>
+            )}
           </div>
         }
       />
@@ -174,6 +201,49 @@ export default async function OrderDetailPage({ params }: Props) {
 
           <Card>
             <CardHeader className="pb-3">
+              <CardTitle className="text-base">Fulfillment timeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3">
+                {timeline.map((event, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm">
+                    <span
+                      className={
+                        event.kind === "refund"
+                          ? "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-destructive"
+                          : event.kind === "current"
+                            ? "mt-1.5 h-2 w-2 shrink-0 rounded-full border border-primary bg-background"
+                            : "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"
+                      }
+                    />
+                    <div>
+                      <p className="font-medium">{event.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {event.at ? formatDateTime(event.at) : "date not recorded"}
+                        {event.detail && <> · {event.detail}</>}
+                        {event.trackingUrl && (
+                          <>
+                            {" · "}
+                            <a
+                              href={event.trackingUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              track shipment ↗
+                            </a>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
               <CardTitle className="text-base">Order totals</CardTitle>
             </CardHeader>
             <CardContent>
@@ -195,6 +265,13 @@ export default async function OrderDetailPage({ params }: Props) {
                   value={formatCurrency(order.grandTotal, order.currency)}
                   emphasis
                 />
+                {order.refundedTotal > 0 && (
+                  <Total
+                    label="Refunded"
+                    value={`-${formatCurrency(order.refundedTotal, order.currency)}`}
+                  />
+                )}
+                <Total label="Payment method" value={order.paymentMethod ?? "—"} />
                 <Total
                   label="Estimated GP"
                   value={
