@@ -6,7 +6,8 @@
  *   BC-OWNED (overwritten on every sync):
  *     orderNumber, status, paymentStatus, fulfillmentStatus, orderDate,
  *     subtotal, discountTotal, shippingTotal, taxTotal, grandTotal,
- *     currency, customerId (linked from synced Customer rows by BC id)
+ *     currency, paymentMethod, refundedTotal (Phase 3D),
+ *     customerId (linked from synced Customer rows by BC id)
  *
  *   CC-OWNED (set on create only; NEVER touched by sync):
  *     estimatedGrossProfit, estimatedGrossMargin, supplierStatus,
@@ -44,6 +45,12 @@ export type BcOrderPayload = {
   total_tax?: string | number;
   total_inc_tax?: string | number;
   currency_code?: string;
+  /** Payment + refund header fields (Phase 3D). */
+  payment_method?: string;
+  refunded_amount?: string | number;
+  /** Shipment progress counters (Phase 3D) — refine fulfillmentStatus. */
+  items_total?: number;
+  items_shipped?: number;
   /** Present on /v2/orders; the buyer identity for guest checkouts. */
   billing_address?: {
     email?: string | null;
@@ -114,13 +121,41 @@ const PAYMENT_STATUS_MAP: Record<string, PaymentStatus> = {
 
 function deriveStatus(bc: BcOrderPayload): StatusTriple {
   const fromStatusId = bc.status_id != null ? STATUS_MAP[bc.status_id] : undefined;
-  const triple: StatusTriple = fromStatusId ?? FALLBACK_TRIPLE;
+  let triple: StatusTriple = fromStatusId ?? FALLBACK_TRIPLE;
 
   const ps = bc.payment_status?.toLowerCase().trim();
   const overridePayment = ps ? PAYMENT_STATUS_MAP[ps] : undefined;
   if (overridePayment) {
-    return { ...triple, payment: overridePayment };
+    triple = { ...triple, payment: overridePayment };
   }
+
+  // ---- Phase 3D refinements ----
+
+  // Refund amount is a hard financial fact — when > 0 it wins over any
+  // string/status-derived payment state.
+  const refunded = decimal(bc.refunded_amount);
+  if (refunded > 0) {
+    const total = decimal(bc.total_inc_tax);
+    const payment: PaymentStatus = refunded >= total ? "refunded" : "partially_refunded";
+    triple = { ...triple, payment };
+  }
+
+  // Shipment counters refine fulfillment — but never downgrade a "returned"
+  // order, and only when both counters are usable numbers.
+  if (
+    triple.fulfillment !== "returned" &&
+    typeof bc.items_total === "number" &&
+    typeof bc.items_shipped === "number" &&
+    bc.items_total > 0
+  ) {
+    if (bc.items_shipped >= bc.items_total) {
+      triple = { ...triple, fulfillment: "fulfilled" };
+    } else if (bc.items_shipped > 0) {
+      triple = { ...triple, fulfillment: "partially_fulfilled" };
+    }
+    // items_shipped === 0 → keep the status_id-derived value.
+  }
+
   return triple;
 }
 
@@ -161,6 +196,8 @@ export function mapBcOrderToUpsert(
     taxTotal: decimal(bc.total_tax),
     grandTotal: decimal(bc.total_inc_tax),
     currency: bc.currency_code?.trim() || "CAD",
+    paymentMethod: bc.payment_method?.trim() || null,
+    refundedTotal: decimal(bc.refunded_amount),
   };
 
   // ---- METADATA ----

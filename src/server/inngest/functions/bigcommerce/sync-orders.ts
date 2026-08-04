@@ -77,6 +77,8 @@ async function runOrderSync(args: {
               itemsUpdated: c.itemsUpdated,
               itemsDeleted: c.itemsDeleted,
               itemsFailed: c.itemsFailed,
+              shipmentsUpserted: c.shipmentsUpserted,
+              shipmentsFailed: c.shipmentsFailed,
               currentErrors: c.errorMessages.slice(0, 5),
             },
           },
@@ -132,6 +134,9 @@ async function runOrderSync(args: {
         itemsUpdated: counts.itemsUpdated,
         itemsDeleted: counts.itemsDeleted,
         itemsFailed: counts.itemsFailed,
+        shipmentsUpserted: counts.shipmentsUpserted,
+        shipmentsDeleted: counts.shipmentsDeleted,
+        shipmentsFailed: counts.shipmentsFailed,
         mode: args.mode,
         sinceIso: sinceIso ?? null,
       },
@@ -168,6 +173,9 @@ async function runOrderSync(args: {
         itemsUpdated: counts.itemsUpdated,
         itemsDeleted: counts.itemsDeleted,
         itemsFailed: counts.itemsFailed,
+        shipmentsUpserted: counts.shipmentsUpserted,
+        shipmentsDeleted: counts.shipmentsDeleted,
+        shipmentsFailed: counts.shipmentsFailed,
       },
     });
   }

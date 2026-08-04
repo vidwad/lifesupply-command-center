@@ -158,6 +158,19 @@ sync backfills** the `productId` / `productVariantId` links on order items
 (Phase 3B). Counts appear in the sync log (`categoriesUpserted`,
 `productsScanned`, `variantsUpserted/Deleted`).
 
+**Fulfillments + refunds (Phase 3D):** order sync captures payment/refund
+reporting fields straight from the order header (`Order.paymentMethod`,
+`Order.refundedTotal` — no extra API calls) and refines
+payment/fulfillment status from them (a nonzero refund amount forces
+refunded / partially_refunded; shipped-item counters upgrade fulfillment).
+Shipments (carrier, tracking number/URL, shipped date) are pulled from
+`/v2/orders/{id}/shipments` into `OrderShipment` rows — fetched **only for
+orders with shipped items**, so unshipped orders cost nothing extra
+(`syncShipments: false` disables). Counts appear in the sync log
+(`shipmentsUpserted/Deleted/Failed`). Deeper per-transaction gateway detail
+is deliberately not synced — header-level payment method + refund totals are
+the reporting level; revisit if gateway-level reporting is ever needed.
+
 **Order line items (Phase 3B):** order sync also pulls each order's line items
 from `/v2/orders/{id}/products` and upserts `OrderItem` rows (keyed by BC
 order-product id, so re-syncs preserve CC-owned cost/margin/supplier fields).
