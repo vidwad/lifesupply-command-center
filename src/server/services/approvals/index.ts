@@ -17,6 +17,7 @@ const APPROVE_PERMISSION_BY_TYPE: Record<string, PermissionKey | null> = {
   supplier_order: PERMISSIONS.SUPPLIERS_APPROVE_ORDER_AUTOMATION,
   external_update: PERMISSIONS.ORDERS_APPROVE_EXTERNAL_UPDATE,
   investor_material: PERMISSIONS.INVESTORS_APPROVE_MATERIALS,
+  forecast: PERMISSIONS.FINANCIALS_APPROVE,
 };
 
 export const APPROVAL_TYPE_LABEL: Record<string, string> = {
@@ -26,6 +27,7 @@ export const APPROVAL_TYPE_LABEL: Record<string, string> = {
   supplier_order: "Supplier order",
   external_update: "External update",
   investor_material: "Investor material",
+  forecast: "Forecast scenario",
 };
 
 export function approvePermissionFor(type: string): PermissionKey | null {
@@ -86,6 +88,16 @@ async function resolveRelatedEntity(
         select: { title: true },
       });
       return { label: report?.title ?? null, href: `/reports/${entityId}` };
+    }
+    case "ForecastScenario": {
+      const scenario = await prisma.forecastScenario.findUnique({
+        where: { id: entityId },
+        select: { name: true, version: true },
+      });
+      return {
+        label: scenario ? `Forecast: ${scenario.name} v${scenario.version}` : null,
+        href: `/financials/forecasting/${entityId}`,
+      };
     }
     default:
       return { label: null, href: null };
@@ -343,6 +355,32 @@ async function decide(args: {
         data: { status: "draft" },
       });
     }
+  }
+
+  // Side-effect: forecast-scenario approvals transition the scenario.
+  // Approval marks it usable for external material; rejection returns it to
+  // draft. Forecasts never touch actuals either way.
+  if (
+    before.approvalType === "forecast" &&
+    before.relatedEntityType === "ForecastScenario" &&
+    before.relatedEntityId
+  ) {
+    if (args.decision === "approved") {
+      await prisma.forecastScenario.update({
+        where: { id: before.relatedEntityId },
+        data: {
+          status: "approved",
+          approvedById: args.actor.id,
+          approvedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.forecastScenario.update({
+        where: { id: before.relatedEntityId },
+        data: { status: "draft" },
+      });
+    }
+    revalidatePath(`/financials/forecasting/${before.relatedEntityId}`);
   }
 
   await writeAudit({

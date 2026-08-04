@@ -73,6 +73,8 @@ model User {
   approvedInvestorUpdates     InvestorUpdate[]      @relation("InvestorUpdateApprover")
   reconciliationRuns          ReconciliationReport[] @relation("ReconciliationTriggeredBy")
   savedViews                  SavedView[]            @relation("SavedViewOwner")
+  forecastsCreated            ForecastScenario[]     @relation("ForecastCreator")
+  forecastsApproved           ForecastScenario[]     @relation("ForecastApprover")
 
   @@index([status])
   @@map("users")
@@ -1369,6 +1371,57 @@ enum ExceptionSeverity {
   medium
   high
   urgent
+}
+
+// =============================================================================
+// Forecast scenarios — versioned management forecasts (Phase 9, docs/12 §11).
+// Forecasts are NEVER facts: every row stores the assumptions that produced
+// it, the source periods it extrapolates, a data-freshness stamp, and the
+// standing limitations list. Saving a scenario under an existing name creates
+// a new version; approval (for external use) goes through an Approval row of
+// type "forecast" and never mutates actuals.
+// =============================================================================
+
+model ForecastScenario {
+  id            String                 @id @default(cuid())
+  name          String
+  version       Int                    @default(1)
+  status        ForecastScenarioStatus @default(draft)
+  /// Projection method key from the forecast engine.
+  method        String
+  horizonMonths Int
+  /// Full ForecastAssumptions object (method params + scenario overlays).
+  assumptions   Json
+  /// Historical input series actually used (revenue + margin per period).
+  inputs        Json
+  /// Engine output rows (baseline vs scenario per period).
+  results       Json
+  /// Source periods + freshness (QBO last sync, latest closed period, etc.).
+  sourceReferences Json?
+  /// Standing limitations snapshot at generation time.
+  limitations   Json?
+  notes         String?                @db.Text
+  createdById   String?
+  approvalId    String?
+  approvedById  String?
+  approvedAt    DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  createdBy  User? @relation("ForecastCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("ForecastApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@unique([name, version])
+  @@index([status])
+  @@index([createdAt])
+  @@map("forecast_scenarios")
+}
+
+enum ForecastScenarioStatus {
+  draft
+  under_review
+  approved
+  archived
 }
 
 // =============================================================================

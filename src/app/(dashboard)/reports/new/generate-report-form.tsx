@@ -12,6 +12,24 @@ type Props = {
   divisions: { id: string; code: string; name: string }[];
 };
 
+const REPORT_TYPES = [
+  {
+    value: "monthly_management",
+    label: "Monthly management report",
+    hint: "Internal monthly review for the chosen division.",
+  },
+  {
+    value: "board",
+    label: "Board report",
+    hint: "Consolidated board pack: financials, trend, capital, risks. Approval required before external use.",
+  },
+  {
+    value: "investor",
+    label: "Investor & lender package",
+    hint: "Concise external package with TTM figures; excludes internal task lists. Approval required; never auto-distributed.",
+  },
+];
+
 export function GenerateReportForm({ periods, divisions }: Props) {
   const [state, formAction, pending] = useActionState<GenerateReportState, FormData>(
     generateReportAction,
@@ -20,6 +38,27 @@ export function GenerateReportForm({ periods, divisions }: Props) {
 
   return (
     <form action={formAction} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="reportType">Report type</Label>
+        <select
+          id="reportType"
+          name="reportType"
+          defaultValue="monthly_management"
+          disabled={pending}
+          className="h-10 w-full rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {REPORT_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Board and investor packages are consolidated and must be approved before any external use;
+          nothing is distributed automatically.
+        </p>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="periodId">Period</Label>
         <select
