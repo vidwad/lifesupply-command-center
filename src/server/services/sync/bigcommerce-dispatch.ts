@@ -154,6 +154,77 @@ export async function dispatchBigCommerceSync(args: {
 }
 
 /**
+ * Dispatch a reconciliation run (Phase 3E) for every configured + mapped BC
+ * store. Same planning rules as sync dispatch (explicit store mapping only);
+ * each queued store gets an IntegrationSyncLog (syncType "reconciliation")
+ * and a bc/reconcile.run event for the worker.
+ */
+export async function dispatchBigCommerceReconciliation(args: {
+  actorUserId: string;
+}): Promise<DispatchedJob[]> {
+  const connections = await prisma.integrationConnection.findMany({
+    where: { integrationType: "bigcommerce", status: "configured" },
+    select: {
+      id: true,
+      name: true,
+      storeId: true,
+      store: { select: { id: true, name: true, platform: true } },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  const plan = planBigCommerceDispatch(connections);
+  const results: DispatchedJob[] = [];
+
+  for (const item of plan) {
+    if (item.decision === "skip") {
+      results.push({
+        status: "skipped",
+        syncLogId: null,
+        connectionId: item.connectionId,
+        connectionName: item.connectionName,
+        storeId: null,
+        storeName: null,
+        reason: item.reason,
+      });
+      continue;
+    }
+
+    const syncLog = await prisma.integrationSyncLog.create({
+      data: {
+        integrationConnectionId: item.connectionId,
+        syncType: "reconciliation",
+        status: SyncStatus.running,
+        startedAt: new Date(),
+        triggeredById: args.actorUserId,
+        metadata: { storeId: item.store.id, storeName: item.store.name },
+      },
+    });
+
+    await inngest.send({
+      name: "bc/reconcile.run",
+      data: {
+        syncLogId: syncLog.id,
+        connectionId: item.connectionId,
+        storeId: item.store.id,
+        triggeredById: args.actorUserId,
+      },
+    });
+
+    results.push({
+      status: "queued",
+      syncLogId: syncLog.id,
+      connectionId: item.connectionId,
+      connectionName: item.connectionName,
+      storeId: item.store.id,
+      storeName: item.store.name,
+    });
+  }
+
+  return results;
+}
+
+/**
  * Backwards-compat wrapper kept for any callers that haven't migrated to
  * dispatchBigCommerceSync yet (the customer API routes used to call this).
  */
