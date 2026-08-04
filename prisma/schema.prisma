@@ -528,6 +528,11 @@ model OrderItem {
   orderId              String
   productId            String?
   productVariantId     String?
+  /// Source system + id for imported line items (BigCommerce order-product id).
+  /// Enables idempotent upsert while preserving CC-owned cost/margin fields
+  /// (Phase 3B). Null for manually-added items.
+  sourceSystem         String?
+  sourceId             String?
   sku                  String
   productName          String
   quantity             Int
@@ -540,6 +545,7 @@ model OrderItem {
   estimatedGrossMargin Decimal? @db.Decimal(5, 4)
   supplierId           String?
   supplierProductId    String?
+  metadata             Json?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -549,6 +555,7 @@ model OrderItem {
   supplier        Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   supplierProduct SupplierProduct? @relation(fields: [supplierProductId], references: [id], onDelete: SetNull)
 
+  @@unique([sourceSystem, sourceId])
   @@index([orderId])
   @@index([productId])
   @@index([supplierId])

@@ -147,6 +147,16 @@ Stores (Admin → Stores), set each connection's credentials, then map each
 connection to its Store. Confirm each connection shows its Store name (not
 "Not mapped") before running a sync.
 
+**Order line items (Phase 3B):** order sync also pulls each order's line items
+from `/v2/orders/{id}/products` and upserts `OrderItem` rows (keyed by BC
+order-product id, so re-syncs preserve CC-owned cost/margin/supplier fields).
+Stale BC items removed upstream are deleted; manually-added items are kept.
+Line items link to `Product`/`ProductVariant` once those are synced
+(Phase 3C) — until then `productId`/`productVariantId` stay null. This adds
+**one API call per order**, so a full sync is much slower than header-only;
+counts appear in the sync log (`itemsCreated/Updated/Deleted/Failed`). Callers
+can pass `syncItems: false` for a fast header-only run.
+
 **Guest checkouts (Phase 3A):** order sync creates first-class Customer rows
 for guest buyers (BigCommerce `customer_id = 0`), keyed by normalized billing
 email under `sourceSystem = "bigcommerce_guest"`. A guest whose email matches
