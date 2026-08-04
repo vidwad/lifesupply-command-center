@@ -210,3 +210,49 @@ Update this section when production hosting is selected.
 | Date | Drill | Outcome | Notes |
 |---|---|---|---|
 | _add first entry after first drill_ | | | |
+
+---
+
+## 10. Background worker — stalled sync jobs
+
+BigCommerce customer/order sync runs on the **`lifesupply-cc-worker`**
+Render service (start command `pnpm worker`, code at `src/worker.ts`). It
+connects OUT to Inngest via Connect — no inbound URL. The web service
+publishes events (`bc/sync.*`); the worker processes them and moves each
+`IntegrationSyncLog` from `running` to `success` / `partial` / `failed`.
+
+**Symptom: a sync log sits in `running` and never finishes.**
+
+Triage in order:
+
+1. **Is the worker up?** Render → `lifesupply-cc-worker` → Logs. A healthy
+   worker prints `[worker] connected to Inngest, awaiting work…` and stays
+   running. If it's crash-looping, read the Deploy/Logs tab for the error.
+2. **Did the event reach Inngest?** https://app.inngest.com → **Runs**. If
+   the run is absent, the web service never published it — check that
+   `INNGEST_EVENT_KEY` on `lifesupply-cc-web` matches the worker's.
+3. **Did the run fail inside the worker?** If the Inngest run shows an
+   error:
+   - `missing storeHash or apiToken` → the worker's
+     `MASTER_ENCRYPTION_KEY` does not match the web service's, so vault
+     decryption fails. Copy the exact web value onto the worker.
+   - DB errors → confirm `DATABASE_URL` / `DIRECT_URL` are set on the
+     worker.
+4. **Restart** the worker (Render → Manual Deploy → "Clear build cache &
+   deploy" is not needed; a plain restart re-establishes the Connect
+   session). In-flight Inngest runs retry automatically.
+
+**Clearing a stuck log after the cause is fixed:** the row is safe to
+leave — a fresh sync creates a new log. If a `running` row is misleading
+operators, mark it `failed` manually (it has no side effects beyond
+display):
+
+```sql
+UPDATE integration_sync_logs
+SET status = 'failed', "completedAt" = now(),
+    "errorSummary" = 'manually closed — worker outage'
+WHERE status = 'running' AND "startedAt" < now() - interval '1 hour';
+```
+
+Full worker + Inngest deployment setup lives in
+`docs/DEPLOYMENT_RENDER.md` §2.5.
