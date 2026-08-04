@@ -11,10 +11,13 @@ import { prisma } from "@/server/db/client";
  * src/server/services/ai/index.ts so the migration is invisible to
  * existing AI behavior.
  */
+import { AGENT_BUILTIN_TEMPLATES } from "./agent-templates";
+
 const BUILTIN: Record<
   string,
   Omit<PromptTemplate, "id" | "createdAt" | "updatedAt" | "createdById">
 > = {
+  ...AGENT_BUILTIN_TEMPLATES,
   dashboard_briefing: {
     key: "dashboard_briefing",
     version: 1,
