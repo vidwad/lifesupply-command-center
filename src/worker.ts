@@ -39,6 +39,8 @@ import {
 } from "@/server/inngest/functions/bigcommerce/sync-products";
 import { reconcileBcStore } from "@/server/inngest/functions/bigcommerce/reconcile";
 import { syncMailchimpSubscribers } from "@/server/inngest/functions/mailchimp/sync-members";
+import { syncQboReports } from "@/server/inngest/functions/quickbooks/sync-reports";
+import { syncGa4DailyMetrics } from "@/server/inngest/functions/ga4/sync-daily";
 import { helloWorld } from "@/server/inngest/functions/hello";
 
 async function main(): Promise<void> {
@@ -56,6 +58,8 @@ async function main(): Promise<void> {
           syncBcProductsIncremental,
           reconcileBcStore,
           syncMailchimpSubscribers,
+          syncQboReports,
+          syncGa4DailyMetrics,
         ],
       },
     ],
