@@ -25,7 +25,13 @@ const CHOKEPOINTS: Chokepoint[] = [
   {
     capability: "Mailchimp campaign export/send",
     file: "server/services/marketing/campaigns.ts",
-    mustContain: ["FEATURE_FLAGS.MAILCHIMP_SEND", "writeAudit"],
+    // partitionSnapshotByCurrentConsent = export-time suppression re-check
+    // (11D-08): suppression must win at the last egress point too.
+    mustContain: [
+      "FEATURE_FLAGS.MAILCHIMP_SEND",
+      "writeAudit",
+      "partitionSnapshotByCurrentConsent",
+    ],
   },
   {
     capability: "Supplier order submission",
@@ -67,6 +73,17 @@ describe("high-risk chokepoints stay wired", () => {
       }
     });
   }
+
+  it("the Mailchimp export never auto-sends — campaigns land as drafts", () => {
+    // Export creates the campaign in Mailchimp DRAFT state; the operator
+    // sends from inside Mailchimp after final review (CLAUDE.md §13). An
+    // actual `campaignsApi.send(...)` call appearing here is a CI failure.
+    const src = read("server/services/marketing/campaigns.ts");
+    expect(src).not.toContain("campaignsApi.send(");
+    expect(src, "the deliberate no-send decision comment must stay").toContain(
+      "deliberately do NOT",
+    );
+  });
 
   it("the kill switch covers every external-action flag", () => {
     const killSwitch = read("server/services/feature-flags/kill-switch.ts");

@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { getAutomationDashboard } from "@/server/services/automation";
 import { requirePermission } from "@/server/permissions";
 
+import { StuckSyncReapButton } from "./stuck-sync-reap-button";
+
 export const metadata = { title: "Automation Center" };
 export const dynamic = "force-dynamic";
 
@@ -110,6 +112,49 @@ export default async function AutomationPage() {
             icon={Bot}
           />
         </section>
+
+        {/* Stuck syncs (GATE-02 audit) */}
+        {data.stuckSyncs.length > 0 && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <AlertTriangle className="h-4 w-4 text-warning" /> Stuck syncs
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Still &ldquo;running&rdquo; after 6+ hours — the worker likely crashed or was
+                  redeployed mid-run. Confirm no sync is actually in flight, then mark them failed
+                  so history reaches a terminal state.
+                </CardDescription>
+              </div>
+              <StuckSyncReapButton />
+            </CardHeader>
+            <CardContent className="p-0">
+              <DataTable className="rounded-none border-0">
+                <THead>
+                  <tr>
+                    <TH>Integration</TH>
+                    <TH>Type</TH>
+                    <TH>Started</TH>
+                    <TH align="right">Age</TH>
+                  </tr>
+                </THead>
+                <TBody>
+                  {data.stuckSyncs.map((s) => (
+                    <TR key={s.id}>
+                      <TD className="font-medium">{s.integrationName}</TD>
+                      <TD className="text-muted-foreground">{s.syncType}</TD>
+                      <TD className="text-muted-foreground">{formatDateTime(s.startedAt)}</TD>
+                      <TD align="right" className="tabular-nums">
+                        {s.ageHours}h
+                      </TD>
+                    </TR>
+                  ))}
+                </TBody>
+              </DataTable>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Integration cards */}
         <section>
