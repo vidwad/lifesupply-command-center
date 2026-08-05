@@ -82,3 +82,6 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Client bundle secret scan (GATE-05)
+        run: node scripts/security/scan-bundle-secrets.mjs

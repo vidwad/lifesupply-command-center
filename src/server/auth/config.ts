@@ -20,7 +20,11 @@ type AppUser = {
 };
 
 export const authConfig: NextAuthConfig = {
-  session: { strategy: "jwt" },
+  // Phase 11C hardening: bound session lifetime explicitly instead of the
+  // Auth.js 30-day default. JWT sessions bake permissions in at login, so
+  // maxAge is also the upper bound on how long a suspension or permission
+  // change can lag — 24h absolute, refreshed hourly while active.
+  session: { strategy: "jwt", maxAge: 60 * 60 * 24, updateAge: 60 * 60 },
   pages: {
     signIn: "/login",
   },
