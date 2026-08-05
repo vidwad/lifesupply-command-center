@@ -5,7 +5,11 @@ import {
   ELIGIBILITY_POLICY_VERSION,
   evaluateMarketingEligibility,
   IMPLIED_CONSENT_WINDOW_DAYS,
+  isSuppressedConsentStatus,
+  partitionSnapshotByCurrentConsent,
+  SUPPRESSED_CONSENT_STATUSES,
   type EligibilityInput,
+  type SnapshotConsentState,
 } from "./marketing-eligibility";
 
 const NOW = new Date("2026-08-01T00:00:00Z");
@@ -144,6 +148,97 @@ describe("evaluateMarketingEligibility", () => {
 
   it("every verdict carries the policy version", () => {
     expect(evaluateMarketingEligibility(input(), NOW).policy).toBe(ELIGIBILITY_POLICY_VERSION);
+  });
+});
+
+describe("suppressed-status list (11D-08)", () => {
+  it("is exactly the three hard suppressions", () => {
+    expect([...SUPPRESSED_CONSENT_STATUSES].sort()).toEqual([
+      "cleaned",
+      "complained",
+      "unsubscribed",
+    ]);
+  });
+
+  it("every listed status is suppressed by the evaluator — the list and the policy cannot drift", () => {
+    for (const status of SUPPRESSED_CONSENT_STATUSES) {
+      expect(isSuppressedConsentStatus(status)).toBe(true);
+      const v = evaluateMarketingEligibility(
+        input({
+          consentStatus: status,
+          consentBasis: "express",
+          consentObtainedAt: new Date("2026-01-01"),
+          lastOrderAt: new Date("2026-07-01"),
+        }),
+        NOW,
+      );
+      expect(v.code).toBe("suppressed");
+    }
+    expect(isSuppressedConsentStatus("subscribed")).toBe(false);
+    expect(isSuppressedConsentStatus("pending")).toBe(false);
+  });
+});
+
+describe("partitionSnapshotByCurrentConsent (export-time re-check, 11D-08)", () => {
+  const current = (over: Partial<SnapshotConsentState> = {}): SnapshotConsentState => ({
+    email: "buyer@example.com",
+    consentStatus: "subscribed",
+    deletedAt: null,
+    ...over,
+  });
+
+  it("drops customers suppressed after the snapshot was frozen", () => {
+    for (const status of SUPPRESSED_CONSENT_STATUSES) {
+      const result = partitionSnapshotByCurrentConsent(
+        [{ id: "c1" }],
+        new Map([["c1", current({ consentStatus: status })]]),
+      );
+      expect(result.deliverable).toEqual([]);
+      expect(result.dropped).toEqual([{ id: "c1", reason: "suppressed" }]);
+    }
+  });
+
+  it("drops archived and missing customers", () => {
+    const result = partitionSnapshotByCurrentConsent(
+      [{ id: "archived" }, { id: "gone" }],
+      new Map([["archived", current({ deletedAt: new Date() })]]),
+    );
+    expect(result.deliverable).toEqual([]);
+    expect(result.dropped).toEqual([
+      { id: "archived", reason: "archived" },
+      { id: "gone", reason: "missing" },
+    ]);
+  });
+
+  it("uses the CURRENT email address, not the snapshot-time one", () => {
+    const result = partitionSnapshotByCurrentConsent(
+      [{ id: "c1" }],
+      new Map([["c1", current({ email: "new-address@example.com" })]]),
+    );
+    expect(result.deliverable).toEqual([{ id: "c1", email: "new-address@example.com" }]);
+  });
+
+  it("drops customers whose current email is missing or invalid", () => {
+    for (const email of [null, "", "  ", "not-an-email"]) {
+      const result = partitionSnapshotByCurrentConsent(
+        [{ id: "c1" }],
+        new Map([["c1", current({ email })]]),
+      );
+      expect(result.deliverable).toEqual([]);
+      expect(result.dropped).toEqual([{ id: "c1", reason: "invalid_email" }]);
+    }
+  });
+
+  it("keeps still-consenting customers deliverable", () => {
+    const result = partitionSnapshotByCurrentConsent(
+      [{ id: "keep" }, { id: "drop" }],
+      new Map([
+        ["keep", current()],
+        ["drop", current({ consentStatus: "unsubscribed" })],
+      ]),
+    );
+    expect(result.deliverable).toEqual([{ id: "keep", email: "buyer@example.com" }]);
+    expect(result.dropped).toEqual([{ id: "drop", reason: "suppressed" }]);
   });
 });
 

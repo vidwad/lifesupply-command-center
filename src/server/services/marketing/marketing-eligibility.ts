@@ -56,7 +56,20 @@ export type EligibilityVerdict = {
   policy: typeof ELIGIBILITY_POLICY_VERSION;
 };
 
-const SUPPRESSED_STATUSES = new Set(["unsubscribed", "cleaned", "complained"]);
+/**
+ * Hard-suppressed consent statuses. Single source of truth — the
+ * reactivation query filter and the Mailchimp export re-check must use the
+ * same list, or a status could be suppressed in one path and mailable in
+ * another (Phase 11D finding).
+ */
+export const SUPPRESSED_CONSENT_STATUSES = ["unsubscribed", "cleaned", "complained"] as const;
+
+const SUPPRESSED_STATUSES = new Set<string>(SUPPRESSED_CONSENT_STATUSES);
+
+/** True when the given ConsentStatus string is hard-suppressed. */
+export function isSuppressedConsentStatus(status: string): boolean {
+  return SUPPRESSED_STATUSES.has(status);
+}
 
 const day = 24 * 60 * 60 * 1000;
 
@@ -155,6 +168,67 @@ export type EligibilitySnapshot = {
   ineligible: number;
   byCode: Partial<Record<EligibilityCode, number>>;
 };
+
+// ---------------------------------------------------------------------------
+// Export-time suppression re-check (Phase 11D — row 11D-08).
+//
+// Campaign audience snapshots are frozen at draft time so approvers see
+// exactly who would receive the message. But a customer can unsubscribe,
+// bounce, or complain between approval and export — suppression must win at
+// the last egress point too, not only at drafting. `exportCampaignToMailchimp`
+// re-reads current consent and drops anyone no longer deliverable.
+// ---------------------------------------------------------------------------
+
+export type SnapshotConsentState = {
+  email: string | null;
+  /** ConsentStatus enum value as a string. */
+  consentStatus: string;
+  deletedAt: Date | null;
+};
+
+export type SnapshotDropReason = "suppressed" | "archived" | "missing" | "invalid_email";
+
+export type SnapshotPartition = {
+  /** Recipients still deliverable, carrying their CURRENT email address. */
+  deliverable: { id: string; email: string }[];
+  dropped: { id: string; reason: SnapshotDropReason }[];
+};
+
+/**
+ * Partition a frozen audience snapshot against the customers' current
+ * consent state. Pure — callers load `currentById` from the database.
+ * A snapshot entry whose customer row no longer exists is dropped
+ * ("missing"): we never send to a recipient we cannot re-verify.
+ */
+export function partitionSnapshotByCurrentConsent(
+  snapshot: { id: string }[],
+  currentById: Map<string, SnapshotConsentState>,
+): SnapshotPartition {
+  const deliverable: SnapshotPartition["deliverable"] = [];
+  const dropped: SnapshotPartition["dropped"] = [];
+  for (const entry of snapshot) {
+    const current = currentById.get(entry.id);
+    if (!current) {
+      dropped.push({ id: entry.id, reason: "missing" });
+      continue;
+    }
+    if (current.deletedAt) {
+      dropped.push({ id: entry.id, reason: "archived" });
+      continue;
+    }
+    if (isSuppressedConsentStatus(current.consentStatus)) {
+      dropped.push({ id: entry.id, reason: "suppressed" });
+      continue;
+    }
+    const email = current.email?.trim() ?? "";
+    if (!email.includes("@")) {
+      dropped.push({ id: entry.id, reason: "invalid_email" });
+      continue;
+    }
+    deliverable.push({ id: entry.id, email });
+  }
+  return { deliverable, dropped };
+}
 
 export function buildEligibilitySnapshot(
   verdicts: EligibilityVerdict[],

@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
+import { listStuckSyncRuns } from "@/server/services/sync/stuck-syncs";
 
 export type AutomationDashboard = {
   integrations: {
@@ -39,6 +40,16 @@ export type AutomationDashboard = {
     promptPreview: string;
     inputTokens: number | null;
     outputTokens: number | null;
+  }[];
+
+  /** `running` sync logs older than the stuck threshold (GATE-02 audit). */
+  stuckSyncs: {
+    id: string;
+    integrationName: string;
+    integrationType: string;
+    syncType: string;
+    startedAt: string;
+    ageHours: number;
   }[];
 
   totals: {
@@ -132,6 +143,16 @@ export async function getAutomationDashboard(): Promise<AutomationDashboard> {
     };
   });
 
+  const stuckRows = await listStuckSyncRuns();
+  const stuckSyncs = stuckRows.map((s) => ({
+    id: s.id,
+    integrationName: s.integrationName,
+    integrationType: s.integrationType,
+    syncType: s.syncType,
+    startedAt: s.startedAt.toISOString(),
+    ageHours: Math.round(s.ageMs / (60 * 60 * 1000)),
+  }));
+
   const totals = {
     integrationCount: integrations.length,
     configuredCount: integrations.filter((i) => i.status === "configured").length,
@@ -140,5 +161,5 @@ export async function getAutomationDashboard(): Promise<AutomationDashboard> {
     aiRunCount24h: recentAiRecords.filter((a) => a.createdAt >= since).length,
   };
 
-  return { integrations, recentSyncs, recentAiRuns, totals };
+  return { integrations, recentSyncs, recentAiRuns, stuckSyncs, totals };
 }

@@ -19,6 +19,7 @@ import { prisma } from "@/server/db/client";
 
 import {
   evaluateMarketingEligibility,
+  SUPPRESSED_CONSENT_STATUSES,
   type EligibilityCode,
   type EligibilityVerdict,
 } from "./marketing-eligibility";
@@ -65,7 +66,7 @@ export type ReactivationSummary = {
 };
 
 /** Statuses that are hard-suppressed — excluded at the query level. */
-const SUPPRESSED_STATUSES = ["unsubscribed", "cleaned", "complained"] as const;
+const SUPPRESSED_STATUSES = SUPPRESSED_CONSENT_STATUSES;
 
 function bucketize(score: number): ReactivationBucket {
   if (score >= 70) return "hot";

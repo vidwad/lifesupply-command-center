@@ -24,7 +24,11 @@ import { aiCall } from "@/server/services/ai/call";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { isFeatureOn, requireFeature } from "@/server/services/feature-flags";
 
-import { ELIGIBILITY_POLICY_VERSION, type EligibilityCode } from "./marketing-eligibility";
+import {
+  ELIGIBILITY_POLICY_VERSION,
+  partitionSnapshotByCurrentConsent,
+  type EligibilityCode,
+} from "./marketing-eligibility";
 import { listReactivationCandidates, type ReactivationBucket } from "./reactivation";
 
 export class CampaignTransitionError extends Error {
@@ -342,6 +346,23 @@ export async function exportCampaignToMailchimp(args: {
     ? (campaign.audienceSnapshot as Array<{ id: string; email: string | null; name: string }>)
     : [];
 
+  // Suppression must win at the last egress point, not only at draft time
+  // (11D-08): a customer can unsubscribe, bounce, or complain between
+  // approval and export. Re-read current consent and drop anyone no longer
+  // deliverable, using CURRENT email addresses rather than snapshot-time ones.
+  const currentRows = await prisma.customer.findMany({
+    where: { id: { in: audience.map((a) => a.id) } },
+    select: { id: true, email: true, consentStatus: true, deletedAt: true },
+  });
+  const partition = partitionSnapshotByCurrentConsent(
+    audience,
+    new Map(currentRows.map((c) => [c.id, c])),
+  );
+  const droppedByReason: Record<string, number> = {};
+  for (const d of partition.dropped) {
+    droppedByReason[d.reason] = (droppedByReason[d.reason] ?? 0) + 1;
+  }
+
   if (!configured) {
     // ---- Stub path ----
     const stubExternalId = `stub-${Date.now()}`;
@@ -364,6 +385,8 @@ export async function exportCampaignToMailchimp(args: {
         reason: "no mailchimp credentials configured",
         mailchimpExternalId: stubExternalId,
         audienceCount: audience.length,
+        deliverableCount: partition.deliverable.length,
+        droppedByReason,
       },
     });
     return;
@@ -371,13 +394,11 @@ export async function exportCampaignToMailchimp(args: {
 
   // ---- Live path ----
   const { client, config } = configured;
-  const recipientEmails = audience
-    .map((a) => a.email)
-    .filter((e): e is string => typeof e === "string" && e.includes("@"));
+  const recipientEmails = partition.deliverable.map((d) => d.email);
 
   if (recipientEmails.length === 0) {
     throw new MailchimpExportError(
-      "Audience snapshot has no valid email addresses — refusing to send.",
+      "No deliverable recipients remain after the export-time consent re-check — refusing to export.",
     );
   }
 
@@ -455,7 +476,9 @@ export async function exportCampaignToMailchimp(args: {
         stub: false,
         mailchimpExternalId: created.id,
         mailchimpSegmentId: segment.id,
-        audienceCount: recipientEmails.length,
+        audienceCount: audience.length,
+        deliverableCount: recipientEmails.length,
+        droppedByReason,
       },
     });
   } catch (err) {
@@ -473,7 +496,7 @@ export async function exportCampaignToMailchimp(args: {
       action: "campaign.mailchimp_export_failed",
       entityType: "campaign",
       entityId: campaign.id,
-      afterData: { error: message, audienceCount: recipientEmails.length },
+      afterData: { error: message, deliverableCount: recipientEmails.length, droppedByReason },
     });
     throw new MailchimpExportError(`Mailchimp rejected the export: ${message}`);
   }
