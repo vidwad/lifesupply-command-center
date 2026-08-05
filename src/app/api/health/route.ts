@@ -87,6 +87,9 @@ export async function GET() {
 
   const body = {
     status,
+    // Which stack answered (staging/production). Non-sensitive; set via the
+    // DEPLOY_ENV env var in the Render blueprints (Phase 11B).
+    environment: process.env.DEPLOY_ENV ?? "unknown",
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor((Date.now() - STARTED_AT) / 1000),
     checks,
