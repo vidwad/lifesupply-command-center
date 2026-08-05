@@ -296,6 +296,16 @@ async function seedRolePermissions(prisma: PrismaClient) {
 
 async function seedSuperAdmin(prisma: PrismaClient) {
   const email = (process.env.DEV_ADMIN_EMAIL ?? "admin@lifesupply.local").toLowerCase();
+
+  // Phase 11C hardening (GATE-09): the well-known dev fallback password must
+  // never reach a deployed environment. Production/staging seeding requires
+  // an explicit DEV_ADMIN_PASSWORD.
+  const deployed = process.env.NODE_ENV === "production" || Boolean(process.env.DEPLOY_ENV);
+  if (deployed && !process.env.DEV_ADMIN_PASSWORD) {
+    throw new Error(
+      "Refusing to seed the admin user with the dev fallback password in a deployed environment. Set DEV_ADMIN_PASSWORD explicitly.",
+    );
+  }
   const password = process.env.DEV_ADMIN_PASSWORD ?? "DevAdmin!2026";
 
   const passwordHash = await hash(password, 12);

@@ -11,7 +11,12 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     .toLowerCase()
     .trim();
   const password = String(formData.get("password") ?? "");
-  const redirectTo = String(formData.get("redirectTo") ?? "/dashboard");
+  // Phase 11C hardening: accept only same-origin path redirects. Auth.js's
+  // default redirect callback already rejects cross-origin URLs; this makes
+  // the constraint explicit and blocks protocol-relative ("//host") values.
+  const rawRedirect = String(formData.get("redirectTo") ?? "/dashboard");
+  const redirectTo =
+    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/dashboard";
 
   if (!email || !password) {
     return { error: "Email and password are required." };
