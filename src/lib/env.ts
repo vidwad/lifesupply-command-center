@@ -8,6 +8,8 @@ const envSchema = z.object({
    * an operator can always confirm which stack answered (Phase 11B).
    */
   DEPLOY_ENV: z.string().optional(),
+  /** pino log level for the structured logger (Phase 11E). */
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
 
   DATABASE_URL: z.string().url().optional(),

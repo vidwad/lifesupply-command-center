@@ -69,6 +69,9 @@ async function checkFeatureFlags(): Promise<Check> {
     FEATURE_FLAGS.QUICKBOOKS_WRITEBACKS,
     FEATURE_FLAGS.AI_ACTIONS,
     FEATURE_FLAGS.MAILCHIMP_SEND,
+    // External-action flag that was missing from this probe list until
+    // Phase 11E — the staging smoke test alerts on any of these being ON.
+    FEATURE_FLAGS.INVESTOR_DISTRIBUTION,
   ]) {
     if (flags[key]) risky.push(key);
   }

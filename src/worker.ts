@@ -25,6 +25,8 @@
 import { connect } from "inngest/connect";
 
 import { inngest } from "@/server/inngest/client";
+import { logger } from "@/server/logger";
+import { captureException } from "@/server/logger/error-tracking";
 import {
   syncBcCustomersFull,
   syncBcCustomersIncremental,
@@ -44,6 +46,19 @@ import { syncGa4DailyMetrics } from "@/server/inngest/functions/ga4/sync-daily";
 import { runSupplierCheck } from "@/server/inngest/functions/supplier/run-check";
 import { delaySweep } from "@/server/inngest/functions/operations/delay-sweep";
 import { helloWorld } from "@/server/inngest/functions/hello";
+
+// Process-level safety nets (Phase 11E — row 11E-06). Inngest handles
+// per-run failures; these catch everything outside a run so a crashing
+// worker leaves a structured, alertable log line instead of dying silently.
+process.on("unhandledRejection", (reason) => {
+  captureException(reason, { source: "worker.unhandledRejection" });
+});
+process.on("uncaughtException", (err) => {
+  captureException(err, { source: "worker.uncaughtException" });
+  // State after an uncaught exception is undefined — exit and let Render
+  // restart the worker; in-flight Inngest runs retry automatically.
+  process.exit(1);
+});
 
 async function main(): Promise<void> {
   const connection = await connect({
@@ -69,16 +84,19 @@ async function main(): Promise<void> {
     ],
   });
 
-  console.log("[worker] connected to Inngest, awaiting work…");
+  logger.info(
+    { deployEnv: process.env.DEPLOY_ENV ?? "unknown" },
+    "[worker] connected to Inngest, awaiting work…",
+  );
 
   // Block forever until the connection is closed (SIGINT/SIGTERM are
   // handled by the SDK automatically and trigger graceful shutdown).
   await connection.closed;
 
-  console.log("[worker] connection closed, exiting.");
+  logger.info("[worker] connection closed, exiting.");
 }
 
 main().catch((err) => {
-  console.error("[worker] fatal:", err);
+  captureException(err, { source: "worker.fatal" });
   process.exit(1);
 });

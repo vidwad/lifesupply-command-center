@@ -97,6 +97,7 @@ describe("QuickBooks stays read-only", () => {
         join("server", "services", "feature-flags", "kill-switch.ts"),
         join("server", "security", "chokepoints.test.ts"),
         join("server", "security", "qbo-read-only.test.ts"),
+        join("server", "security", "reliability-canaries.test.ts"),
         // Health surfaces high-risk flag STATE (read-only) for the smoke test.
         join("app", "api", "health", "route.ts"),
       ].map((p) => p),
