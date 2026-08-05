@@ -580,16 +580,19 @@ Triage in order:
    deploy" is not needed; a plain restart re-establishes the Connect
    session). In-flight Inngest runs retry automatically.
 
-**Clearing a stuck log after the cause is fixed:** the row is safe to
-leave — a fresh sync creates a new log. If a `running` row is misleading
-operators, mark it `failed` manually (it has no side effects beyond
-display):
+**Clearing a stuck log after the cause is fixed:** use the **Automation
+Center stuck-sync card** (Phase 11D): any log still `running` after 6 hours
+appears there, and "Mark stuck syncs failed" dispositions them with an
+audit row (`sync.stuck_runs_reaped`) — no SQL needed. This is the GATE-02
+evidence path; see `docs/23_INTEGRATION_CERTIFICATION_WORKBOOK.md` §8.
+
+SQL fallback if the UI is unreachable (same effect, but not audit-logged):
 
 ```sql
 UPDATE integration_sync_logs
 SET status = 'failed', "completedAt" = now(),
     "errorSummary" = 'manually closed — worker outage'
-WHERE status = 'running' AND "startedAt" < now() - interval '1 hour';
+WHERE status = 'running' AND "startedAt" < now() - interval '6 hours';
 ```
 
 Full worker + Inngest deployment setup lives in
