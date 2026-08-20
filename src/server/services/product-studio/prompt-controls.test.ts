@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyOperatorInstructions,
+  buildEffectivePrompt,
+  MAX_QA_CORRECTIONS,
   detectAspect,
   MAX_OPERATOR_INSTRUCTIONS,
   normaliseOperatorInstructions,
@@ -107,5 +109,64 @@ describe("applyOperatorInstructions", () => {
   it("places operator text after the lock so the lock is not overridden by position", () => {
     const out = applyOperatorInstructions(base, "zzz");
     expect(out.indexOf("AUTHORITATIVE PRODUCT LOCK")).toBeLessThan(out.indexOf("zzz"));
+  });
+});
+
+describe("buildEffectivePrompt", () => {
+  const base = `BASE PROMPT
+AUTHORITATIVE PRODUCT LOCK ...`;
+  // Verbatim from a live QA result (SureComfort insulin syringes, composition 2).
+  const corrections = [
+    "Replace the syringe with one that uses the correct U-100 3/10 cc graduation layout.",
+    "Use a strict top-down (90°) camera angle with minimal perspective.",
+  ];
+
+  it("returns the base prompt when there is nothing to add", () => {
+    expect(buildEffectivePrompt({ basePrompt: base })).toBe(base);
+    expect(
+      buildEffectivePrompt({ basePrompt: base, qaCorrections: [], operatorInstructions: "" }),
+    ).toBe(base);
+  });
+
+  it("feeds the previous revision's QA corrections back in, numbered", () => {
+    // Regression: requiredCorrections were displayed and then discarded, so a
+    // regeneration repeated the same mistakes the QA model had just described.
+    const out = buildEffectivePrompt({ basePrompt: base, qaCorrections: corrections });
+    expect(out).toContain("REQUIRED CORRECTIONS FROM THE PREVIOUS REVISION");
+    expect(out).toContain("1. Replace the syringe");
+    expect(out).toContain("2. Use a strict top-down");
+  });
+
+  it("forbids corrections being used to authorise invention", () => {
+    // QA output is model-authored text. A correction like "show the half-unit
+    // markings" must not license drawing markings absent from the references.
+    const out = buildEffectivePrompt({ basePrompt: base, qaCorrections: corrections });
+    expect(out).toContain("never authorise adding anything absent from the");
+    expect(out).toContain("omit that element and leave it out of the frame");
+  });
+
+  it("ignores blank entries and caps the list", () => {
+    const many = Array.from({ length: MAX_QA_CORRECTIONS + 5 }, (_, i) => `fix ${i + 1}`);
+    const out = buildEffectivePrompt({ basePrompt: base, qaCorrections: ["", "   ", ...many] });
+    expect(out).toContain(`${MAX_QA_CORRECTIONS}. fix ${MAX_QA_CORRECTIONS}`);
+    expect(out).not.toContain(`${MAX_QA_CORRECTIONS + 1}. fix`);
+  });
+
+  it("puts operator instructions after QA corrections so a human can override", () => {
+    const out = buildEffectivePrompt({
+      basePrompt: base,
+      qaCorrections: corrections,
+      operatorInstructions: "Omit the loose syringe entirely; box only.",
+    });
+    expect(out.indexOf("REQUIRED CORRECTIONS")).toBeLessThan(out.indexOf("OPERATOR INSTRUCTIONS"));
+    expect(out).toContain("Omit the loose syringe entirely; box only.");
+  });
+
+  it("tolerates a malformed corrections array", () => {
+    const out = buildEffectivePrompt({
+      basePrompt: base,
+      qaCorrections: [null, 42, "keep this"] as unknown as string[],
+    });
+    expect(out).toContain("1. keep this");
   });
 });

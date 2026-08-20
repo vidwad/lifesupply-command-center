@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import {
-  applyOperatorInstructions,
+  buildEffectivePrompt,
   detectAspect,
 } from "@/server/services/product-studio/prompt-controls";
 
@@ -49,6 +49,14 @@ function identityFromSummary(summary: unknown): QaIdentity | null {
     modelIdentifiers: strings(record.modelIdentifiers),
     conditionNotes: strings(record.conditionNotes),
   };
+}
+
+/** Pulls requiredCorrections out of a stored QA result, defensively. */
+function requiredCorrectionsFrom(qaResult: unknown): string[] {
+  if (!qaResult || typeof qaResult !== "object" || Array.isArray(qaResult)) return [];
+  const value = (qaResult as Record<string, unknown>).requiredCorrections;
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
 }
 
 /** Render the stored composition attributes JSON as QA brief lines. */
@@ -276,10 +284,15 @@ export const generateProductStudioImage = inngest.createFunction(
       // guidance is layered on here so each revision records the exact prompt
       // that produced it.
       const attributes = (composition.attributes ?? {}) as Record<string, unknown>;
-      const effectivePrompt = applyOperatorInstructions(
-        composition.prompt,
-        data.operatorInstructions,
-      );
+      // Close the QA loop: the corrections the QA model wrote for the rejected
+      // revision are fed back into the regeneration instead of being displayed
+      // and discarded. The QA prompt asks for "corrections a regeneration must
+      // make"; until now nothing made the regeneration aware of them.
+      const effectivePrompt = buildEffectivePrompt({
+        basePrompt: composition.prompt,
+        qaCorrections: requiredCorrectionsFrom(existing?.qaResult),
+        operatorInstructions: data.operatorInstructions,
+      });
       const generated = await generateProductImage({
         prompt: effectivePrompt,
         references: project.assets,

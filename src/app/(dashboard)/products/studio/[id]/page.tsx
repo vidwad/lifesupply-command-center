@@ -309,6 +309,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                       className="w-full rounded-md border bg-background p-2 text-xs"
                                     />
                                     <p className="text-xs text-muted-foreground">
+                                      {asStrings(qa?.requiredCorrections).length > 0
+                                        ? `The ${asStrings(qa?.requiredCorrections).length} required correction(s) above are applied automatically — add anything extra here. `
+                                        : null}
                                       Changes staging and framing only. Product identity and visible
                                       condition stay locked to your source photographs.
                                     </p>
