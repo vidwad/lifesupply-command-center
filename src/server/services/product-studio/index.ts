@@ -24,14 +24,26 @@ function sanitizeFileName(name: string): string {
   return safe || "reference-image";
 }
 
-export async function createProductStudioProject(args: {
-  actorUserId: string;
-  productId?: string | null;
+export type PreparedSourceImage = {
+  fileName: string;
+  contentType: string;
+  bytes: number;
+  /** Buffer over a plain ArrayBuffer — the shape Prisma's Bytes field requires. */
+  data: Buffer<ArrayBuffer>;
+  contentHash: string;
+};
+
+/**
+ * Server-side intake validation (pure with respect to the database). Every
+ * rule is enforced here regardless of what the browser form allowed:
+ * text bounds, 1–4 files, JPEG/PNG/WebP only, non-empty, ≤ 8 MiB each.
+ * Each accepted file gets a SHA-256 content hash for provenance.
+ */
+export async function prepareProductStudioIntake(args: {
   title: string;
   shortDescription: string;
   files: File[];
-}): Promise<string> {
-  await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
+}): Promise<{ title: string; shortDescription: string; prepared: PreparedSourceImage[] }> {
   const title = args.title.trim();
   const shortDescription = args.shortDescription.trim();
   if (title.length < 3 || title.length > 240) {
@@ -49,7 +61,10 @@ export async function createProductStudioProject(args: {
       if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
         throw new ProductStudioInputError(`${file.name}: use JPEG, PNG, or WebP.`);
       }
-      if (file.size < 1 || file.size > MAX_SOURCE_BYTES) {
+      if (file.size < 1) {
+        throw new ProductStudioInputError(`${file.name}: the file is empty.`);
+      }
+      if (file.size > MAX_SOURCE_BYTES) {
         throw new ProductStudioInputError(`${file.name}: each image must be 8 MiB or smaller.`);
       }
       const data = Buffer.from(await file.arrayBuffer());
@@ -62,6 +77,18 @@ export async function createProductStudioProject(args: {
       };
     }),
   );
+  return { title, shortDescription, prepared };
+}
+
+export async function createProductStudioProject(args: {
+  actorUserId: string;
+  productId?: string | null;
+  title: string;
+  shortDescription: string;
+  files: File[];
+}): Promise<string> {
+  await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
+  const { title, shortDescription, prepared } = await prepareProductStudioIntake(args);
 
   if (args.productId) {
     const exists = await prisma.product.count({ where: { id: args.productId, deletedAt: null } });
@@ -248,6 +275,9 @@ export async function reviewProductStudioAsset(args: {
   actorUserId: string;
   decision: "approved" | "rejected";
 }): Promise<void> {
+  // Fail closed with the rest of the workflow when the module is disabled;
+  // stored records stay intact and readable either way.
+  await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
   const asset = await prisma.productStudioAsset.findUniqueOrThrow({ where: { id: args.assetId } });
   if (asset.kind !== "generated") {
     throw new ProductStudioInputError("Only generated draft images can be approved or rejected.");
@@ -287,21 +317,35 @@ export async function reviewProductStudioAsset(args: {
 }
 
 export function compositionAttributes(input: {
+  purpose: string;
   layout: string;
   background: string;
   lighting: string;
   cameraAngle: string;
+  productOrientation: string;
   productPlacement: string;
+  shadowTreatment: string;
+  cropAndNegativeSpace: string;
+  depthOfField: string;
   props: string[];
+  accessoriesExclude: string[];
+  conditionMustShow: string[];
   negativeConstraints: string[];
 }): Prisma.InputJsonValue {
   return {
+    purpose: input.purpose,
     layout: input.layout,
     background: input.background,
     lighting: input.lighting,
     cameraAngle: input.cameraAngle,
+    productOrientation: input.productOrientation,
     productPlacement: input.productPlacement,
+    shadowTreatment: input.shadowTreatment,
+    cropAndNegativeSpace: input.cropAndNegativeSpace,
+    depthOfField: input.depthOfField,
     props: input.props,
+    accessoriesExclude: input.accessoriesExclude,
+    conditionMustShow: input.conditionMustShow,
     negativeConstraints: input.negativeConstraints,
   };
 }

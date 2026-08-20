@@ -72,6 +72,9 @@ async function checkFeatureFlags(): Promise<Check> {
     // External-action flag that was missing from this probe list until
     // Phase 11E — the staging smoke test alerts on any of these being ON.
     FEATURE_FLAGS.INVESTOR_DISTRIBUTION,
+    // Spends OpenAI image-generation credits; kill-switch covered, so the
+    // health probe must observe it like the other kill-set flags.
+    FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION,
   ]) {
     if (flags[key]) risky.push(key);
   }

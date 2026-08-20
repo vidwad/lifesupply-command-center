@@ -97,6 +97,8 @@ CREATE TABLE "product_studio_price_observations" (
   "price" DECIMAL(12,2) NOT NULL,
   "currency" TEXT NOT NULL,
   "condition" TEXT,
+  "includedAccessories" TEXT,
+  "notes" TEXT,
   "observedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "product_studio_price_observations_pkey" PRIMARY KEY ("id")
 );

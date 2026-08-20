@@ -78,11 +78,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
     flags[FEATURE_FLAGS.PRODUCT_STUDIO] &&
     generatedAssets.length === 0 &&
     ["draft", "failed"].includes(project.status);
-  const canGenerate =
-    flags[FEATURE_FLAGS.PRODUCT_STUDIO] &&
-    flags[FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION] &&
-    Boolean(nextComposition) &&
-    !busy;
+  const canUseGeneration =
+    flags[FEATURE_FLAGS.PRODUCT_STUDIO] && flags[FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION];
+  const canGenerate = canUseGeneration && Boolean(nextComposition) && !busy;
   const summary = asRecord(project.researchSummary);
   const identity = asRecord(summary?.identifiedProduct);
   const benchmark = asRecord(summary?.benchmarkListing);
@@ -169,6 +167,10 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                       const asset = generatedAssets.find(
                         (item) => item.compositionSlot === composition.slot,
                       );
+                      const priorRevisions = allGeneratedAssets.filter(
+                        (item) =>
+                          item.compositionSlot === composition.slot && item.id !== asset?.id,
+                      );
                       const attributes = asRecord(composition.attributes);
                       const qa = asRecord(asset?.qaResult);
                       return (
@@ -223,6 +225,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                               <div className="rounded-md bg-muted p-3 text-xs">
                                 <p className="font-medium">
                                   Automated QA: {String(qa.verdict ?? "needs review")}
+                                  {typeof qa.confidence === "number"
+                                    ? ` (${Math.round(Number(qa.confidence) * 100)}% confident)`
+                                    : ""}
                                 </p>
                                 <p className="mt-1 text-muted-foreground">
                                   Identity {Math.round(Number(qa.identityScore ?? 0) * 100)}% ·
@@ -235,10 +240,20 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                     • {difference}
                                   </p>
                                 ))}
+                                {asStrings(qa.requiredCorrections).length > 0 ? (
+                                  <div className="mt-2">
+                                    <p className="font-medium">Required corrections</p>
+                                    {asStrings(qa.requiredCorrections).map((correction) => (
+                                      <p key={correction} className="mt-1 text-muted-foreground">
+                                        • {correction}
+                                      </p>
+                                    ))}
+                                  </div>
+                                ) : null}
                               </div>
                             ) : null}
                             {asset ? (
-                              <div className="flex gap-2">
+                              <div className="flex flex-wrap gap-2">
                                 <form action={reviewAssetAction}>
                                   <input type="hidden" name="projectId" value={project.id} />
                                   <input type="hidden" name="assetId" value={asset.id} />
@@ -255,7 +270,54 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                     <X /> Reject
                                   </Button>
                                 </form>
+                                {asset.status === "rejected" && canUseGeneration && !busy ? (
+                                  <form action={queueGenerationAction}>
+                                    <input type="hidden" name="projectId" value={project.id} />
+                                    <input type="hidden" name="slot" value={composition.slot} />
+                                    <Button type="submit" size="sm" variant="outline">
+                                      <RefreshCw /> Regenerate (r{asset.revision + 1})
+                                    </Button>
+                                  </form>
+                                ) : null}
                               </div>
+                            ) : null}
+                            {priorRevisions.length > 0 ? (
+                              <details className="text-xs">
+                                <summary className="cursor-pointer font-medium">
+                                  Revision history ({priorRevisions.length} prior)
+                                </summary>
+                                <ul className="mt-2 space-y-1">
+                                  {priorRevisions.map((prior) => {
+                                    const priorQa = asRecord(prior.qaResult);
+                                    return (
+                                      <li
+                                        key={prior.id}
+                                        className="flex items-center justify-between gap-2 rounded-md border p-2"
+                                      >
+                                        <span className="text-muted-foreground">
+                                          r{prior.revision} · {prior.status.replaceAll("_", " ")}
+                                          {priorQa
+                                            ? ` · QA ${String(priorQa.verdict ?? "—")}`
+                                            : ""}{" "}
+                                          ·{" "}
+                                          {prior.createdAt
+                                            .toISOString()
+                                            .slice(0, 16)
+                                            .replace("T", " ")}
+                                        </span>
+                                        <a
+                                          href={`/api/product-studio/assets/${prior.id}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-primary hover:underline"
+                                        >
+                                          View
+                                        </a>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </details>
                             ) : null}
                             <details className="text-xs">
                               <summary className="cursor-pointer font-medium">
@@ -402,7 +464,15 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                         <span className="font-medium">{observation.sellerName}</span>
                         <span className="block text-xs text-muted-foreground">
                           {observation.condition ?? "Condition not stated"}
+                          {observation.includedAccessories
+                            ? ` · incl. ${observation.includedAccessories}`
+                            : ""}
                         </span>
+                        {observation.notes ? (
+                          <span className="block text-xs text-muted-foreground">
+                            {observation.notes}
+                          </span>
+                        ) : null}
                       </span>
                       <span className="whitespace-nowrap tabular-nums">
                         {formatCurrency(Number(observation.price), observation.currency)}

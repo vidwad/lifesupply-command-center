@@ -14,12 +14,51 @@ import {
   researchProduct,
 } from "@/server/services/product-studio/openai";
 import { compileProductImagePrompt } from "@/server/services/product-studio/prompts";
+import { planGenerationRevision } from "@/server/services/product-studio/revisions";
 
 type ResearchEvent = { projectId: string; actorUserId: string };
 type GenerateEvent = ResearchEvent & { slot: number };
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 4000) : "Unknown Product Studio error";
+}
+
+type QaIdentity = {
+  brand: string;
+  model: string;
+  modelIdentifiers: string[];
+  conditionNotes: string[];
+};
+
+/** Defensive read of the stored identifiedProduct summary for the QA call. */
+function identityFromSummary(summary: unknown): QaIdentity | null {
+  if (!summary || typeof summary !== "object" || Array.isArray(summary)) return null;
+  const identified = (summary as Record<string, unknown>).identifiedProduct;
+  if (!identified || typeof identified !== "object" || Array.isArray(identified)) return null;
+  const record = identified as Record<string, unknown>;
+  if (typeof record.brand !== "string" || typeof record.model !== "string") return null;
+  const strings = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return {
+    brand: record.brand,
+    model: record.model,
+    modelIdentifiers: strings(record.modelIdentifiers),
+    conditionNotes: strings(record.conditionNotes),
+  };
+}
+
+/** Render the stored composition attributes JSON as QA brief lines. */
+function briefLinesFromAttributes(attributes: unknown): string[] {
+  if (!attributes || typeof attributes !== "object" || Array.isArray(attributes)) return [];
+  const lines: string[] = [];
+  for (const [key, value] of Object.entries(attributes as Record<string, unknown>)) {
+    if (typeof value === "string" && value.trim()) {
+      lines.push(`${key}: ${value}`);
+    } else if (Array.isArray(value) && value.length > 0) {
+      lines.push(`${key}: ${value.filter((item) => typeof item === "string").join("; ")}`);
+    }
+  }
+  return lines;
 }
 
 export const researchProductStudioProject = inngest.createFunction(
@@ -85,6 +124,8 @@ export const researchProductStudioProject = inngest.createFunction(
             price: observation.price,
             currency: observation.currency.toUpperCase(),
             condition: observation.condition,
+            includedAccessories: observation.includedAccessories,
+            notes: observation.notes,
           })),
         });
         await tx.productStudioComposition.createMany({
@@ -119,6 +160,8 @@ export const researchProductStudioProject = inngest.createFunction(
               benchmarkListing: research.benchmarkListing,
               keyDetails: research.optimizedListing.keyDetails,
               methodology: research.methodology,
+              marketBasis: research.market.basis,
+              priceObservationCount: research.market.observations.length,
             } as Prisma.InputJsonValue,
             warnings,
             status: "ready_to_generate",
@@ -213,10 +256,11 @@ export const generateProductStudioImage = inngest.createFunction(
       where: { projectId: project.id, kind: "generated", compositionSlot: data.slot },
       orderBy: { revision: "desc" },
     });
-    if (existing && existing.status !== "rejected") {
-      return { assetId: existing.id, status: existing.status, reused: true };
+    const plan = planGenerationRevision(existing);
+    if (plan.action === "reuse") {
+      return { assetId: existing?.id, status: existing?.status, reused: true };
     }
-    const revision = (existing?.revision ?? 0) + 1;
+    const revision = plan.revision;
 
     await prisma.productStudioComposition.update({
       where: { id: composition.id },
@@ -231,6 +275,8 @@ export const generateProductStudioImage = inngest.createFunction(
       const qa = await qaProductImage({
         title: project.confirmedTitle ?? project.title,
         compositionName: composition.name,
+        compositionBrief: briefLinesFromAttributes(composition.attributes),
+        identity: identityFromSummary(project.researchSummary),
         references: project.assets,
         generated,
       });

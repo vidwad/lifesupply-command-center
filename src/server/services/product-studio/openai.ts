@@ -101,13 +101,23 @@ const researchJsonSchema = {
           items: {
             type: "object",
             additionalProperties: false,
-            required: ["sellerName", "url", "price", "currency", "condition"],
+            required: [
+              "sellerName",
+              "url",
+              "price",
+              "currency",
+              "condition",
+              "includedAccessories",
+              "notes",
+            ],
             properties: {
               sellerName: { type: "string" },
               url: { type: "string" },
               price: { type: "number", minimum: 0 },
               currency: { type: "string" },
               condition: { anyOf: [{ type: "string" }, { type: "null" }] },
+              includedAccessories: { anyOf: [{ type: "string" }, { type: "null" }] },
+              notes: { anyOf: [{ type: "string" }, { type: "null" }] },
             },
           },
         },
@@ -142,6 +152,7 @@ const researchJsonSchema = {
         required: [
           "slot",
           "name",
+          "purpose",
           "sourceSeller",
           "sourceUrl",
           "referenceImageUrl",
@@ -150,13 +161,20 @@ const researchJsonSchema = {
           "background",
           "lighting",
           "cameraAngle",
+          "productOrientation",
           "productPlacement",
+          "shadowTreatment",
+          "cropAndNegativeSpace",
+          "depthOfField",
           "props",
+          "accessoriesExclude",
+          "conditionMustShow",
           "negativeConstraints",
         ],
         properties: {
           slot: { type: "integer", minimum: 1, maximum: 4 },
           name: { type: "string" },
+          purpose: { type: "string" },
           sourceSeller: { anyOf: [{ type: "string" }, { type: "null" }] },
           sourceUrl: { anyOf: [{ type: "string" }, { type: "null" }] },
           referenceImageUrl: { anyOf: [{ type: "string" }, { type: "null" }] },
@@ -165,8 +183,14 @@ const researchJsonSchema = {
           background: { type: "string" },
           lighting: { type: "string" },
           cameraAngle: { type: "string" },
+          productOrientation: { type: "string" },
           productPlacement: { type: "string" },
+          shadowTreatment: { type: "string" },
+          cropAndNegativeSpace: { type: "string" },
+          depthOfField: { type: "string" },
           props: { type: "array", items: { type: "string" } },
+          accessoriesExclude: { type: "array", items: { type: "string" } },
+          conditionMustShow: { type: "array", items: { type: "string" } },
           negativeConstraints: { type: "array", items: { type: "string" } },
         },
       },
@@ -186,7 +210,9 @@ const qaJsonSchema = {
     "textIntegrity",
     "verdict",
     "differences",
+    "requiredCorrections",
     "warnings",
+    "confidence",
   ],
   properties: {
     identityScore: { type: "number", minimum: 0, maximum: 1 },
@@ -195,7 +221,9 @@ const qaJsonSchema = {
     textIntegrity: { type: "string", enum: ["pass", "not_applicable", "fail"] },
     verdict: { type: "string", enum: ["pass", "needs_review", "reject"] },
     differences: { type: "array", items: { type: "string" } },
+    requiredCorrections: { type: "array", items: { type: "string" } },
     warnings: { type: "array", items: { type: "string" } },
+    confidence: { type: "number", minimum: 0, maximum: 1 },
   },
 } as const;
 
@@ -211,7 +239,7 @@ function parseJson<T>(raw: string, parser: { parse: (value: unknown) => T }): T 
   return parser.parse(JSON.parse(trimmed));
 }
 
-function collectHttpUrls(value: unknown, found = new Set<string>()): Set<string> {
+function collectHttpUrls(value: unknown, found: Set<string>): Set<string> {
   if (typeof value === "string") {
     if (/^https?:\/\//i.test(value)) found.add(value);
     return found;
@@ -226,8 +254,64 @@ function collectHttpUrls(value: unknown, found = new Set<string>()): Set<string>
   return found;
 }
 
+/**
+ * Collect the URLs that constitute actual web-search evidence: the
+ * `web_search_call` tool items (queries, actions, and included sources) and
+ * the API-attached `url_citation` annotations on message content. The
+ * model-authored message TEXT is deliberately excluded — a URL the model
+ * merely wrote in its answer is a claim, not evidence, and must never be
+ * allowed to vouch for itself.
+ */
+export function collectWebSearchEvidenceUrls(output: unknown): string[] {
+  const found = new Set<string>();
+  if (!Array.isArray(output)) return [];
+  for (const item of output) {
+    if (!item || typeof item !== "object") continue;
+    const record = item as Record<string, unknown>;
+    if (record.type === "web_search_call") {
+      collectHttpUrls(record, found);
+      continue;
+    }
+    if (record.type === "message" && Array.isArray(record.content)) {
+      for (const part of record.content) {
+        if (!part || typeof part !== "object") continue;
+        const annotations = (part as Record<string, unknown>).annotations;
+        if (!Array.isArray(annotations)) continue;
+        for (const annotation of annotations) {
+          if (!annotation || typeof annotation !== "object") continue;
+          const a = annotation as Record<string, unknown>;
+          if (a.type === "url_citation" && typeof a.url === "string") {
+            collectHttpUrls(a.url, found);
+          }
+        }
+      }
+    }
+  }
+  return [...found];
+}
+
 function hostname(value: string): string {
   return new URL(value).hostname.replace(/^www\./i, "").toLowerCase();
+}
+
+/**
+ * Return the cited seller domains that are NOT backed by web-search
+ * evidence. Verification is by registrable host (www-insensitive): the model
+ * may cite a canonical product URL while the evidence recorded a variant of
+ * the same page, but it may never introduce a seller domain the search
+ * results do not contain.
+ */
+export function findUnsupportedCitedDomains(
+  research: ProductStudioResearch,
+  evidenceUrls: string[],
+): string[] {
+  const verifiedHosts = new Set(evidenceUrls.map(hostname));
+  const cited = [research.benchmarkListing, ...research.sources, ...research.market.observations];
+  return [
+    ...new Set(
+      cited.map((source) => hostname(source.url)).filter((host) => !verifiedHosts.has(host)),
+    ),
+  ];
 }
 
 export async function researchProduct(args: {
@@ -272,21 +356,14 @@ export async function researchProduct(args: {
   const rawOutput = response.output_text.trim();
   if (!rawOutput) throw new Error("OpenAI returned an empty product research response.");
   const result = parseJson(rawOutput, productStudioResearchSchema);
-  const verifiedSourceUrls = [...collectHttpUrls(response.output)];
-  const verifiedHosts = new Set(verifiedSourceUrls.map(hostname));
-  if (verifiedHosts.size === 0) {
+  const verifiedSourceUrls = collectWebSearchEvidenceUrls(response.output);
+  if (verifiedSourceUrls.length === 0) {
     throw new Error("Research returned no verifiable web-search source URLs.");
   }
-  const unsupported = [
-    result.benchmarkListing,
-    ...result.sources,
-    ...result.market.observations,
-  ].filter((source) => !verifiedHosts.has(hostname(source.url)));
+  const unsupported = findUnsupportedCitedDomains(result, verifiedSourceUrls);
   if (unsupported.length > 0) {
     throw new Error(
-      `Research cited source domains that were not present in the web-search evidence: ${[
-        ...new Set(unsupported.map((source) => hostname(source.url))),
-      ].join(", ")}`,
+      `Research cited source domains that were not present in the web-search evidence: ${unsupported.join(", ")}`,
     );
   }
 
@@ -342,6 +419,13 @@ export async function generateProductImage(args: {
 export async function qaProductImage(args: {
   title: string;
   compositionName: string;
+  compositionBrief: string[];
+  identity: {
+    brand: string;
+    model: string;
+    modelIdentifiers: string[];
+    conditionNotes: string[];
+  } | null;
   references: ReferenceAsset[];
   generated: GeneratedImage;
 }): Promise<{ result: ProductStudioQa; modelName: string; rawOutput: string; usage: Usage }> {
@@ -351,6 +435,8 @@ export async function qaProductImage(args: {
   const prompt = buildImageQaPrompt({
     title: args.title,
     compositionName: args.compositionName,
+    compositionBrief: args.compositionBrief,
+    identity: args.identity,
   });
   const generatedUrl = `data:${args.generated.contentType};base64,${args.generated.data.toString("base64")}`;
   const content = [

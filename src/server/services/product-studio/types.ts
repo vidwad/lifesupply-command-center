@@ -22,11 +22,15 @@ export const priceObservationSchema = z.object({
   price: z.number().nonnegative(),
   currency: z.string().length(3),
   condition: z.string().nullable(),
+  includedAccessories: z.string().nullable(),
+  notes: z.string().nullable(),
 });
 
 export const compositionSchema = z.object({
   slot: z.number().int().min(1).max(4),
   name: z.string().min(1),
+  /** Role this image plays in the product gallery (hero, condition view, …). */
+  purpose: z.string().min(1),
   sourceSeller: z.string().nullable(),
   sourceUrl: httpUrl.nullable(),
   referenceImageUrl: httpUrl.nullable(),
@@ -35,8 +39,17 @@ export const compositionSchema = z.object({
   background: z.string().min(1),
   lighting: z.string().min(1),
   cameraAngle: z.string().min(1),
+  productOrientation: z.string().min(1),
   productPlacement: z.string().min(1),
+  shadowTreatment: z.string().min(1),
+  cropAndNegativeSpace: z.string().min(1),
+  depthOfField: z.string().min(1),
+  /** Accessories from the source photos that must appear in this frame. */
   props: z.array(z.string()),
+  /** Accessories that must be left out of this specific frame. */
+  accessoriesExclude: z.array(z.string()),
+  /** Genuine condition details that must stay visible in this frame. */
+  conditionMustShow: z.array(z.string()),
   negativeConstraints: z.array(z.string()),
 });
 
@@ -103,7 +116,11 @@ export const productStudioQaSchema = z.object({
   textIntegrity: z.enum(["pass", "not_applicable", "fail"]),
   verdict: z.enum(["pass", "needs_review", "reject"]),
   differences: z.array(z.string()),
+  /** Concrete changes a regeneration must make before this image can pass. */
+  requiredCorrections: z.array(z.string()),
   warnings: z.array(z.string()),
+  /** QA model's confidence in its own verdict, 0–1. */
+  confidence: z.number().min(0).max(1),
 });
 
 export type ProductStudioQa = z.infer<typeof productStudioQaSchema>;

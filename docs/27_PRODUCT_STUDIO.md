@@ -15,11 +15,14 @@ description into a durable, reviewable project containing:
 - an original improved listing title and short description;
 - current seller-source records and normalized asking-price observations;
 - a cited low/high market range with currency, condition, and methodology;
-- four distinct product-photo composition briefs;
+- four distinct product-photo composition briefs (gallery purpose, camera angle, orientation,
+  placement, background, lighting, shadow treatment, crop/negative space, depth of field,
+  accessories to include and exclude, and the condition details that must stay visible);
 - one compiled high-fidelity image-edit prompt per composition;
 - four generated draft images, produced one at a time;
-- automated identity, condition-fidelity, composition, and text-integrity QA;
-- human approval/rejection state for every generated image; and
+- automated identity, condition-fidelity, composition, and text-integrity QA with a verdict,
+  required corrections, and the QA model's confidence;
+- human approval/rejection state and a preserved revision history for every generated image; and
 - complete AI prompt, output, source-reference, model, token, actor, and audit records.
 
 The feature does **not** publish to BigCommerce, change a product price, copy a competitor image,
@@ -41,9 +44,16 @@ send a campaign, or post to a social network.
 7. The user queues one composition at a time. The worker sends only the user's source photos and the
    compiled prompt to the OpenAI Images edit API with high input fidelity.
 8. The worker compares each generated image with the authoritative photographs using a structured QA
-   pass. A human must still approve or reject the result.
-9. After four drafts are approved, the project status becomes `approved`. This means approved inside
-   Command Center only; no external publishing path exists in this slice.
+   pass that receives the source photos, the generated image, the confirmed identity requirements,
+   and the composition brief. A QA verdict of `reject` marks the draft rejected instead of ready for
+   approval. A human must still approve or reject every result.
+9. A rejected image can be regenerated as a new revision from the project page. Prior revisions,
+   their prompts, models, QA results, and timestamps are never overwritten and stay visible in the
+   revision history.
+10. After four drafts are approved, the project status becomes `approved`. This means approved inside
+    Command Center only; no external publishing path exists in this slice.
+11. When `product_studio.enabled` is off, intake, research, generation, and review actions all fail
+    closed server-side; stored records remain intact and readable.
 
 ## 3. What “most effective” means
 
@@ -62,8 +72,8 @@ warnings are stored with each project.
 
 ## 4. Pricing rules
 
-- Store every observation with seller, direct URL, asking price, currency, stated condition, and
-  observation timestamp.
+- Store every observation with seller, direct URL, asking price, currency, stated condition,
+  included accessories when known, comparison notes, and observation timestamp.
 - Keep incompatible generations, variants, bundles, and conditions out of the range.
 - Normalize the displayed range to one currency and retain the original observation currency.
 - Present the result as an asking-price range, not an appraisal, realized-sale guarantee, or pricing
@@ -80,6 +90,7 @@ warnings are stored with each project.
 | Provider keys | Resolved server-side from environment or encrypted credential vault. |
 | Source authority | Uploaded photographs are explicitly identified as the sole authoritative visual source. |
 | Prompt injection | Web pages are labelled untrusted data; their instructions must be ignored. |
+| Source verification | Cited seller domains are validated against actual web-search tool evidence (tool calls and URL-citation annotations only — a URL the model merely wrote is not evidence). Research citing unsupported domains is rejected. |
 | Provenance | Seller URLs, price observations, prompts, model names, hashes, actors, and timestamps are stored. |
 | External actions | None. BigCommerce updates and social publishing are out of scope. |
 | Human review | Generated assets remain `needs_review` or `rejected` until a permitted user acts. |
@@ -139,6 +150,20 @@ separate loss-aware crop/export pipeline rather than repeatedly regenerating the
 - Confirm the global kill switch disables image generation.
 - Confirm prompts preserve authoritative product identity and forbid invented condition/accessories.
 - Confirm every generated image has QA and human review state.
+
+## 8.5 Error handling, cost control, and rollback
+
+- Research and generation run as durable Inngest jobs (one retry, serialized per project); failures
+  set the project/composition to `failed` with the stored error message and an audit event, and the
+  UI offers a safe re-queue.
+- Images generate strictly one at a time; a slot regenerates only after a human rejection, so a
+  duplicate click can never double provider spend.
+- Rollback: turn both flags off (or trip the global kill switch) — jobs re-check flags at pickup and
+  stop; stored projects remain readable. The migration is additive-only, so reverting the feature
+  code leaves existing tables untouched and harmless.
+- Privacy and retention: uploaded photographs and generated drafts are private assets served only
+  through the authenticated asset route; retention/lifecycle policy is a pre-production follow-up
+  (§10) and defaults to keep-everything in the MVP.
 
 ## 9. Next phase: social campaign derivatives
 

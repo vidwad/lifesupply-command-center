@@ -533,14 +533,16 @@ model ProductStudioResearchSource {
 }
 
 model ProductStudioPriceObservation {
-  id         String   @id @default(cuid())
-  projectId  String
-  sellerName String
-  url        String
-  price      Decimal  @db.Decimal(12, 2)
-  currency   String
-  condition  String?
-  observedAt DateTime @default(now())
+  id                  String   @id @default(cuid())
+  projectId           String
+  sellerName          String
+  url                 String
+  price               Decimal  @db.Decimal(12, 2)
+  currency            String
+  condition           String?
+  includedAccessories String?
+  notes               String?  @db.Text
+  observedAt          DateTime @default(now())
 
   project ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
