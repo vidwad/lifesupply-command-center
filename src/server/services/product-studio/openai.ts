@@ -1,6 +1,7 @@
 import { toFile } from "openai";
 import type { ImageEditParamsNonStreaming } from "openai/resources/images";
 import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
+import { imageModelCapabilities } from "./image-model";
 
 import { getOpenAiClient, resolveOpenAiModel } from "@/server/integrations/openai/client";
 import { AiProviderNotConfiguredError } from "@/server/services/ai/errors";
@@ -392,28 +393,31 @@ export async function generateProductImage(args: {
 }): Promise<GeneratedImage> {
   const client = await getOpenAiClient();
   if (!client) throw new AiProviderNotConfiguredError("openai");
-  const model = process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2";
+  const caps = imageModelCapabilities(process.env.OPENAI_IMAGE_MODEL);
   const files = await Promise.all(
     args.references.map((asset) =>
       toFile(Buffer.from(asset.data), asset.fileName, { type: asset.contentType }),
     ),
   );
 
-  const request = {
-    model,
+  // Built per model: an unsupported parameter is a hard 400, not an ignored
+  // field. gpt-image-2 rejects input_fidelity; earlier models reject arbitrary
+  // sizes. See image-model.ts for the capability matrix.
+  const request: ImageEditParamsNonStreaming = {
+    model: caps.model,
     stream: false,
     image: files,
     prompt: args.prompt,
-    input_fidelity: "high",
     quality: "high",
-    size: "2048x2048",
+    size: caps.size,
     output_format: "jpeg",
-  } as unknown as ImageEditParamsNonStreaming;
+    ...(caps.supportsInputFidelity ? { input_fidelity: "high" as const } : {}),
+  };
   const response = await client.images.edit(request);
   const encoded = response.data?.[0]?.b64_json;
   if (!encoded) throw new Error("OpenAI returned no image payload.");
 
-  return { data: Buffer.from(encoded, "base64"), contentType: "image/jpeg", modelName: model };
+  return { data: Buffer.from(encoded, "base64"), contentType: "image/jpeg", modelName: caps.model };
 }
 
 export async function qaProductImage(args: {
