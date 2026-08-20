@@ -33,6 +33,17 @@ export const PERMISSIONS = {
   PRODUCTS_MANAGE_SUPPLIER_MAPPING: "products.manage_supplier_mapping",
   PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE: "products.approve_bigcommerce_update",
 
+  // Pricing Intelligence (docs/22 PRD §6)
+  PRICING_VIEW: "pricing.view",
+  PRICING_MANAGE_RULES: "pricing.manage_rules",
+  PRICING_MANAGE_COMPETITORS: "pricing.manage_competitors",
+  PRICING_CREATE_RUNS: "pricing.create_runs",
+  PRICING_RUN_CHECKS: "pricing.run_checks",
+  PRICING_REVIEW_RECOMMENDATIONS: "pricing.review_recommendations",
+  PRICING_APPROVE_RECOMMENDATIONS: "pricing.approve_recommendations",
+  PRICING_WRITEBACK_BIGCOMMERCE: "pricing.writeback_bigcommerce",
+  PRICING_EXPORT: "pricing.export",
+
   // Suppliers
   SUPPLIERS_VIEW: "suppliers.view",
   SUPPLIERS_UPDATE: "suppliers.update",

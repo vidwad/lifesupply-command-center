@@ -23,6 +23,10 @@ export const FEATURE_FLAGS = {
   INVESTOR_DISTRIBUTION: "investor.distribution",
   /** Use forecasting / scenario planning routes. */
   FORECASTING: "forecasting.enabled",
+  /** Enable the Pricing Intelligence module (read-only workflows). */
+  PRICING_INTELLIGENCE: "pricing.intelligence",
+  /** Allow approval-gated BigCommerce sale-price writebacks. */
+  PRICING_WRITEBACKS: "pricing.writebacks",
   /** Enable the review-only product research and creative workspace. */
   PRODUCT_STUDIO: "product_studio.enabled",
   /** Allow Product Studio to spend image-generation credits. */
@@ -49,6 +53,10 @@ export const FEATURE_FLAG_DESCRIPTIONS: Record<FeatureFlagKey, string> = {
   [FEATURE_FLAGS.MAILCHIMP_SEND]: "Send Mailchimp campaigns and export segments.",
   [FEATURE_FLAGS.INVESTOR_DISTRIBUTION]: "Generate + distribute investor-facing materials.",
   [FEATURE_FLAGS.FORECASTING]: "Enable forecasting / scenario routes.",
+  [FEATURE_FLAGS.PRICING_INTELLIGENCE]:
+    "Enable Pricing Intelligence setup and read-only recommendation workflows.",
+  [FEATURE_FLAGS.PRICING_WRITEBACKS]:
+    "Allow approval-gated BigCommerce sale-price writebacks (also requires external.writebacks).",
   [FEATURE_FLAGS.PRODUCT_STUDIO]:
     "Enable Product Studio intake, retailer research, price observations, and draft review.",
   [FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION]:

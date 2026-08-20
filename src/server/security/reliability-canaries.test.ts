@@ -107,6 +107,7 @@ describe("job safety stays wired", () => {
       "MAILCHIMP_SEND",
       "INVESTOR_DISTRIBUTION",
       "PRODUCT_STUDIO_IMAGE_GENERATION",
+      "PRICING_WRITEBACKS",
     ]) {
       expect(health, `health must probe ${flag}`).toContain(flag);
     }

@@ -101,6 +101,7 @@ describe("high-risk chokepoints stay wired", () => {
       "MAILCHIMP_SEND",
       "INVESTOR_DISTRIBUTION",
       "PRODUCT_STUDIO_IMAGE_GENERATION",
+      "PRICING_WRITEBACKS",
     ]) {
       expect(killSwitch, `kill switch must include ${flag}`).toContain(flag);
     }
