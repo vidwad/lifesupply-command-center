@@ -13,6 +13,8 @@ const base = {
     canonicalTitle: "Nikon AF-S NIKKOR 70-200mm f/2.8G ED VR II Lens",
     modelIdentifiers: ["2185", "HB-48"],
     conditionNotes: ["normal visible handling wear"],
+    productMode: "used" as const,
+    depictableSpec: [],
     confidence: 0.98,
   },
   optimizedListing: {
@@ -188,12 +190,19 @@ describe("Product Studio prompt compiler", () => {
     shortDescription: base.optimizedListing.shortDescription,
     identity: base.identifiedProduct,
     composition: base.compositions[0]!,
+    mode: "used",
+    depictableSpec: [],
   });
 
   it("locks identity to user photographs and forbids invented condition", () => {
     expect(prompt).toContain("sole authoritative visual reference");
     expect(prompt).toContain("AF-S NIKKOR 70-200mm f/2.8G ED VR II");
-    expect(prompt).toContain("Do not add invented accessories");
+    // The blanket "do not add invented accessories" line was replaced by the
+    // mode-aware depiction rules. For a used item the guarantee is stronger:
+    // nothing absent from the photographs may appear at all.
+    expect(prompt).toContain("SECOND-HAND ITEM");
+    expect(prompt).toContain("Depict only the item and accessories visible in the reference");
+    expect(prompt).toContain("NEVER render");
     expect(prompt).toContain("do not reproduce retailer-specific text");
   });
 

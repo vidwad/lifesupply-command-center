@@ -2,6 +2,7 @@ import { toFile } from "openai";
 import type { ImageEditParamsNonStreaming } from "openai/resources/images";
 import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
 import { imageModelCapabilities } from "./image-model";
+import type { ProductMode } from "./depiction";
 import { sizeForAspect, type FrameAspect } from "./prompt-controls";
 
 import { getOpenAiClient, resolveOpenAiModel } from "@/server/integrations/openai/client";
@@ -55,6 +56,8 @@ const researchJsonSchema = {
         "canonicalTitle",
         "modelIdentifiers",
         "conditionNotes",
+        "productMode",
+        "depictableSpec",
         "confidence",
       ],
       properties: {
@@ -63,6 +66,8 @@ const researchJsonSchema = {
         canonicalTitle: { type: "string" },
         modelIdentifiers: { type: "array", items: { type: "string" } },
         conditionNotes: { type: "array", items: { type: "string" } },
+        productMode: { type: "string", enum: ["new_sealed", "used"] },
+        depictableSpec: { type: "array", items: { type: "string" } },
         confidence: { type: "number", minimum: 0, maximum: 1 },
       },
     },
@@ -435,6 +440,8 @@ export async function generateProductImage(args: {
 
 export async function qaProductImage(args: {
   title: string;
+  mode: ProductMode;
+  depictableSpec: readonly string[];
   compositionName: string;
   compositionBrief: string[];
   identity: {
@@ -451,6 +458,8 @@ export async function qaProductImage(args: {
   const model = await resolveOpenAiModel();
   const prompt = buildImageQaPrompt({
     title: args.title,
+    mode: args.mode,
+    depictableSpec: args.depictableSpec,
     compositionName: args.compositionName,
     compositionBrief: args.compositionBrief,
     identity: args.identity,

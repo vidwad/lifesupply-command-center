@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { parseDepictableSpec, parseProductMode } from "@/server/services/product-studio/depiction";
 import {
   decideNextChainedSlot,
   PENDING_COMPOSITION_STATUSES,
@@ -60,6 +61,13 @@ function identityFromSummary(summary: unknown): QaIdentity | null {
     modelIdentifiers: strings(record.modelIdentifiers),
     conditionNotes: strings(record.conditionNotes),
   };
+}
+
+/** Narrow stored research JSON to a plain record. */
+function asSummaryRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 /** Pulls requiredCorrections out of a stored QA result, defensively. */
@@ -166,6 +174,8 @@ export const researchProductStudioProject = inngest.createFunction(
               shortDescription: research.optimizedListing.shortDescription,
               identity: research.identifiedProduct,
               composition,
+              mode: research.identifiedProduct.productMode,
+              depictableSpec: research.identifiedProduct.depictableSpec,
             }),
           })),
         });
@@ -312,8 +322,14 @@ export const generateProductStudioImage = inngest.createFunction(
             : null,
         ),
       });
+      // Projects researched before productMode existed fall back to "used",
+      // the conservative mode in which nothing may be added to the photograph.
+      const summary = asSummaryRecord(project.researchSummary);
+      const identityRecord = asSummaryRecord(summary?.identifiedProduct);
       const qa = await qaProductImage({
         title: project.confirmedTitle ?? project.title,
+        mode: parseProductMode(identityRecord?.productMode),
+        depictableSpec: parseDepictableSpec(identityRecord?.depictableSpec),
         compositionName: composition.name,
         compositionBrief: briefLinesFromAttributes(composition.attributes),
         identity: identityFromSummary(project.researchSummary),

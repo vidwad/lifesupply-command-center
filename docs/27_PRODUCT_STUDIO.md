@@ -80,6 +80,36 @@ warnings are stored with each project.
   instruction.
 - Re-run research for stale projects by creating a new project; historical evidence remains intact.
 
+## 4.5 What a generated image may depict
+
+Two product classes need different rules, and applying one rule to both either
+misrepresents the item or reduces every composition to the same photograph.
+
+| Tier | Examples | Rule |
+|---|---|---|
+| **Never depict** | Serial numbers, lot/batch codes, expiry dates, NRC/NDC, GS1/DI, UDI, barcodes, prices, any wear or damage | Unit-specific or regulated. Prohibited in **both** modes, and not overridable by a composition brief, a QA correction, or an operator instruction. |
+| **Spec-bound** | Manufacturer-specified contents: graduation scale, gauge, capacity, cap colour, pack configuration, case count | Depictable in `new_sealed` mode only, from `identifiedProduct.depictableSpec`, and then **required to match exactly**. |
+| **Free** | Background, lighting, camera angle, surface, crop, negative space | Staging. Always allowed. |
+
+Research classifies each project as `new_sealed` or `used` in
+`identifiedProduct.productMode` and, for `new_sealed`, populates
+`depictableSpec` with cited manufacturer attributes.
+
+- **`used`** — every unit differs, so the photographs are the only evidence.
+  Nothing absent from them may appear.
+- **`new_sealed`** — every unit is identical and the contents are published, so
+  depicting the specified contents is illustration, not fabrication. Depicting a
+  *plausible but incorrect* variant is worse than omitting it: a wrong
+  graduation scale misdescribes the product being sold.
+
+`used` is the default. Projects researched before these fields existed, and any
+project research declines to classify, are treated as `used`.
+
+Image QA grades against the same standard: photographs for `used`, the cited
+specification for `new_sealed`. Fabricated identifiers are a defect in both.
+
+---
+
 ## 5. Security and governance
 
 | Control | Implementation |
