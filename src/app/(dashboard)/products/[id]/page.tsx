@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Star } from "lucide-react";
+import { ArrowLeft, Camera, Star } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getProductById } from "@/server/services/products";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.PRODUCTS_VIEW);
+  const user = await requirePermission(PERMISSIONS.PRODUCTS_VIEW);
   const { id } = await params;
   const product = await getProductById(id);
   if (!product) notFound();
@@ -42,6 +43,14 @@ export default async function ProductDetailPage({ params }: Props) {
         }
         actions={
           <div className="flex flex-wrap gap-2">
+            {userHasPermission(user, PERMISSIONS.PRODUCTS_UPDATE) &&
+            userHasPermission(user, PERMISSIONS.AI_USE) ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/products/studio/new?productId=${product.id}`}>
+                  <Camera /> Open in Product Studio
+                </Link>
+              </Button>
+            ) : null}
             <Badge variant="outline">{product.status}</Badge>
             {product.isFeatured && (
               <Badge variant="warning">
