@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import {
+  applyOperatorInstructions,
+  detectAspect,
+} from "@/server/services/product-studio/prompt-controls";
 
 import type { Prisma } from "@prisma/client";
 
@@ -17,7 +21,7 @@ import { compileProductImagePrompt } from "@/server/services/product-studio/prom
 import { planGenerationRevision } from "@/server/services/product-studio/revisions";
 
 type ResearchEvent = { projectId: string; actorUserId: string };
-type GenerateEvent = ResearchEvent & { slot: number };
+type GenerateEvent = ResearchEvent & { slot: number; operatorInstructions?: string | null };
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 4000) : "Unknown Product Studio error";
@@ -268,9 +272,23 @@ export const generateProductStudioImage = inngest.createFunction(
     });
 
     try {
+      // The researched prompt is compiled and stored at research time; operator
+      // guidance is layered on here so each revision records the exact prompt
+      // that produced it.
+      const attributes = (composition.attributes ?? {}) as Record<string, unknown>;
+      const effectivePrompt = applyOperatorInstructions(
+        composition.prompt,
+        data.operatorInstructions,
+      );
       const generated = await generateProductImage({
-        prompt: composition.prompt,
+        prompt: effectivePrompt,
         references: project.assets,
+        aspect: detectAspect(
+          typeof attributes.layout === "string" ? attributes.layout : null,
+          typeof attributes.cropAndNegativeSpace === "string"
+            ? attributes.cropAndNegativeSpace
+            : null,
+        ),
       });
       const qa = await qaProductImage({
         title: project.confirmedTitle ?? project.title,
@@ -302,9 +320,9 @@ export const generateProductStudioImage = inngest.createFunction(
             bytes: generated.data.byteLength,
             data: new Uint8Array(generated.data),
             contentHash,
-            width: 2048,
-            height: 2048,
-            prompt: composition.prompt,
+            width: generated.width,
+            height: generated.height,
+            prompt: effectivePrompt,
             modelName: generated.modelName,
             status: assetStatus,
             qaResult: qa.result as Prisma.InputJsonValue,
@@ -327,7 +345,7 @@ export const generateProductStudioImage = inngest.createFunction(
             modelProvider: "openai",
             modelName: generated.modelName,
             module: "product_studio_image",
-            prompt: composition.prompt,
+            prompt: effectivePrompt,
             output: qa.rawOutput,
             structuredOutput: qa.result as Prisma.InputJsonValue,
             sourceReferences: {

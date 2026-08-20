@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { normaliseOperatorInstructions } from "./prompt-controls";
 
 import type { Prisma } from "@prisma/client";
 
@@ -222,6 +223,8 @@ export async function queueProductStudioGeneration(args: {
   projectId: string;
   slot: number;
   actorUserId: string;
+  /** Operator staging/framing guidance appended to the researched prompt. */
+  operatorInstructions?: string | null;
 }): Promise<void> {
   await Promise.all([
     requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO),
@@ -256,17 +259,20 @@ export async function queueProductStudioGeneration(args: {
       data: { status: "generating", errorMessage: null },
     }),
   ]);
+  // Validate before dispatch so a too-long instruction fails in the request
+  // rather than inside a worker job the operator cannot see.
+  const operatorInstructions = normaliseOperatorInstructions(args.operatorInstructions);
   await inngest.send({
     id: `product-studio-generate-${args.projectId}-${args.slot}-${Date.now()}`,
     name: "product-studio/image.requested",
-    data: args,
+    data: { ...args, operatorInstructions },
   });
   await writeAudit({
     actorUserId: args.actorUserId,
     action: "product_studio.image_queued",
     entityType: "ProductStudioProject",
     entityId: args.projectId,
-    afterData: { slot: args.slot },
+    afterData: { slot: args.slot, operatorInstructions },
   });
 }
 

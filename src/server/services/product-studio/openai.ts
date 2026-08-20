@@ -2,6 +2,7 @@ import { toFile } from "openai";
 import type { ImageEditParamsNonStreaming } from "openai/resources/images";
 import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
 import { imageModelCapabilities } from "./image-model";
+import { sizeForAspect, type FrameAspect } from "./prompt-controls";
 
 import { getOpenAiClient, resolveOpenAiModel } from "@/server/integrations/openai/client";
 import { AiProviderNotConfiguredError } from "@/server/services/ai/errors";
@@ -385,15 +386,20 @@ export type GeneratedImage = {
   data: Buffer;
   contentType: "image/png" | "image/jpeg" | "image/webp";
   modelName: string;
+  /** Dimensions actually requested, so stored metadata matches the payload. */
+  width: number;
+  height: number;
 };
 
 export async function generateProductImage(args: {
   prompt: string;
   references: ReferenceAsset[];
+  aspect: FrameAspect;
 }): Promise<GeneratedImage> {
   const client = await getOpenAiClient();
   if (!client) throw new AiProviderNotConfiguredError("openai");
   const caps = imageModelCapabilities(process.env.OPENAI_IMAGE_MODEL);
+  const requestedSize = sizeForAspect(args.aspect, caps.supportsArbitrarySize);
   const files = await Promise.all(
     args.references.map((asset) =>
       toFile(Buffer.from(asset.data), asset.fileName, { type: asset.contentType }),
@@ -409,7 +415,7 @@ export async function generateProductImage(args: {
     image: files,
     prompt: args.prompt,
     quality: "high",
-    size: caps.size,
+    size: requestedSize,
     output_format: "jpeg",
     ...(caps.supportsInputFidelity ? { input_fidelity: "high" as const } : {}),
   };
@@ -417,7 +423,14 @@ export async function generateProductImage(args: {
   const encoded = response.data?.[0]?.b64_json;
   if (!encoded) throw new Error("OpenAI returned no image payload.");
 
-  return { data: Buffer.from(encoded, "base64"), contentType: "image/jpeg", modelName: caps.model };
+  const [width, height] = requestedSize.split("x").map(Number);
+  return {
+    data: Buffer.from(encoded, "base64"),
+    contentType: "image/jpeg",
+    modelName: caps.model,
+    width: width ?? 0,
+    height: height ?? 0,
+  };
 }
 
 export async function qaProductImage(args: {
