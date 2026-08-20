@@ -61,6 +61,12 @@ export const productStudioResearchSchema = z
       canonicalTitle: z.string().min(1),
       modelIdentifiers: z.array(z.string()),
       conditionNotes: z.array(z.string()),
+      /** Whether the photograph is the only evidence (used) or the contents are
+       *  published by the manufacturer and identical per unit (new_sealed). */
+      productMode: z.enum(["new_sealed", "used"]),
+      /** Manufacturer-specified physical attributes that may be depicted in
+       *  new_sealed mode, each traceable to a cited source. */
+      depictableSpec: z.array(z.string()),
       confidence: z.number().min(0).max(1),
     }),
     optimizedListing: z.object({

@@ -66,6 +66,7 @@ export async function queueGenerationAction(formData: FormData): Promise<void> {
     slot,
     actorUserId: user.id,
     operatorInstructions: typeof operatorInstructions === "string" ? operatorInstructions : null,
+    autoContinue: formData.get("autoContinue") === "1",
   });
   revalidatePath(`/products/studio/${projectId}`);
 }
