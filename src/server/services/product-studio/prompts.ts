@@ -72,10 +72,7 @@ EXECUTION RULES
 Return only the image, with no text overlay.`;
 }
 
-export function buildImageQaPrompt(args: {
-  title: string;
-  compositionName: string;
-}): string {
+export function buildImageQaPrompt(args: { title: string; compositionName: string }): string {
   return `Compare the first attached image(s), which are authoritative source photographs, with the final attached generated image for ${args.title}.
 
 Evaluate exact product identity, geometry, controls/markings, included accessories, visible condition, and whether the generated image follows the "${args.compositionName}" composition. Do not penalize normal lighting/background changes. Reject invented model features, hidden or removed genuine wear, new damage, extra accessories, distorted text, or a different product generation.

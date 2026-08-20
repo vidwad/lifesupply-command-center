@@ -33,7 +33,11 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   const project = await getProductStudioProject(id);
-  return { title: project ? `${project.confirmedTitle ?? project.title} · Product Studio` : "Product Studio" };
+  return {
+    title: project
+      ? `${project.confirmedTitle ?? project.title} · Product Studio`
+      : "Product Studio",
+  };
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -43,7 +47,9 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function asStrings(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 export default async function ProductStudioDetailPage({ params }: Props) {
@@ -52,10 +58,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   const { id } = await params;
   const [project, flags] = await Promise.all([
     getProductStudioProject(id),
-    getFeatureFlags([
-      FEATURE_FLAGS.PRODUCT_STUDIO,
-      FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION,
-    ]),
+    getFeatureFlags([FEATURE_FLAGS.PRODUCT_STUDIO, FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION]),
   ]);
   if (!project) notFound();
 
@@ -63,8 +66,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   const allGeneratedAssets = project.assets.filter((asset) => asset.kind === "generated");
   const generatedAssets = allGeneratedAssets.filter(
     (asset, index) =>
-      allGeneratedAssets.findIndex((candidate) => candidate.compositionSlot === asset.compositionSlot) ===
-      index,
+      allGeneratedAssets.findIndex(
+        (candidate) => candidate.compositionSlot === asset.compositionSlot,
+      ) === index,
   );
   const nextComposition = project.compositions.find((item) =>
     ["planned", "failed"].includes(item.status),
@@ -150,7 +154,8 @@ export default async function ProductStudioDetailPage({ params }: Props) {
               <CardHeader>
                 <CardTitle className="text-base">Four researched compositions</CardTitle>
                 <CardDescription>
-                  Generated sequentially to control cost and let you review identity before continuing.
+                  Generated sequentially to control cost and let you review identity before
+                  continuing.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -210,19 +215,25 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                               >
-                                {composition.sourceSeller ?? "Retailer evidence"} <ExternalLink className="h-3 w-3" />
+                                {composition.sourceSeller ?? "Retailer evidence"}{" "}
+                                <ExternalLink className="h-3 w-3" />
                               </a>
                             ) : null}
                             {qa ? (
                               <div className="rounded-md bg-muted p-3 text-xs">
-                                <p className="font-medium">Automated QA: {String(qa.verdict ?? "needs review")}</p>
+                                <p className="font-medium">
+                                  Automated QA: {String(qa.verdict ?? "needs review")}
+                                </p>
                                 <p className="mt-1 text-muted-foreground">
-                                  Identity {Math.round(Number(qa.identityScore ?? 0) * 100)}% · Condition{" "}
-                                  {Math.round(Number(qa.conditionFidelityScore ?? 0) * 100)}% · Composition{" "}
-                                  {Math.round(Number(qa.compositionScore ?? 0) * 100)}%
+                                  Identity {Math.round(Number(qa.identityScore ?? 0) * 100)}% ·
+                                  Condition{" "}
+                                  {Math.round(Number(qa.conditionFidelityScore ?? 0) * 100)}% ·
+                                  Composition {Math.round(Number(qa.compositionScore ?? 0) * 100)}%
                                 </p>
                                 {asStrings(qa.differences).map((difference) => (
-                                  <p key={difference} className="mt-1 text-muted-foreground">• {difference}</p>
+                                  <p key={difference} className="mt-1 text-muted-foreground">
+                                    • {difference}
+                                  </p>
                                 ))}
                               </div>
                             ) : null}
@@ -247,7 +258,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                               </div>
                             ) : null}
                             <details className="text-xs">
-                              <summary className="cursor-pointer font-medium">View generated prompt</summary>
+                              <summary className="cursor-pointer font-medium">
+                                View generated prompt
+                              </summary>
                               <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-3 font-sans text-muted-foreground">
                                 {composition.prompt}
                               </pre>
@@ -266,7 +279,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Workflow</CardTitle>
-                <CardDescription>Long-running AI work is handled by the background worker.</CardDescription>
+                <CardDescription>
+                  Long-running AI work is handled by the background worker.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {canResearch ? (
@@ -291,14 +306,16 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                     Work is in progress. Refresh this page after the worker completes.
                   </p>
                 ) : null}
-                {!flags[FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION] && project.compositions.length > 0 ? (
+                {!flags[FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION] &&
+                project.compositions.length > 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Image generation is off. Enable {FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION}{" "}
                     only after confirming OpenAI budget and worker capacity.
                   </p>
                 ) : null}
                 <p className="text-xs text-muted-foreground">
-                  No result is published externally. Approval here means internally accepted draft only.
+                  No result is published externally. Approval here means internally accepted draft
+                  only.
                 </p>
               </CardContent>
             </Card>
@@ -312,16 +329,25 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   <dl className="space-y-2">
                     <BriefRow label="Brand" value={identity.brand} />
                     <BriefRow label="Model" value={identity.model} />
-                    <BriefRow label="Confidence" value={`${Math.round(Number(identity.confidence ?? 0) * 100)}%`} />
+                    <BriefRow
+                      label="Confidence"
+                      value={`${Math.round(Number(identity.confidence ?? 0) * 100)}%`}
+                    />
                   </dl>
                 ) : (
-                  <p className="text-muted-foreground">Identity confirmation is pending research.</p>
+                  <p className="text-muted-foreground">
+                    Identity confirmation is pending research.
+                  </p>
                 )}
                 {summary ? (
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Key details</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Key details
+                    </p>
                     <ul className="mt-2 space-y-1 text-muted-foreground">
-                      {asStrings(summary.keyDetails).map((detail) => <li key={detail}>• {detail}</li>)}
+                      {asStrings(summary.keyDetails).map((detail) => (
+                        <li key={detail}>• {detail}</li>
+                      ))}
                     </ul>
                   </div>
                 ) : null}
@@ -350,7 +376,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Market range</CardTitle>
-                <CardDescription>Asking prices are evidence, not an appraisal or guaranteed sale price.</CardDescription>
+                <CardDescription>
+                  Asking prices are evidence, not an appraisal or guaranteed sale price.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {project.marketLow != null && project.marketHigh != null ? (
@@ -416,7 +444,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   <CardTitle className="text-base">Warnings</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-warning">
-                  {project.warnings.map((warning) => <p key={warning}>• {warning}</p>)}
+                  {project.warnings.map((warning) => (
+                    <p key={warning}>• {warning}</p>
+                  ))}
                 </CardContent>
               </Card>
             ) : null}

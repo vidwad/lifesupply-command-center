@@ -41,7 +41,8 @@ export default async function NewProductStudioPage({ searchParams }: Props) {
           <CardHeader>
             <CardTitle>Product intake</CardTitle>
             <CardDescription>
-              Research and generation run after the project is created, one controlled step at a time.
+              Research and generation run after the project is created, one controlled step at a
+              time.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -66,9 +67,17 @@ export default async function NewProductStudioPage({ searchParams }: Props) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Retailer pages provide market evidence and composition patterns, not product identity.</p>
-            <p>Each price remains attached to its seller URL, currency, condition, and observation time.</p>
-            <p>All four images require human review. Nothing is published to BigCommerce or social channels.</p>
+            <p>
+              Retailer pages provide market evidence and composition patterns, not product identity.
+            </p>
+            <p>
+              Each price remains attached to its seller URL, currency, condition, and observation
+              time.
+            </p>
+            <p>
+              All four images require human review. Nothing is published to BigCommerce or social
+              channels.
+            </p>
           </CardContent>
         </Card>
       </div>

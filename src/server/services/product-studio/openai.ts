@@ -77,13 +77,7 @@ const researchJsonSchema = {
     benchmarkListing: {
       type: "object",
       additionalProperties: false,
-      required: [
-        "sellerName",
-        "url",
-        "heroImageUrl",
-        "whyStrongDescription",
-        "whyStrongHero",
-      ],
+      required: ["sellerName", "url", "heroImageUrl", "whyStrongDescription", "whyStrongHero"],
       properties: {
         sellerName: { type: "string" },
         url: { type: "string" },
@@ -124,14 +118,7 @@ const researchJsonSchema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: [
-          "sellerName",
-          "pageTitle",
-          "url",
-          "heroImageUrl",
-          "sourceType",
-          "notes",
-        ],
+        required: ["sellerName", "pageTitle", "url", "heroImageUrl", "sourceType", "notes"],
         properties: {
           sellerName: { type: "string" },
           pageTitle: { anyOf: [{ type: "string" }, { type: "null" }] },
@@ -217,7 +204,10 @@ function asDataUrl(asset: ReferenceAsset): string {
 }
 
 function parseJson<T>(raw: string, parser: { parse: (value: unknown) => T }): T {
-  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  const trimmed = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
   return parser.parse(JSON.parse(trimmed));
 }
 

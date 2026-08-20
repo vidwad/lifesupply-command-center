@@ -1,8 +1,11 @@
 import { z } from "zod";
 
-const httpUrl = z.string().url().refine((value) => /^https?:\/\//i.test(value), {
-  message: "Only HTTP(S) source URLs are allowed.",
-});
+const httpUrl = z
+  .string()
+  .url()
+  .refine((value) => /^https?:\/\//i.test(value), {
+    message: "Only HTTP(S) source URLs are allowed.",
+  });
 
 export const retailerSourceSchema = z.object({
   sellerName: z.string().min(1),

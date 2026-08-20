@@ -65,11 +65,7 @@ const CHOKEPOINTS: Chokepoint[] = [
   {
     capability: "Product Studio image generation",
     file: "server/services/product-studio/index.ts",
-    mustContain: [
-      "FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION",
-      "requireFeature",
-      "writeAudit",
-    ],
+    mustContain: ["FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION", "requireFeature", "writeAudit"],
   },
 ];
 

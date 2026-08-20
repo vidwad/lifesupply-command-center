@@ -56,7 +56,8 @@ export default async function ProductStudioPage() {
                         </h2>
                         {project.product ? (
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Catalog: {project.product.name} {project.product.sku ? `· ${project.product.sku}` : ""}
+                            Catalog: {project.product.name}{" "}
+                            {project.product.sku ? `· ${project.product.sku}` : ""}
                           </p>
                         ) : null}
                       </div>

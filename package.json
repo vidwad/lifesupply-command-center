@@ -16,7 +16,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
-    "format:check": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\" && git diff --binary | base64 -w0 && false",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "postinstall": "prisma generate",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",

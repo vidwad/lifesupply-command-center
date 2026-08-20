@@ -65,7 +65,8 @@ export async function createProductStudioProject(args: {
 
   if (args.productId) {
     const exists = await prisma.product.count({ where: { id: args.productId, deletedAt: null } });
-    if (!exists) throw new ProductStudioInputError("The selected catalog product no longer exists.");
+    if (!exists)
+      throw new ProductStudioInputError("The selected catalog product no longer exists.");
   }
 
   const project = await prisma.productStudioProject.create({

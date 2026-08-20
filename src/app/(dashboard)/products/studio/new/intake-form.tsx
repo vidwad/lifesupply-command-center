@@ -62,7 +62,10 @@ export function ProductStudioIntakeForm(props: {
       </label>
 
       {state?.error ? (
-        <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+        >
           {state.error}
         </p>
       ) : null}
