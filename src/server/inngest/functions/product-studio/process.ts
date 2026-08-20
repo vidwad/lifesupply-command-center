@@ -14,7 +14,6 @@ import {
   researchProduct,
 } from "@/server/services/product-studio/openai";
 import { compileProductImagePrompt } from "@/server/services/product-studio/prompts";
-import type { ProductStudioCompositionBrief } from "@/server/services/product-studio/types";
 
 type ResearchEvent = { projectId: string; actorUserId: string };
 type GenerateEvent = ResearchEvent & { slot: number };
