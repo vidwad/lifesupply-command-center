@@ -46,6 +46,10 @@ import { syncGa4DailyMetrics } from "@/server/inngest/functions/ga4/sync-daily";
 import { runSupplierCheck } from "@/server/inngest/functions/supplier/run-check";
 import { delaySweep } from "@/server/inngest/functions/operations/delay-sweep";
 import { helloWorld } from "@/server/inngest/functions/hello";
+import {
+  generateProductStudioImage,
+  researchProductStudioProject,
+} from "@/server/inngest/functions/product-studio/process";
 
 // Process-level safety nets (Phase 11E — row 11E-06). Inngest handles
 // per-run failures; these catch everything outside a run so a crashing
@@ -79,6 +83,8 @@ async function main(): Promise<void> {
           syncGa4DailyMetrics,
           runSupplierCheck,
           delaySweep,
+          researchProductStudioProject,
+          generateProductStudioImage,
         ],
       },
     ],

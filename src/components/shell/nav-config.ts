@@ -2,6 +2,7 @@ import {
   BarChart3,
   Bot,
   Boxes,
+  Camera,
   Briefcase,
   Building2,
   CircleDollarSign,
@@ -65,6 +66,12 @@ export const PRIMARY_NAV: NavItem[] = [
     href: "/products",
     icon: Boxes,
     permission: PERMISSIONS.PRODUCTS_VIEW,
+  },
+  {
+    label: "Product Studio",
+    href: "/products/studio",
+    icon: Camera,
+    permission: PERMISSIONS.PRODUCTS_UPDATE,
   },
   {
     label: "Suppliers",

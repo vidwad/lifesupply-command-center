@@ -23,6 +23,10 @@ export const FEATURE_FLAGS = {
   INVESTOR_DISTRIBUTION: "investor.distribution",
   /** Use forecasting / scenario planning routes. */
   FORECASTING: "forecasting.enabled",
+  /** Enable the review-only product research and creative workspace. */
+  PRODUCT_STUDIO: "product_studio.enabled",
+  /** Allow Product Studio to spend image-generation credits. */
+  PRODUCT_STUDIO_IMAGE_GENERATION: "product_studio.image_generation",
 } as const;
 
 export type FeatureFlagKey = (typeof FEATURE_FLAGS)[keyof typeof FEATURE_FLAGS];
@@ -45,4 +49,8 @@ export const FEATURE_FLAG_DESCRIPTIONS: Record<FeatureFlagKey, string> = {
   [FEATURE_FLAGS.MAILCHIMP_SEND]: "Send Mailchimp campaigns and export segments.",
   [FEATURE_FLAGS.INVESTOR_DISTRIBUTION]: "Generate + distribute investor-facing materials.",
   [FEATURE_FLAGS.FORECASTING]: "Enable forecasting / scenario routes.",
+  [FEATURE_FLAGS.PRODUCT_STUDIO]:
+    "Enable Product Studio intake, retailer research, price observations, and draft review.",
+  [FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION]:
+    "Generate review-only product images from authoritative user-uploaded references.",
 };

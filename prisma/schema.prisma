@@ -76,6 +76,7 @@ model User {
   forecastsCreated            ForecastScenario[]     @relation("ForecastCreator")
   forecastsApproved           ForecastScenario[]     @relation("ForecastApprover")
   agentRuns                   AgentRun[]             @relation("AgentRunTrigger")
+  productStudioProjects       ProductStudioProject[] @relation("ProductStudioCreator")
 
   @@index([status])
   @@map("users")
@@ -395,6 +396,7 @@ model Product {
   variants         ProductVariant[]
   orderItems       OrderItem[]
   supplierProducts SupplierProduct[]
+  studioProjects   ProductStudioProject[]
 
   @@unique([sourceSystem, sourceId])
   @@index([storeId])
@@ -416,6 +418,169 @@ enum DataQualityStatus {
   present
   needs_review
   validated
+}
+
+// =============================================================================
+// Product Studio — researched, review-only product listing and image drafts.
+// The original uploaded photographs are the authoritative visual source.
+// Competitor imagery is referenced by URL and composition attributes only.
+// =============================================================================
+
+model ProductStudioProject {
+  id                String                     @id @default(cuid())
+  productId         String?
+  createdById       String?
+  title             String
+  shortDescription  String                     @db.Text
+  confirmedTitle    String?
+  finalDescription  String?                    @db.Text
+  status            ProductStudioProjectStatus @default(draft)
+  currency          String                     @default("CAD")
+  marketLow         Decimal?                   @db.Decimal(12, 2)
+  marketHigh        Decimal?                   @db.Decimal(12, 2)
+  marketMedian      Decimal?                   @db.Decimal(12, 2)
+  researchSummary   Json?
+  warnings          String[]
+  errorMessage      String?                    @db.Text
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  product           Product?                   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  createdBy         User?                      @relation("ProductStudioCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  assets            ProductStudioAsset[]
+  researchSources   ProductStudioResearchSource[]
+  priceObservations ProductStudioPriceObservation[]
+  compositions      ProductStudioComposition[]
+
+  @@index([productId])
+  @@index([createdById])
+  @@index([status])
+  @@index([createdAt])
+  @@map("product_studio_projects")
+}
+
+enum ProductStudioProjectStatus {
+  draft
+  research_queued
+  researching
+  ready_to_generate
+  generating
+  needs_review
+  approved
+  failed
+  archived
+}
+
+model ProductStudioAsset {
+  id             String                   @id @default(cuid())
+  projectId      String
+  kind           ProductStudioAssetKind
+  compositionSlot Int?
+  revision       Int                      @default(1)
+  fileName       String
+  contentType    String
+  bytes          Int
+  data           Bytes
+  contentHash    String
+  width          Int?
+  height         Int?
+  prompt         String?                  @db.Text
+  modelName      String?
+  status         ProductStudioAssetStatus @default(uploaded)
+  qaResult       Json?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  project ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, kind, compositionSlot, revision])
+  @@index([projectId])
+  @@index([status])
+  @@map("product_studio_assets")
+}
+
+enum ProductStudioAssetKind {
+  source
+  generated
+}
+
+enum ProductStudioAssetStatus {
+  uploaded
+  queued
+  generating
+  needs_review
+  approved
+  rejected
+  failed
+}
+
+model ProductStudioResearchSource {
+  id           String   @id @default(cuid())
+  projectId    String
+  sellerName   String
+  pageTitle    String?
+  url          String
+  heroImageUrl String?
+  sourceType   String?
+  notes        String?  @db.Text
+  capturedAt   DateTime @default(now())
+
+  project ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, url])
+  @@index([projectId])
+  @@map("product_studio_research_sources")
+}
+
+model ProductStudioPriceObservation {
+  id                  String   @id @default(cuid())
+  projectId           String
+  sellerName          String
+  url                 String
+  price               Decimal  @db.Decimal(12, 2)
+  currency            String
+  condition           String?
+  includedAccessories String?
+  notes               String?  @db.Text
+  observedAt          DateTime @default(now())
+
+  project ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([observedAt])
+  @@map("product_studio_price_observations")
+}
+
+model ProductStudioComposition {
+  id                String                         @id @default(cuid())
+  projectId         String
+  slot              Int
+  name              String
+  sourceSeller      String?
+  sourceUrl         String?
+  referenceImageUrl String?
+  rationale         String                        @db.Text
+  attributes        Json
+  prompt            String                        @db.Text
+  status            ProductStudioCompositionStatus @default(planned)
+  errorMessage      String?                       @db.Text
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+
+  project ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, slot])
+  @@index([projectId])
+  @@index([status])
+  @@map("product_studio_compositions")
+}
+
+enum ProductStudioCompositionStatus {
+  planned
+  queued
+  generating
+  generated
+  failed
 }
 
 model ProductVariant {

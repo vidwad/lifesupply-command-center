@@ -62,6 +62,11 @@ const CHOKEPOINTS: Chokepoint[] = [
     file: "server/services/ai/actions.ts",
     mustContain: ["FEATURE_FLAGS.AI_ACTIONS"],
   },
+  {
+    capability: "Product Studio image generation",
+    file: "server/services/product-studio/index.ts",
+    mustContain: ["FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION", "requireFeature", "writeAudit"],
+  },
 ];
 
 describe("high-risk chokepoints stay wired", () => {
@@ -95,6 +100,7 @@ describe("high-risk chokepoints stay wired", () => {
       "AI_ACTIONS",
       "MAILCHIMP_SEND",
       "INVESTOR_DISTRIBUTION",
+      "PRODUCT_STUDIO_IMAGE_GENERATION",
     ]) {
       expect(killSwitch, `kill switch must include ${flag}`).toContain(flag);
     }
