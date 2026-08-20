@@ -1,3 +1,4 @@
+import { aspectPhrase, detectAspect } from "./prompt-controls";
 import type { ProductStudioCompositionBrief } from "./types";
 
 export function buildProductResearchPrompt(args: {
@@ -43,7 +44,11 @@ export function compileProductImagePrompt(args: {
   composition: ProductStudioCompositionBrief;
 }): string {
   const c = args.composition;
-  return `Create one premium, photorealistic square e-commerce product photograph.
+  // The brief's layout dictates the frame. Asking for a square while the brief
+  // says "landscape orientation" is an unsatisfiable instruction and the model
+  // silently drops one half of it.
+  const aspect = detectAspect(c.layout, c.cropAndNegativeSpace);
+  return `Create one premium, photorealistic ${aspectPhrase(aspect)} e-commerce product photograph.
 
 AUTHORITATIVE PRODUCT LOCK
 The attached user photographs are the sole authoritative visual reference for the exact physical item. Preserve its real construction, proportions, colors, materials, markings, accessories, and visible used condition. Product: ${args.identity.brand} ${args.identity.model}. Identifiers: ${args.identity.modelIdentifiers.join(", ") || "use only what is visible"}. Condition notes: ${args.identity.conditionNotes.join("; ") || "preserve visible condition exactly"}.
@@ -63,7 +68,7 @@ COMPOSITION ${c.slot} — ${c.name}
 - Shadow / reflection: ${c.shadowTreatment}
 - Crop and negative space: ${c.cropAndNegativeSpace}
 - Depth of field: ${c.depthOfField}
-- Accessories to include: ${c.props.length ? c.props.join(", ") : "none"}
+- Accessories to include, ONLY if visible in the reference photographs: ${c.props.length ? c.props.join(", ") : "none"}
 - Accessories to exclude from this frame: ${c.accessoriesExclude.length ? c.accessoriesExclude.join(", ") : "none"}
 - Condition details that must stay visible: ${c.conditionMustShow.length ? c.conditionMustShow.join("; ") : "all genuine wear visible in the reference photos"}
 
@@ -72,6 +77,7 @@ EXECUTION RULES
 - Keep the product identity and condition faithful to the reference photos even if that differs from generic model knowledge.
 - Use the researched image only as a high-level composition pattern; do not reproduce retailer-specific text, graphics, watermarks, staging, or protected creative details.
 - Do not add invented accessories, serial numbers, labels, damage, dust, packaging, hands, people, prices, badges, sales copy, or decorative graphics.
+- If this composition calls for an accessory, prop, packaging, or surface detail that is not visible in the reference photographs, OMIT it and compose the frame without it. Never substitute a stand-in or invent one to satisfy the brief — an incomplete but truthful frame is correct, a complete but invented one is not.
 - Do not hide condition-relevant areas behind props or packaging.
 - No duplicated parts, warped geometry, garbled lettering, or altered switches/controls.
 - ${c.negativeConstraints.join("\n- ")}

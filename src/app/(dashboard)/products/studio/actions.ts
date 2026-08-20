@@ -60,7 +60,13 @@ export async function queueGenerationAction(formData: FormData): Promise<void> {
   const user = await requireStudioUser();
   const projectId = String(formData.get("projectId") ?? "");
   const slot = Number(formData.get("slot"));
-  await queueProductStudioGeneration({ projectId, slot, actorUserId: user.id });
+  const operatorInstructions = formData.get("operatorInstructions");
+  await queueProductStudioGeneration({
+    projectId,
+    slot,
+    actorUserId: user.id,
+    operatorInstructions: typeof operatorInstructions === "string" ? operatorInstructions : null,
+  });
   revalidatePath(`/products/studio/${projectId}`);
 }
 

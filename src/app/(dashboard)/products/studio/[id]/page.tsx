@@ -23,6 +23,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
 import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
+import { MAX_OPERATOR_INSTRUCTIONS } from "@/server/services/product-studio/prompt-controls";
 import {
   approvedSlotCount,
   buildWorkflowSteps,
@@ -287,11 +288,32 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                   </Button>
                                 </form>
                                 {asset.status === "rejected" && canUseGeneration && !busy ? (
-                                  <form action={queueGenerationAction}>
+                                  <form
+                                    action={queueGenerationAction}
+                                    className="w-full space-y-2 rounded-md border p-3"
+                                  >
                                     <input type="hidden" name="projectId" value={project.id} />
                                     <input type="hidden" name="slot" value={composition.slot} />
+                                    <label
+                                      className="block text-xs font-medium"
+                                      htmlFor={`instructions-${composition.slot}`}
+                                    >
+                                      Adjust and regenerate (revision {asset.revision + 1})
+                                    </label>
+                                    <textarea
+                                      id={`instructions-${composition.slot}`}
+                                      name="operatorInstructions"
+                                      rows={2}
+                                      maxLength={MAX_OPERATOR_INSTRUCTIONS}
+                                      placeholder="e.g. Exclude the soft case and caps. Tighten the crop on the nameplate."
+                                      className="w-full rounded-md border bg-background p-2 text-xs"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Changes staging and framing only. Product identity and visible
+                                      condition stay locked to your source photographs.
+                                    </p>
                                     <Button type="submit" size="sm" variant="outline">
-                                      <RefreshCw /> Regenerate (r{asset.revision + 1})
+                                      <RefreshCw /> Regenerate
                                     </Button>
                                   </form>
                                 ) : null}
