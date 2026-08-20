@@ -75,6 +75,9 @@ async function checkFeatureFlags(): Promise<Check> {
     // Spends OpenAI image-generation credits; kill-switch covered, so the
     // health probe must observe it like the other kill-set flags.
     FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION,
+    // Future BigCommerce sale-price writebacks (DP-1 ships no write path);
+    // kill-switch covered, so the probe observes it from day one.
+    FEATURE_FLAGS.PRICING_WRITEBACKS,
   ]) {
     if (flags[key]) risky.push(key);
   }

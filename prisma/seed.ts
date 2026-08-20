@@ -4,6 +4,7 @@ import { seedAuth } from "./seed/auth";
 import { seedGovernance } from "./seed/governance";
 import { seedManagement } from "./seed/management";
 import { seedOperating } from "./seed/operating";
+import { seedPricing } from "./seed/pricing";
 import { seedStrategic } from "./seed/strategic";
 import { seedTransactions } from "./seed/transactions";
 
@@ -14,6 +15,7 @@ async function main() {
 
   const admin = await seedAuth(prisma);
   await seedGovernance(prisma);
+  await seedPricing(prisma);
   await seedOperating(prisma);
   await seedTransactions(prisma);
   await seedManagement(prisma);

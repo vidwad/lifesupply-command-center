@@ -74,6 +74,12 @@ export const PRIMARY_NAV: NavItem[] = [
     permission: PERMISSIONS.PRODUCTS_UPDATE,
   },
   {
+    label: "Pricing Intelligence",
+    href: "/products/pricing",
+    icon: CircleDollarSign,
+    permission: PERMISSIONS.PRICING_VIEW,
+  },
+  {
     label: "Suppliers",
     href: "/suppliers",
     icon: Building2,

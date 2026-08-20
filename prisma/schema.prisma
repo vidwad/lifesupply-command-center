@@ -77,6 +77,11 @@ model User {
   forecastsApproved           ForecastScenario[]     @relation("ForecastApprover")
   agentRuns                   AgentRun[]             @relation("AgentRunTrigger")
   productStudioProjects       ProductStudioProject[] @relation("ProductStudioCreator")
+  pricingRunsCreated          PricingRun[]           @relation("PricingRunCreator")
+  priceRecommendationsApproved PriceRecommendation[] @relation("PriceRecommendationApprover")
+  priceRecommendationsRejected PriceRecommendation[] @relation("PriceRecommendationRejecter")
+  priceWritebacksWritten      PriceWritebackLog[]    @relation("PriceWritebackWriter")
+  productCompetitorUrlsVerified ProductCompetitorUrl[] @relation("ProductCompetitorUrlVerifier")
 
   @@index([status])
   @@map("users")
@@ -221,6 +226,10 @@ model Store {
   websiteMetrics         WebsiteMetric[]
   integrationConnections IntegrationConnection[]
   reconciliationReports  ReconciliationReport[]
+  pricingRules           PricingRule[]
+  pricingRuns            PricingRun[]
+  pricingRunItems        PricingRunItem[]
+  priceWritebackLogs     PriceWritebackLog[]
 
   @@unique([sourceSystem, externalStoreId])
   @@index([divisionId])
@@ -361,6 +370,7 @@ model Category {
   parentCategory  Category?  @relation("CategoryTree", fields: [parentCategoryId], references: [id], onDelete: SetNull)
   childCategories Category[] @relation("CategoryTree")
   products        Product[]
+  pricingRules    PricingRule[]
 
   @@unique([sourceSystem, sourceId])
   @@index([storeId])
@@ -397,6 +407,10 @@ model Product {
   orderItems       OrderItem[]
   supplierProducts SupplierProduct[]
   studioProjects   ProductStudioProject[]
+  pricingRules     PricingRule[]
+  pricingRunItems  PricingRunItem[]
+  priceWritebackLogs PriceWritebackLog[]
+  competitorUrls   ProductCompetitorUrl[]
 
   @@unique([sourceSystem, sourceId])
   @@index([storeId])
@@ -602,6 +616,10 @@ model ProductVariant {
   product          Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
   orderItems       OrderItem[]
   supplierProducts SupplierProduct[]
+  pricingRules     PricingRule[]
+  pricingRunItems  PricingRunItem[]
+  priceWritebackLogs PriceWritebackLog[]
+  competitorUrls   ProductCompetitorUrl[]
 
   @@unique([sourceSystem, sourceId])
   @@index([productId])
@@ -2123,4 +2141,325 @@ enum InvestorUpdateStatus {
   approved
   released
   archived
+}
+// =============================================================================
+// Pricing Intelligence (docs/22 PRD) — DP-1 foundation. Setup data only in
+// this phase: no competitor website is contacted and no BigCommerce price is
+// ever written from this module without pricing.writebacks + external
+// writebacks + permission + approval + audit (future DP-6).
+// =============================================================================
+
+model PricingCompetitor {
+  id                       String                    @id @default(cuid())
+  name                     String                    @unique
+  baseUrl                  String
+  enabled                  Boolean                   @default(true)
+  country                  String?
+  currency                 String                    @default("CAD")
+  searchUrlTemplate        String?
+  productUrlPattern        String?
+  rateLimitPerHour         Int                       @default(60)
+  termsReviewStatus        PricingTermsReviewStatus  @default(pending)
+  requiresManualUrlMapping Boolean                   @default(false)
+  notes                    String?                   @db.Text
+  lastSuccessfulCheckAt    DateTime?
+  lastFailedCheckAt        DateTime?
+  failureCount             Int                       @default(0)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+
+  observations   CompetitorPriceObservation[]
+  productUrls    ProductCompetitorUrl[]
+
+  @@index([enabled])
+  @@map("pricing_competitors")
+}
+
+enum PricingTermsReviewStatus {
+  pending
+  reviewed_allowed
+  reviewed_restricted
+  disabled
+}
+
+model PricingRule {
+  id                    String   @id @default(cuid())
+  name                  String   @unique
+  storeId               String?
+  categoryId            String?
+  productId             String?
+  productVariantId      String?
+  minCostMultiplier     Decimal  @default(1.40) @db.Decimal(6, 3)
+  defaultUndercutAmount Decimal  @default(0.01) @db.Decimal(10, 2)
+  defaultUndercutPct    Decimal? @db.Decimal(5, 2)
+  maxIncreasePct        Decimal  @default(10.00) @db.Decimal(5, 2)
+  maxDecreasePct        Decimal  @default(20.00) @db.Decimal(5, 2)
+  dailyBatchSize        Int      @default(300)
+  minConfidence         Decimal  @default(0.850) @db.Decimal(4, 3)
+  evidenceFreshnessHours Int     @default(48)
+  requiresApproval      Boolean  @default(true)
+  autoApproveEligible   Boolean  @default(false)
+  enabled               Boolean  @default(true)
+  notes                 String?  @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  store          Store?          @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  product        Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+
+  @@index([enabled])
+  @@index([storeId])
+  @@map("pricing_rules")
+}
+
+model PricingRun {
+  id             String               @id @default(cuid())
+  storeId        String
+  sourceType     PricingRunSourceType
+  rankingBasis   String?
+  lookbackWindow String?
+  targetCount    Int?
+  dailyBatchSize Int                  @default(300)
+  status         PricingRunStatus     @default(draft)
+  createdById    String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  lastBatchAt    DateTime?
+  metadata       Json?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  store     Store            @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  createdBy User?            @relation("PricingRunCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  items     PricingRunItem[]
+
+  @@index([storeId])
+  @@index([status])
+  @@map("pricing_runs")
+}
+
+enum PricingRunSourceType {
+  upload
+  top_products
+}
+
+enum PricingRunStatus {
+  draft
+  queued
+  running
+  paused
+  completed
+  failed
+  cancelled
+}
+
+model PricingRunItem {
+  id                     String               @id @default(cuid())
+  pricingRunId           String
+  storeId                String
+  productId              String?
+  productVariantId       String?
+  sku                    String
+  productName            String?
+  currentRegularPrice    Decimal?             @db.Decimal(12, 2)
+  currentSalePrice       Decimal?             @db.Decimal(12, 2)
+  currentEffectivePrice  Decimal?             @db.Decimal(12, 2)
+  costPrice              Decimal?             @db.Decimal(12, 2)
+  costSource             String?
+  floorPrice             Decimal?             @db.Decimal(12, 2)
+  lowestCompetitorPrice  Decimal?             @db.Decimal(12, 2)
+  recommendedSalePrice   Decimal?             @db.Decimal(12, 2)
+  recommendationType     String?
+  confidence             Decimal?             @db.Decimal(4, 3)
+  status                 PricingRunItemStatus @default(pending)
+  blockedReason          String?
+  lastCheckedAt          DateTime?
+  metadata               Json?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
+  pricingRun     PricingRun                   @relation(fields: [pricingRunId], references: [id], onDelete: Cascade)
+  store          Store                        @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  product        Product?                     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productVariant ProductVariant?              @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+  observations   CompetitorPriceObservation[]
+  recommendations PriceRecommendation[]
+
+  @@index([pricingRunId])
+  @@index([status])
+  @@index([sku])
+  @@map("pricing_run_items")
+}
+
+enum PricingRunItemStatus {
+  pending
+  checked
+  recommendation_ready
+  approved
+  rejected
+  blocked
+  written_back
+  failed
+}
+
+model CompetitorPriceObservation {
+  id                     String                    @id @default(cuid())
+  pricingRunItemId       String
+  competitorId           String
+  competitorUrl          String
+  observedRegularPrice   Decimal?                  @db.Decimal(12, 2)
+  observedSalePrice      Decimal?                  @db.Decimal(12, 2)
+  observedEffectivePrice Decimal?                  @db.Decimal(12, 2)
+  currency               String?
+  availability           String?
+  shippingNote           String?
+  taxNote                String?
+  matchConfidence        Decimal?                  @db.Decimal(4, 3)
+  extractionMethod       PricingExtractionMethod
+  rawEvidenceText        String?                   @db.Text
+  evidenceRef            String?
+  checkedAt              DateTime?
+  status                 PricingObservationStatus  @default(valid)
+  errorMessage           String?                   @db.Text
+  createdAt              DateTime                  @default(now())
+
+  pricingRunItem PricingRunItem    @relation(fields: [pricingRunItemId], references: [id], onDelete: Cascade)
+  competitor     PricingCompetitor @relation(fields: [competitorId], references: [id], onDelete: Restrict)
+
+  @@index([pricingRunItemId])
+  @@index([competitorId])
+  @@map("competitor_price_observations")
+}
+
+enum PricingExtractionMethod {
+  direct_url
+  search_template
+  manual
+  ai_assisted
+}
+
+enum PricingObservationStatus {
+  valid
+  invalid
+  unavailable
+  low_confidence
+  failed
+}
+
+model PriceRecommendation {
+  id                    String                    @id @default(cuid())
+  pricingRunItemId      String
+  oldRegularPrice       Decimal?                  @db.Decimal(12, 2)
+  oldSalePrice          Decimal?                  @db.Decimal(12, 2)
+  recommendedSalePrice  Decimal                   @db.Decimal(12, 2)
+  floorPrice            Decimal?                  @db.Decimal(12, 2)
+  costPrice             Decimal?                  @db.Decimal(12, 2)
+  marginBefore          Decimal?                  @db.Decimal(5, 4)
+  marginAfter           Decimal?                  @db.Decimal(5, 4)
+  lowestCompetitorPrice Decimal?                  @db.Decimal(12, 2)
+  undercutAmount        Decimal?                  @db.Decimal(10, 2)
+  recommendationType    String
+  reason                String?                   @db.Text
+  requiresApproval      Boolean                   @default(true)
+  status                PriceRecommendationStatus @default(draft)
+  approvedById          String?
+  approvedAt            DateTime?
+  rejectedById          String?
+  rejectedAt            DateTime?
+  rejectionReason       String?
+  expiresAt             DateTime?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  pricingRunItem PricingRunItem      @relation(fields: [pricingRunItemId], references: [id], onDelete: Cascade)
+  approvedBy     User?               @relation("PriceRecommendationApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectedBy     User?               @relation("PriceRecommendationRejecter", fields: [rejectedById], references: [id], onDelete: SetNull)
+  writebackLogs  PriceWritebackLog[]
+
+  @@index([pricingRunItemId])
+  @@index([status])
+  @@map("price_recommendations")
+}
+
+enum PriceRecommendationStatus {
+  draft
+  ready_for_review
+  approved
+  rejected
+  expired
+  written_back
+  failed
+}
+
+model PriceWritebackLog {
+  id               String               @id @default(cuid())
+  recommendationId String
+  storeId          String
+  productId        String?
+  productVariantId String?
+  sourceSystem     String?
+  sourceProductId  String?
+  sourceVariantId  String?
+  oldRegularPrice  Decimal?             @db.Decimal(12, 2)
+  oldSalePrice     Decimal?             @db.Decimal(12, 2)
+  newSalePrice     Decimal              @db.Decimal(12, 2)
+  status           PriceWritebackStatus @default(queued)
+  requestPayload   Json?
+  responsePayload  Json?
+  errorMessage     String?              @db.Text
+  writtenById      String?
+  writtenAt        DateTime?
+  rollbackPayload  Json?
+  rollbackAt       DateTime?
+  createdAt        DateTime             @default(now())
+
+  recommendation PriceRecommendation @relation(fields: [recommendationId], references: [id], onDelete: Restrict)
+  store          Store               @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  product        Product?            @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productVariant ProductVariant?     @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+  writtenBy      User?               @relation("PriceWritebackWriter", fields: [writtenById], references: [id], onDelete: SetNull)
+
+  @@index([recommendationId])
+  @@index([status])
+  @@map("price_writeback_logs")
+}
+
+enum PriceWritebackStatus {
+  queued
+  succeeded
+  failed
+  rolled_back
+}
+
+model ProductCompetitorUrl {
+  id               String                     @id @default(cuid())
+  productId        String?
+  productVariantId String?
+  competitorId     String
+  competitorUrl    String
+  matchConfidence  Decimal?                   @db.Decimal(4, 3)
+  verifiedAt       DateTime?
+  verifiedById     String?
+  status           ProductCompetitorUrlStatus @default(active)
+  notes            String?                    @db.Text
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  product        Product?          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant?   @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  competitor     PricingCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  verifiedBy     User?             @relation("ProductCompetitorUrlVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@unique([competitorId, competitorUrl])
+  @@index([productId])
+  @@index([productVariantId])
+  @@map("product_competitor_urls")
+}
+
+enum ProductCompetitorUrlStatus {
+  active
+  needs_review
+  disabled
 }
