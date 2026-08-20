@@ -47,6 +47,13 @@ Rules for using this register:
 | Package manager | pnpm 10.0.0 (`package.json` → `packageManager`) |
 | `package.json` version | `0.0.1` — see decision `DEC-11` |
 
+> **Baseline currency (2026-08-08).** `6db79b2` remains the *recorded Phase 11A baseline* and is
+> deliberately historical — it is the commit the launch gates were scoped against. `main` has since
+> advanced through the Phase 11B–11G packages and then through two feature merges (PR #24 Product
+> Studio, PR #25 Pricing Intelligence DP-1). The divergence is tracked as `BLK-08` / `DEC-16`; it does
+> not invalidate the baseline record above, but it does mean gate evidence must state which commit it
+> was gathered against.
+
 ### 2.1 Merged Phase 1–10 history
 
 All roadmap phases are merged into `main`. Verified via `gh pr list --state merged` and
@@ -333,6 +340,7 @@ Blockers identified during Phase 11A that are not resolvable by documentation al
 | BLK-05 | `docs/OPS_RUNBOOK.md` §9 restore-drill log is empty and §8 incident contacts list `TBD` for tech lead and hosting owners. | `GATE-06` and `GATE-07` cannot be closed. | 2026-08-04 | Product Owner | Complete in 11E/11F. Requires `DEC-09`. | Open |
 | BLK-06 | No named owners exist for any Phase 11 role. Every "Accountable role" in this register is a role, not a person. | No gate can reach **Accepted** without an accountable person. | 2026-08-04 | Product Owner | Assign named owners. Requires `DEC-09`. | Open |
 | BLK-07 | Object storage is referenced throughout the plan and `docs/16_DEPLOYMENT_AND_ENVIRONMENT.md` §6, but no `S3_*` values are configured in `render.yaml` for any environment. | Supplier evidence, exports, and report artefacts may not persist as designed. | 2026-08-04 | Technical Lead | `S3_*` variables reserved (`sync: false`) in `render.staging.yaml` so the blueprint carries the slots; app treats storage as optional today (supplier evidence persists in Postgres since Phase 7). Provider choice + bucket provisioning await `DEC-03`. | Open — awaiting `DEC-03` |
+| BLK-08 | `main` has advanced beyond the recorded baseline with new feature modules — Product Studio (PR #24) and Pricing Intelligence DP-1 (PR #25), plus two new migrations — merged while `CLAUDE.md` §2/§9 declared feature expansion frozen for Phase 11. | Phase 11C security evidence, 11D reconciliation scope, and 11E performance thresholds were all scoped to baseline `6db79b2`, which no longer describes `main`. Gate evidence gathered before these merges may not cover the pricing engine or the OpenAI image pipeline. | 2026-08-08 | Product Owner | Ratify or reverse the scope change (`DEC-16`). If ratified, re-scope 11C/11D/11E evidence to the new surface area and record a superseding baseline. | Open — awaiting `DEC-16` |
 
 ---
 
@@ -358,6 +366,7 @@ Phase 11A. All are **TBD**.
 | DEC-13 | Acceptable reconciliation tolerance for BigCommerce and QuickBooks | 11D | TBD | TBD |
 | DEC-14 | Whether live supplier-portal read-only testing is authorised, and by whom | 11D | TBD | TBD |
 | DEC-15 | Agreed performance thresholds for dashboards, tables, exports, reports | 11E | TBD | TBD |
+| DEC-16 | Ratify or reverse reopening feature development during the Phase 11 freeze (Product Studio, Pricing Intelligence). If ratified, record the superseding baseline and re-scope 11C/11D/11E evidence. | Immediately | TBD | TBD |
 
 ---
 
@@ -371,3 +380,4 @@ Phase 11A. All are **TBD**.
 | 2026-08-05 | Phase 11D repository-side delivery: `docs/23_INTEGRATION_CERTIFICATION_WORKBOOK.md` (per-integration certification sheets, staging procedures, DEC-13 tolerance options, findings I-01–I-07). New automated guards: `qbo-read-only.test.ts` (no write scope/path), stuck-sync audit + operator reap tooling with Automation Center card (GATE-02), export-time suppression re-check in `exportCampaignToMailchimp` with per-status tests and chokepoint canaries (finding I-01 fixed), shared suppressed-status constant (I-03 fixed). Rows 11D-01–20 moved to Ready for Review / Evidence Required; no row Accepted; `DEC-05`/`DEC-06`/`DEC-07`/`DEC-13`/`DEC-14` remain unanswered — dependencies recorded, no answers assumed. | Claude Code (Phase 11D) |
 | 2026-08-05 | Phase 11C repository-side delivery: `docs/22_SECURITY_VERIFICATION_REPORT.md` (auth/session review, route matrix, export inventory, vault verification, AI posture, chokepoint controls, retention draft, findings log F-01–F-10, role matrix skeleton). New automated guards: `secrets.test.ts`, `route-permissions.test.ts`, `chokepoints.test.ts`; CI client-bundle secret scan (GATE-05). Hardening under the gate-fix freeze exception: session maxAge 24h/updateAge 1h, same-origin `redirectTo`, deployed-environment seed-password guard (GATE-09). Rows 11C-01–15 moved to Ready for Review / Evidence Required; no row Accepted; `DEC-08` remains unanswered. | Claude Code (Phase 11C) |
 | 2026-08-04 | Phase 11B repository-side delivery: `render.staging.yaml` staging blueprint, `docs/21_STAGING_ENVIRONMENT_GUIDE.md` (isolation design, connection matrix, provisioning runbook, smoke checklist, migration rehearsal + rollback, DEC-12 options), `.github/workflows/staging-smoke.yml`, CI schema-only `DIRECT_URL` (`BLK-03` resolved pending review), `/api/health` `environment` field. Rows 11B-01–14 moved to Ready for Review / Evidence Required; no row Accepted; `DEC-12` deliberately unanswered. | Claude Code (Phase 11B) |
+| 2026-08-08 | Defect corrections outside the work-package sequence: committed migration `20260820032855_fix_product_studio_asset_index_name` resolving permanent Prisma drift caused by a 64-character index name truncated by PostgreSQL in `20260819000000_product_studio_mvp` (`migrate dev` prompted for a new migration on every run); renumbered the duplicate `docs/22_PRICING_INTELLIGENCE_DYNAMIC_PRICING_PRD.md` to `docs/28_...` to clear the collision with `docs/22_SECURITY_VERIFICATION_REPORT.md`. Raised `BLK-08` and `DEC-16` recording that feature development reopened during the declared freeze. No gate moved to Accepted; no production readiness claimed. | Claude Code |
