@@ -23,8 +23,14 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
 import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
+import {
+  approvedSlotCount,
+  buildWorkflowSteps,
+  isWorkflowBusy,
+} from "@/server/services/product-studio/workflow-progress";
 
 import { queueGenerationAction, queueResearchAction, reviewAssetAction } from "../actions";
+import { WorkflowProgress } from "./workflow-progress";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +79,17 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   const nextComposition = project.compositions.find((item) =>
     ["planned", "failed"].includes(item.status),
   );
-  const busy = project.compositions.some((item) => ["queued", "generating"].includes(item.status));
+  // Busyness must include the research phase, which runs before any
+  // composition row exists. Deriving it from compositions alone left the
+  // whole research stage rendering as idle with no button and no progress.
+  const progressInput = {
+    status: project.status,
+    compositions: project.compositions,
+    assets: project.assets,
+  };
+  const busy = isWorkflowBusy(progressInput);
+  const workflowSteps = buildWorkflowSteps(progressInput);
+  const approvedCount = approvedSlotCount(progressInput);
   const canResearch =
     flags[FEATURE_FLAGS.PRODUCT_STUDIO] &&
     generatedAssets.length === 0 &&
@@ -345,7 +361,11 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   Long-running AI work is handled by the background worker.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
+                <WorkflowProgress steps={workflowSteps} />
+                <p className="text-xs text-muted-foreground">
+                  {approvedCount} of 4 image{approvedCount === 1 ? "" : "s"} approved.
+                </p>
                 {canResearch ? (
                   <form action={queueResearchAction}>
                     <input type="hidden" name="projectId" value={project.id} />
@@ -363,9 +383,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                     </Button>
                   </form>
                 ) : null}
-                {busy ? (
+                {busy && !canResearch && !canGenerate ? (
                   <p className="text-sm text-muted-foreground">
-                    Work is in progress. Refresh this page after the worker completes.
+                    The worker is processing this project. Progress above updates automatically.
                   </p>
                 ) : null}
                 {!flags[FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION] &&
