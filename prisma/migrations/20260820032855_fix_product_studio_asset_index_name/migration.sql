@@ -1,0 +1,2 @@
+-- RenameIndex
+ALTER INDEX "product_studio_assets_projectId_kind_compositionSlot_revision_k" RENAME TO "product_studio_assets_projectId_kind_compositionSlot_revisi_key";

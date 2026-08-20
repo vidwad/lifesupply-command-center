@@ -987,7 +987,7 @@ Please read:
 - CLAUDE.md
 - docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md
 - docs/RELEASE_READINESS_STATUS.md
-- docs/22_PRICING_INTELLIGENCE_DYNAMIC_PRICING_PRD.md
+- docs/28_PRICING_INTELLIGENCE_DYNAMIC_PRICING_PRD.md
 - prisma/schema.prisma
 - src/lib/permissions.ts
 - src/lib/feature-flags.ts
