@@ -96,6 +96,27 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
+      # ---- OpenAI — required by Product Studio (research + image drafts) ----
+      # PREFERRED: store the key in the encrypted vault at /admin/integrations
+      # (openai / apiKey). The vault is shared by web and worker via the
+      # database + MASTER_ENCRYPTION_KEY, so one entry covers both services and
+      # needs no redeploy. Env wins over the vault when both are set.
+      #
+      # OPENAI_MODEL must be a Responses-compatible multimodal model that
+      # supports the `web_search` tool — Product Studio research calls
+      # `tools: [{type: "web_search"}]`. Unset falls back to the application
+      # default, which is NOT verified for web-search support. Set explicitly.
+      #
+      # OPENAI_IMAGE_MODEL defaults to gpt-image-2 in code; override only with a
+      # tested replacement supporting arbitrary square sizes and high-fidelity
+      # multi-image editing (docs/27 §7).
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: OPENAI_IMAGE_MODEL
+        sync: false
+
       # ---- optional: investor-update email distribution ----
       - key: RESEND_API_KEY
         sync: false
@@ -158,6 +179,16 @@ services:
       - key: INNGEST_EVENT_KEY
         sync: false
       - key: INNGEST_SIGNING_KEY
+        sync: false
+
+      # ---- OpenAI — the worker runs Product Studio research + image jobs ----
+      # Only needed if you prefer env over the vault; the vault entry at
+      # /admin/integrations already reaches this service.
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: OPENAI_IMAGE_MODEL
         sync: false
 
       # ---- always set ----
