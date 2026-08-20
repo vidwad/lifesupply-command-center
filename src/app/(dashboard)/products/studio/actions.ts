@@ -11,6 +11,7 @@ import {
   queueProductStudioGeneration,
   queueProductStudioResearch,
   reviewProductStudioAsset,
+  deleteProductStudioProject,
 } from "@/server/services/product-studio";
 
 export type ProductStudioActionState = { error?: string } | undefined;
@@ -81,4 +82,12 @@ export async function reviewAssetAction(formData: FormData): Promise<void> {
   }
   await reviewProductStudioAsset({ assetId, actorUserId: user.id, decision: rawDecision });
   revalidatePath(`/products/studio/${projectId}`);
+}
+
+export async function deleteProjectAction(formData: FormData): Promise<void> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  await deleteProductStudioProject({ projectId, actorUserId: user.id });
+  revalidatePath("/products/studio");
+  redirect("/products/studio");
 }
