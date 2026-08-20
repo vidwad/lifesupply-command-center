@@ -21,7 +21,7 @@ docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md
 docs/RELEASE_READINESS_STATUS.md
 ```
 
-Phase 11 is the sole active workstream. New feature development is frozen except for defects or changes required to pass a Phase 11 launch gate. Claude Code must not rerun Phases 1–10 unless the product owner explicitly reopens one of them.
+Phase 11 remains the active deployment-readiness workstream. New feature development was unfrozen on 2026-08-20 (`DEC-16` in `docs/RELEASE_READINESS_STATUS.md`); the Phase 11 launch gates are unaffected and still govern production. Claude Code must not rerun Phases 1–10 unless the product owner explicitly reopens one of them.
 
 ---
 
