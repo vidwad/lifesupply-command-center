@@ -151,3 +151,35 @@ describe("approvedSlotCount", () => {
     expect(approvedSlotCount(base)).toBe(0);
   });
 });
+
+describe("isWorkflowBusy as the delete guard", () => {
+  // deleteProductStudioProject refuses while a worker job is in flight, or the
+  // job would write to rows that no longer exist. It calls isWorkflowBusy with
+  // an empty assets list, so the guard must not depend on assets at all.
+  const guard = (status: string, compositionStatuses: string[] = []) =>
+    isWorkflowBusy({
+      status,
+      compositions: compositionStatuses.map((s, i) => ({ slot: i + 1, status: s })),
+      assets: [],
+    });
+
+  it("blocks deletion while research or generation is running", () => {
+    expect(guard("research_queued")).toBe(true);
+    expect(guard("researching")).toBe(true);
+    expect(guard("ready_to_generate", ["queued"])).toBe(true);
+    expect(guard("generating", ["generated", "generating"])).toBe(true);
+  });
+
+  it("allows deletion at every resting state", () => {
+    expect(guard("draft")).toBe(false);
+    expect(guard("failed")).toBe(false);
+    expect(guard("ready_to_generate", ["planned", "planned"])).toBe(false);
+    expect(guard("needs_review", ["generated", "generated"])).toBe(false);
+    expect(guard("approved", ["generated", "generated", "generated", "generated"])).toBe(false);
+    expect(guard("archived")).toBe(false);
+  });
+
+  it("allows deletion of a half-finished project that is not running", () => {
+    expect(guard("needs_review", ["generated", "failed", "planned", "planned"])).toBe(false);
+  });
+});

@@ -33,6 +33,7 @@ import {
 } from "@/server/services/product-studio/workflow-progress";
 
 import { queueGenerationAction, queueResearchAction, reviewAssetAction } from "../actions";
+import { StudioActionForm } from "../studio-action-form";
 import { WorkflowProgress } from "./workflow-progress";
 
 export const dynamic = "force-dynamic";
@@ -285,24 +286,24 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                             ) : null}
                             {asset ? (
                               <div className="flex flex-wrap gap-2">
-                                <form action={reviewAssetAction}>
+                                <StudioActionForm action={reviewAssetAction}>
                                   <input type="hidden" name="projectId" value={project.id} />
                                   <input type="hidden" name="assetId" value={asset.id} />
                                   <input type="hidden" name="decision" value="approved" />
                                   <Button type="submit" size="sm" variant="outline">
                                     <Check /> Approve
                                   </Button>
-                                </form>
-                                <form action={reviewAssetAction}>
+                                </StudioActionForm>
+                                <StudioActionForm action={reviewAssetAction}>
                                   <input type="hidden" name="projectId" value={project.id} />
                                   <input type="hidden" name="assetId" value={asset.id} />
                                   <input type="hidden" name="decision" value="rejected" />
                                   <Button type="submit" size="sm" variant="outline">
                                     <X /> Reject
                                   </Button>
-                                </form>
+                                </StudioActionForm>
                                 {asset.status === "rejected" && canUseGeneration && !busy ? (
-                                  <form
+                                  <StudioActionForm
                                     action={queueGenerationAction}
                                     className="w-full space-y-2 rounded-md border p-3"
                                   >
@@ -329,7 +330,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                     <Button type="submit" size="sm" variant="outline">
                                       <RefreshCw /> Regenerate
                                     </Button>
-                                  </form>
+                                  </StudioActionForm>
                                 ) : null}
                               </div>
                             ) : null}
@@ -403,31 +404,31 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   {approvedCount} of 4 image{approvedCount === 1 ? "" : "s"} approved.
                 </p>
                 {canResearch ? (
-                  <form action={queueResearchAction}>
+                  <StudioActionForm action={queueResearchAction}>
                     <input type="hidden" name="projectId" value={project.id} />
                     <Button type="submit" className="w-full">
                       <Search /> Research retailers and prices
                     </Button>
-                  </form>
+                  </StudioActionForm>
                 ) : null}
                 {canGenerate && nextComposition ? (
                   <div className="space-y-2">
-                    <form action={queueGenerationAction}>
+                    <StudioActionForm action={queueGenerationAction}>
                       <input type="hidden" name="projectId" value={project.id} />
                       <input type="hidden" name="slot" value={nextComposition.slot} />
                       <Button type="submit" className="w-full">
                         <Sparkles /> Generate composition {nextComposition.slot}
                       </Button>
-                    </form>
+                    </StudioActionForm>
                     {remainingSlots > 1 ? (
-                      <form action={queueGenerationAction}>
+                      <StudioActionForm action={queueGenerationAction}>
                         <input type="hidden" name="projectId" value={project.id} />
                         <input type="hidden" name="slot" value={nextComposition.slot} />
                         <input type="hidden" name="autoContinue" value="1" />
                         <Button type="submit" variant="outline" className="w-full">
                           <Layers /> Generate all {remainingSlots} remaining
                         </Button>
-                      </form>
+                      </StudioActionForm>
                     ) : null}
                     <p className="text-xs text-muted-foreground">
                       {remainingSlots > 1

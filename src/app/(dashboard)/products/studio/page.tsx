@@ -10,6 +10,8 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
 import { listProductStudioProjects } from "@/server/services/product-studio";
 
+import { ProjectActions } from "./project-actions";
+
 export const metadata = { title: "Product Studio" };
 export const dynamic = "force-dynamic";
 
@@ -46,34 +48,35 @@ export default async function ProductStudioPage() {
         ) : (
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
             {projects.map((project) => (
-              <Link key={project.id} href={`/products/studio/${project.id}`}>
-                <Card className="h-full transition-colors hover:bg-accent/40">
-                  <CardContent className="space-y-3 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h2 className="font-semibold leading-snug">
+              <Card key={project.id} className="h-full">
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-semibold leading-snug">
+                        <Link href={`/products/studio/${project.id}`} className="hover:underline">
                           {project.confirmedTitle ?? project.title}
-                        </h2>
-                        {project.product ? (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Catalog: {project.product.name}{" "}
-                            {project.product.sku ? `· ${project.product.sku}` : ""}
-                          </p>
-                        ) : null}
-                      </div>
-                      <Badge variant="outline">{project.status.replaceAll("_", " ")}</Badge>
+                        </Link>
+                      </h2>
+                      {project.product ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Catalog: {project.product.name}{" "}
+                          {project.product.sku ? `· ${project.product.sku}` : ""}
+                        </p>
+                      ) : null}
                     </div>
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {project.finalDescription ?? project.shortDescription}
-                    </p>
-                    <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>{project._count.assets} assets</span>
-                      <span>{project._count.researchSources} sources</span>
-                      <span>{project._count.compositions}/4 concepts</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    <Badge variant="outline">{project.status.replaceAll("_", " ")}</Badge>
+                  </div>
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {project.finalDescription ?? project.shortDescription}
+                  </p>
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    <span>{project._count.assets} assets</span>
+                    <span>{project._count.researchSources} sources</span>
+                    <span>{project._count.compositions}/4 concepts</span>
+                  </div>
+                  <ProjectActions projectId={project.id} assetCount={project._count.assets} />
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}

@@ -21,8 +21,13 @@
 
 export type FrameAspect = "square" | "landscape" | "portrait";
 
-/** Longest operator instruction accepted, in characters. */
-export const MAX_OPERATOR_INSTRUCTIONS = 1_000;
+/**
+ * Longest operator instruction accepted, in characters. Matches the project
+ * short-description cap. The previous 1,000 was arbitrary and too tight: QA
+ * required-corrections lists run to eight or more detailed bullets, and pasting
+ * them is a reasonable thing to do.
+ */
+export const MAX_OPERATOR_INSTRUCTIONS = 4_000;
 
 const PORTRAIT = /\b(portrait|vertical)\b/i;
 const LANDSCAPE = /\b(landscape|horizontal|widescreen|wide\s+crop)\b/i;
@@ -69,7 +74,11 @@ export class OperatorInstructionError extends Error {}
 
 /** Trims, validates, and returns null for an empty instruction. */
 export function normaliseOperatorInstructions(raw: string | null | undefined): string | null {
-  const value = raw?.trim();
+  // A textarea's maxLength counts a newline as one character while editing, but
+  // form submission normalises newlines to CRLF, so a multi-line value arrives
+  // longer than the browser allowed the operator to type. Measure the same way
+  // the browser did, or a value the UI accepted is rejected by the server.
+  const value = raw?.replace(/\r\n/g, "\n").trim();
   if (!value) return null;
   if (value.length > MAX_OPERATOR_INSTRUCTIONS) {
     throw new OperatorInstructionError(
