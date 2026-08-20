@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { normaliseOperatorInstructions } from "./prompt-controls";
+import { isWorkflowBusy } from "./workflow-progress";
 
 import type { Prisma } from "@prisma/client";
 
@@ -263,7 +264,16 @@ export async function queueProductStudioGeneration(args: {
   ]);
   // Validate before dispatch so a too-long instruction fails in the request
   // rather than inside a worker job the operator cannot see.
-  const operatorInstructions = normaliseOperatorInstructions(args.operatorInstructions);
+  let operatorInstructions: string | null;
+  try {
+    operatorInstructions = normaliseOperatorInstructions(args.operatorInstructions);
+  } catch (error) {
+    // Surfaces as a field-level message rather than a 500. prompt-controls
+    // cannot throw ProductStudioInputError directly without an import cycle.
+    throw new ProductStudioInputError(
+      error instanceof Error ? error.message : "Instructions could not be read.",
+    );
+  }
   await inngest.send({
     id: `product-studio-generate-${args.projectId}-${args.slot}-${Date.now()}`,
     name: "product-studio/image.requested",
@@ -321,6 +331,57 @@ export async function reviewProductStudioAsset(args: {
     entityType: "ProductStudioAsset",
     entityId: asset.id,
     afterData: { projectId: asset.projectId, compositionSlot: asset.compositionSlot },
+  });
+}
+
+/**
+ * Permanently deletes a project and its working artefacts.
+ *
+ * Child rows (assets, research sources, price observations, compositions)
+ * cascade at the database level. AiOutput and AuditLog rows reference the
+ * project by string rather than foreign key, so the record of what was
+ * generated, by which model, for which actor, deliberately survives the
+ * deletion — the working artefacts go, the evidence trail does not.
+ */
+export async function deleteProductStudioProject(args: {
+  projectId: string;
+  actorUserId: string;
+}): Promise<void> {
+  const project = await prisma.productStudioProject.findUniqueOrThrow({
+    where: { id: args.projectId },
+    include: {
+      compositions: { select: { slot: true, status: true } },
+      _count: { select: { assets: true, researchSources: true, priceObservations: true } },
+    },
+  });
+
+  // Refuse while a worker job is in flight. Deleting mid-run would leave the
+  // job writing to rows that no longer exist.
+  if (isWorkflowBusy({ status: project.status, compositions: project.compositions, assets: [] })) {
+    throw new ProductStudioInputError(
+      "This project has work in progress. Wait for the worker to finish before deleting it.",
+    );
+  }
+
+  // Captured before the delete so the audit entry describes what was removed.
+  const beforeData = {
+    title: project.confirmedTitle ?? project.title,
+    status: project.status,
+    productId: project.productId,
+    assets: project._count.assets,
+    researchSources: project._count.researchSources,
+    priceObservations: project._count.priceObservations,
+    compositions: project.compositions.length,
+  };
+
+  await prisma.productStudioProject.delete({ where: { id: project.id } });
+
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: "product_studio.project_deleted",
+    entityType: "ProductStudioProject",
+    entityId: project.id,
+    beforeData,
   });
 }
 

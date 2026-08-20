@@ -72,6 +72,19 @@ describe("normaliseOperatorInstructions", () => {
     expect(normaliseOperatorInstructions("  tighten the crop  ")).toBe("tighten the crop");
   });
 
+  it("measures the way a textarea does, so CRLF from submission does not overflow", () => {
+    // A textarea maxLength counts a newline as one character while typing, but
+    // form submission normalises newlines to CRLF. Measuring the raw value
+    // rejected input the UI had already accepted — the live 500 that sent an
+    // operator to the generic error page with a digest reference.
+    const CRLF = String.fromCharCode(13) + String.fromCharCode(10);
+    const LF = String.fromCharCode(10);
+    const submitted = Array.from({ length: 40 }, () => "x".repeat(24)).join(CRLF);
+    expect(submitted.length).toBeGreaterThan(submitted.split(CRLF).join(LF).length);
+    expect(() => normaliseOperatorInstructions(submitted)).not.toThrow();
+    expect(normaliseOperatorInstructions("a" + CRLF + "b")).toBe("a" + LF + "b");
+  });
+
   it("rejects instructions beyond the cap", () => {
     expect(() => normaliseOperatorInstructions("x".repeat(MAX_OPERATOR_INSTRUCTIONS + 1))).toThrow(
       OperatorInstructionError,
