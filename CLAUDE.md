@@ -42,7 +42,9 @@ The immediate next phase is:
 Phase 11 — Deployment Readiness, Integration Validation, and Controlled Production Launch
 ```
 
-Run **one Phase 11 work package at a time**, beginning with Phase 11A. Freeze new feature expansion except for defects or changes required to pass a Phase 11 launch gate. Do not repeat Phases 1–10 unless the product owner explicitly reopens a completed phase.
+Run **one Phase 11 work package at a time**. Do not repeat Phases 1–10 unless the product owner explicitly reopens a completed phase.
+
+**Feature freeze: lifted (2026-08-20, `DEC-16`).** Feature development is reopened; new modules and enhancements no longer require a gate justification. This changes *development* scope only. The Phase 11 launch gates in `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` §5 remain fully in force: the application is still **not production-ready**, no gate has been accepted, and external write-backs, campaign sends, supplier ordering, investor distribution, and autonomous AI actions stay disabled until their gates are signed. New features widen the surface area that Phase 11C/11D/11E evidence must cover — see `BLK-09`.
 
 **Baseline:** `main` at `6db79b24d88a2a267fae839d9e7f962bfbb68c63` (merge of PR #17), CI run `30952484455` green on both jobs. The repository is a release candidate and is **not** production-ready. Only the product owner records acceptance of a launch gate; Claude Code may propose "Ready for Review" but must never mark a gate accepted, nor describe the application as production-ready.
 
@@ -294,7 +296,7 @@ Non-negotiable execution reminders:
 - Keep external write-backs, distributions, campaign sends, supplier ordering, and autonomous AI actions disabled.
 - Require evidence for every launch gate.
 - Do not declare production readiness until security, reconciliation, recovery, UAT, and cutover gates are signed.
-- Do not add new strategic modules during Phase 11 unless the product owner explicitly changes scope.
+- New strategic modules are permitted again since `DEC-16` (2026-08-20). Adding one does **not** relax any launch gate, and widens the evidence scope for 11C/11D/11E (`BLK-09`).
 
 ### Release branch and tag convention
 

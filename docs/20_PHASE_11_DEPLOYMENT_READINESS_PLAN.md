@@ -26,7 +26,10 @@ The recommended next stage is **Phase 11 — Deployment Readiness, Integration V
 6. Business user acceptance and operational readiness.
 7. Controlled production cutover and stabilization.
 
-No additional strategic modules should be added until the Phase 11 go-live gates are satisfied.
+> **Superseded 2026-08-20 (`DEC-16`).** This plan originally recommended adding no strategic modules until the
+> go-live gates were satisfied. The product owner has reopened feature development. The recommendation is
+> retained as the plan's original reasoning; the **launch gates in §5 are unchanged and still binding**, and
+> new modules widen the evidence scope for 11C/11D/11E (`BLK-09`).
 
 ---
 
@@ -60,7 +63,7 @@ The controlling documents state, and must continue to state:
 - Phases 1–10 are code-complete and merged, and are retained as historical implementation evidence.
 - The application is code-complete for the original roadmap but is **not** yet declared production-ready.
 - Phase 11 is the sole active workstream.
-- Feature expansion is frozen except for defects or changes required to pass a Phase 11 launch gate.
+- Feature expansion was frozen through 2026-08-20 and is now reopened by `DEC-16`. The launch gates in §5 are **not** relaxed by that decision; they continue to govern production readiness, and new features widen the evidence scope for 11C/11D/11E (`BLK-09`).
 - Work proceeds one Phase 11 work package at a time.
 
 Further documentation reconciled during Phase 11A:
