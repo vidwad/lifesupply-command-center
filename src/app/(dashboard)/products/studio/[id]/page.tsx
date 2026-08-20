@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Check,
+  Download,
   ExternalLink,
   ImageIcon,
+  Layers,
   RefreshCw,
   Search,
   ShieldAlert,
@@ -91,6 +93,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   const busy = isWorkflowBusy(progressInput);
   const workflowSteps = buildWorkflowSteps(progressInput);
   const approvedCount = approvedSlotCount(progressInput);
+  const remainingSlots = project.compositions.filter((item) =>
+    ["planned", "failed"].includes(item.status),
+  ).length;
   const canResearch =
     flags[FEATURE_FLAGS.PRODUCT_STUDIO] &&
     generatedAssets.length === 0 &&
@@ -202,6 +207,15 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                 className="object-contain"
                                 unoptimized
                               />
+                              <a
+                                href={`/api/product-studio/assets/${asset.id}?download=1`}
+                                download
+                                className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-background/90 px-2.5 py-1.5 text-xs font-medium shadow-sm ring-1 ring-border backdrop-blur transition-colors hover:bg-background"
+                                title={`Download ${asset.fileName}`}
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                Download
+                              </a>
                             </div>
                           ) : (
                             <div className="flex aspect-square items-center justify-center bg-muted/50">
@@ -397,13 +411,30 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   </form>
                 ) : null}
                 {canGenerate && nextComposition ? (
-                  <form action={queueGenerationAction}>
-                    <input type="hidden" name="projectId" value={project.id} />
-                    <input type="hidden" name="slot" value={nextComposition.slot} />
-                    <Button type="submit" className="w-full">
-                      <Sparkles /> Generate composition {nextComposition.slot}
-                    </Button>
-                  </form>
+                  <div className="space-y-2">
+                    <form action={queueGenerationAction}>
+                      <input type="hidden" name="projectId" value={project.id} />
+                      <input type="hidden" name="slot" value={nextComposition.slot} />
+                      <Button type="submit" className="w-full">
+                        <Sparkles /> Generate composition {nextComposition.slot}
+                      </Button>
+                    </form>
+                    {remainingSlots > 1 ? (
+                      <form action={queueGenerationAction}>
+                        <input type="hidden" name="projectId" value={project.id} />
+                        <input type="hidden" name="slot" value={nextComposition.slot} />
+                        <input type="hidden" name="autoContinue" value="1" />
+                        <Button type="submit" variant="outline" className="w-full">
+                          <Layers /> Generate all {remainingSlots} remaining
+                        </Button>
+                      </form>
+                    ) : null}
+                    <p className="text-xs text-muted-foreground">
+                      {remainingSlots > 1
+                        ? `Runs one at a time. Stops early if image QA rejects a draft, so a drifting identity does not consume the rest.`
+                        : `One composition left.`}
+                    </p>
+                  </div>
                 ) : null}
                 {busy && !canResearch && !canGenerate ? (
                   <p className="text-sm text-muted-foreground">

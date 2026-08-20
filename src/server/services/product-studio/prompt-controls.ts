@@ -104,3 +104,45 @@ that part of the instruction.
 
 ${value}`;
 }
+
+/** Longest QA correction list carried into a regeneration. */
+export const MAX_QA_CORRECTIONS = 12;
+
+/**
+ * Composes the prompt actually sent for one generation.
+ *
+ * Order matters. The researched brief comes first, then the previous
+ * revision's QA corrections, then operator instructions last so a human can
+ * override the QA model. Both added blocks restate that the identity lock wins,
+ * because a correction list is model-authored text and must not become a
+ * side-channel for authorising invention.
+ */
+export function buildEffectivePrompt(args: {
+  basePrompt: string;
+  /** requiredCorrections from the rejected revision's QA result. */
+  qaCorrections?: readonly string[] | null;
+  operatorInstructions?: string | null;
+}): string {
+  let prompt = args.basePrompt;
+
+  const corrections = (args.qaCorrections ?? [])
+    .map((line) => (typeof line === "string" ? line.trim() : ""))
+    .filter(Boolean)
+    .slice(0, MAX_QA_CORRECTIONS);
+
+  if (corrections.length > 0) {
+    prompt += `
+
+REQUIRED CORRECTIONS FROM THE PREVIOUS REVISION
+Automated image QA rejected the previous attempt for this composition. Fix each
+of the following. These describe how the frame failed to match the reference
+photographs and the brief; they never authorise adding anything absent from the
+references. Where a correction cannot be satisfied without inventing a product
+feature, accessory, marking, or packaging that is not visible in the references,
+omit that element and leave it out of the frame instead.
+
+${corrections.map((line, index) => `${index + 1}. ${line}`).join("\n")}`;
+  }
+
+  return applyOperatorInstructions(prompt, args.operatorInstructions);
+}

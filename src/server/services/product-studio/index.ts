@@ -225,6 +225,8 @@ export async function queueProductStudioGeneration(args: {
   actorUserId: string;
   /** Operator staging/framing guidance appended to the researched prompt. */
   operatorInstructions?: string | null;
+  /** Chain the remaining planned slots after this one succeeds. */
+  autoContinue?: boolean;
 }): Promise<void> {
   await Promise.all([
     requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO),

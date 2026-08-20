@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import {
-  applyOperatorInstructions,
+  decideNextChainedSlot,
+  PENDING_COMPOSITION_STATUSES,
+} from "@/server/services/product-studio/generation-chain";
+import {
+  buildEffectivePrompt,
   detectAspect,
 } from "@/server/services/product-studio/prompt-controls";
 
@@ -11,7 +15,10 @@ import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 import { inngest } from "@/server/inngest/client";
 import { requireFeature } from "@/server/services/feature-flags";
-import { compositionAttributes } from "@/server/services/product-studio";
+import {
+  compositionAttributes,
+  queueProductStudioGeneration,
+} from "@/server/services/product-studio";
 import {
   generateProductImage,
   qaProductImage,
@@ -21,7 +28,11 @@ import { compileProductImagePrompt } from "@/server/services/product-studio/prom
 import { planGenerationRevision } from "@/server/services/product-studio/revisions";
 
 type ResearchEvent = { projectId: string; actorUserId: string };
-type GenerateEvent = ResearchEvent & { slot: number; operatorInstructions?: string | null };
+type GenerateEvent = ResearchEvent & {
+  slot: number;
+  operatorInstructions?: string | null;
+  autoContinue?: boolean;
+};
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 4000) : "Unknown Product Studio error";
@@ -49,6 +60,14 @@ function identityFromSummary(summary: unknown): QaIdentity | null {
     modelIdentifiers: strings(record.modelIdentifiers),
     conditionNotes: strings(record.conditionNotes),
   };
+}
+
+/** Pulls requiredCorrections out of a stored QA result, defensively. */
+function requiredCorrectionsFrom(qaResult: unknown): string[] {
+  if (!qaResult || typeof qaResult !== "object" || Array.isArray(qaResult)) return [];
+  const value = (qaResult as Record<string, unknown>).requiredCorrections;
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
 }
 
 /** Render the stored composition attributes JSON as QA brief lines. */
@@ -276,10 +295,13 @@ export const generateProductStudioImage = inngest.createFunction(
       // guidance is layered on here so each revision records the exact prompt
       // that produced it.
       const attributes = (composition.attributes ?? {}) as Record<string, unknown>;
-      const effectivePrompt = applyOperatorInstructions(
-        composition.prompt,
-        data.operatorInstructions,
-      );
+      // Close the QA loop: the corrections the QA model wrote for the rejected
+      // revision are fed back in rather than displayed and discarded.
+      const effectivePrompt = buildEffectivePrompt({
+        basePrompt: composition.prompt,
+        qaCorrections: requiredCorrectionsFrom(existing?.qaResult),
+        operatorInstructions: data.operatorInstructions,
+      });
       const generated = await generateProductImage({
         prompt: effectivePrompt,
         references: project.assets,
@@ -379,6 +401,28 @@ export const generateProductStudioImage = inngest.createFunction(
           qa: qa.result,
         },
       });
+      // "Generate all" chains one slot at a time rather than fanning out: the
+      // Inngest concurrency limit is 1 per project, spend stays sequential, and
+      // a QA rejection stops the run so a drifting identity cannot quietly
+      // consume three more generations. Operator instructions are deliberately
+      // not carried forward — they were written about a specific image.
+      const pending = await prisma.productStudioComposition.findMany({
+        where: { projectId: project.id, status: { in: [...PENDING_COMPOSITION_STATUSES] } },
+        select: { slot: true },
+      });
+      const chain = decideNextChainedSlot({
+        autoContinue: data.autoContinue,
+        verdict: qa.result.verdict,
+        pendingSlots: pending.map((item) => item.slot),
+      });
+      if (chain.continue) {
+        await queueProductStudioGeneration({
+          projectId: project.id,
+          slot: chain.slot,
+          actorUserId: data.actorUserId,
+          autoContinue: true,
+        });
+      }
       return { assetId: asset.id, status: asset.status, reused: false };
     } catch (error) {
       const message = errorMessage(error);
