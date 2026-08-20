@@ -1,4 +1,6 @@
 import { toFile } from "openai";
+import type { ImageEditParamsNonStreaming } from "openai/resources/images";
+import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
 
 import { getOpenAiClient, resolveOpenAiModel } from "@/server/integrations/openai/client";
 import { AiProviderNotConfiguredError } from "@/server/services/ai/errors";
@@ -262,6 +264,7 @@ export async function researchProduct(args: {
   ];
   const request = {
     model,
+    stream: false,
     tools: [{ type: "web_search" }],
     include: ["web_search_call.action.sources"],
     input: [{ role: "user", content }],
@@ -273,7 +276,7 @@ export async function researchProduct(args: {
         schema: researchJsonSchema,
       },
     },
-  } as unknown as Parameters<typeof client.responses.create>[0];
+  } as unknown as ResponseCreateParamsNonStreaming;
 
   const response = await client.responses.create(request);
   const rawOutput = response.output_text.trim();
@@ -331,13 +334,14 @@ export async function generateProductImage(args: {
 
   const request = {
     model,
+    stream: false,
     image: files,
     prompt: args.prompt,
     input_fidelity: "high",
     quality: "high",
     size: "2048x2048",
     output_format: "jpeg",
-  } as unknown as Parameters<typeof client.images.edit>[0];
+  } as unknown as ImageEditParamsNonStreaming;
   const response = await client.images.edit(request);
   const encoded = response.data?.[0]?.b64_json;
   if (!encoded) throw new Error("OpenAI returned no image payload.");
@@ -370,6 +374,7 @@ export async function qaProductImage(args: {
   ];
   const request = {
     model,
+    stream: false,
     input: [{ role: "user", content }],
     text: {
       format: {
@@ -379,7 +384,7 @@ export async function qaProductImage(args: {
         schema: qaJsonSchema,
       },
     },
-  } as unknown as Parameters<typeof client.responses.create>[0];
+  } as unknown as ResponseCreateParamsNonStreaming;
   const response = await client.responses.create(request);
   const rawOutput = response.output_text.trim();
   if (!rawOutput) throw new Error("OpenAI returned an empty Product Studio QA response.");

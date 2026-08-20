@@ -255,7 +255,7 @@ export const generateProductStudioImage = inngest.createFunction(
             fileName: `composition-${data.slot}-r${revision}.jpg`,
             contentType: generated.contentType,
             bytes: generated.data.byteLength,
-            data: generated.data,
+            data: new Uint8Array(generated.data),
             contentHash,
             width: 2048,
             height: 2048,
