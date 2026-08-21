@@ -221,6 +221,52 @@ The run should snapshot the selected items at creation time so later changes to 
 
 ---
 
+## 7.3 DP-2 implementation notes and deferrals
+
+Recorded 2026-08-21 during the DP-2A corrective pass, so the PRD matches what is
+actually built.
+
+**CSV only.** DP-2 accepts CSV uploads. XLSX is **deferred** — it needs a parser
+dependency and a sheet-selection UI, and every source an operator has can export
+CSV. Tracked as **DP-2C**. UI copy states this at the point of upload.
+
+**Preview before create.** Implemented as a two-phase submit: the first submit
+validates, selects, and returns a preview showing totals, blocked counts by
+reason, duplicate SKUs, and a sample of rows with blocked ones first. Nothing is
+written until a second submit carries `confirm=1`. For uploads, the parsed CSV
+text is echoed through the confirm submit because a `File` cannot survive the
+round trip; uploads are capped at 1 MB, well above a 1,500-row list.
+
+**Input bounds.** `rankingBasis`, `lookbackWindow`, and `targetCount` are
+validated against allow-lists server-side. `targetCount` is capped at **1,500**
+— the PRD target size. The cap exists because target count drives how many
+products a later phase will fetch competitor prices for, and an accidental
+150,000 would commit the operation to a workload nobody sized. Raising it is a
+product-owner decision, not a form input.
+
+**Cost provenance.** When a cost is inferred from order history rather than the
+catalogue, the run item records `costSource = "order_history"` plus the source
+order-item id and order date in `metadata.costSourceRef`, so an auditor can see
+which line the figure came from and how stale it is. Order lines are queried
+newest-first so "most recent" is literally true.
+
+**Uploaded metadata.** Fields with no column of their own — upload row number,
+competitor URL, supplier SKU, notes, store, unmatched product/variant ids, and
+parse errors — are preserved in `PricingRunItem.metadata.upload`. DP-2 creates
+**no** `ProductCompetitorUrl` records; a supplied competitor URL is retained as
+evidence for DP-3 to act on.
+
+**Feature-flag posture.** `pricing.intelligence` gates **creation and
+mutation**. Existing runs remain readable and exportable on permission alone
+(`pricing.view` / `pricing.export`). Tripping the flag — or the global kill
+switch — must stop new activity, not hide the blocked-row fix-list an operator
+may need precisely because it was tripped. Reading or exporting a stored run
+contacts nothing external.
+
+**Deferred to DP-2C:** XLSX upload support.
+
+---
+
 ## 8. Competitor Setup Requirements
 
 Add setup screens for competitor stores under:

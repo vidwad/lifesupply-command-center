@@ -35,7 +35,7 @@ export default async function PricingRunPage({ params }: Props) {
     <div>
       <PageHeader
         title={`${run.store.name} — ${run.sourceType.replaceAll("_", " ")}`}
-        description="Draft product list. Nothing here has been price-checked: no competitor site was contacted, no recommendation exists, and no price was written back."
+        description="Draft product list and fix-list. Nothing here has been price-checked: no competitor site was contacted, no recommendation exists, and no price was written back. Readable on permission alone — the pricing.intelligence flag gates building new runs, not reading stored ones."
         breadcrumb={
           <Link
             href="/products/pricing/runs"

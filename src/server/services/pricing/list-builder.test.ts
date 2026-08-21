@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildItems,
+  ListBuilderInputError,
+  MAX_TARGET_COUNT,
+  parseLookbackWindow,
+  parseRankingBasis,
+  parseTargetCount,
   effectivePrice,
   floorPrice,
   rankCandidates,
@@ -184,5 +189,49 @@ describe("summarise", () => {
     expect(summary.missingCost).toBe(1);
     expect(summary.duplicates).toBe(1);
     expect(summary.belowFloor).toBe(1);
+  });
+});
+
+describe("input validation (DP-2A)", () => {
+  it("accepts every documented ranking basis", () => {
+    for (const basis of ["revenue", "units", "gross_profit", "margin_opportunity"]) {
+      expect(parseRankingBasis(basis)).toBe(basis);
+    }
+  });
+
+  it("rejects an unknown ranking basis rather than defaulting", () => {
+    // Defaulting would silently rank by something the operator did not choose.
+    for (const bad of ["profit", "", null, undefined, 7, "REVENUE"]) {
+      expect(() => parseRankingBasis(bad)).toThrow(ListBuilderInputError);
+    }
+  });
+
+  it("accepts only the offered lookback windows", () => {
+    for (const days of [30, 90, 180, 365]) {
+      expect(parseLookbackWindow(days)).toBe(days);
+      expect(parseLookbackWindow(String(days))).toBe(days);
+    }
+  });
+
+  it("rejects an arbitrary lookback window", () => {
+    for (const bad of [0, -30, 45, 3650, "ninety", null]) {
+      expect(() => parseLookbackWindow(bad)).toThrow(ListBuilderInputError);
+    }
+  });
+
+  it("requires a positive whole target count", () => {
+    expect(parseTargetCount(500)).toBe(500);
+    expect(parseTargetCount("500")).toBe(500);
+    for (const bad of [0, -1, 1.5, "abc", null, undefined, Number.NaN]) {
+      expect(() => parseTargetCount(bad)).toThrow(ListBuilderInputError);
+    }
+  });
+
+  it("caps the target count at the documented maximum", () => {
+    // The cap exists because target count drives how many products a later
+    // phase will fetch prices for; an accidental 150000 commits the operation
+    // to a workload nobody sized.
+    expect(parseTargetCount(MAX_TARGET_COUNT)).toBe(MAX_TARGET_COUNT);
+    expect(() => parseTargetCount(MAX_TARGET_COUNT + 1)).toThrow(/cannot exceed 1500/);
   });
 });

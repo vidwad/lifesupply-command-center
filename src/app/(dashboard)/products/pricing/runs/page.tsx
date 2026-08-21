@@ -17,8 +17,13 @@ export const dynamic = "force-dynamic";
 
 export default async function PricingRunsPage() {
   await requirePermission(PERMISSIONS.PRICING_VIEW);
+  // Posture decision (DP-2A): pricing.intelligence gates CREATION and mutation.
+  // Existing runs stay readable and exportable on permission alone. Tripping
+  // the flag — or the global kill switch — must stop new activity, not hide the
+  // blocked-row fix-list an operator may need precisely because it was tripped.
+  // Reading a stored run contacts nothing external.
   const enabled = await isFeatureOn(FEATURE_FLAGS.PRICING_INTELLIGENCE);
-  const runs = enabled ? await listPricingRuns() : [];
+  const runs = await listPricingRuns();
 
   return (
     <div>
@@ -49,12 +54,13 @@ export default async function PricingRunsPage() {
       />
       <div className="space-y-4 p-6">
         {!enabled ? (
-          <EmptyState
-            icon={ListPlus}
-            title="Pricing Intelligence is off"
-            description={`An administrator must enable ${FEATURE_FLAGS.PRICING_INTELLIGENCE}.`}
-          />
-        ) : runs.length === 0 ? (
+          <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+            Pricing Intelligence is off, so no new runs can be built. Existing runs below remain
+            readable and exportable. An administrator can enable{" "}
+            {FEATURE_FLAGS.PRICING_INTELLIGENCE}.
+          </div>
+        ) : null}
+        {runs.length === 0 ? (
           <EmptyState
             icon={ListPlus}
             title="No pricing runs yet"

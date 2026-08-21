@@ -5,6 +5,11 @@
  * only data already stored on the run — the export is how an operator gets the
  * blocked-row list out to fix costs, so it deliberately includes blocked rows
  * and their reasons rather than only the checkable ones.
+ *
+ * Deliberately NOT gated on pricing.intelligence (DP-2A posture decision): the
+ * flag gates building and mutating runs. Tripping it must stop new activity,
+ * not withhold the fix-list from an operator who may need it precisely because
+ * the flag was tripped. Exporting stored rows contacts nothing external.
  */
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";

@@ -414,3 +414,91 @@ describe("DP-2 Product List Builder canaries", () => {
     expect(service).toContain("floorPrice: item.floorPrice");
   });
 });
+
+describe("DP-2A corrections", () => {
+  const runs = () => read("src/server/services/pricing/runs.ts");
+  const actions = () => read("src/app/(dashboard)/products/pricing/runs/actions.ts");
+
+  it("orders order lines newest-first so the cost fallback is genuinely the most recent", () => {
+    // The original query had no ordering, so "most recent unit cost" took
+    // whatever row the database happened to return first.
+    const src = runs();
+    expect(src).toContain('orderBy: { order: { orderDate: "desc" } }');
+  });
+
+  it("records which order line an inferred cost came from", () => {
+    const src = runs();
+    expect(src).toContain("costSourceRef");
+    expect(src).toContain("orderItemId");
+    expect(src).toContain("orderDate");
+  });
+
+  it("persists uploaded fields that have no column of their own", () => {
+    const src = runs();
+    for (const field of [
+      "uploadRow",
+      "competitorUrl",
+      "supplierSku",
+      "notes",
+      "store",
+      "uploadedProductId",
+      "uploadedVariantId",
+      "parseErrors",
+    ]) {
+      expect(src, `upload metadata must carry ${field}`).toContain(field);
+    }
+    expect(src).toContain("metadata:");
+  });
+
+  it("creates no ProductCompetitorUrl record — a supplied URL is evidence for DP-3 only", () => {
+    expect(runs()).not.toContain("productCompetitorUrl");
+    expect(actions()).not.toContain("productCompetitorUrl");
+  });
+
+  it("validates every run input against an allow-list before querying", () => {
+    const src = actions();
+    for (const fn of ["parseRankingBasis", "parseLookbackWindow", "parseTargetCount"]) {
+      expect(src, `actions must call ${fn}`).toContain(fn);
+    }
+  });
+
+  it("previews before writing: nothing is created without confirm=1", () => {
+    const src = actions();
+    expect(src).toContain('formData.get("confirm") === "1"');
+    // Both builders return a preview on the first pass.
+    expect(src.match(/if \(!confirm\) \{/g) ?? []).toHaveLength(2);
+  });
+
+  it("documents CSV-only support and defers XLSX", () => {
+    const prd = read("docs/28_PRICING_INTELLIGENCE_DYNAMIC_PRICING_PRD.md");
+    expect(prd).toContain("XLSX is **deferred**");
+    const forms = read("src/app/(dashboard)/products/pricing/runs/run-forms.tsx");
+    expect(forms).toContain("CSV only in this phase");
+  });
+
+  it("documents the feature-flag posture for reading stored runs", () => {
+    const prd = read("docs/28_PRICING_INTELLIGENCE_DYNAMIC_PRICING_PRD.md");
+    expect(prd).toContain("gates **creation and\nmutation**");
+    // The export route stays permission-gated, not flag-gated.
+    const route = read("src/app/api/exports/pricing/runs/[id]/route.ts");
+    expect(route).toContain("PERMISSIONS.PRICING_EXPORT");
+    expect(route).not.toContain("requireFeature");
+  });
+
+  it("still writes no observation, recommendation, or writeback", () => {
+    for (const rel of [
+      "src/server/services/pricing/runs.ts",
+      "src/app/(dashboard)/products/pricing/runs/actions.ts",
+    ]) {
+      const src = read(rel);
+      for (const table of [
+        "competitorPriceObservation",
+        "priceRecommendation",
+        "priceWritebackLog",
+      ]) {
+        expect(src, `${rel} must not write ${table}`).not.toContain(`prisma.${table}`);
+      }
+      expect(src, `${rel} must not use the writeback flag`).not.toContain("PRICING_WRITEBACKS");
+    }
+  });
+});

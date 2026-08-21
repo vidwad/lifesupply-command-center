@@ -69,7 +69,12 @@ export async function selectTopProducts(args: {
 }): Promise<CandidateItem[]> {
   const lines = await prisma.orderItem.findMany({
     where: { order: { storeId: args.storeId, orderDate: { gte: args.since } } },
+    // Newest first so the first costed line encountered per bucket IS the most
+    // recent one. Without this ordering the "most recent unit cost" fallback
+    // took whatever row the database happened to return.
+    orderBy: { order: { orderDate: "desc" } },
     select: {
+      id: true,
       productId: true,
       productVariantId: true,
       sku: true,
@@ -78,13 +83,18 @@ export async function selectTopProducts(args: {
       lineSubtotal: true,
       unitCost: true,
       estimatedGrossProfit: true,
+      order: { select: { orderDate: true } },
       productVariant: {
         select: { id: true, sku: true, price: true, salePrice: true, costPrice: true },
       },
     },
   });
 
-  type Bucket = CandidateItem & { latestUnitCost: number | null };
+  type Bucket = CandidateItem & {
+    latestUnitCost: number | null;
+    latestCostOrderItemId: string | null;
+    latestCostOrderDate: Date | null;
+  };
   const buckets = new Map<string, Bucket>();
 
   for (const line of lines) {
@@ -100,7 +110,16 @@ export async function selectTopProducts(args: {
       if (profit != null) {
         existing.estimatedGrossProfit = (existing.estimatedGrossProfit ?? 0) + profit;
       }
-      existing.latestUnitCost ??= num(line.unitCost);
+      // Lines arrive newest-first, so the first costed one wins and later
+      // (older) lines must not overwrite it.
+      if (existing.latestUnitCost == null) {
+        const cost = num(line.unitCost);
+        if (cost != null && cost > 0) {
+          existing.latestUnitCost = cost;
+          existing.latestCostOrderItemId = line.id;
+          existing.latestCostOrderDate = line.order?.orderDate ?? null;
+        }
+      }
       continue;
     }
 
@@ -118,14 +137,31 @@ export async function selectTopProducts(args: {
       quantitySold: line.quantity,
       revenue,
       estimatedGrossProfit: profit,
-      latestUnitCost: num(line.unitCost),
+      latestUnitCost:
+        num(line.unitCost) != null && Number(line.unitCost) > 0 ? num(line.unitCost) : null,
+      latestCostOrderItemId:
+        num(line.unitCost) != null && Number(line.unitCost) > 0 ? line.id : null,
+      latestCostOrderDate:
+        num(line.unitCost) != null && Number(line.unitCost) > 0
+          ? (line.order?.orderDate ?? null)
+          : null,
     });
   }
 
   const candidates: CandidateItem[] = [...buckets.values()].map((bucket) => {
-    const { latestUnitCost, ...rest } = bucket;
+    const { latestUnitCost, latestCostOrderItemId, latestCostOrderDate, ...rest } = bucket;
     if (rest.costPrice == null && latestUnitCost != null && latestUnitCost > 0) {
-      return { ...rest, costPrice: latestUnitCost, costSource: "order_history" };
+      return {
+        ...rest,
+        costPrice: latestUnitCost,
+        costSource: "order_history",
+        // Recorded so a later phase — or an auditor — can see exactly which
+        // order line an inferred cost came from, and how stale it is.
+        costSourceRef: {
+          orderItemId: latestCostOrderItemId,
+          orderDate: latestCostOrderDate ? latestCostOrderDate.toISOString() : null,
+        },
+      };
     }
     return rest;
   });
@@ -171,6 +207,18 @@ export async function candidatesFromUpload(args: {
       quantitySold: 0,
       revenue: 0,
       estimatedGrossProfit: null,
+      uploadMeta: {
+        uploadRow: row.line,
+        competitorUrl: row.competitorUrl,
+        supplierSku: row.supplierSku,
+        notes: row.notes,
+        store: row.store,
+        // Only recorded when the SKU did not match a catalogue variant; a
+        // matched row already has the real ids in its own columns.
+        uploadedProductId: match ? null : row.productId,
+        uploadedVariantId: match ? null : row.variantId,
+        parseErrors: row.errors.length ? row.errors : undefined,
+      },
     } satisfies CandidateItem;
   });
 }
@@ -224,6 +272,13 @@ export async function createDraftPricingRun(args: CreateRunArgs): Promise<string
         floorPrice: item.floorPrice,
         status: item.status,
         blockedReason: item.blockedReason,
+        // Everything the source carried that has no column of its own. Kept so
+        // the run is reproducible and a later phase does not need the original
+        // file to know which competitor URL or supplier SKU a row came from.
+        metadata:
+          item.costSourceRef || item.uploadMeta
+            ? { costSourceRef: item.costSourceRef ?? null, upload: item.uploadMeta ?? null }
+            : undefined,
       })),
     });
     return created;

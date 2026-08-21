@@ -29,6 +29,24 @@ export type BlockedReason =
 export type CostSource = "variant" | "order_history" | "upload" | "none";
 
 /** One row of a candidate list, before it becomes a PricingRunItem. */
+/** Where an inferred cost came from, for audit and staleness checks. */
+export type CostSourceRef = {
+  orderItemId?: string | null;
+  orderDate?: string | null;
+};
+
+/** Uploaded fields that are not columns on PricingRunItem but must survive. */
+export type UploadMeta = {
+  uploadRow?: number;
+  competitorUrl?: string | null;
+  supplierSku?: string | null;
+  notes?: string | null;
+  store?: string | null;
+  uploadedProductId?: string | null;
+  uploadedVariantId?: string | null;
+  parseErrors?: string[];
+};
+
 export type CandidateItem = {
   sku: string;
   productId: string | null;
@@ -41,6 +59,8 @@ export type CandidateItem = {
   quantitySold: number;
   revenue: number;
   estimatedGrossProfit: number | null;
+  costSourceRef?: CostSourceRef;
+  uploadMeta?: UploadMeta;
 };
 
 export type BuiltItem = CandidateItem & {
@@ -180,4 +200,48 @@ export function summarise(items: readonly BuiltItem[]): BuildSummary {
     invalidPrice: count("invalid_price"),
     belowFloor: count("floor_above_price"),
   };
+}
+
+/** Lookback windows offered in the UI, in days. */
+export const LOOKBACK_WINDOWS = [30, 90, 180, 365] as const;
+export type LookbackWindow = (typeof LOOKBACK_WINDOWS)[number];
+
+/**
+ * Upper bound on a single run.
+ *
+ * 1500 is the PRD's target list size. The cap exists because target count
+ * drives how many products a later phase will fetch competitor prices for, and
+ * an accidental 150000 would commit the operation to a workload nobody sized.
+ * Raising it is a product-owner decision, not a form input.
+ */
+export const MAX_TARGET_COUNT = 1500;
+
+export class ListBuilderInputError extends Error {}
+
+export function parseRankingBasis(value: unknown): RankingBasis {
+  if (typeof value === "string" && (RANKING_BASES as readonly string[]).includes(value)) {
+    return value as RankingBasis;
+  }
+  throw new ListBuilderInputError(`Ranking basis must be one of: ${RANKING_BASES.join(", ")}.`);
+}
+
+export function parseLookbackWindow(value: unknown): LookbackWindow {
+  const days = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
+  if ((LOOKBACK_WINDOWS as readonly number[]).includes(days)) return days as LookbackWindow;
+  throw new ListBuilderInputError(
+    `Lookback window must be one of: ${LOOKBACK_WINDOWS.join(", ")} days.`,
+  );
+}
+
+export function parseTargetCount(value: unknown): number {
+  const raw = typeof value === "number" ? value : Number(String(value ?? "").trim());
+  if (!Number.isFinite(raw) || !Number.isInteger(raw) || raw <= 0) {
+    throw new ListBuilderInputError("Target count must be a positive whole number.");
+  }
+  if (raw > MAX_TARGET_COUNT) {
+    throw new ListBuilderInputError(
+      `Target count cannot exceed ${MAX_TARGET_COUNT} in this phase.`,
+    );
+  }
+  return raw;
 }
