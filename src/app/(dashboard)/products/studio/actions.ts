@@ -12,6 +12,7 @@ import {
   queueProductStudioResearch,
   reviewProductStudioAsset,
   deleteProductStudioProject,
+  recompileProductStudioPrompts,
 } from "@/server/services/product-studio";
 
 export type ProductStudioActionState = { error?: string } | undefined;
@@ -130,4 +131,19 @@ export async function deleteProjectAction(
   // Outside the try: redirect() signals by throwing and must never be caught.
   revalidatePath("/products/studio");
   redirect("/products/studio");
+}
+
+export async function recompilePromptsAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  try {
+    await recompileProductStudioPrompts({ projectId, actorUserId: user.id });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  return undefined;
 }

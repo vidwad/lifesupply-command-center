@@ -106,8 +106,41 @@ describe("buildDepictionQaRules", () => {
     expect(qa).toContain("neither specified below nor visible in the sources");
   });
 
-  it("always rejects fabricated identifiers", () => {
+  it("always rejects rendered identifiers", () => {
+    // Wording strengthened: any legible identifier is a defect, not merely a
+    // mismatched one, because the model cannot render digit strings reliably.
     const qa = buildDepictionQaRules({ mode: "new_sealed", depictableSpec: SPEC });
-    expect(qa).toContain("fabricated identifiers are always a defect");
+    expect(qa).toContain("must NOT be rendered at all");
+  });
+});
+
+describe("QA identifier policy", () => {
+  it("applies to both modes", () => {
+    // The observed regeneration loop was on a project in "used" mode, so the
+    // rule cannot live only in the new_sealed branch.
+    for (const mode of ["used", "new_sealed"] as const) {
+      const qa = buildDepictionQaRules({ mode, depictableSpec: SPEC });
+      expect(qa, mode).toContain("IDENTIFIERS — how to report them");
+    }
+  });
+
+  it("treats an attempted identifier as the defect, not a mismatch", () => {
+    const qa = buildDepictionQaRules({ mode: "used", depictableSpec: [] });
+    expect(qa).toContain("The defect is the attempt, not the mismatch");
+  });
+
+  it("forbids corrections that demand a specific digit sequence", () => {
+    // QA previously wrote "Render the GS1/DI exactly as 00786227650456",
+    // which no image model can satisfy — each regeneration produced a
+    // differently-wrong string and the composition never converged.
+    const qa = buildDepictionQaRules({ mode: "used", depictableSpec: [] });
+    expect(qa).toContain("NEVER write a correction instructing the image to render a specific");
+    expect(qa).toContain("endless regeneration loop");
+    expect(qa).toContain("crop the panel out, throw it out of focus, or turn it away");
+  });
+
+  it("extends the same treatment to fine graduations and small print", () => {
+    const qa = buildDepictionQaRules({ mode: "new_sealed", depictableSpec: SPEC });
+    expect(qa).toContain("de-emphasised rather than corrected digit by digit");
   });
 });
