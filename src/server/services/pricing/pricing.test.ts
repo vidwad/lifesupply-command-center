@@ -270,3 +270,68 @@ describe("DP-1 execution-path canaries", () => {
     );
   });
 });
+
+describe("auto-approval is unavailable in this phase (DP-1A)", () => {
+  const validRule: PricingRuleInput = {
+    name: "Global default",
+    storeId: null,
+    minCostMultiplier: 1.4,
+    defaultUndercutAmount: 0.01,
+    defaultUndercutPct: null,
+    maxIncreasePct: 10,
+    maxDecreasePct: 20,
+    dailyBatchSize: 300,
+    minConfidence: 0.85,
+    evidenceFreshnessHours: 48,
+    requiresApproval: true,
+    autoApproveEligible: false,
+    enabled: true,
+    notes: null,
+  };
+
+  it("rejects autoApproveEligible: true", () => {
+    // The form previously exposed this as a checkbox labelled "future phase
+    // only", but nothing stopped it being submitted and stored as true.
+    expect(() => validatePricingRuleInput({ ...validRule, autoApproveEligible: true })).toThrow(
+      PricingValidationError,
+    );
+  });
+
+  it("names the phase in the refusal so the reason is actionable", () => {
+    expect(() => validatePricingRuleInput({ ...validRule, autoApproveEligible: true })).toThrow(
+      /product-owner-approved automation phase/,
+    );
+  });
+
+  it("pins the stored value to false even on a valid input", () => {
+    expect(validatePricingRuleInput(validRule).autoApproveEligible).toBe(false);
+  });
+
+  it("rejects rather than silently coercing, so the attempt is visible", () => {
+    // Coercing to false would leave no trace that someone tried to enable it.
+    let threw = false;
+    try {
+      validatePricingRuleInput({ ...validRule, autoApproveEligible: true });
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+  });
+
+  it("keeps the seeded default global rule at autoApproveEligible false", () => {
+    const seed = read("prisma/seed/pricing.ts");
+    expect(seed).toMatch(/autoApproveEligible:\s*false/);
+    expect(seed).not.toMatch(/autoApproveEligible:\s*true/);
+  });
+
+  it("no longer offers the setting as a form control", () => {
+    const form = read("src/app/(dashboard)/products/pricing/setup-forms.tsx");
+    expect(form).not.toContain('name="autoApproveEligible"');
+    expect(form).toContain("Auto-approval is unavailable until a later");
+  });
+
+  it("does not read the field from submitted form data", () => {
+    const actions = read("src/app/(dashboard)/products/pricing/actions.ts");
+    expect(actions).not.toContain('flag(formData, "autoApproveEligible")');
+  });
+});

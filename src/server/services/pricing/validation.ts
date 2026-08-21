@@ -175,6 +175,15 @@ export function validatePricingRuleInput(input: PricingRuleInput): PricingRuleIn
   if (!input.requiresApproval) {
     throw new PricingValidationError("Approval cannot be disabled in this phase.");
   }
+  // Rejected rather than silently coerced to false. A rule stored with
+  // autoApproveEligible true would sit in the database looking like an
+  // authorisation that no one granted, and the first phase to read the field
+  // would honour it. Refusing makes the attempt visible now.
+  if (input.autoApproveEligible) {
+    throw new PricingValidationError(
+      "Auto-approval is unavailable until a later product-owner-approved automation phase.",
+    );
+  }
   const notes = input.notes?.trim() ? requireText(input.notes, "Notes", 1, 4000) : null;
 
   return {
@@ -189,7 +198,8 @@ export function validatePricingRuleInput(input: PricingRuleInput): PricingRuleIn
     minConfidence,
     evidenceFreshnessHours,
     requiresApproval: input.requiresApproval,
-    autoApproveEligible: input.autoApproveEligible,
+    // Pinned false for this phase; the guard above rejects any attempt to set it.
+    autoApproveEligible: false,
     enabled: input.enabled,
     notes,
   };

@@ -63,7 +63,9 @@ function ruleInputFromForm(formData: FormData): PricingRuleInput {
     minConfidence: num(formData, "minConfidence"),
     evidenceFreshnessHours: num(formData, "evidenceFreshnessHours"),
     requiresApproval: flag(formData, "requiresApproval"),
-    autoApproveEligible: flag(formData, "autoApproveEligible"),
+    // Not read from the form: the field is not rendered, and validation
+    // rejects true. Sending false keeps the input shape intact.
+    autoApproveEligible: false,
     enabled: flag(formData, "enabled"),
     notes: optionalText(formData, "notes"),
   };
