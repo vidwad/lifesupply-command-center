@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyOperatorInstructions,
   buildEffectivePrompt,
+  DEPICTION_RULES_MARKER,
   MAX_QA_CORRECTIONS,
   detectAspect,
   MAX_OPERATOR_INSTRUCTIONS,
@@ -181,5 +182,42 @@ AUTHORITATIVE PRODUCT LOCK ...`;
       qaCorrections: [null, 42, "keep this"] as unknown as string[],
     });
     expect(out).toContain("1. keep this");
+  });
+});
+describe("buildEffectivePrompt — depiction rules injection", () => {
+  const LF = String.fromCharCode(10);
+  const legacy = "BASE PROMPT" + LF + "AUTHORITATIVE PRODUCT LOCK ...";
+  const rules = DEPICTION_RULES_MARKER + " SECOND-HAND ITEM" + LF + "NEVER render serial numbers.";
+
+  it("injects current rules into a prompt compiled before they existed", () => {
+    // The stored prompt is compiled once at research time while the QA prompt
+    // is rebuilt every generation, so QA was judging against rules the image
+    // generator had never been given.
+    const out = buildEffectivePrompt({ basePrompt: legacy, depictionRules: rules });
+    expect(out).toContain(DEPICTION_RULES_MARKER);
+    expect(out).toContain("NEVER render serial numbers.");
+    expect(out.startsWith(legacy)).toBe(true);
+  });
+
+  it("does not duplicate rules already present in the stored prompt", () => {
+    const modern = legacy + LF + LF + rules;
+    const out = buildEffectivePrompt({ basePrompt: modern, depictionRules: rules });
+    expect(out.split(DEPICTION_RULES_MARKER)).toHaveLength(2);
+  });
+
+  it("is a no-op when no rules are supplied", () => {
+    expect(buildEffectivePrompt({ basePrompt: legacy })).toBe(legacy);
+    expect(buildEffectivePrompt({ basePrompt: legacy, depictionRules: "   " })).toBe(legacy);
+  });
+
+  it("keeps rules ahead of QA corrections and operator instructions", () => {
+    const out = buildEffectivePrompt({
+      basePrompt: legacy,
+      depictionRules: rules,
+      qaCorrections: ["crop the identifier panel"],
+      operatorInstructions: "box only",
+    });
+    expect(out.indexOf(DEPICTION_RULES_MARKER)).toBeLessThan(out.indexOf("REQUIRED CORRECTIONS"));
+    expect(out.indexOf("REQUIRED CORRECTIONS")).toBeLessThan(out.indexOf("OPERATOR INSTRUCTIONS"));
   });
 });

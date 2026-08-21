@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
-import { parseDepictableSpec, parseProductMode } from "@/server/services/product-studio/depiction";
+import {
+  buildDepictionRules,
+  parseDepictableSpec,
+  parseProductMode,
+} from "@/server/services/product-studio/depiction";
 import {
   decideNextChainedSlot,
   PENDING_COMPOSITION_STATUSES,
@@ -307,8 +311,15 @@ export const generateProductStudioImage = inngest.createFunction(
       const attributes = (composition.attributes ?? {}) as Record<string, unknown>;
       // Close the QA loop: the corrections the QA model wrote for the rejected
       // revision are fed back in rather than displayed and discarded.
+      // Projects researched before productMode existed fall back to "used",
+      // the conservative mode in which nothing may be added to the photograph.
+      const summary = asSummaryRecord(project.researchSummary);
+      const identityRecord = asSummaryRecord(summary?.identifiedProduct);
+      const mode = parseProductMode(identityRecord?.productMode);
+      const depictableSpec = parseDepictableSpec(identityRecord?.depictableSpec);
       const effectivePrompt = buildEffectivePrompt({
         basePrompt: composition.prompt,
+        depictionRules: buildDepictionRules({ mode, depictableSpec }),
         qaCorrections: requiredCorrectionsFrom(existing?.qaResult),
         operatorInstructions: data.operatorInstructions,
       });
@@ -322,14 +333,10 @@ export const generateProductStudioImage = inngest.createFunction(
             : null,
         ),
       });
-      // Projects researched before productMode existed fall back to "used",
-      // the conservative mode in which nothing may be added to the photograph.
-      const summary = asSummaryRecord(project.researchSummary);
-      const identityRecord = asSummaryRecord(summary?.identifiedProduct);
       const qa = await qaProductImage({
         title: project.confirmedTitle ?? project.title,
-        mode: parseProductMode(identityRecord?.productMode),
-        depictableSpec: parseDepictableSpec(identityRecord?.depictableSpec),
+        mode,
+        depictableSpec,
         compositionName: composition.name,
         compositionBrief: briefLinesFromAttributes(composition.attributes),
         identity: identityFromSummary(project.researchSummary),

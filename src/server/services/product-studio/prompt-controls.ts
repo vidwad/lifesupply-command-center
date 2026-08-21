@@ -126,13 +126,33 @@ export const MAX_QA_CORRECTIONS = 12;
  * because a correction list is model-authored text and must not become a
  * side-channel for authorising invention.
  */
+/** Marker identifying a stored prompt that already carries depiction rules. */
+export const DEPICTION_RULES_MARKER = "DEPICTION RULES —";
+
 export function buildEffectivePrompt(args: {
   basePrompt: string;
+  /**
+   * Current depiction rules. The stored prompt is compiled once at research
+   * time, while the QA prompt is rebuilt on every generation — so QA judged
+   * against rules the image generator had never been given. Injecting the
+   * current rules here keeps the two halves in step for projects researched
+   * before a rule existed, without waiting for a manual prompt rebuild.
+   */
+  depictionRules?: string | null;
   /** requiredCorrections from the rejected revision's QA result. */
   qaCorrections?: readonly string[] | null;
   operatorInstructions?: string | null;
 }): string {
   let prompt = args.basePrompt;
+
+  // Skip when the stored prompt already carries them, so a rebuilt prompt or a
+  // newly researched project is not given the same block twice.
+  const rules = args.depictionRules?.trim();
+  if (rules && !prompt.includes(DEPICTION_RULES_MARKER)) {
+    prompt += `
+
+${rules}`;
+  }
 
   const corrections = (args.qaCorrections ?? [])
     .map((line) => (typeof line === "string" ? line.trim() : ""))
