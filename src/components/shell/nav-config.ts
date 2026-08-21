@@ -10,6 +10,7 @@ import {
   FileText,
   Gauge,
   LayoutDashboard,
+  ListChecks,
   LineChart,
   Megaphone,
   ShieldCheck,
@@ -77,6 +78,12 @@ export const PRIMARY_NAV: NavItem[] = [
     label: "Pricing Intelligence",
     href: "/products/pricing",
     icon: CircleDollarSign,
+    permission: PERMISSIONS.PRICING_VIEW,
+  },
+  {
+    label: "Pricing runs",
+    href: "/products/pricing/runs",
+    icon: ListChecks,
     permission: PERMISSIONS.PRICING_VIEW,
   },
   {
