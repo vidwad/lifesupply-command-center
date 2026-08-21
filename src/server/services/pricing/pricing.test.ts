@@ -335,3 +335,82 @@ describe("auto-approval is unavailable in this phase (DP-1A)", () => {
     expect(actions).not.toContain('flag(formData, "autoApproveEligible")');
   });
 });
+
+describe("DP-2 Product List Builder canaries", () => {
+  const runFiles = [
+    "src/server/services/pricing/runs.ts",
+    "src/server/services/pricing/list-builder.ts",
+    "src/server/services/pricing/upload-parser.ts",
+    "src/app/(dashboard)/products/pricing/runs/actions.ts",
+    "src/app/api/exports/pricing/runs/[id]/route.ts",
+  ];
+
+  it("creates only draft runs — no other status is written at creation", () => {
+    const service = read("src/server/services/pricing/runs.ts");
+    expect(service).toContain('status: "draft"');
+    expect(service).not.toMatch(/status:\s*"(running|completed|paused)"/);
+  });
+
+  it("writes no observation, recommendation, or writeback row", () => {
+    // DP-2 non-scope: those tables belong to DP-3 and later.
+    for (const rel of runFiles) {
+      const src = read(rel);
+      for (const table of [
+        "competitorPriceObservation",
+        "priceRecommendation",
+        "priceWritebackLog",
+      ]) {
+        expect(src, `${rel} must not write ${table}`).not.toContain(`prisma.${table}`);
+      }
+    }
+  });
+
+  it("never references pricing.writebacks", () => {
+    for (const rel of runFiles) {
+      expect(read(rel), `${rel} must not use the writeback flag`).not.toContain(
+        "PRICING_WRITEBACKS",
+      );
+    }
+  });
+
+  it("gates run mutations on the module flag", () => {
+    const service = read("src/server/services/pricing/runs.ts");
+    expect(service).toContain("requireFeature(FEATURE_FLAGS.PRICING_INTELLIGENCE)");
+  });
+
+  it("requires pricing.create_runs to build a run and pricing.export to export", () => {
+    const actions = read("src/app/(dashboard)/products/pricing/runs/actions.ts");
+    expect(actions).toContain("PERMISSIONS.PRICING_CREATE_RUNS");
+    const route = read("src/app/api/exports/pricing/runs/[id]/route.ts");
+    expect(route).toContain("PERMISSIONS.PRICING_EXPORT");
+  });
+
+  it("requires pricing.view to read runs", () => {
+    for (const rel of [
+      "src/app/(dashboard)/products/pricing/runs/page.tsx",
+      "src/app/(dashboard)/products/pricing/runs/[id]/page.tsx",
+    ]) {
+      expect(read(rel), `${rel} must require pricing.view`).toContain("PERMISSIONS.PRICING_VIEW");
+    }
+  });
+
+  it("audits run creation, cancellation, and both upload outcomes", () => {
+    const service = read("src/server/services/pricing/runs.ts");
+    for (const action of [
+      "pricing.run_created",
+      "pricing.run_cancelled",
+      "pricing.upload_processed",
+      "pricing.upload_rejected",
+    ]) {
+      expect(service, `missing audit action ${action}`).toContain(action);
+    }
+  });
+
+  it("stores a cost source and a floor price on every item it writes", () => {
+    // Guardrail: no product proceeds without a recorded cost basis, and the
+    // floor is persisted rather than recomputed against a rule that may change.
+    const service = read("src/server/services/pricing/runs.ts");
+    expect(service).toContain("costSource: item.costSource");
+    expect(service).toContain("floorPrice: item.floorPrice");
+  });
+});

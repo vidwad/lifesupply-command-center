@@ -94,6 +94,9 @@ export default async function PricingIntelligencePage() {
               <Button asChild variant="outline">
                 <Link href="/products/pricing/rules">Manage rules</Link>
               </Button>
+              <Button asChild variant="outline">
+                <Link href="/products/pricing/runs">Pricing runs</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
