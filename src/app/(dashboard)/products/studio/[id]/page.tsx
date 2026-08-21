@@ -12,6 +12,7 @@ import {
   Search,
   ShieldAlert,
   Sparkles,
+  Wrench,
   X,
 } from "lucide-react";
 
@@ -32,7 +33,12 @@ import {
   isWorkflowBusy,
 } from "@/server/services/product-studio/workflow-progress";
 
-import { queueGenerationAction, queueResearchAction, reviewAssetAction } from "../actions";
+import {
+  queueGenerationAction,
+  queueResearchAction,
+  recompilePromptsAction,
+  reviewAssetAction,
+} from "../actions";
 import { StudioActionForm } from "../studio-action-form";
 import { WorkflowProgress } from "./workflow-progress";
 
@@ -448,6 +454,19 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                     Image generation is off. Enable {FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION}{" "}
                     only after confirming OpenAI budget and worker capacity.
                   </p>
+                ) : null}
+                {project.compositions.length > 0 && !busy ? (
+                  <StudioActionForm action={recompilePromptsAction} className="border-t pt-3">
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <Button type="submit" size="sm" variant="ghost" className="w-full">
+                      <Wrench /> Rebuild prompts from current rules
+                    </Button>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Composition prompts are written once, during research. Rebuild to apply
+                      prompt-rule improvements made since then. Free — no AI call, and research is
+                      not changed.
+                    </p>
+                  </StudioActionForm>
                 ) : null}
                 <p className="text-xs text-muted-foreground">
                   No result is published externally. Approval here means internally accepted draft

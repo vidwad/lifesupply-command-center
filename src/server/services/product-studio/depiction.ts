@@ -82,6 +82,12 @@ ${spec}
 ${never}`;
 }
 
+const QA_IDENTIFIER_RULES = `IDENTIFIERS — how to report them
+Legible serial numbers, lot or batch codes, expiry dates, NRC/NDC, GS1/DI, UDI, and barcodes must NOT be rendered at all. Image models cannot reproduce long digit strings reliably, so an attempted identifier is wrong by default.
+- Report an attempted identifier as a defect whenever it is legible, whether or not it matches the packaging. The defect is the attempt, not the mismatch.
+- The required correction for such a defect is ALWAYS to crop the panel out, throw it out of focus, or turn it away from camera. NEVER write a correction instructing the image to render a specific identifier, digit sequence, or spacing — that correction cannot be satisfied and sends the composition into an endless regeneration loop.
+- The same applies to dense small print and fine measurement graduations: if numerals cannot be rendered cleanly, ask for them to be de-emphasised rather than corrected digit by digit.`;
+
 /** The equivalent block for the QA prompt, so QA grades on the same rule. */
 export function buildDepictionQaRules(args: {
   mode: ProductMode;
@@ -89,7 +95,9 @@ export function buildDepictionQaRules(args: {
 }): string {
   if (args.mode === "used") {
     return `DEPICTION STANDARD — SECOND-HAND ITEM
-Anything shown that is not present in the authoritative source photographs is a defect. Reject added accessories, packaging, or props.`;
+Anything shown that is not present in the authoritative source photographs is a defect. Reject added accessories, packaging, or props.
+
+${QA_IDENTIFIER_RULES}`;
   }
   const spec = args.depictableSpec.length
     ? args.depictableSpec.map((line) => `- ${line}`).join("\n")
@@ -97,7 +105,8 @@ Anything shown that is not present in the authoritative source photographs is a 
   return `DEPICTION STANDARD — NEW, SEALED, MASS-PRODUCED RETAIL PRODUCT
 Contents specified by the manufacturer MAY appear even if absent from the source photographs. Judge them against the specification below, not against the photographs.
 Reject any depicted item that CONTRADICTS the specification (wrong scale, gauge, capacity, count, or colour), and reject any item that is neither specified below nor visible in the sources.
-Reject any legible serial number, lot code, expiry date, NRC/NDC, GS1/DI or UDI, or barcode that does not match the authoritative packaging — fabricated identifiers are always a defect.
+
+${QA_IDENTIFIER_RULES}
 
 VERIFIED SPECIFICATION:
 ${spec}`;

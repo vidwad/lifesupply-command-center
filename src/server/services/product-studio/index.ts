@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
 import { normaliseOperatorInstructions } from "./prompt-controls";
+import { parseDepictableSpec, parseProductMode } from "./depiction";
+import { compileProductImagePrompt } from "./prompts";
+import { rebuildCompositionBrief, rebuildIdentity, rebuildListing } from "./recompile";
 import { isWorkflowBusy } from "./workflow-progress";
 
 import type { Prisma } from "@prisma/client";
@@ -383,6 +386,84 @@ export async function deleteProductStudioProject(args: {
     entityId: project.id,
     beforeData,
   });
+}
+
+/**
+ * Rebuilds every stored composition prompt for a project using the CURRENT
+ * prompt compiler and the research already on disk.
+ *
+ * Why this exists: composition.prompt is written once at research time, so
+ * improvements to the compiler never reach existing projects. This is a pure
+ * rebuild — no provider call, no cost, and researchSummary is not touched, so
+ * provenance and the "research cannot be replaced after generation" rule hold.
+ *
+ * Note what it cannot do: a project researched before productMode existed has
+ * no stored classification, so it recompiles as "used" — the conservative mode.
+ * Getting new_sealed treatment requires fresh research on a new project.
+ */
+export async function recompileProductStudioPrompts(args: {
+  projectId: string;
+  actorUserId: string;
+}): Promise<{ recompiled: number; unchanged: number }> {
+  await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
+  const project = await prisma.productStudioProject.findUniqueOrThrow({
+    where: { id: args.projectId },
+    include: { compositions: { orderBy: { slot: "asc" } } },
+  });
+
+  if (isWorkflowBusy({ status: project.status, compositions: project.compositions, assets: [] })) {
+    throw new ProductStudioInputError(
+      "This project has work in progress. Wait for the worker to finish before recompiling prompts.",
+    );
+  }
+  if (project.compositions.length === 0) {
+    throw new ProductStudioInputError("Research this project before recompiling prompts.");
+  }
+
+  const identity = rebuildIdentity(project.researchSummary);
+  const listing = rebuildListing(project.researchSummary, {
+    title: project.confirmedTitle ?? project.title,
+    shortDescription: project.finalDescription ?? project.shortDescription,
+  });
+  const identityRecord = (
+    project.researchSummary && typeof project.researchSummary === "object"
+      ? (project.researchSummary as Record<string, unknown>).identifiedProduct
+      : null
+  ) as Record<string, unknown> | null;
+  const mode = parseProductMode(identityRecord?.productMode);
+  const depictableSpec = parseDepictableSpec(identityRecord?.depictableSpec);
+
+  let recompiled = 0;
+  let unchanged = 0;
+  for (const composition of project.compositions) {
+    const prompt = compileProductImagePrompt({
+      title: listing.title,
+      shortDescription: listing.shortDescription,
+      identity,
+      composition: rebuildCompositionBrief(composition),
+      mode,
+      depictableSpec,
+    });
+    if (prompt === composition.prompt) {
+      unchanged += 1;
+      continue;
+    }
+    await prisma.productStudioComposition.update({
+      where: { id: composition.id },
+      data: { prompt },
+    });
+    recompiled += 1;
+  }
+
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: "product_studio.prompts_recompiled",
+    entityType: "ProductStudioProject",
+    entityId: project.id,
+    afterData: { recompiled, unchanged, mode, depictableSpecCount: depictableSpec.length },
+  });
+
+  return { recompiled, unchanged };
 }
 
 export function compositionAttributes(input: {
