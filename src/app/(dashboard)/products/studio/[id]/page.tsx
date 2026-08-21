@@ -136,6 +136,24 @@ export default async function ProductStudioDetailPage({ params }: Props) {
         }
       />
 
+      {project.longDescription ? (
+        <div className="px-6 pt-6">
+          <details className="rounded-lg border bg-card">
+            <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
+              Full product description
+            </summary>
+            <div className="space-y-3 border-t px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+              {project.longDescription
+                .split(/\n\s*\n/)
+                .map((paragraph) => paragraph.trim())
+                .filter(Boolean)
+                .map((paragraph, index) => (
+                  <p key={index}>{paragraph}</p>
+                ))}
+            </div>
+          </details>
+        </div>
+      ) : null}
       <div className="space-y-6 p-6">
         {project.errorMessage ? (
           <div className="flex gap-3 rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">

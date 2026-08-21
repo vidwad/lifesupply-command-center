@@ -188,6 +188,7 @@ export const researchProductStudioProject = inngest.createFunction(
           data: {
             confirmedTitle: research.optimizedListing.title,
             finalDescription: research.optimizedListing.shortDescription,
+            longDescription: research.optimizedListing.longDescription,
             currency: research.market.currency.toUpperCase(),
             marketLow: research.market.low,
             marketHigh: research.market.high,
