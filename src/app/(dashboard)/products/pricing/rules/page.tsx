@@ -26,7 +26,7 @@ export default async function PricingRulesPage() {
     <div>
       <PageHeader
         title="Pricing rules"
-        description="Guardrails for future recommendations. The minimum cost multiplier is the price floor — 1.40 means a sale price never drops below 140% of cost. Nothing is recommended or written back in this phase."
+        description="Guardrails for future recommendations. The minimum cost multiplier is the price floor — 1.40 means a sale price never drops below 140% of cost. Nothing is recommended or written back in this phase, and auto-approval is unavailable until a later product-owner-approved automation phase."
         breadcrumb={
           <Link href="/products/pricing" className="inline-flex items-center gap-1 hover:underline">
             <ArrowLeft className="h-3 w-3" /> Pricing Intelligence

@@ -334,17 +334,19 @@ export function RuleForm({
         <textarea name="notes" defaultValue={values.notes ?? ""} rows={2} className={selectClass} />
       </Field>
       <div className="flex flex-wrap gap-4">
-        <Checkbox
-          name="autoApproveEligible"
-          label="Auto-approve eligible (future phase only)"
-          defaultChecked={values.autoApproveEligible ?? false}
-        />
         <Checkbox name="enabled" label="Enabled" defaultChecked={values.enabled ?? true} />
       </div>
-      <p className="text-xs text-muted-foreground">
-        Every recommendation requires human approval in this phase; that setting cannot be turned
-        off.
-      </p>
+      {/* Rendered as static text, not a disabled input: a disabled checkbox
+          submits nothing, so the field would silently fall to false anyway —
+          and a control that looks settable invites the question of why it is
+          not. The server rejects autoApproveEligible outright. */}
+      <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">Auto-approve: off</p>
+        <p className="mt-1">
+          Auto-approval is unavailable until a later product-owner-approved automation phase. Every
+          recommendation requires human approval in this phase; that setting cannot be turned off.
+        </p>
+      </div>
       <Feedback state={state} />
       <Button type="submit" disabled={pending}>
         {pending ? <Loader2 className="animate-spin" /> : <Save />}
