@@ -20,6 +20,8 @@ const base = {
   optimizedListing: {
     title: "Nikon AF-S NIKKOR 70-200mm f/2.8G ED VR II Lens",
     shortDescription: "Used F-mount professional telephoto zoom with original box, case, and hood.",
+    longDescription:
+      "The AF-S NIKKOR 70-200mm f/2.8G ED VR II is a constant-aperture telephoto zoom for Nikon F-mount bodies. It uses ED glass and Nano Crystal Coat, and carries second-generation Vibration Reduction. The supplied hood is the HB-48. Filter thread is 77mm. The tripod collar is removable.",
     keyDetails: ["F-mount", "VR II"],
   },
   benchmarkListing: {
@@ -300,5 +302,29 @@ describe("Product Studio intake validation (server-side)", () => {
         files: [png("a.png", 128)],
       }),
     ).rejects.toBeInstanceOf(ProductStudioInputError);
+  });
+});
+
+describe("research schema — long description", () => {
+  it("requires a long description", () => {
+    // Research must produce it, or projects silently render an empty panel.
+    const { longDescription: _omitted, ...listing } = base.optimizedListing;
+    const result = productStudioResearchSchema.safeParse({
+      ...base,
+      optimizedListing: listing,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty long description", () => {
+    const result = productStudioResearchSchema.safeParse({
+      ...base,
+      optimizedListing: { ...base.optimizedListing, longDescription: "" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a populated long description", () => {
+    expect(productStudioResearchSchema.safeParse(base).success).toBe(true);
   });
 });

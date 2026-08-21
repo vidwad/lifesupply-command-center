@@ -72,6 +72,8 @@ export const productStudioResearchSchema = z
     optimizedListing: z.object({
       title: z.string().min(1),
       shortDescription: z.string().min(1),
+      /** Full buyer-facing description; factual, sourced, no marketing claims. */
+      longDescription: z.string().min(1),
       keyDetails: z.array(z.string()).min(1),
     }),
     benchmarkListing: z.object({

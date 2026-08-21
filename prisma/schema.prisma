@@ -448,6 +448,8 @@ model ProductStudioProject {
   shortDescription  String                     @db.Text
   confirmedTitle    String?
   finalDescription  String?                    @db.Text
+  /// Full buyer-facing description from research; null for older projects.
+  longDescription   String?                    @db.Text
   status            ProductStudioProjectStatus @default(draft)
   currency          String                     @default("CAD")
   marketLow         Decimal?                   @db.Decimal(12, 2)

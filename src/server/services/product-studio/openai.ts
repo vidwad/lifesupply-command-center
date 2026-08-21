@@ -74,10 +74,11 @@ const researchJsonSchema = {
     optimizedListing: {
       type: "object",
       additionalProperties: false,
-      required: ["title", "shortDescription", "keyDetails"],
+      required: ["title", "shortDescription", "longDescription", "keyDetails"],
       properties: {
         title: { type: "string" },
         shortDescription: { type: "string" },
+        longDescription: { type: "string" },
         keyDetails: { type: "array", items: { type: "string" } },
       },
     },
