@@ -326,10 +326,25 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                       name="operatorInstructions"
                                       rows={2}
                                       maxLength={MAX_OPERATOR_INSTRUCTIONS}
-                                      placeholder="e.g. Exclude the soft case and caps. Tighten the crop on the nameplate."
+                                      placeholder="Optional. e.g. Show the box only. Turn the identifier panel away from camera."
                                       className="w-full rounded-md border bg-background p-2 text-xs"
                                     />
                                     <p className="text-xs text-muted-foreground">
+                                      {asStrings(qa?.requiredCorrections).length > 0 ? (
+                                        <>
+                                          The{" "}
+                                          <strong>
+                                            {asStrings(qa?.requiredCorrections).length} required
+                                            correction
+                                            {asStrings(qa?.requiredCorrections).length === 1
+                                              ? ""
+                                              : "s"}{" "}
+                                            above
+                                          </strong>{" "}
+                                          are sent automatically — no need to copy them here. Use
+                                          this box only for extra guidance.{" "}
+                                        </>
+                                      ) : null}
                                       Changes staging and framing only. Product identity and visible
                                       condition stay locked to your source photographs.
                                     </p>
