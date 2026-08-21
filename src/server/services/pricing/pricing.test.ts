@@ -21,7 +21,15 @@ import {
 } from "./validation";
 
 const ROOT = join(__dirname, "..", "..", "..", "..");
-const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
+/**
+ * Reads a repo file with line endings normalised.
+ *
+ * core.autocrlf is on and there is no .gitattributes, so a file is LF in the
+ * working tree it was written in and CRLF after a fresh checkout. Any assertion
+ * spanning a line break would pass for its author and fail for everyone else —
+ * which is exactly what happened to the flag-posture canary below.
+ */
+const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
 
 describe("pricing registries", () => {
   it("registers all nine pricing permissions", () => {
@@ -478,7 +486,7 @@ describe("DP-2A corrections", () => {
 
   it("documents the feature-flag posture for reading stored runs", () => {
     const prd = read("docs/28_PRICING_INTELLIGENCE_DYNAMIC_PRICING_PRD.md");
-    expect(prd).toContain("gates **creation and\nmutation**");
+    expect(prd.replace(/\s+/g, " ")).toContain("gates **creation and mutation**");
     // The export route stays permission-gated, not flag-gated.
     const route = read("src/app/api/exports/pricing/runs/[id]/route.ts");
     expect(route).toContain("PERMISSIONS.PRICING_EXPORT");
