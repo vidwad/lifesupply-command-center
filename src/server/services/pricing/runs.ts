@@ -356,7 +356,18 @@ export async function getPricingRun(id: string) {
     include: {
       store: { select: { id: true, name: true } },
       createdBy: { select: { id: true, name: true, email: true } },
-      items: { orderBy: [{ status: "asc" }, { sku: "asc" }], take: 2000 },
+      items: {
+        orderBy: [{ status: "asc" }, { sku: "asc" }],
+        take: 2000,
+        include: {
+          // Newest first so the run page shows the latest attempt per item.
+          observations: {
+            orderBy: { checkedAt: "desc" },
+            take: 5,
+            include: { competitor: { select: { id: true, name: true } } },
+          },
+        },
+      },
       _count: { select: { items: true } },
     },
   });
