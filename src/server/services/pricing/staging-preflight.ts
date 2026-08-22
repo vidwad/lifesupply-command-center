@@ -112,6 +112,32 @@ export async function runStagingPreflight(): Promise<{
     );
   }
 
+  // ---- Do the permissions even exist in this database? -------------------
+  // Distinct from "no role grants it". A permission absent from the table
+  // means the database predates the feature and needs the seed re-run; a
+  // permission present but ungranted needs a role amended. Sending an operator
+  // to edit a role that cannot reference a missing permission wastes the fix.
+  const presentPermissions = await prisma.permission.findMany({
+    where: { key: { in: [...EXERCISE_PERMISSIONS] } },
+    select: { key: true },
+  });
+  const presentKeys = new Set(presentPermissions.map((row) => row.key));
+  const absentKeys = EXERCISE_PERMISSIONS.filter((key) => !presentKeys.has(key));
+  checks.push(
+    check(
+      "PERM-00",
+      "Pricing permissions exist in this database",
+      absentKeys.length === 0,
+      "blocker",
+      absentKeys.length === 0
+        ? "All " + EXERCISE_PERMISSIONS.length + " pricing permissions are present."
+        : absentKeys.length +
+            " pricing permission(s) are missing from the database entirely: " +
+            absentKeys.join(", ") +
+            ". This database predates Pricing Intelligence. Re-run the seed (`pnpm db:seed`) so the permission rows exist — amending a role cannot grant a permission that is not there.",
+    ),
+  );
+
   // ---- Who can actually run the exercise ---------------------------------
   const roles = await prisma.role.findMany({
     select: {
@@ -134,7 +160,9 @@ export async function runStagingPreflight(): Promise<{
         permission === PERMISSIONS.PRICING_WRITEBACK_BIGCOMMERCE ? "blocker" : "warning",
         withPermission.length > 0
           ? "Held by: " + withPermission.join(", ") + "."
-          : "No role grants this. Nobody can perform the steps that need it until a role is amended.",
+          : presentKeys.has(permission)
+            ? "The permission exists but no role grants it. Amend a role before the steps that need it."
+            : "Not present in this database at all — see PERM-00. Re-seed first.",
       ),
     );
   }

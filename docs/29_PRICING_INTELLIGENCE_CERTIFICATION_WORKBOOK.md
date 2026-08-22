@@ -68,7 +68,31 @@ The permission registry and the seeded role grants were inspected on 2026-08-22.
 | `pricing.writeback_bigcommerce` | **Super Admin only** |
 | `pricing.export` | Super Admin, Executive, Finance Manager |
 
-Two consequences the exercise must plan around:
+### 4.1 Observed environment state — 2026-08-22
+
+The table above reflects the **seed file**. The deployed database was inspected
+separately on the same day and does not match it:
+
+| Observation | Value |
+|---|---|
+| Permission rows in the database | 75 |
+| `pricing.*` permission rows | **0** |
+| Roles | 10 (Super Admin holds all 75 — none of which are pricing permissions) |
+| Roles holding `pricing.writeback_bigcommerce` | **none** |
+| Roles holding `pricing.approve_recommendations` | **none** |
+
+**The deployed database predates Pricing Intelligence and has never been
+re-seeded.** No pricing permission exists in it, so no user — including Super
+Admin — can reach `/products/pricing` at all. This is consistent with
+`pricing.intelligence` having no flag row either.
+
+**Consequence:** the exercise cannot begin until the seed is re-run in the
+target environment so the nine `pricing.*` permission rows exist. Amending a
+role cannot grant a permission that is not in the table. Preflight check
+`PERM-00` detects this specific case and distinguishes it from "the permission
+exists but no role grants it", because the fixes are different.
+
+Two further consequences the exercise must plan around:
 
 1. **Only Super Admin can write back, roll back, or reconcile.** No other seeded role holds `pricing.writeback_bigcommerce`. Steps G, H, and I therefore require a Super Admin account, or a deliberate decision to grant the permission to a narrower role first. Running the most dangerous steps as Super Admin is convenient and is *not* what production should look like.
 2. **Separation of duties is achievable but not enforced by the seed.** Executive can approve and cannot write back; Super Admin can do both. If the exercise is run entirely by one Super Admin, it certifies the workflow but **not** the separation of duties. Record which was done.
@@ -122,6 +146,7 @@ Open `/products/pricing/operations`. The **Staging readiness** card runs the rea
 
 | Step | Action | Expected |
 |---|---|---|
+| A-0 | Confirm the pricing permissions exist in this database | `PERM-00` ok. If not, re-run the seed before anything else — see §4.1 |
 | A-1 | Read the preflight card | Zero blockers. Each blocker names what to fix |
 | A-2 | Confirm `pricing.intelligence` is ON | `FLAG-01` ok |
 | A-3 | Confirm `pricing.writebacks` is OFF | `FLAG-pricing.writebacks` ok |
@@ -291,6 +316,7 @@ Independent of how the staging exercise goes, production remains blocked while a
 | No-go | Why |
 |---|---|
 | The staging BigCommerce store is not chosen (`DEC-05`) | The exercise cannot run |
+| The target database has no `pricing.*` permission rows (§4.1) | Nobody can reach the module at all; the seed must be re-run first |
 | `DEC-PI-01` is undecided — which role holds `pricing.writeback_bigcommerce` | Running production writebacks as Super Admin is not an operating model |
 | No post-write verification exists | A silently coerced price reads as a clean write |
 | No concurrency guard exists | Two operators can both produce a succeeded log |
