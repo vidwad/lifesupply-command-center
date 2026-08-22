@@ -245,12 +245,18 @@ describe("DP-1 execution-path canaries", () => {
    * generation, approval, pages, actions, exports — must still be unable to
    * reach a store, and no pricing file may hand-roll a BigCommerce request.
    */
-  const BIGCOMMERCE_IMPORT_ALLOWED = join("services", "pricing", "writeback.ts");
+  // WIDENED IN DP-6B: rollback is a second write path to the same store and
+  // legitimately reaches the integration. Still exactly two named modules —
+  // everything else in the pricing tree must be unable to reach a store.
+  const BIGCOMMERCE_IMPORT_ALLOWED = [
+    join("services", "pricing", "writeback.ts"),
+    join("services", "pricing", "rollback.ts"),
+  ];
 
-  it("reaches the BigCommerce integration from the writeback service only", () => {
+  it("reaches the BigCommerce integration from the write and rollback services only", () => {
     for (const file of pricingFiles) {
       const src = readFileSync(file, "utf8");
-      if (!file.endsWith(BIGCOMMERCE_IMPORT_ALLOWED)) {
+      if (!BIGCOMMERCE_IMPORT_ALLOWED.some((allowed) => file.endsWith(allowed))) {
         expect(src, `${file} must not touch the BigCommerce integration`).not.toContain(
           "integrations/bigcommerce",
         );
@@ -313,6 +319,12 @@ describe("DP-1 execution-path canaries", () => {
       join("src", "server", "services", "pricing", "writeback-eligibility.ts"),
       join("src", "server", "services", "pricing", "writeback-eligibility.test.ts"),
       join("src", "server", "services", "pricing", "writeback-canaries.test.ts"),
+      // DP-6B rollback path: same gates, same flags.
+      join("src", "server", "services", "pricing", "rollback.ts"),
+      join("src", "server", "services", "pricing", "rollback-eligibility.ts"),
+      join("src", "server", "services", "pricing", "rollback-eligibility.test.ts"),
+      join("src", "server", "services", "pricing", "rollback-read.ts"),
+      join("src", "server", "services", "pricing", "rollback-canaries.test.ts"),
       join("src", "lib", "feature-flags.ts"),
       join("src", "server", "services", "feature-flags", "kill-switch.ts"),
       join("src", "app", "api", "health", "route.ts"),

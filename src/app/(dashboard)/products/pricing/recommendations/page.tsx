@@ -23,8 +23,8 @@ import {
 import {
   listRecommendations,
   recommendationStatusCounts,
-  writebackSummary,
 } from "@/server/services/pricing/recommendations";
+import { writebackState } from "@/server/services/pricing/rollback-read";
 
 export const metadata = { title: "Price recommendations" };
 export const dynamic = "force-dynamic";
@@ -182,7 +182,7 @@ export default async function RecommendationsPage({
                               : "—"}
                         </td>
                         <td className="py-2 pr-3 text-xs">
-                          {writebackSummary(row).replaceAll("_", " ")}
+                          {writebackState(row.writebackLogs).replaceAll("_", " ")}
                         </td>
                         <td className="py-2 pr-3">
                           <Link

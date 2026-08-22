@@ -79,6 +79,18 @@ const CHOKEPOINTS: Chokepoint[] = [
     ],
   },
   {
+    capability: "Pricing BigCommerce sale-price rollback",
+    file: "server/services/pricing/rollback.ts",
+    // A rollback is a live price change too, so it carries the same three
+    // flags and the same permission as the forward write.
+    mustContain: [
+      "flagsBlockingWriteback()",
+      "pricing.writeback_bigcommerce",
+      "writeAudit",
+      "canRollBackAfterRead",
+    ],
+  },
+  {
     capability: "Product Studio image generation",
     file: "server/services/product-studio/index.ts",
     mustContain: ["FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION", "requireFeature", "writeAudit"],
