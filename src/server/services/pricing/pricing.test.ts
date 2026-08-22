@@ -202,7 +202,10 @@ describe("DP-1 execution-path canaries", () => {
   const pricingFiles = [
     ...collectFiles(join(ROOT, "src", "server", "services", "pricing")),
     ...collectFiles(join(ROOT, "src", "app", "(dashboard)", "products", "pricing")),
-  ].filter((file) => !file.endsWith("pricing.test.ts"));
+    // Test files are excluded wholesale: a canary suite necessarily NAMES the
+    // strings it forbids, so scanning tests makes documenting a guardrail trip
+    // it. Only shipped execution paths are policed here.
+  ].filter((file) => !/\.test\.tsx?$/.test(file));
 
   /**
    * NARROWED IN DP-3.
@@ -233,13 +236,31 @@ describe("DP-1 execution-path canaries", () => {
     }
   });
 
-  it("contains no BigCommerce write path", () => {
+  /**
+   * NARROWED IN DP-6.
+   *
+   * Through DP-5 no file in the pricing tree could reach the BigCommerce
+   * integration at all. DP-6 writes approved sale prices, so exactly one module
+   * may: services/pricing/writeback.ts. Every other pricing file — engine,
+   * generation, approval, pages, actions, exports — must still be unable to
+   * reach a store, and no pricing file may hand-roll a BigCommerce request.
+   */
+  const BIGCOMMERCE_IMPORT_ALLOWED = join("services", "pricing", "writeback.ts");
+
+  it("reaches the BigCommerce integration from the writeback service only", () => {
     for (const file of pricingFiles) {
       const src = readFileSync(file, "utf8");
-      expect(src, `${file} must not touch the BigCommerce integration`).not.toContain(
-        "integrations/bigcommerce",
+      if (!file.endsWith(BIGCOMMERCE_IMPORT_ALLOWED)) {
+        expect(src, `${file} must not touch the BigCommerce integration`).not.toContain(
+          "integrations/bigcommerce",
+        );
+      }
+      // No pricing file may build its own authenticated BigCommerce call, not
+      // even the writeback service: the request belongs in the integration
+      // layer where the outbound-HTTP canary can still see it.
+      expect(src, `${file} must not hand-roll a BigCommerce request`).not.toMatch(
+        /X-Auth-Token|bcFetch/,
       );
-      expect(src).not.toMatch(/X-Auth-Token|bcFetch/);
     }
   });
 
@@ -276,11 +297,22 @@ describe("DP-1 execution-path canaries", () => {
     }
   });
 
-  it("pricing.writebacks has no enforcement call sites — no write path exists", () => {
-    // Mirrors the QuickBooks read-only canary: a reference outside flag
-    // infrastructure implies someone added a writeback path, which requires
-    // the full DP-6 control design and a conscious update here.
+  /**
+   * SUPERSEDED IN DP-6.
+   *
+   * This asserted that NO writeback path existed. DP-6 builds one, so the
+   * assertion becomes: the flag is referenced only by flag infrastructure,
+   * display surfaces, and the single approved writeback path. A reference
+   * anywhere else still means someone opened a second door to a live store.
+   */
+  it("pricing.writebacks is enforced only on the one approved writeback path", () => {
     const ALLOWED = new Set([
+      // DP-6 writeback path: eligibility declares the required flags, the
+      // service enforces them, the form explains them to the operator.
+      join("src", "server", "services", "pricing", "writeback.ts"),
+      join("src", "server", "services", "pricing", "writeback-eligibility.ts"),
+      join("src", "server", "services", "pricing", "writeback-eligibility.test.ts"),
+      join("src", "server", "services", "pricing", "writeback-canaries.test.ts"),
       join("src", "lib", "feature-flags.ts"),
       join("src", "server", "services", "feature-flags", "kill-switch.ts"),
       join("src", "app", "api", "health", "route.ts"),
@@ -887,8 +919,17 @@ describe("DP-5 approval canaries", () => {
     }
   });
 
-  it("references no writeback flag", () => {
-    for (const src of dp5()) {
+  /**
+   * NARROWED IN DP-6.
+   *
+   * The DP-5 file list includes the detail page and the actions file, which now
+   * legitimately host the DP-6 writeback panel and action. What must still hold
+   * is that the DECISION path — the rules, the service, and the approve/reject
+   * forms — cannot reach a writeback flag: approving must never be a route to
+   * publishing.
+   */
+  it("the decision path references no writeback flag", () => {
+    for (const src of [rules(), service(), forms()]) {
       const code = stripComments(src);
       expect(code).not.toContain("PRICING_WRITEBACKS");
       expect(code).not.toContain("EXTERNAL_WRITEBACKS");

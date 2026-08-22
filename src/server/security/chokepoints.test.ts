@@ -63,6 +63,22 @@ const CHOKEPOINTS: Chokepoint[] = [
     mustContain: ["FEATURE_FLAGS.AI_ACTIONS"],
   },
   {
+    capability: "Pricing BigCommerce sale-price writeback",
+    file: "server/services/pricing/writeback.ts",
+    // Three flags, not one: external.writebacks is the platform gate for any
+    // BigCommerce write and pricing.writebacks is this feature's own. Both sit
+    // in the kill set, so tripping the kill switch stops this path.
+    // The flag list itself lives in writeback-eligibility.ts and is applied by
+    // the read-only writeback-read.ts (DP-6A split); the write service calls
+    // that shared checker rather than re-listing the flags.
+    mustContain: [
+      "flagsBlockingWriteback()",
+      "pricing.writeback_bigcommerce",
+      "writeAudit",
+      "priceWritebackLog.create",
+    ],
+  },
+  {
     capability: "Product Studio image generation",
     file: "server/services/product-studio/index.ts",
     mustContain: ["FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION", "requireFeature", "writeAudit"],
@@ -104,6 +120,17 @@ describe("high-risk chokepoints stay wired", () => {
       "PRICING_WRITEBACKS",
     ]) {
       expect(killSwitch, `kill switch must include ${flag}`).toContain(flag);
+    }
+  });
+
+  it("the pricing writeback declares all three required flags", () => {
+    // That no bulk or scheduled path exists is asserted in
+    // services/pricing/writeback-canaries.test.ts, which strips comments first.
+    // Asserting it here against raw source would trip on the module's own
+    // documentation of the guarantee.
+    const rules = read("server/services/pricing/writeback-eligibility.ts");
+    for (const flag of ["PRICING_INTELLIGENCE", "PRICING_WRITEBACKS", "EXTERNAL_WRITEBACKS"]) {
+      expect(rules, flag).toContain(flag);
     }
   });
 

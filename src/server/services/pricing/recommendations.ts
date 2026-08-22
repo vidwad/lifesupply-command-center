@@ -343,6 +343,13 @@ export async function listRecommendations(args?: {
       // queue can say who decided without widening what a viewer can see.
       approvedBy: { select: { id: true, name: true, email: true } },
       rejectedBy: { select: { id: true, name: true, email: true } },
+      // DP-6 status summary. Newest first so the queue reflects the latest
+      // attempt rather than the first one.
+      writebackLogs: {
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { id: true, status: true, writtenAt: true },
+      },
       pricingRunItem: {
         include: {
           store: { select: { id: true, name: true } },
@@ -351,6 +358,22 @@ export async function listRecommendations(args?: {
       },
     },
   });
+}
+
+/**
+ * One-word writeback state for the queue.
+ *
+ * Distinguishes "nobody has tried" from "an attempt failed": both leave the
+ * recommendation `approved`, and conflating them would hide failed writes.
+ */
+export function writebackSummary(row: {
+  status: string;
+  writebackLogs: readonly { status: string }[];
+}): "written_back" | "writeback_failed" | "approved_not_written" | "not_applicable" {
+  if (row.writebackLogs.some((log) => log.status === "succeeded")) return "written_back";
+  if (row.writebackLogs.some((log) => log.status === "failed")) return "writeback_failed";
+  if (row.status === "approved") return "approved_not_written";
+  return "not_applicable";
 }
 
 /** Counts per status, for the queue filter tabs. */
@@ -379,6 +402,11 @@ export async function getRecommendation(id: string) {
         include: {
           store: { select: { id: true, name: true } },
           pricingRun: { select: { id: true, sourceType: true, status: true } },
+          // Source ids only. DP-6 needs them to resolve the BigCommerce target;
+          // loading the whole product here would pull catalogue content into a
+          // pricing page that has no use for it.
+          product: { select: { id: true, sourceSystem: true, sourceId: true } },
+          productVariant: { select: { id: true, sourceSystem: true, sourceId: true } },
           observations: {
             orderBy: { checkedAt: "desc" },
             take: 25,

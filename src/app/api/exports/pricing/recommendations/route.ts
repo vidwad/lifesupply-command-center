@@ -15,7 +15,7 @@
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
 import { csvResponse, toCsv } from "@/server/services/exports/csv";
-import { listRecommendations } from "@/server/services/pricing/recommendations";
+import { listRecommendations, writebackSummary } from "@/server/services/pricing/recommendations";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -101,6 +101,14 @@ export async function GET(request: Request): Promise<Response> {
       },
       { key: "rejected_at", label: "rejected_at", get: (r) => r.rejectedAt },
       { key: "rejection_reason", label: "rejection_reason", get: (r) => r.rejectionReason ?? "" },
+      // DP-6. Read from the writeback log, not inferred from the
+      // recommendation status: a failed write leaves the row `approved`.
+      { key: "writeback_status", label: "writeback_status", get: (r) => writebackSummary(r) },
+      {
+        key: "written_at",
+        label: "written_at",
+        get: (r) => r.writebackLogs.find((log) => log.status === "succeeded")?.writtenAt ?? "",
+      },
     ],
     rows,
   });
