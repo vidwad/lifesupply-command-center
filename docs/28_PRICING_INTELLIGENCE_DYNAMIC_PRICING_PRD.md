@@ -388,6 +388,73 @@ next convenience, but it is also the obvious way to approve a hundred prices
 without reading them, and DP-6 writeback has not been built yet. Deferred until
 there is an operator with a real queue to argue from.
 
+## 7.6 DP-6 implementation notes and decisions
+
+Recorded 2026-08-22 during the DP-6 build. This is the first phase that can
+change a customer-facing price, so the decisions below are stated rather than
+left to be inferred from the code.
+
+**Both writeback flags remain OFF.** `external.writebacks` exists and is OFF;
+`pricing.writebacks` and `pricing.intelligence` have no row at all, and an
+absent row resolves to false. Nothing in this phase enables a flag anywhere.
+
+**The kill switch needs no separate check.** `KILL_SET` already contains
+`external.writebacks` and `pricing.writebacks`, so tripping the kill switch
+turns both off and the flag gate stops the write. Adding an independent
+kill-switch test would have been a second mechanism to keep in sync with the
+first, and a weaker guarantee than the one already in place.
+
+**The HTTP call lives in the integration layer, not in services/pricing.** The
+pricing canaries assert that no file under `services/pricing` performs outbound
+HTTP except the DP-3 collector. Putting the request in
+`integrations/bigcommerce/price-writeback.ts` keeps that guarantee true and
+leaves the writeback service auditable as pure orchestration. That client is
+deliberately narrow: it can read a price and set `sale_price`, and there is no
+generic "update product" helper in it for a later phase to reach for.
+
+**Only `sale_price` is sent, proved by inspecting the request body.** The
+payload is built as a single-key object literal rather than spread from a
+caller-supplied object, so no caller can smuggle another field into a price
+update. A test asserts `Object.keys(body)` is exactly `["sale_price"]`.
+
+**A pre-write read is mandatory.** If the live price cannot be read, the write
+is refused rather than attempted. A writeback with nothing to restore is a
+one-way change to a customer-facing price, and the read is the whole rollback
+story. This is stricter than "record what we can and proceed".
+
+**A failed write leaves the recommendation `approved`, not `failed`.** The
+recommendation is still a sound proposal that a human blessed; what failed is
+one attempt to deliver it, and that lives on the `PriceWritebackLog`. Marking
+the recommendation `failed` would destroy a human approval because of a network
+blip and force a re-approval to retry. A failed attempt therefore does not block
+a later retry, but a SUCCEEDED one does — permanently, by design.
+
+**The local `ProductVariant` price is not updated.** BigCommerce is the source
+of truth for catalogue prices and the app syncs them inward. Writing the local
+mirror from this side would create a second writer for a field the sync owns and
+would mask a write that silently did not take. The next product sync brings the
+value back.
+
+**Variant writes never fall back to the product.** BigCommerce addresses a
+variant as `/products/{id}/variants/{id}`, so a variant-scoped item with no
+resolvable parent product id cannot be targeted. That case refuses rather than
+writing the product, which would reprice every variant of it.
+
+**Store routing is by explicit link, and ambiguity refuses.** The connection is
+found via `IntegrationConnection.storeId`. Zero linked connections refuses;
+more than one also refuses rather than picking the first, because picking would
+silently choose which storefront gets repriced.
+
+**Rollback is not implemented.** Evidence is captured — old regular and sale
+price from the live read, the local values, the target, the full request and
+response payloads, actor and timestamp — but no restore action exists.
+Recommended as **DP-6B** before any real use.
+
+**No bulk, scheduled, or autonomous path.** One recommendation per explicit
+button press. Canaries assert the service contains no loop feeding the write
+call, no Inngest registration, and that no background function or worker
+entrypoint can reach it.
+
 ## 8. Competitor Setup Requirements
 
 Add setup screens for competitor stores under:

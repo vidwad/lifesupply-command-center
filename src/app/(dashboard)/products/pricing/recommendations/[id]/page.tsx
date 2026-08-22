@@ -25,8 +25,16 @@ import {
   showsRejectControl,
 } from "@/server/services/pricing/approval";
 import { getRecommendation } from "@/server/services/pricing/recommendations";
+import {
+  canUserWriteBack,
+  canWriteBack,
+  describeMissingMapping,
+  resolveBigCommerceTarget,
+} from "@/server/services/pricing/writeback-eligibility";
+import { listWritebackLogs, writebackFlagState } from "@/server/services/pricing/writeback";
 
 import { ApproveForm, RejectForm } from "../decision-forms";
+import { WritebackForm } from "../writeback-form";
 
 export const metadata = { title: "Price recommendation" };
 export const dynamic = "force-dynamic";
@@ -73,6 +81,37 @@ export default async function RecommendationDetailPage({
   // Shown when the user COULD decide but this row is not approvable, so the
   // absent button reads as a guardrail rather than a broken page.
   const approveBlockedBecause = canApproveHere ? null : approveUnavailableReason(decisionArgs);
+
+  // DP-6. The panel renders on permission alone so a flag being off can be
+  // EXPLAINED rather than making the control silently vanish; the eligibility
+  // verdict below decides whether the button itself is offered.
+  const mayWriteBack = canUserWriteBack(user);
+  const [writebackLogs, flagState] = mayWriteBack
+    ? await Promise.all([listWritebackLogs(recommendation.id), writebackFlagState()])
+    : [[], { enabled: false, disabledFlags: [] as string[] }];
+  const writebackTargetArgs = {
+    product: item.product ?? null,
+    variant: item.productVariant ?? null,
+    variantScoped: item.productVariantId != null,
+  };
+  const writebackVerdict = mayWriteBack
+    ? canWriteBack({
+        recommendation: {
+          status: recommendation.status,
+          approvedById: recommendation.approvedById,
+          approvedAt: recommendation.approvedAt,
+          recommendedSalePrice: Number(recommendation.recommendedSalePrice),
+          floorPrice: recommendation.floorPrice == null ? null : Number(recommendation.floorPrice),
+          costPrice: recommendation.costPrice == null ? null : Number(recommendation.costPrice),
+          expiresAt: recommendation.expiresAt,
+        },
+        item: { status: item.status, blockedReason: item.blockedReason, storeId: item.storeId },
+        existingLogs: writebackLogs,
+        target: resolveBigCommerceTarget(writebackTargetArgs),
+        missingMappingMessage: describeMissingMapping(writebackTargetArgs),
+        now,
+      })
+    : null;
 
   return (
     <div>
@@ -193,6 +232,70 @@ export default async function RecommendationDetailPage({
               </p>
             )}
             {canRejectHere ? <RejectForm recommendationId={recommendation.id} /> : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {mayWriteBack ? (
+        <Card className="mt-4 border-destructive">
+          <CardHeader>
+            <CardTitle>BigCommerce writeback</CardTitle>
+            <CardDescription>
+              Writes the approved sale price to the live storefront. One recommendation per action —
+              there is no bulk or scheduled writeback.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {writebackVerdict?.allowed ? (
+              <WritebackForm
+                recommendationId={recommendation.id}
+                disabledFlags={flagState.disabledFlags}
+              />
+            ) : (
+              <p className="text-xs text-destructive">
+                Cannot write back:{" "}
+                {writebackVerdict?.allowed === false ? writebackVerdict.message : "not eligible."}
+              </p>
+            )}
+
+            {writebackLogs.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b text-left text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="py-2 pr-3">Status</th>
+                      <th className="py-2 pr-3 text-right">Old sale</th>
+                      <th className="py-2 pr-3 text-right">New sale</th>
+                      <th className="py-2 pr-3">Written by</th>
+                      <th className="py-2 pr-3">Written at</th>
+                      <th className="py-2 pr-3">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {writebackLogs.map((log) => (
+                      <tr key={log.id} className="border-b last:border-0">
+                        <td className="py-2 pr-3">
+                          <Badge variant={log.status === "succeeded" ? "default" : "destructive"}>
+                            {log.status}
+                          </Badge>
+                        </td>
+                        <td className="py-2 pr-3 text-right">{money(log.oldSalePrice)}</td>
+                        <td className="py-2 pr-3 text-right">{money(log.newSalePrice)}</td>
+                        <td className="py-2 pr-3 text-xs">
+                          {log.writtenBy?.name ?? log.writtenBy?.email ?? "—"}
+                        </td>
+                        <td className="py-2 pr-3 text-xs">{when(log.writtenAt)}</td>
+                        <td className="max-w-[20rem] truncate py-2 pr-3 text-xs">
+                          {log.errorMessage ?? "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No writeback attempted yet.</p>
+            )}
           </CardContent>
         </Card>
       ) : null}

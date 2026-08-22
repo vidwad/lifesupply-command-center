@@ -23,6 +23,7 @@ import {
 import {
   listRecommendations,
   recommendationStatusCounts,
+  writebackSummary,
 } from "@/server/services/pricing/recommendations";
 
 export const metadata = { title: "Price recommendations" };
@@ -122,6 +123,7 @@ export default async function RecommendationsPage({
                     <th className="py-2 pr-3">Status</th>
                     <th className="py-2 pr-3">Evidence age</th>
                     <th className="py-2 pr-3">Decision</th>
+                    <th className="py-2 pr-3">Writeback</th>
                     <th className="py-2 pr-3">Run</th>
                   </tr>
                 </thead>
@@ -178,6 +180,9 @@ export default async function RecommendationsPage({
                             : row.rejectedAt
                               ? `rejected by ${row.rejectedBy?.name ?? row.rejectedBy?.email ?? "unknown"}`
                               : "—"}
+                        </td>
+                        <td className="py-2 pr-3 text-xs">
+                          {writebackSummary(row).replaceAll("_", " ")}
                         </td>
                         <td className="py-2 pr-3">
                           <Link

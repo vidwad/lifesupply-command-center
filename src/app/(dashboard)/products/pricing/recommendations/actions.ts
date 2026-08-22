@@ -7,9 +7,14 @@
  * nothing, mutates no product or variant, calls no external system, and never
  * references pricing.writebacks or external.writebacks.
  *
- * DP-5 adds the decision actions below. They record an INTERNAL approval or
- * rejection on the recommendation row only: no price is written to any product,
- * variant, or store, and no writeback is queued. Writeback is DP-6.
+ * DP-5 adds the decision actions. They record an INTERNAL approval or rejection
+ * on the recommendation row only: no price is written to any product, variant,
+ * or store.
+ *
+ * DP-6 adds the writeback action at the bottom of this file. That one DOES
+ * change a live storefront price, and it is the only thing in this file that
+ * does. It carries its own permission, its own three flags, and its own audit
+ * trail; generation and approval remain incapable of touching a store price.
  *
  * Gated on pricing.review_recommendations rather than pricing.view: generating
  * writes rows, and a read-only viewer should not be able to fill a queue that
@@ -23,6 +28,7 @@ import { PricingValidationError } from "@/server/services/pricing";
 import { parseRejectionReason } from "@/server/services/pricing/approval";
 import { approveRecommendation, rejectRecommendation } from "@/server/services/pricing/approvals";
 import { generateRecommendationsForRun } from "@/server/services/pricing/recommendations";
+import { writeRecommendationToBigCommerce } from "@/server/services/pricing/writeback";
 
 export type RecommendationActionState = { error?: string; ok?: string } | undefined;
 
@@ -119,5 +125,56 @@ export async function rejectRecommendationAction(
   } catch (error) {
     if (error instanceof PricingValidationError) return { error: error.message };
     throw error instanceof Error ? error : new Error("Could not reject the recommendation.");
+  }
+}
+
+/**
+ * DP-6: writes one approved recommendation's sale price to BigCommerce.
+ *
+ * Requires pricing.writeback_bigcommerce — deliberately NOT satisfied by
+ * pricing.approve_recommendations. The person who blesses a price and the
+ * person who publishes it are separated by permission.
+ *
+ * The user's permissions are handed to the service so the check is enforced
+ * twice: once here at the boundary, once inside the service, which must never
+ * be callable with a price and no proof of authority.
+ */
+export async function writeRecommendationToBigCommerceAction(
+  _previous: RecommendationActionState,
+  formData: FormData,
+): Promise<RecommendationActionState> {
+  const user = await requirePermission(PERMISSIONS.PRICING_WRITEBACK_BIGCOMMERCE);
+  const recommendationId = String(formData.get("recommendationId") ?? "");
+
+  try {
+    const result = await writeRecommendationToBigCommerce({
+      actorUserId: user.id,
+      actorPermissions: user.permissions,
+      recommendationId,
+    });
+    revalidateDecision(recommendationId);
+
+    if (result.status === "failed") {
+      return {
+        error:
+          "BigCommerce rejected the write: " +
+          result.message +
+          " The recommendation is still approved and the attempt is recorded in the writeback log.",
+      };
+    }
+    return {
+      ok:
+        "Sale price written to BigCommerce (" +
+        (result.oldSalePrice == null
+          ? "no previous sale price"
+          : "was $" + result.oldSalePrice.toFixed(2)) +
+        " -> $" +
+        result.newSalePrice.toFixed(2) +
+        "). " +
+        result.message,
+    };
+  } catch (error) {
+    if (error instanceof PricingValidationError) return { error: error.message };
+    throw error instanceof Error ? error : new Error("Could not write the price to BigCommerce.");
   }
 }
