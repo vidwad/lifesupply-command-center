@@ -279,6 +279,33 @@ single row where they share one piece of evidence.
 
 ---
 
+### 5.8 Pricing Intelligence certification (DP-1 … DP-6C)
+
+Added 2026-08-22. Pricing Intelligence was merged after the Phase 11 baseline
+(`BLK-09`), so it carries its own certification rows rather than being assumed
+covered by 11C/11D/11E evidence gathered against `6db79b2`.
+
+**Nothing below has been performed.** The Pricing Intelligence chain has never
+contacted a real BigCommerce store from this codebase. Procedures are in
+`docs/29_PRICING_INTELLIGENCE_CERTIFICATION_WORKBOOK.md`.
+
+| ID | Requirement | Status | Accountable role | Evidence required | Evidence location | Blocker / dependency | Target date | Decision / approval | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| PI-CERT-01 | Pricing workflow preflight documented and executable | Evidence Required | Developer / Technical Admin | Preflight output with zero blockers | Read-only preflight on `/products/pricing/operations` + `staging-preflight.test.ts` [CI]; staging output TBD | 11B-01 (staging), `DEC-05` | TBD | TBD | Checks flags, role grants, store mapping, and test data. Contacts no store |
+| PI-CERT-02 | DP-1 setup workflow staging-tested | Evidence Required | Product Manager | Rule and competitor records with terms status | Validation tests [CI]; procedure `docs/29` §8 step B; staging record TBD | PI-CERT-01 | TBD | TBD | |
+| PI-CERT-03 | DP-2 run / product-list workflow staging-tested | Evidence Required | Product Manager | Run with a costed, floored item | List-builder tests [CI]; procedure `docs/29` §8 step C; staging record TBD | PI-CERT-02 | TBD | TBD | Floor snapshotted at run creation |
+| PI-CERT-04 | DP-3 read-only observation staging-tested | Evidence Required | Operations Manager | Observation rows with evidence text and confidence | Collector + robots + rate-limit tests [CI]; procedure `docs/29` §8 step D; staging record TBD | PI-CERT-03 | TBD | TBD | Only `reviewed_allowed` competitors are contacted |
+| PI-CERT-05 | DP-4 recommendation workflow staging-tested | Evidence Required | Product Manager | Recommendation with reason text, plus two guardrail refusals | Engine tests [CI]; procedure `docs/29` §8 step E (incl. E-5 missing cost, E-6 below floor); staging record TBD | PI-CERT-04 | TBD | TBD | Every row `requires approval` |
+| PI-CERT-06 | DP-5 approval workflow staging-tested | Evidence Required | Executive | Approval and rejection records; store price unchanged | Approval tests + canaries [CI]; procedure `docs/29` §8 step F; staging record TBD | PI-CERT-05 | TBD | TBD | F-3 must be confirmed in the BigCommerce admin |
+| PI-CERT-07 | DP-6 writeback workflow staging-tested | Evidence Required | Product Owner | Refusal with flags off, then one confirmed live price change | Gate + client tests and canaries [CI]; procedure `docs/29` §8 step G; staging record TBD | PI-CERT-06, `DEC-05`, `DEC-PI-01` | TBD | TBD | **G-1 refusal with flags OFF is the highest-value negative test.** G-7 confirmed in the store, not from the app |
+| PI-CERT-08 | DP-6B rollback workflow staging-tested | Evidence Required | Product Owner | Mismatch refusal, then confirmed restore | Rollback tests + canaries [CI]; procedure `docs/29` §8 step I; staging record TBD | PI-CERT-07 | TBD | TBD | Test product must start WITH a sale price — null prior state cannot be restored (PRD §7.7) |
+| PI-CERT-09 | DP-6C operations / reconciliation workflow staging-tested | Evidence Required | Operations Manager | `matched` then `mismatch` observations; export | Reconciliation tests + canaries [CI]; procedure `docs/29` §8 steps H and J; staging record TBD | PI-CERT-07 | TBD | TBD | Reconciliation writes audit entries only; no schema change |
+| PI-CERT-10 | Audit evidence reviewed for the exercise window | Evidence Required | Developer / Technical Admin | Audit export covering every action performed | Procedure `docs/29` §8 step K-4; export TBD | PI-CERT-02…PI-CERT-09 | TBD | TBD | Every visible action must have a matching entry |
+| PI-CERT-11 | No automation enabled at any point | Evidence Required | Developer / Technical Admin | Flag state before and after; canary results | Canaries prove no scheduled, bulk, or background price path [CI]; flag export at `docs/29` §8 K-2 TBD | PI-CERT-07 | TBD | TBD | Both writeback flags OFF at K-2 |
+| PI-CERT-12 | Product-owner sign-off on Pricing Intelligence certification | Evidence Required | Product Owner | Signed §12 table in `docs/29` | Template `docs/29` §12; signatures human-only | PI-CERT-01…PI-CERT-11 | TBD | TBD | Acceptance criterion. Certifies the manual workflow on ONE product in ONE staging store — not volume, concurrency, multiple stores, or automation |
+
+---
+
 ## 6. Non-negotiable launch gates
 
 Production is a **no-go** while any gate below is not Accepted. Source:
@@ -368,6 +395,7 @@ Phase 11A. All are **TBD**.
 | DEC-14 | Whether live supplier-portal read-only testing is authorised, and by whom | 11D | TBD | TBD |
 | DEC-15 | Agreed performance thresholds for dashboards, tables, exports, reports | 11E | TBD | TBD |
 | DEC-16 | Ratify or reverse reopening feature development during the Phase 11 freeze (Product Studio, Pricing Intelligence). If ratified, record the superseding baseline and re-scope 11C/11D/11E evidence. | Immediately | **Ratified — feature development reopened.** The Phase 11 feature freeze is lifted. Phase 11 launch gates remain in force and unaffected. | 2026-08-20 (product owner) |
+| DEC-PI-01 | Which role should hold `pricing.writeback_bigcommerce` in production. Today **only Super Admin** holds it, so the staging exercise's writeback, rollback, and reconciliation steps must be run as Super Admin unless a narrower role is granted it first. Running the most dangerous steps as Super Admin is not an operating model. | Before PI-CERT-07 | TBD | TBD |
 
 ---
 

@@ -24,6 +24,7 @@ import {
   listWritebackOperations,
   operationsCounts,
 } from "@/server/services/pricing/operations-read";
+import { runStagingPreflight } from "@/server/services/pricing/staging-preflight";
 import {
   hasFailedRollbackAttempt,
   latestRollbackAttempt,
@@ -60,11 +61,14 @@ export default async function PricingOperationsPage({
   const canReconcile = userHasPermission(user, PERMISSIONS.PRICING_WRITEBACK_BIGCOMMERCE);
   const filter = parseOperationsFilter((await searchParams).filter);
 
-  const [counts, logs, approvedNotWritten, reconciliations] = await Promise.all([
+  const [counts, logs, approvedNotWritten, reconciliations, preflight] = await Promise.all([
     operationsCounts(),
     listWritebackOperations(),
     listApprovedNotWritten(),
     latestReconciliations(),
+    // Read-only: flags, role grants, store mappings, and test data from the
+    // local database. It contacts no store.
+    runStagingPreflight(),
   ]);
 
   const matches = (log: (typeof logs)[number], f: OperationsFilter): boolean => {
@@ -204,6 +208,46 @@ export default async function PricingOperationsPage({
           </CardContent>
         </Card>
       ) : null}
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-base">
+            Staging readiness{" "}
+            <Badge variant={preflight.ready ? "default" : "destructive"}>
+              {preflight.ready ? "ready" : `${preflight.blockers} blocker(s)`}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            Read-only preflight for the certification exercise in{" "}
+            <code>docs/29_PRICING_INTELLIGENCE_CERTIFICATION_WORKBOOK.md</code>. It reads flags,
+            role grants, store mappings, and test data locally. It contacts no store and changes
+            nothing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <tbody>
+                {preflight.checks.map((c) => (
+                  <tr key={c.id} className="border-b align-top last:border-0">
+                    <td className="whitespace-nowrap py-2 pr-3">
+                      <Badge
+                        variant={
+                          c.ok ? "default" : c.level === "blocker" ? "destructive" : "outline"
+                        }
+                      >
+                        {c.ok ? "ok" : c.level}
+                      </Badge>
+                    </td>
+                    <td className="py-2 pr-3">{c.label}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{c.detail}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

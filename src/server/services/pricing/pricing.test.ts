@@ -328,6 +328,11 @@ describe("DP-1 execution-path canaries", () => {
       join("src", "server", "services", "pricing", "rollback-eligibility.test.ts"),
       join("src", "server", "services", "pricing", "rollback-read.ts"),
       join("src", "server", "services", "pricing", "rollback-canaries.test.ts"),
+      // The staging preflight READS the flag to report its state to an
+      // operator; it enforces nothing and cannot change it (asserted in
+      // staging-preflight.test.ts).
+      join("src", "server", "services", "pricing", "staging-preflight.ts"),
+      join("src", "server", "services", "pricing", "staging-preflight.test.ts"),
       join("src", "lib", "feature-flags.ts"),
       join("src", "server", "services", "feature-flags", "kill-switch.ts"),
       join("src", "app", "api", "health", "route.ts"),
