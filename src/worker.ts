@@ -45,6 +45,7 @@ import { syncQboReports } from "@/server/inngest/functions/quickbooks/sync-repor
 import { syncGa4DailyMetrics } from "@/server/inngest/functions/ga4/sync-daily";
 import { runSupplierCheck } from "@/server/inngest/functions/supplier/run-check";
 import { delaySweep } from "@/server/inngest/functions/operations/delay-sweep";
+import { competitorPriceCheck } from "@/server/inngest/functions/pricing/competitor-check";
 import { helloWorld } from "@/server/inngest/functions/hello";
 import {
   generateProductStudioImage,
@@ -83,6 +84,7 @@ async function main(): Promise<void> {
           syncGa4DailyMetrics,
           runSupplierCheck,
           delaySweep,
+          competitorPriceCheck,
           researchProductStudioProject,
           generateProductStudioImage,
         ],

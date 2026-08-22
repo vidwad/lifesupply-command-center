@@ -31,6 +31,19 @@ const ROOT = join(__dirname, "..", "..", "..", "..");
  */
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
 
+/**
+ * Strips comments so a canary tests CODE, not prose.
+ *
+ * Without this, documenting a guardrail trips it: collector.ts explaining that
+ * it sends no Authorization header would fail an assertion looking for
+ * "Authorization". That would push the codebase toward undocumented guardrails,
+ * which is the opposite of what these canaries are for.
+ *
+ * `://` is preserved so URLs in string literals are not mistaken for comments.
+ */
+const stripComments = (source: string): string =>
+  source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1");
+
 describe("pricing registries", () => {
   it("registers all nine pricing permissions", () => {
     for (const key of [
@@ -191,11 +204,31 @@ describe("DP-1 execution-path canaries", () => {
     ...collectFiles(join(ROOT, "src", "app", "(dashboard)", "products", "pricing")),
   ].filter((file) => !file.endsWith("pricing.test.ts"));
 
-  it("contains no competitor crawling or outbound HTTP", () => {
+  /**
+   * NARROWED IN DP-3.
+   *
+   * Through DP-2 this asserted that NO file under the pricing tree performed
+   * outbound HTTP. DP-3 collects competitor prices, so exactly one module is
+   * now allowed to: services/pricing/collector.ts. Every other pricing file —
+   * services, actions, pages, worker function — must still contain no fetch,
+   * and no headless browser or scraping framework is permitted anywhere,
+   * because DP-3 is a plain GET of pages LifeSupply configured, not a crawler.
+   */
+  const OUTBOUND_HTTP_ALLOWED = join("services", "pricing", "collector.ts");
+
+  it("performs outbound HTTP in the collector only", () => {
+    for (const file of pricingFiles) {
+      if (file.endsWith(OUTBOUND_HTTP_ALLOWED)) continue;
+      const src = readFileSync(file, "utf8");
+      expect(src, file + " must not fetch external content").not.toMatch(/fetch\(/i);
+    }
+  });
+
+  it("uses no headless browser or scraping framework anywhere", () => {
     for (const file of pricingFiles) {
       const src = readFileSync(file, "utf8");
-      expect(src, `${file} must not fetch external content`).not.toMatch(
-        /\bfetch\(|axios|playwright|puppeteer|chromium/i,
+      expect(src, file + " must not drive a browser").not.toMatch(
+        /axios|playwright|puppeteer|chromium|cheerio|jsdom/i,
       );
     }
   });
@@ -508,5 +541,214 @@ describe("DP-2A corrections", () => {
       }
       expect(src, `${rel} must not use the writeback flag`).not.toContain("PRICING_WRITEBACKS");
     }
+  });
+});
+
+describe("DP-3 read-only collection canaries", () => {
+  const dp3Files = [
+    "src/server/services/pricing/observations.ts",
+    "src/server/services/pricing/eligibility.ts",
+    "src/server/services/pricing/extraction.ts",
+    "src/server/services/pricing/collector.ts",
+    "src/server/inngest/functions/pricing/competitor-check.ts",
+    "src/app/(dashboard)/products/pricing/runs/actions.ts",
+  ];
+
+  it("creates observations but never a recommendation or writeback log", () => {
+    for (const rel of dp3Files) {
+      const src = read(rel);
+      expect(src, rel + " must not write recommendations").not.toContain(
+        "prisma.priceRecommendation",
+      );
+      expect(src, rel + " must not write writeback logs").not.toContain("prisma.priceWritebackLog");
+    }
+    expect(read("src/server/inngest/functions/pricing/competitor-check.ts")).toContain(
+      "prisma.competitorPriceObservation.create",
+    );
+  });
+
+  it("never references the writeback flags", () => {
+    for (const rel of dp3Files) {
+      const src = read(rel);
+      const code = stripComments(src);
+      expect(code, rel + " must not use pricing.writebacks").not.toContain("PRICING_WRITEBACKS");
+      expect(code, rel + " must not use external.writebacks").not.toContain("EXTERNAL_WRITEBACKS");
+      expect(code, rel).not.toContain("external.writebacks");
+    }
+  });
+
+  it("has no BigCommerce path", () => {
+    for (const rel of dp3Files) {
+      const src = read(rel);
+      expect(src, rel).not.toContain("integrations/bigcommerce");
+      expect(src, rel).not.toMatch(/X-Auth-Token|bcFetch/);
+    }
+  });
+
+  it("issues GET only — no write verb reaches a competitor", () => {
+    const collector = read("src/server/services/pricing/collector.ts");
+    expect(collector).toContain('method: "GET"');
+    expect(collector).not.toMatch(/method:\s*"(POST|PUT|PATCH|DELETE)"/);
+  });
+
+  it("sends no credentials and does not follow redirects", () => {
+    const collector = read("src/server/services/pricing/collector.ts");
+    // A redirect could land on a host that never passed terms review.
+    expect(collector).toContain('redirect: "manual"');
+    expect(collector).toContain('credentials: "omit"');
+    expect(stripComments(collector)).not.toMatch(/Authorization|Cookie:|setCookie/i);
+  });
+
+  it("identifies itself and honours robots.txt", () => {
+    const collector = read("src/server/services/pricing/collector.ts");
+    expect(collector).toContain("User-Agent");
+    expect(collector).toContain("isAllowedByRobots");
+  });
+
+  it("has no CAPTCHA, login, or bot-evasion handling", () => {
+    for (const rel of dp3Files) {
+      const src = read(rel);
+      expect(stripComments(src), rel).not.toMatch(
+        /captcha|recaptcha|hcaptcha|bypass|stealth|signin/i,
+      );
+    }
+  });
+
+  it("uses no general web search and no AI matching", () => {
+    for (const rel of dp3Files) {
+      const src = read(rel);
+      expect(stripComments(src), rel).not.toMatch(/web_search|googleapis|bing\.|openai|anthropic/i);
+    }
+  });
+
+  it("dispatches through the worker rather than fetching in a request", () => {
+    const actions = read("src/app/(dashboard)/products/pricing/runs/actions.ts");
+    expect(actions).toContain("requestCompetitorCheck");
+    expect(actions).not.toMatch(/\bfetch\(/);
+    expect(read("src/server/services/pricing/observations.ts")).toContain("inngest.send");
+  });
+
+  it("requires pricing.run_checks to start a check", () => {
+    expect(read("src/app/(dashboard)/products/pricing/runs/actions.ts")).toContain(
+      "PERMISSIONS.PRICING_RUN_CHECKS",
+    );
+  });
+
+  it("gates collection on pricing.intelligence", () => {
+    expect(read("src/server/services/pricing/observations.ts")).toContain(
+      "requireFeature(FEATURE_FLAGS.PRICING_INTELLIGENCE)",
+    );
+    expect(read("src/server/inngest/functions/pricing/competitor-check.ts")).toContain(
+      "requireFeature(FEATURE_FLAGS.PRICING_INTELLIGENCE)",
+    );
+  });
+
+  it("audits the request and the batch outcome", () => {
+    expect(read("src/server/services/pricing/observations.ts")).toContain(
+      "pricing.competitor_check_requested",
+    );
+    expect(read("src/server/inngest/functions/pricing/competitor-check.ts")).toContain(
+      "pricing.observation_batch_completed",
+    );
+  });
+
+  it("never marks an item recommendation_ready in this phase", () => {
+    for (const rel of dp3Files) {
+      expect(read(rel), rel).not.toContain("recommendation_ready");
+    }
+  });
+});
+
+describe("DP-3A corrections", () => {
+  const planner = () => read("src/server/services/pricing/observations.ts");
+  const worker = () => read("src/server/inngest/functions/pricing/competitor-check.ts");
+  const collector = () => read("src/server/services/pricing/collector.ts");
+
+  it("counts the batch in products, not competitor URLs", () => {
+    // A batch of 300 read as URL targets would check only 60 products when
+    // each has five competitors.
+    const src = planner();
+    expect(src).toContain("itemsSelected");
+    expect(src).toContain("if (itemsSelected >= batchSize) break;");
+    expect(src).toContain("itemsSelected += 1;");
+  });
+
+  it("resolves multiple competitor URLs per product", () => {
+    const src = planner();
+    expect(src).toContain("selectCompetitorUrlsForItem");
+    expect(read("src/server/services/pricing/eligibility.ts")).toContain(
+      "MAX_COMPETITOR_URLS_PER_ITEM = 5",
+    );
+  });
+
+  it("caps targets at each competitor's remaining hourly allowance", () => {
+    const src = planner();
+    expect(src).toContain("remainingHourlyAllowance");
+    expect(src).toContain("allowance.set(candidate.competitorId, left - 1)");
+  });
+
+  it("waits the full spacing rather than a truncated one", () => {
+    // The earlier implementation capped the wait at 10s, which could exceed a
+    // competitor's hourly limit on a 60/hour setting.
+    const src = stripComments(worker());
+    expect(src).toContain("await sleep(wait)");
+    expect(src).not.toMatch(/Math\.min\(wait/);
+  });
+
+  it("refuses an oversized response before and during reading", () => {
+    const src = collector();
+    expect(src).toContain('response.headers.get("content-length")');
+    expect(src).toContain("readCapped");
+    expect(src).toContain("await reader.cancel()");
+  });
+
+  it("does not follow cross-origin robots redirects", () => {
+    // A cross-origin robots redirect must never authorise checking a URL: the
+    // file granting permission would belong to a different site.
+    const src = collector();
+    expect(src).toContain("next.origin !== origin");
+    expect(stripComments(src)).not.toContain('redirect: "follow"');
+  });
+
+  it("audits grouped skip counts so shortfalls are explainable", () => {
+    expect(planner()).toContain("skipCounts");
+    const eligibility = read("src/server/services/pricing/eligibility.ts");
+    for (const reason of [
+      "blocked",
+      "missing_cost",
+      "missing_floor",
+      "no_competitor_url",
+      "disabled",
+      "terms_not_reviewed",
+      "terms_restricted",
+      "rate_limited",
+      "robots_disallowed",
+      "invalid_url",
+    ]) {
+      expect(eligibility, "missing skip reason " + reason).toContain(reason);
+    }
+  });
+
+  it("states the product-vs-URL distinction and the read-only posture in the UI", () => {
+    const form = read("src/app/(dashboard)/products/pricing/runs/competitor-check-form.tsx");
+    expect(form.replace(/\s+/g, " ")).toContain("Batch size means products, not competitor URLs.");
+    expect(form.replace(/\s+/g, " ")).toContain(
+      "It does not create recommendations, approvals, or BigCommerce price changes.",
+    );
+    expect(form).toContain("reviewed_allowed");
+    expect(form.replace(/\s+/g, " ")).toContain(
+      "The actual number of checks may be lower than the product batch size",
+    );
+  });
+
+  it("still creates observations only", () => {
+    for (const src of [planner(), worker(), collector()]) {
+      expect(src).not.toContain("prisma.priceRecommendation");
+      expect(src).not.toContain("prisma.priceWritebackLog");
+      expect(stripComments(src)).not.toContain("PRICING_WRITEBACKS");
+      expect(stripComments(src)).not.toContain("EXTERNAL_WRITEBACKS");
+      expect(src).not.toContain("integrations/bigcommerce");
+    }
+    expect(worker()).toContain("prisma.competitorPriceObservation.create");
   });
 });

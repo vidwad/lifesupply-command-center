@@ -37,6 +37,7 @@ import {
   resolveMinCostMultiplier,
   selectTopProducts,
 } from "@/server/services/pricing/runs";
+import { requestCompetitorCheck } from "@/server/services/pricing/observations";
 import { parseUpload, previewUpload } from "@/server/services/pricing/upload-parser";
 
 /** A handful of rows so the operator can eyeball the mapping before writing. */
@@ -256,4 +257,37 @@ export async function cancelRunAction(
   }
   revalidatePath("/products/pricing/runs/" + runId);
   return { ok: "Draft run cancelled." };
+}
+
+/**
+ * Dispatches a read-only competitor check. Requires pricing.run_checks — a
+ * stricter permission than reading a run, because this is the only DP-3 action
+ * that causes outbound requests.
+ */
+export async function requestCompetitorCheckAction(
+  _previous: RunActionState,
+  formData: FormData,
+): Promise<RunActionState> {
+  const user = await requirePermission(PERMISSIONS.PRICING_RUN_CHECKS);
+  const runId = String(formData.get("runId") ?? "");
+  const rawBatch = String(formData.get("batchSize") ?? "").trim();
+  try {
+    const result = await requestCompetitorCheck({
+      actorUserId: user.id,
+      pricingRunId: runId,
+      batchSize: rawBatch ? Number(rawBatch) : null,
+    });
+    revalidatePath("/products/pricing/runs/" + runId);
+    return {
+      ok:
+        "Queued a read-only check of " +
+        String(result.items) +
+        " product(s) across " +
+        String(result.targets) +
+        " competitor URL(s). No recommendations, approvals, or price changes are made. " +
+        "Refresh in a minute for observations.",
+    };
+  } catch (error) {
+    return actionError(error, "Could not start the competitor check.");
+  }
 }
