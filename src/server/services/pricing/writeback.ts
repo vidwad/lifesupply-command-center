@@ -25,8 +25,12 @@
  *
  * Only `sale_price` is written. Regular price, cost, inventory, and content are
  * untouched, and the client module offers no method that could change them.
+ *
+ * READ-ONLY helpers deliberately do NOT live here (DP-6A). Writeback history
+ * and flag state are in writeback-read.ts so a page render never loads the
+ * module holding the BigCommerce write client. Only the writeback server
+ * action may import this file, and a canary enforces that.
  */
-import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 import {
@@ -36,13 +40,12 @@ import {
   writeBigCommerceSalePrice,
 } from "@/server/integrations/bigcommerce/price-writeback";
 import { logger } from "@/server/logger";
-import { isFeatureOn } from "@/server/services/feature-flags";
 
 import { PricingValidationError } from "./validation";
+import { flagsBlockingWriteback } from "./writeback-read";
 import {
   canWriteBack,
   describeMissingMapping,
-  REQUIRED_WRITEBACK_FLAGS,
   resolveBigCommerceTarget,
   type ResolvedTarget,
   type WritebackVerdict,
@@ -122,21 +125,6 @@ async function auditRefusal(args: {
   });
 }
 
-/**
- * Checks the three flags together and names the one that is off.
- *
- * Reported as a refusal rather than thrown as FeatureDisabledError so the
- * refusal lands in the audit log like every other one: an attempted price
- * change that was stopped is exactly what a reviewer wants to see.
- */
-async function flagsBlocking(): Promise<string[]> {
-  const off: string[] = [];
-  for (const flag of REQUIRED_WRITEBACK_FLAGS) {
-    if (!(await isFeatureOn(flag))) off.push(flag);
-  }
-  return off;
-}
-
 export type WritebackResult = {
   writebackLogId: string;
   status: "succeeded" | "failed";
@@ -177,7 +165,7 @@ export async function writeRecommendationToBigCommerce(args: {
   }
 
   // ---- Gate 2: all three flags -------------------------------------------
-  const off = await flagsBlocking();
+  const off = await flagsBlockingWriteback();
   if (off.length > 0) {
     await auditRefusal({
       actorUserId: args.actorUserId,
@@ -412,20 +400,3 @@ export async function writeRecommendationToBigCommerce(args: {
       "Sale price written to BigCommerce. The local catalogue value updates on the next product sync.",
   };
 }
-
-/** Writeback history for one recommendation, for the detail page. */
-export async function listWritebackLogs(recommendationId: string) {
-  return prisma.priceWritebackLog.findMany({
-    where: { recommendationId },
-    orderBy: { createdAt: "desc" },
-    include: { writtenBy: { select: { id: true, name: true, email: true } } },
-  });
-}
-
-/** Whether writeback is currently possible at all, for UI explanation. */
-export async function writebackFlagState(): Promise<{ enabled: boolean; disabledFlags: string[] }> {
-  const disabledFlags = await flagsBlocking();
-  return { enabled: disabledFlags.length === 0, disabledFlags };
-}
-
-export { FEATURE_FLAGS };

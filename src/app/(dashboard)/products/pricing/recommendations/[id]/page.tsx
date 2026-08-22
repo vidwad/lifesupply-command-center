@@ -31,7 +31,9 @@ import {
   describeMissingMapping,
   resolveBigCommerceTarget,
 } from "@/server/services/pricing/writeback-eligibility";
-import { listWritebackLogs, writebackFlagState } from "@/server/services/pricing/writeback";
+// Read-only module by design: the page must never load the write-capable
+// service (DP-6A). writeback-eligibility.ts above is pure — no Prisma, no HTTP.
+import { listWritebackLogs, writebackFlagState } from "@/server/services/pricing/writeback-read";
 
 import { ApproveForm, RejectForm } from "../decision-forms";
 import { WritebackForm } from "../writeback-form";

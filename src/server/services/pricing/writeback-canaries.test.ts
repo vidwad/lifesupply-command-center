@@ -44,6 +44,18 @@ const RULES = "src/server/services/pricing/writeback-eligibility.ts";
 const CLIENT = "src/server/integrations/bigcommerce/price-writeback.ts";
 const FORM = "src/app/(dashboard)/products/pricing/recommendations/writeback-form.tsx";
 const ACTIONS = "src/app/(dashboard)/products/pricing/recommendations/actions.ts";
+const READ_ONLY = "src/server/services/pricing/writeback-read.ts";
+
+/** Import specifier for the BigCommerce write client. */
+const BC_CLIENT_IMPORT = "integrations/bigcommerce/price-writeback";
+
+/**
+ * `writeback-read` and `writeback-eligibility` both begin with the write
+ * service's specifier, so a plain substring match would count the safe modules
+ * as reaching the write path. Match the module boundary instead.
+ */
+const importsWriteService = (code: string): boolean =>
+  /["']@?[^"']*services\/pricing\/writeback["']/.test(code);
 
 const SELF = "writeback-canaries.test.ts";
 
@@ -115,8 +127,12 @@ describe("the gates stay wired", () => {
     expect(rules).toContain("FEATURE_FLAGS.EXTERNAL_WRITEBACKS");
     expect(rules).toContain("PRICING_WRITEBACK_BIGCOMMERCE");
 
+    // REQUIRED_WRITEBACK_FLAGS is declared in writeback-eligibility.ts and read
+    // by writeback-read.ts; the write service calls the shared checker rather
+    // than re-listing the flags, so both surfaces cannot drift apart.
+    expect(stripComments(read(READ_ONLY))).toContain("REQUIRED_WRITEBACK_FLAGS");
     const service = stripComments(read(SERVICE));
-    expect(service).toContain("REQUIRED_WRITEBACK_FLAGS");
+    expect(service).toContain("flagsBlockingWriteback()");
     // Re-asserted inside the service, not only at the action boundary.
     expect(service).toContain("pricing.writeback_bigcommerce");
     expect(stripComments(read(ACTIONS))).toContain("PERMISSIONS.PRICING_WRITEBACK_BIGCOMMERCE");
@@ -188,7 +204,7 @@ describe("no autonomous, scheduled, or bulk writeback exists", () => {
   it("is unreachable from any background function", () => {
     const offenders: string[] = [];
     for (const file of collectSource(join(ROOT, "src", "server", "inngest"))) {
-      if (readFileSync(file, "utf8").includes("services/pricing/writeback")) {
+      if (importsWriteService(stripComments(readFileSync(file, "utf8")))) {
         offenders.push(rel(file));
       }
     }
@@ -196,19 +212,84 @@ describe("no autonomous, scheduled, or bulk writeback exists", () => {
   });
 
   it("is unreachable from the worker entrypoint", () => {
-    expect(read("src/worker.ts")).not.toContain("services/pricing/writeback");
+    expect(importsWriteService(stripComments(read("src/worker.ts")))).toBe(false);
   });
 
-  it("is never invoked from a page or layout render", () => {
+  /**
+   * DP-6A. A page that merely IMPORTS the write service already loads the
+   * module holding the BigCommerce client, whether or not it calls the write
+   * function. The read-only helpers were split into writeback-read.ts so a
+   * render never pulls the write path in at all.
+   */
+  it("is never imported by a page or layout render", () => {
     const offenders: string[] = [];
     for (const file of collectSource(join(ROOT, "src", "app"))) {
       const name = file.split(/[\\/]/).pop() ?? "";
       if (!/^(page|layout)\.tsx$/.test(name)) continue;
       const code = stripComments(readFileSync(file, "utf8"));
-      if (code.includes("writeRecommendationToBigCommerce(")) offenders.push(rel(file));
-      if (code.includes("integrations/bigcommerce/price-writeback")) offenders.push(rel(file));
+      if (importsWriteService(code)) offenders.push(rel(file) + " (imports write service)");
+      if (code.includes(BC_CLIENT_IMPORT)) offenders.push(rel(file) + " (imports BC client)");
+      if (code.includes("writeRecommendationToBigCommerce(")) {
+        offenders.push(rel(file) + " (calls write)");
+      }
     }
-    expect(offenders, "pages must not write prices: " + offenders.join(", ")).toEqual([]);
+    expect(offenders, "pages must not reach the write path: " + offenders.join(", ")).toEqual([]);
+  });
+
+  it("is imported by the recommendation action and nothing else", () => {
+    const allowed = new Set([
+      join("src", "app", "(dashboard)", "products", "pricing", "recommendations", "actions.ts"),
+    ]);
+    const offenders: string[] = [];
+    for (const file of allSource()) {
+      if (file.endsWith(SELF)) continue;
+      // A writeback-* sibling importing the write service is not a call site.
+      if (rel(file).startsWith(join("src", "server", "services", "pricing", "writeback"))) continue;
+      const code = stripComments(readFileSync(file, "utf8"));
+      if (importsWriteService(code) && !allowed.has(rel(file))) offenders.push(rel(file));
+    }
+    expect(offenders, "unexpected write-service importers: " + offenders.join(", ")).toEqual([]);
+  });
+
+  it("imports the BigCommerce price client only from the write service", () => {
+    const allowed = new Set([
+      join("src", "server", "services", "pricing", "writeback.ts"),
+      join("src", "server", "integrations", "bigcommerce", "price-writeback.ts"),
+      join("src", "server", "integrations", "bigcommerce", "price-writeback.test.ts"),
+    ]);
+    const offenders: string[] = [];
+    for (const file of allSource()) {
+      if (file.endsWith(SELF)) continue;
+      const code = stripComments(readFileSync(file, "utf8"));
+      if (code.includes(BC_CLIENT_IMPORT) && !allowed.has(rel(file))) offenders.push(rel(file));
+    }
+    expect(offenders, "unexpected BigCommerce client importers: " + offenders.join(", ")).toEqual(
+      [],
+    );
+  });
+
+  it("keeps the read-only module free of the write client", () => {
+    const code = stripComments(read(READ_ONLY));
+    expect(code).not.toContain(BC_CLIENT_IMPORT);
+    for (const symbol of [
+      "writeBigCommerceSalePrice",
+      "readBigCommercePrice",
+      "resolveStoreCredentials",
+      "buildSalePriceRequestPayload",
+    ]) {
+      expect(code, symbol).not.toContain(symbol);
+    }
+    // Reads only: the render path must not mutate anything either.
+    expect(code).not.toMatch(/prisma\.[a-zA-Z]+\.(create|update|upsert|delete)/);
+  });
+
+  it("keeps the write service narrow — the mutation is its only export", () => {
+    const code = stripComments(read(SERVICE));
+    const exported = [...code.matchAll(/export\s+(?:async\s+)?function\s+(\w+)/g)].map((m) => m[1]);
+    expect(exported).toEqual(["writeRecommendationToBigCommerce"]);
+    // The read helpers must not creep back in.
+    expect(code).not.toContain("listWritebackLogs");
+    expect(code).not.toContain("writebackFlagState");
   });
 });
 
@@ -223,7 +304,7 @@ describe("approval and generation cannot publish a price", () => {
       const code = stripComments(read(path));
       expect(code).not.toContain("integrations/bigcommerce");
       expect(code).not.toContain("priceWritebackLog");
-      expect(code).not.toContain("services/pricing/writeback");
+      expect(importsWriteService(code)).toBe(false);
     });
   }
 });

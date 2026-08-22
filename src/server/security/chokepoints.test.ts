@@ -68,8 +68,11 @@ const CHOKEPOINTS: Chokepoint[] = [
     // Three flags, not one: external.writebacks is the platform gate for any
     // BigCommerce write and pricing.writebacks is this feature's own. Both sit
     // in the kill set, so tripping the kill switch stops this path.
+    // The flag list itself lives in writeback-eligibility.ts and is applied by
+    // the read-only writeback-read.ts (DP-6A split); the write service calls
+    // that shared checker rather than re-listing the flags.
     mustContain: [
-      "REQUIRED_WRITEBACK_FLAGS",
+      "flagsBlockingWriteback()",
       "pricing.writeback_bigcommerce",
       "writeAudit",
       "priceWritebackLog.create",
