@@ -34,8 +34,15 @@ import {
 // Read-only module by design: the page must never load the write-capable
 // service (DP-6A). writeback-eligibility.ts above is pure — no Prisma, no HTTP.
 import { listWritebackLogs, writebackFlagState } from "@/server/services/pricing/writeback-read";
+// Read-only by design (DP-6A/6B): the page must never load rollback.ts either.
+import {
+  priorSalePriceFor,
+  rollbackAvailability,
+  toLogLike,
+} from "@/server/services/pricing/rollback-read";
 
 import { ApproveForm, RejectForm } from "../decision-forms";
+import { RollbackForm } from "../rollback-form";
 import { WritebackForm } from "../writeback-form";
 
 export const metadata = { title: "Price recommendation" };
@@ -270,28 +277,62 @@ export default async function RecommendationDetailPage({
                       <th className="py-2 pr-3 text-right">New sale</th>
                       <th className="py-2 pr-3">Written by</th>
                       <th className="py-2 pr-3">Written at</th>
+                      <th className="py-2 pr-3">Rolled back</th>
                       <th className="py-2 pr-3">Error</th>
+                      <th className="py-2 pr-3">Rollback</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {writebackLogs.map((log) => (
-                      <tr key={log.id} className="border-b last:border-0">
-                        <td className="py-2 pr-3">
-                          <Badge variant={log.status === "succeeded" ? "default" : "destructive"}>
-                            {log.status}
-                          </Badge>
-                        </td>
-                        <td className="py-2 pr-3 text-right">{money(log.oldSalePrice)}</td>
-                        <td className="py-2 pr-3 text-right">{money(log.newSalePrice)}</td>
-                        <td className="py-2 pr-3 text-xs">
-                          {log.writtenBy?.name ?? log.writtenBy?.email ?? "—"}
-                        </td>
-                        <td className="py-2 pr-3 text-xs">{when(log.writtenAt)}</td>
-                        <td className="max-w-[20rem] truncate py-2 pr-3 text-xs">
-                          {log.errorMessage ?? "—"}
-                        </td>
-                      </tr>
-                    ))}
+                    {writebackLogs.map((log) => {
+                      const logLike = toLogLike(log);
+                      const availability = rollbackAvailability({
+                        log: logLike,
+                        recommendationStatus: recommendation.status,
+                        user,
+                      });
+                      const prior = priorSalePriceFor(logLike);
+                      return (
+                        <tr key={log.id} className="border-b last:border-0">
+                          <td className="py-2 pr-3">
+                            <Badge
+                              variant={
+                                log.status === "succeeded"
+                                  ? "default"
+                                  : log.status === "rolled_back"
+                                    ? "secondary"
+                                    : "destructive"
+                              }
+                            >
+                              {log.status.replaceAll("_", " ")}
+                            </Badge>
+                          </td>
+                          <td className="py-2 pr-3 text-right">{money(log.oldSalePrice)}</td>
+                          <td className="py-2 pr-3 text-right">{money(log.newSalePrice)}</td>
+                          <td className="py-2 pr-3 text-xs">
+                            {log.writtenBy?.name ?? log.writtenBy?.email ?? "—"}
+                          </td>
+                          <td className="py-2 pr-3 text-xs">{when(log.writtenAt)}</td>
+                          <td className="py-2 pr-3 text-xs">{when(log.rollbackAt)}</td>
+                          <td className="max-w-[16rem] truncate py-2 pr-3 text-xs">
+                            {log.errorMessage ?? "—"}
+                          </td>
+                          <td className="py-2 pr-3">
+                            {availability.canOffer ? (
+                              <RollbackForm
+                                writebackLogId={log.id}
+                                recommendationId={recommendation.id}
+                                restoreTo={prior.kind === "value" ? prior.salePrice : null}
+                                disabledFlags={flagState.disabledFlags}
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                {availability.reason ?? "—"}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

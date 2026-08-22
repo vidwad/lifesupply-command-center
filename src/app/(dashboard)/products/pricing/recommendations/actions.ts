@@ -11,10 +11,12 @@
  * on the recommendation row only: no price is written to any product, variant,
  * or store.
  *
- * DP-6 adds the writeback action at the bottom of this file. That one DOES
- * change a live storefront price, and it is the only thing in this file that
- * does. It carries its own permission, its own three flags, and its own audit
- * trail; generation and approval remain incapable of touching a store price.
+ * DP-6 adds the writeback action, and DP-6B the rollback action. Those two DO
+ * change a live storefront price, and they are the only things in this file
+ * that do. Each carries the same permission, the same three flags, and its own
+ * audit trail; generation and approval remain incapable of touching a store
+ * price. This file is the only place allowed to import either dangerous
+ * service, and a canary enforces it.
  *
  * Gated on pricing.review_recommendations rather than pricing.view: generating
  * writes rows, and a read-only viewer should not be able to fill a queue that
@@ -28,6 +30,7 @@ import { PricingValidationError } from "@/server/services/pricing";
 import { parseRejectionReason } from "@/server/services/pricing/approval";
 import { approveRecommendation, rejectRecommendation } from "@/server/services/pricing/approvals";
 import { generateRecommendationsForRun } from "@/server/services/pricing/recommendations";
+import { rollBackWriteback } from "@/server/services/pricing/rollback";
 import { writeRecommendationToBigCommerce } from "@/server/services/pricing/writeback";
 
 export type RecommendationActionState = { error?: string; ok?: string } | undefined;
@@ -176,5 +179,43 @@ export async function writeRecommendationToBigCommerceAction(
   } catch (error) {
     if (error instanceof PricingValidationError) return { error: error.message };
     throw error instanceof Error ? error : new Error("Could not write the price to BigCommerce.");
+  }
+}
+
+/**
+ * DP-6B: restores one writeback's prior sale price in BigCommerce.
+ *
+ * A rollback is a live price change, so it carries the same permission and the
+ * same three flags as the forward write. One writeback log per press: there is
+ * no bulk control and no loop anywhere on this path.
+ */
+export async function rollBackWritebackAction(
+  _previous: RecommendationActionState,
+  formData: FormData,
+): Promise<RecommendationActionState> {
+  const user = await requirePermission(PERMISSIONS.PRICING_WRITEBACK_BIGCOMMERCE);
+  const writebackLogId = String(formData.get("writebackLogId") ?? "");
+  const recommendationId = String(formData.get("recommendationId") ?? "");
+
+  try {
+    const result = await rollBackWriteback({
+      actorUserId: user.id,
+      actorPermissions: user.permissions,
+      writebackLogId,
+    });
+    revalidateDecision(recommendationId);
+
+    if (result.status === "failed") {
+      return {
+        error:
+          "BigCommerce rejected the rollback: " +
+          result.message +
+          " The store price is unchanged and the attempt is recorded on the writeback log.",
+      };
+    }
+    return { ok: result.message };
+  } catch (error) {
+    if (error instanceof PricingValidationError) return { error: error.message };
+    throw error instanceof Error ? error : new Error("Could not roll back the writeback.");
   }
 }
