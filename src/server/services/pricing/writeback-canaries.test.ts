@@ -257,10 +257,14 @@ describe("no autonomous, scheduled, or bulk writeback exists", () => {
       // DP-6B. Rollback restores a price, which is a store write like any
       // other, so it uses the same client rather than a second one.
       join("src", "server", "services", "pricing", "rollback.ts"),
+      // DP-6C read-only reconciliation. It imports the READ helpers only, which
+      // reconciliation-canaries.test.ts asserts separately.
+      join("src", "server", "services", "pricing", "reconciliation-service.ts"),
       join("src", "server", "integrations", "bigcommerce", "price-writeback.ts"),
       join("src", "server", "integrations", "bigcommerce", "price-writeback.test.ts"),
-      // Names the specifier in order to police it — the opposite of a breach.
+      // Name the specifier in order to police it — the opposite of a breach.
       join("src", "server", "services", "pricing", "rollback-canaries.test.ts"),
+      join("src", "server", "services", "pricing", "reconciliation-canaries.test.ts"),
     ]);
     const offenders: string[] = [];
     for (const file of allSource()) {

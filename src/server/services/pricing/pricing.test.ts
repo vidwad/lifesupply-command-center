@@ -251,6 +251,9 @@ describe("DP-1 execution-path canaries", () => {
   const BIGCOMMERCE_IMPORT_ALLOWED = [
     join("services", "pricing", "writeback.ts"),
     join("services", "pricing", "rollback.ts"),
+    // DP-6C. Reconciliation READS a live price and never writes one; that it
+    // imports no write symbol is asserted in reconciliation-canaries.test.ts.
+    join("services", "pricing", "reconciliation-service.ts"),
   ];
 
   it("reaches the BigCommerce integration from the write and rollback services only", () => {
