@@ -827,7 +827,14 @@ describe("DP-4 recommendation canaries", () => {
   });
 
   it("states on both surfaces that nothing is approved or written", () => {
-    expect(listPage().replace(/\s+/g, " ")).toContain("no price has been changed");
+    // The exact three sentences the product owner required at DP-4 sign-off.
+    const REQUIRED =
+      "No recommendation has been approved. No price has been changed. " +
+      "Approval and writeback are later phases.";
+    const detailPage = () =>
+      read("src/app/(dashboard)/products/pricing/recommendations/[id]/page.tsx");
+    expect(listPage().replace(/\s+/g, " ")).toContain(REQUIRED);
+    expect(detailPage().replace(/\s+/g, " ")).toContain(REQUIRED);
     const form = read(
       "src/app/(dashboard)/products/pricing/recommendations/generate-form.tsx",
     ).replace(/\s+/g, " ");

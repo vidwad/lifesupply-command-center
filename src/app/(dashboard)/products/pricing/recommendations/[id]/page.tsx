@@ -49,7 +49,7 @@ export default async function RecommendationDetailPage({
     <div>
       <PageHeader
         title={`${item.sku} — ${recommendation.recommendationType.replaceAll("_", " ")}`}
-        description="A proposal awaiting human review. It has not been approved and no price has been changed. Approval and write-back are not implemented in this phase."
+        description="A proposal awaiting human review. No recommendation has been approved. No price has been changed. Approval and writeback are later phases."
         breadcrumb={
           <Link
             href="/products/pricing/recommendations"

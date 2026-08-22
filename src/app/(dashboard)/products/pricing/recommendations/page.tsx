@@ -48,7 +48,7 @@ export default async function RecommendationsPage(): Promise<React.JSX.Element> 
     <div>
       <PageHeader
         title="Price recommendations"
-        description="Proposals awaiting human review. Nothing here has been approved and no price has been changed. Generating a recommendation creates a queue row only — it does not approve, reject, or write back to BigCommerce."
+        description="Proposals awaiting human review. No recommendation has been approved. No price has been changed. Approval and writeback are later phases. Generating a recommendation creates a queue row only — it does not approve, reject, or write back to BigCommerce."
         actions={
           canExport ? (
             <Button asChild variant="outline">
