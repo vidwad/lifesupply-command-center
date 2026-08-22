@@ -776,8 +776,19 @@ describe("DP-4 recommendation canaries", () => {
     expect(service()).toContain("prisma.priceRecommendation.create");
   });
 
-  it("implements no approval or rejection", () => {
-    for (const src of dp4()) {
+  /**
+   * NARROWED IN DP-5.
+   *
+   * Through DP-4 this asserted that NO file in the recommendation tree touched
+   * a decision column. DP-5 adds approval, so the pages legitimately DISPLAY
+   * approvedBy/rejectedBy and the actions legitimately record them. What must
+   * still hold is that GENERATION never decides: the engine and the generation
+   * service may not set a decision column or a decided status. The DP-5
+   * canaries below pin the other half — that only the approval service writes
+   * those columns.
+   */
+  it("generation implements no approval or rejection", () => {
+    for (const src of [engine(), service()]) {
       const code = stripComments(src);
       expect(code).not.toMatch(/approvedById|approvedAt|rejectedById|rejectedAt|rejectionReason/);
       expect(code).not.toMatch(/prisma\.approval\./);
@@ -826,20 +837,166 @@ describe("DP-4 recommendation canaries", () => {
     expect(stripComments(engine())).toContain("recommendedSalePrice: null");
   });
 
-  it("states on both surfaces that nothing is approved or written", () => {
-    // The exact three sentences the product owner required at DP-4 sign-off.
-    const REQUIRED =
-      "No recommendation has been approved. No price has been changed. " +
-      "Approval and writeback are later phases.";
-    const detailPage = () =>
-      read("src/app/(dashboard)/products/pricing/recommendations/[id]/page.tsx");
-    expect(listPage().replace(/\s+/g, " ")).toContain(REQUIRED);
-    expect(detailPage().replace(/\s+/g, " ")).toContain(REQUIRED);
+  /**
+   * SUPERSEDED IN DP-5.
+   *
+   * The DP-4 sign-off wording was "No recommendation has been approved. No
+   * price has been changed. Approval and writeback are later phases." Two of
+   * those three sentences became false the moment approval shipped, so keeping
+   * them on the pages would have been a lie the canary enforced. The DP-5
+   * canary below pins the replacement wording, which still makes the load-
+   * bearing promise: approval changes no price.
+   *
+   * The GENERATE form keeps its DP-4 wording, which is still true of it.
+   */
+  it("states on the generate form that it approves and writes nothing", () => {
     const form = read(
       "src/app/(dashboard)/products/pricing/recommendations/generate-form.tsx",
     ).replace(/\s+/g, " ");
     expect(form).toContain(
       "This creates recommendations only. It does not approve or write prices.",
     );
+  });
+});
+
+describe("DP-5 approval canaries", () => {
+  const rules = () => read("src/server/services/pricing/approval.ts");
+  const service = () => read("src/server/services/pricing/approvals.ts");
+  const action = () => read("src/app/(dashboard)/products/pricing/recommendations/actions.ts");
+  const forms = () =>
+    read("src/app/(dashboard)/products/pricing/recommendations/decision-forms.tsx");
+  const detail = () => read("src/app/(dashboard)/products/pricing/recommendations/[id]/page.tsx");
+  const list = () => read("src/app/(dashboard)/products/pricing/recommendations/page.tsx");
+  const dp5 = () => [rules(), service(), action(), forms(), detail(), list()];
+
+  it("writes no product or variant price", () => {
+    for (const src of dp5()) {
+      const code = stripComments(src);
+      expect(code).not.toMatch(/prisma[.]product[.](update|updateMany|upsert)/);
+      expect(code).not.toMatch(/prisma[.]productVariant[.](update|updateMany|upsert)/);
+      // The words that would signal a price mutation slipping in.
+      expect(code).not.toMatch(/updateProductPrice|setSalePrice|setRegularPrice/);
+    }
+  });
+
+  it("creates no writeback log and imports no BigCommerce integration", () => {
+    for (const src of dp5()) {
+      const code = stripComments(src);
+      expect(code).not.toMatch(/priceWritebackLog/i);
+      expect(code).not.toContain("integrations/bigcommerce");
+    }
+  });
+
+  it("references no writeback flag", () => {
+    for (const src of dp5()) {
+      const code = stripComments(src);
+      expect(code).not.toContain("PRICING_WRITEBACKS");
+      expect(code).not.toContain("EXTERNAL_WRITEBACKS");
+      expect(code).not.toContain("pricing.writebacks");
+      expect(code).not.toContain("external.writebacks");
+      expect(code).not.toContain("PRICING_WRITEBACK_BIGCOMMERCE");
+    }
+  });
+
+  it("makes no outbound request and uses no AI, search, or browser", () => {
+    for (const src of dp5()) {
+      const code = stripComments(src);
+      expect(code).not.toMatch(/fetch[(]/i);
+      expect(code).not.toMatch(/axios|playwright|puppeteer|chromium|cheerio|jsdom/i);
+      expect(code).not.toMatch(/openai|anthropic|web_search|googleapis|bing[.]/i);
+    }
+  });
+
+  it("mutates only PriceRecommendation and the internal PricingRunItem row", () => {
+    const code = stripComments(service());
+    const writes =
+      code.match(
+        /prisma[.][a-zA-Z]+[.](create|createMany|update|updateMany|upsert|delete|deleteMany)/g,
+      ) ?? [];
+    expect(writes.length).toBeGreaterThan(0);
+    for (const write of writes) {
+      expect(["prisma.priceRecommendation.update", "prisma.pricingRunItem.update"]).toContain(
+        write,
+      );
+    }
+  });
+
+  it("gates both decisions on pricing.approve_recommendations", () => {
+    const code = stripComments(action());
+    expect(code).toContain("PERMISSIONS.PRICING_APPROVE_RECOMMENDATIONS");
+    // The generate action keeps the weaker permission; a decision must not be
+    // reachable on it.
+    expect(code).toMatch(/approveRecommendationAction/);
+    expect(code).toMatch(/rejectRecommendationAction/);
+    expect(stripComments(rules())).toContain("PRICING_APPROVE_RECOMMENDATIONS");
+  });
+
+  it("requires the pricing.intelligence flag for a decision", () => {
+    expect(stripComments(service())).toContain("FEATURE_FLAGS.PRICING_INTELLIGENCE");
+  });
+
+  it("sets decision columns only in the approval service", () => {
+    // DP-4 generation must never write a decision column.
+    const generation = read("src/server/services/pricing/recommendations.ts");
+    for (const column of ["approvedById", "approvedAt", "rejectedById", "rejectedAt"]) {
+      expect(stripComments(generation), column).not.toContain(column + ":");
+    }
+    const code = stripComments(service());
+    expect(code).toContain("approvedById: args.actorUserId");
+    expect(code).toContain("rejectedById: args.actorUserId");
+  });
+
+  it("never clears the approval requirement", () => {
+    for (const src of dp5()) {
+      expect(stripComments(src)).not.toContain("requiresApproval: false");
+      expect(stripComments(src)).not.toContain("autoApprove");
+    }
+  });
+
+  it("states on every decision surface that approval changes no price", () => {
+    const REQUIRED =
+      "Approved recommendations are internal approvals only. No BigCommerce price change " +
+      "occurs until a later controlled writeback phase.";
+    expect(list().replace(/\s+/g, " ")).toContain(REQUIRED);
+    expect(detail().replace(/\s+/g, " ")).toContain(REQUIRED);
+    expect(forms().replace(/\s+/g, " ")).toContain(
+      "Approval marks this recommendation as internally approved only. It does not update " +
+        "BigCommerce or change any product price.",
+    );
+    expect(detail().replace(/\s+/g, " ")).toContain(
+      "This recommendation is expired. Re-run observation and recommendation generation before approving.",
+    );
+  });
+});
+
+describe("DP-5A: the UI predicate matches the server", () => {
+  const detail = () => read("src/app/(dashboard)/products/pricing/recommendations/[id]/page.tsx");
+
+  it("gates the approve control on the full server check, not a subset", () => {
+    const code = stripComments(read("src/server/services/pricing/approval.ts"));
+    // showsApproveControl must delegate to canApprove rather than re-implement
+    // a looser version of it. A hand-rolled subset is what let a row the server
+    // would refuse still render an Approve button.
+    expect(code).toMatch(/showsApproveControl[\s\S]*?canApprove\(/);
+    expect(code).not.toContain("showsDecisionControls");
+  });
+
+  it("keeps reject reachable when approve is not", () => {
+    const code = stripComments(read("src/server/services/pricing/approval.ts"));
+    // showsRejectControl must NOT consult canApprove: rejection exists to clear
+    // rows that can never be approved.
+    const reject = code.slice(code.indexOf("export function showsRejectControl"));
+    const body = reject.slice(
+      0,
+      reject.indexOf("}" + String.fromCharCode(10) + String.fromCharCode(10)),
+    );
+    expect(body).not.toContain("canApprove");
+  });
+
+  it("renders both controls from the split predicates", () => {
+    const code = stripComments(detail());
+    expect(code).toContain("showsApproveControl");
+    expect(code).toContain("showsRejectControl");
+    expect(code).toContain("approveUnavailableReason");
   });
 });

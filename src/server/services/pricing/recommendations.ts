@@ -8,7 +8,8 @@
  * external.writebacks.
  *
  * Every row is written with requiresApproval = true and status
- * ready_for_review. Approval itself is DP-5 and does not exist yet.
+ * ready_for_review. Deciding on a row is DP-5 (services/pricing/approvals.ts);
+ * this module never sets a decision column.
  *
  * Generation runs synchronously rather than through Inngest: unlike DP-3 this
  * phase contacts nothing and is bounded arithmetic over rows already in the
@@ -92,17 +93,31 @@ const bump = (counts: Record<string, number>, key: string): void => {
 };
 
 /**
- * True when this run item already has a live recommendation awaiting review.
+ * True when an existing recommendation should stop DP-4 regenerating this item.
  *
- * Regenerating a run must not stack duplicate rows on the same item: a
- * reviewer seeing two live proposals for one SKU has no way to tell which one
- * the queue means.
+ * Regenerating a run must not stack duplicate rows on the same item: a reviewer
+ * seeing two live proposals for one SKU has no way to tell which one the queue
+ * means.
+ *
+ * WIDENED IN DP-5. Through DP-4 only `ready_for_review` suppressed, which meant
+ * a rejected recommendation came straight back on the next pass — the reviewer
+ * says no and the system silently asks again with the same evidence. Decided
+ * rows now suppress too:
+ *
+ *  - `approved` and `written_back` always suppress. An approved row is waiting
+ *    on DP-6; proposing a competing price for the same item alongside it would
+ *    make the queue ambiguous at exactly the wrong moment.
+ *  - `rejected` suppresses until its evidence horizon passes. The rejection was
+ *    of a price derived from THAT evidence, so re-asking on fresher evidence is
+ *    legitimate; re-asking on the same evidence is not.
+ *  - `expired` and `failed` never suppress — there is nothing live to protect.
  */
 export function isStillLive(
   existing: { status: string; expiresAt: Date | null },
   now: Date,
 ): boolean {
-  if (existing.status !== "ready_for_review") return false;
+  if (existing.status === "approved" || existing.status === "written_back") return true;
+  if (existing.status !== "ready_for_review" && existing.status !== "rejected") return false;
   return existing.expiresAt == null || existing.expiresAt > now;
 }
 
@@ -138,8 +153,11 @@ export async function generateRecommendationsForRun(args: {
     orderBy: { sku: "asc" },
     include: {
       observations: { orderBy: { checkedAt: "desc" }, take: 25 },
+      // Not filtered to ready_for_review: DP-5 lets decided rows suppress
+      // regeneration too, so isStillLive must see them.
       recommendations: {
-        where: { status: "ready_for_review" },
+        orderBy: { createdAt: "desc" },
+        take: 10,
         select: { id: true, status: true, expiresAt: true },
       },
     },
@@ -307,18 +325,24 @@ async function persistOutcome(args: {
 }
 
 export async function listRecommendations(args?: {
+  /** A PriceRecommendationStatus, or "all" / undefined for no status filter. */
   status?: string;
   pricingRunId?: string;
   take?: number;
 }) {
+  const status = args?.status;
   return prisma.priceRecommendation.findMany({
     where: {
-      status: args?.status ? { equals: args.status as never } : undefined,
+      status: status && status !== "all" ? { equals: status as never } : undefined,
       pricingRunItem: args?.pricingRunId ? { pricingRunId: args.pricingRunId } : undefined,
     },
     orderBy: { createdAt: "desc" },
     take: args?.take ?? 500,
     include: {
+      // Decision actors are read-only projections: name and email only, so the
+      // queue can say who decided without widening what a viewer can see.
+      approvedBy: { select: { id: true, name: true, email: true } },
+      rejectedBy: { select: { id: true, name: true, email: true } },
       pricingRunItem: {
         include: {
           store: { select: { id: true, name: true } },
@@ -329,10 +353,28 @@ export async function listRecommendations(args?: {
   });
 }
 
+/** Counts per status, for the queue filter tabs. */
+export async function recommendationStatusCounts(): Promise<Record<string, number>> {
+  const grouped = await prisma.priceRecommendation.groupBy({
+    by: ["status"],
+    _count: { _all: true },
+  });
+  const counts: Record<string, number> = {};
+  let total = 0;
+  for (const row of grouped) {
+    counts[row.status] = row._count._all;
+    total += row._count._all;
+  }
+  counts.all = total;
+  return counts;
+}
+
 export async function getRecommendation(id: string) {
   return prisma.priceRecommendation.findUnique({
     where: { id },
     include: {
+      approvedBy: { select: { id: true, name: true, email: true } },
+      rejectedBy: { select: { id: true, name: true, email: true } },
       pricingRunItem: {
         include: {
           store: { select: { id: true, name: true } },
