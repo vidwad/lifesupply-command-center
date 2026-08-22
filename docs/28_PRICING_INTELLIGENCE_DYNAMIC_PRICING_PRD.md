@@ -515,6 +515,62 @@ submit — the alternative is an outbound request per log on every page view.
 **No bulk rollback.** One writeback log per explicit press, enforced by canary:
 no loop, no scheduler, no background path, and no multi-select in the UI.
 
+## 7.8 DP-6C implementation notes and decisions
+
+Recorded 2026-08-22. DP-6C is a reporting and reconciliation phase: it observes
+what the writeback and rollback paths did, and corrects nothing.
+
+**No schema change.** Reconciliation observations are stored as audit entries
+(`pricing.writeback_reconciliation_completed`, `entityType =
+PriceWritebackLog`) and read back by entity id, which `AuditLog` is already
+indexed for. An audit entry is exactly what a reconciliation result is — "a
+person looked at the store at this time and saw this" — so a new column would
+have duplicated it. This also keeps reconciliation from touching
+`rollbackPayload`, which a future rollback depends on.
+
+**Permission: `pricing.writeback_bigcommerce`, not `admin.manage_integrations`.**
+The older sync-wide reconciliation uses the admin permission, but that is an
+admin/integrations task; this one is a pricing task and belongs in the pricing
+permission set rather than demanding a global admin grant. Anyone who may
+CHANGE a price may certainly read one, so requiring it adds no privilege.
+Viewing and exporting the report need only `pricing.view` / `pricing.export`.
+
+**No feature flag on read-only reconciliation.** The existing read-only
+BigCommerce reconciliation is not flag-gated either, and the DP-2A posture
+holds: flags gate creating and mutating, not looking. Tripping the kill switch
+must stop price CHANGES; it must not blind an operator trying to find out what
+the store currently holds — that is precisely when they need to look.
+
+**Reconciliation statuses.** `matched`, `mismatch`, `possible_landed_write`,
+`manual_verification_required`, `not_applicable`. The expectation differs per
+log status, and a log we hold no expectation for reports `not_applicable`
+rather than a false `matched`.
+
+**`possible_landed_write` is the finding worth having.** When a writeback
+reported failure but the store holds the value it tried to set, the write may
+have landed despite the error. Reporting that as "nothing happened" would leave
+an unrecorded live change on the storefront.
+
+**A mismatch never suggests re-writing.** The required action reads "find out
+what changed this price before acting", not "write it again". Something changed
+that price and this system does not know what; a person decides whether it was
+correct. DP-6B's rollback will refuse while the live price differs, which is the
+same posture.
+
+**Reconciliation imports no write symbol.** It shares the BigCommerce client
+module with the write and rollback paths, so "read-only" has to mean it pulls in
+`readBigCommercePrice` and not `writeBigCommerceSalePrice` — asserted by canary
+rather than left as a convention.
+
+**The operations page reaches no dangerous service.** It imports neither
+`writeback.ts` nor `rollback.ts` nor the BigCommerce client, and carries no
+writeback or rollback button. Those remain on the individual recommendation,
+one record at a time, behind their own gates. The one action on the page reads
+a live price and records what it saw.
+
+**No bulk anything.** One log per explicit press, no loop over logs in the
+service, no scheduler, and no background path.
+
 ## 8. Competitor Setup Requirements
 
 Add setup screens for competitor stores under:

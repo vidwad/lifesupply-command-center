@@ -7,6 +7,7 @@ import {
   Calculator,
   Camera,
   CircleDollarSign,
+  ClipboardCheck,
   ClipboardList,
   FileText,
   Gauge,
@@ -91,6 +92,12 @@ export const PRIMARY_NAV: NavItem[] = [
     label: "Price recommendations",
     href: "/products/pricing/recommendations",
     icon: Calculator,
+    permission: PERMISSIONS.PRICING_VIEW,
+  },
+  {
+    label: "Pricing operations",
+    href: "/products/pricing/operations",
+    icon: ClipboardCheck,
     permission: PERMISSIONS.PRICING_VIEW,
   },
   {
