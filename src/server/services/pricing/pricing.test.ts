@@ -752,3 +752,94 @@ describe("DP-3A corrections", () => {
     expect(worker()).toContain("prisma.competitorPriceObservation.create");
   });
 });
+
+describe("DP-4 recommendation canaries", () => {
+  const engine = () => read("src/server/services/pricing/recommendation.ts");
+  const service = () => read("src/server/services/pricing/recommendations.ts");
+  const action = () => read("src/app/(dashboard)/products/pricing/recommendations/actions.ts");
+  const listPage = () => read("src/app/(dashboard)/products/pricing/recommendations/page.tsx");
+  const exportRoute = () => read("src/app/api/exports/pricing/recommendations/route.ts");
+  const dp4 = () => [engine(), service(), action(), listPage(), exportRoute()];
+
+  it("creates recommendations and mutates no price anywhere", () => {
+    for (const src of dp4()) {
+      const code = stripComments(src);
+      // The queue row and the run item are ours. A product, variant, or
+      // BigCommerce price is not.
+      expect(code).not.toMatch(/prisma\.product\.update/);
+      expect(code).not.toMatch(/prisma\.productVariant\.update/);
+      expect(code).not.toMatch(/prisma\.product\.updateMany/);
+      expect(code).not.toMatch(/prisma\.productVariant\.updateMany/);
+      expect(code).not.toContain("integrations/bigcommerce");
+      expect(code).not.toMatch(/priceWritebackLog/);
+    }
+    expect(service()).toContain("prisma.priceRecommendation.create");
+  });
+
+  it("implements no approval or rejection", () => {
+    for (const src of dp4()) {
+      const code = stripComments(src);
+      expect(code).not.toMatch(/approvedById|approvedAt|rejectedById|rejectedAt|rejectionReason/);
+      expect(code).not.toMatch(/prisma\.approval\./);
+      expect(code).not.toMatch(/status:\s*"approved"|status:\s*"rejected"/);
+    }
+  });
+
+  it("references no writeback flag", () => {
+    for (const src of dp4()) {
+      expect(stripComments(src)).not.toContain("PRICING_WRITEBACKS");
+      expect(stripComments(src)).not.toContain("EXTERNAL_WRITEBACKS");
+      expect(stripComments(src)).not.toContain("pricing.writebacks");
+      expect(stripComments(src)).not.toContain("external.writebacks");
+    }
+  });
+
+  it("collects no new evidence: no fetch, browser, AI, or web search", () => {
+    for (const src of dp4()) {
+      const code = stripComments(src);
+      expect(code).not.toMatch(/fetch\(/i);
+      expect(code).not.toMatch(/axios|playwright|puppeteer|chromium|cheerio|jsdom/i);
+      expect(code).not.toMatch(/openai|anthropic|web_search|googleapis|bing\./i);
+      expect(code).not.toContain("prisma.competitorPriceObservation.create");
+    }
+  });
+
+  it("writes every recommendation as ready_for_review requiring approval", () => {
+    const code = stripComments(service());
+    expect(code).toContain("requiresApproval: true");
+    expect(code).toContain('status: "ready_for_review"');
+    // No path may set requiresApproval false or auto-approve.
+    expect(code).not.toContain("requiresApproval: false");
+    expect(code).not.toContain("autoApprove");
+  });
+
+  it("gates generation on review permission and the pricing.intelligence flag", () => {
+    expect(action()).toContain("PERMISSIONS.PRICING_REVIEW_RECOMMENDATIONS");
+    expect(service()).toContain("FEATURE_FLAGS.PRICING_INTELLIGENCE");
+    expect(exportRoute()).toContain("PERMISSIONS.PRICING_EXPORT");
+  });
+
+  it("never stores a price for a blocked outcome", () => {
+    // recommendedSalePrice is non-nullable, so a blocked row could only be
+    // stored by inventing a number. The service must gate on the priced list.
+    expect(stripComments(service())).toContain("PRICED_RECOMMENDATION_TYPES");
+    expect(stripComments(engine())).toContain("recommendedSalePrice: null");
+  });
+
+  it("states on both surfaces that nothing is approved or written", () => {
+    // The exact three sentences the product owner required at DP-4 sign-off.
+    const REQUIRED =
+      "No recommendation has been approved. No price has been changed. " +
+      "Approval and writeback are later phases.";
+    const detailPage = () =>
+      read("src/app/(dashboard)/products/pricing/recommendations/[id]/page.tsx");
+    expect(listPage().replace(/\s+/g, " ")).toContain(REQUIRED);
+    expect(detailPage().replace(/\s+/g, " ")).toContain(REQUIRED);
+    const form = read(
+      "src/app/(dashboard)/products/pricing/recommendations/generate-form.tsx",
+    ).replace(/\s+/g, " ");
+    expect(form).toContain(
+      "This creates recommendations only. It does not approve or write prices.",
+    );
+  });
+});

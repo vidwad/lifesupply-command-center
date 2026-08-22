@@ -10,6 +10,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { getPricingRun } from "@/server/services/pricing/runs";
 
+import { GenerateRecommendationsForm } from "../../recommendations/generate-form";
 import { CompetitorCheckForm } from "../competitor-check-form";
 
 export const metadata = { title: "Pricing run" };
@@ -23,6 +24,7 @@ export default async function PricingRunPage({ params }: Props) {
   const user = await requirePermission(PERMISSIONS.PRICING_VIEW);
   const canExport = userHasPermission(user, PERMISSIONS.PRICING_EXPORT);
   const canRunChecks = userHasPermission(user, PERMISSIONS.PRICING_RUN_CHECKS);
+  const canReview = userHasPermission(user, PERMISSIONS.PRICING_REVIEW_RECOMMENDATIONS);
   const { id } = await params;
   const run = await getPricingRun(id);
   if (!run) notFound();
@@ -43,6 +45,19 @@ export default async function PricingRunPage({ params }: Props) {
     lowOrFailed: observations.filter((o) =>
       ["low_confidence", "failed", "invalid", "unavailable"].includes(o.status),
     ).length,
+    // Eligible = checked, unblocked, priced, and carrying at least one valid
+    // observation. It is the ceiling on what a generation pass could produce,
+    // not a promise: freshness and confidence are applied by the engine.
+    eligible: run.items.filter(
+      (item) =>
+        item.status !== "blocked" &&
+        item.blockedReason == null &&
+        item.costPrice != null &&
+        item.floorPrice != null &&
+        item.currentEffectivePrice != null &&
+        item.observations.some((o) => o.status === "valid"),
+    ).length,
+    recommendationReady: run.items.filter((item) => item.status === "recommendation_ready").length,
   };
 
   return (
@@ -79,6 +94,8 @@ export default async function PricingRunPage({ params }: Props) {
             ["Missing cost", String(counts.missingCost)],
             ["Observations", String(counts.observations)],
             ["Valid observations", String(counts.valid)],
+            ["Eligible for recommendation", String(counts.eligible)],
+            ["Recommendations ready", String(counts.recommendationReady)],
             ["Low conf. / failed", String(counts.lowOrFailed)],
             [
               "Last checked",
@@ -108,6 +125,23 @@ export default async function PricingRunPage({ params }: Props) {
             </CardHeader>
             <CardContent>
               <CompetitorCheckForm runId={run.id} dailyBatchSize={run.dailyBatchSize} />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {canReview ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Generate recommendations</CardTitle>
+              <CardDescription>
+                Turns valid, fresh competitor observations into proposals for review.{" "}
+                <strong>
+                  This creates recommendations only. It does not approve or write prices.
+                </strong>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <GenerateRecommendationsForm runId={run.id} />
             </CardContent>
           </Card>
         ) : null}

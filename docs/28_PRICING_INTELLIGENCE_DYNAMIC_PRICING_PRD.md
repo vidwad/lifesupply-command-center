@@ -267,6 +267,57 @@ contacts nothing external.
 
 ---
 
+## 7.4 DP-4 implementation notes and deviations
+
+Recorded 2026-08-21 during the DP-4 build, so the PRD matches what is actually
+built. Each item below is a place where the written DP-4 instruction met a
+schema or product constraint; none of them relaxes a launch gate.
+
+**Blocked outcomes do not create `PriceRecommendation` rows.**
+`recommendedSalePrice` is a non-nullable `Decimal` column. Storing a blocked
+outcome would therefore mean inventing a price that a reviewer could later act
+on, and storing the floor or the current price would make a block look like a
+proposal. Blocked outcomes are recorded on the `PricingRunItem`
+(`recommendationType`, plus the reason under `metadata.recommendation`) and
+counted in the grouped generation audit. Management can still see why a
+recommendation was not created; there is simply no fabricated price attached to
+it. Adding a nullable price column, or a separate outcome table, would let
+blocked rows join the queue — tracked as **DP-4A** if wanted.
+
+**`manual_review` absorbs the missing-floor case.** The DP-4 type list has no
+`blocked_missing_floor`. When no floor is stored and none can be derived, the
+engine returns `manual_review` naming the floor as the missing input. When a
+floor is absent but a cost and multiplier exist, the engine derives one and says
+so in the reason, as the fallback rule requires.
+
+**`maxDecreasePct` annotates rather than blocks.** DP-4's decrease rule is
+explicit: a target at or above the floor becomes a `reduce`. An earlier draft of
+this engine blocked cuts beyond `maxDecreasePct`, which withheld exactly the
+rows a reviewer most needs to see and contradicted the written rule. A large cut
+now produces a normal `reduce` whose reason carries a `NOTE:` that the drop
+exceeds the guideline. The floor remains the hard rail, and every row requires
+approval regardless.
+
+**Currency screening is largely inert until a currency is stored.** There is no
+`Store.currency` column, so the run currency is read from
+`PricingRun.metadata.currency` and is normally null, which makes the per-
+observation currency check unable to fire. To cover the unsafe case that needs
+no known base, the engine refuses outright — `manual_review` — when the usable
+observations for one item quote more than one currency. A single observation in
+the wrong currency is still not detectable. Adding `Store.currency` closes this
+and is the recommended fix.
+
+**Generation is synchronous, not an Inngest job.** DP-3 needed a worker because
+it made rate-limited outbound requests. DP-4 contacts nothing and is bounded
+arithmetic over rows already in the database, so a background worker would add
+failure modes without buying anything. The pass is capped at
+`MAX_ITEMS_PER_GENERATION` (2000), matching DP-2's list ceiling.
+
+**Confidence is the driving observation's, not a blend.** The proposal is
+derived from the single cheapest usable observation, so the confidence reported
+is that observation's. A blended or agreement-weighted score would describe
+evidence that did not set the price.
+
 ## 8. Competitor Setup Requirements
 
 Add setup screens for competitor stores under:
