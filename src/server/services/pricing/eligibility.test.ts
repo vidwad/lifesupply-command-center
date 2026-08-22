@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   canContactCompetitor,
+  MAX_COMPETITOR_URLS_PER_ITEM,
+  remainingHourlyAllowance,
+  selectCompetitorUrlsForItem,
+  type UrlCandidate,
   isItemEligible,
   isRunCheckable,
   minRequestSpacingMs,
@@ -164,5 +168,79 @@ describe("resolveBatchSize", () => {
 
   it("falls back to 300 for a nonsensical daily batch size", () => {
     expect(resolveBatchSize({ dailyBatchSize: 0 })).toBe(300);
+  });
+});
+
+describe("selectCompetitorUrlsForItem (DP-3A)", () => {
+  const c = (over: Partial<UrlCandidate>): UrlCandidate => ({
+    competitorId: "c1",
+    competitorUrl: "https://a.example/p1",
+    scope: "product",
+    urlVerified: false,
+    ...over,
+  });
+
+  it("allows up to five competitor URLs per product", () => {
+    const many = Array.from({ length: 8 }, (_, i) =>
+      c({ competitorId: "c" + i, competitorUrl: "https://s" + i + ".example/p" }),
+    );
+    expect(selectCompetitorUrlsForItem(many)).toHaveLength(MAX_COMPETITOR_URLS_PER_ITEM);
+    expect(MAX_COMPETITOR_URLS_PER_ITEM).toBe(5);
+  });
+
+  it("prefers variant-level mappings over product-level", () => {
+    // A product mapping may point at a different size or pack; the variant
+    // mapping identifies the exact item being priced.
+    const chosen = selectCompetitorUrlsForItem([
+      c({ scope: "product", competitorUrl: "https://a.example/product" }),
+      c({ scope: "variant", competitorUrl: "https://a.example/variant" }),
+      c({ scope: "upload", competitorUrl: "https://a.example/uploaded" }),
+    ]);
+    expect(chosen.map((x) => x.scope)).toEqual(["variant", "product", "upload"]);
+  });
+
+  it("deduplicates the same URL so one product does not spend two requests", () => {
+    const chosen = selectCompetitorUrlsForItem([
+      c({ scope: "variant", competitorUrl: "https://a.example/p" }),
+      c({ scope: "product", competitorUrl: "https://A.example/p" }),
+      c({ scope: "upload", competitorUrl: "https://a.example/p " }),
+    ]);
+    expect(chosen).toHaveLength(1);
+    expect(chosen[0]?.scope).toBe("variant");
+  });
+
+  it("ignores blank URLs", () => {
+    expect(selectCompetitorUrlsForItem([c({ competitorUrl: "   " })])).toHaveLength(0);
+  });
+
+  it("honours a smaller explicit limit", () => {
+    const many = Array.from({ length: 5 }, (_, i) =>
+      c({ competitorUrl: "https://s" + i + ".example/p" }),
+    );
+    expect(selectCompetitorUrlsForItem(many, 2)).toHaveLength(2);
+    expect(selectCompetitorUrlsForItem(many, 0)).toHaveLength(0);
+  });
+});
+
+describe("remainingHourlyAllowance (DP-3A)", () => {
+  it("reports what is left within the hour", () => {
+    expect(remainingHourlyAllowance({ rateLimitPerHour: 60 }, 0)).toBe(60);
+    expect(remainingHourlyAllowance({ rateLimitPerHour: 60 }, 59)).toBe(1);
+  });
+
+  it("never goes negative or grants credit for over-use", () => {
+    expect(remainingHourlyAllowance({ rateLimitPerHour: 60 }, 60)).toBe(0);
+    expect(remainingHourlyAllowance({ rateLimitPerHour: 60 }, 999)).toBe(0);
+  });
+
+  it("treats a non-positive limit as no allowance, not unlimited", () => {
+    expect(remainingHourlyAllowance({ rateLimitPerHour: 0 }, 0)).toBe(0);
+    expect(remainingHourlyAllowance({ rateLimitPerHour: -5 }, 0)).toBe(0);
+  });
+
+  it("matches the documented 60/hour spacing", () => {
+    // 60 per hour means one request per minute; a truncated wait would breach
+    // the very limit the setting exists to enforce.
+    expect(minRequestSpacingMs(60)).toBe(60_000);
   });
 });

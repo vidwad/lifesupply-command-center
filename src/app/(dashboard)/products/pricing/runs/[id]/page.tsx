@@ -5,7 +5,7 @@ import { ArrowLeft, Download } from "lucide-react";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { getPricingRun } from "@/server/services/pricing/runs";
@@ -49,7 +49,7 @@ export default async function PricingRunPage({ params }: Props) {
     <div>
       <PageHeader
         title={`${run.store.name} — ${run.sourceType.replaceAll("_", " ")}`}
-        description="Draft product list and fix-list. Nothing here has been price-checked: no competitor site was contacted, no recommendation exists, and no price was written back. Readable on permission alone — the pricing.intelligence flag gates building new runs, not reading stored ones."
+        description="Draft product list and fix-list. This is read-only: it creates competitor observations only. It does not create recommendations, approvals, or BigCommerce price changes. Readable on permission alone — the pricing.intelligence flag gates building and checking runs, not reading stored ones."
         breadcrumb={
           <Link
             href="/products/pricing/runs"
@@ -101,6 +101,10 @@ export default async function PricingRunPage({ params }: Props) {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Read-only competitor check</CardTitle>
+              <CardDescription>
+                Checks up to the batch size in <strong>products</strong>, each against up to five
+                approved competitor URLs, subject to each competitor&apos;s hourly rate limit.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <CompetitorCheckForm runId={run.id} dailyBatchSize={run.dailyBatchSize} />

@@ -96,15 +96,32 @@ async function loadRobots(origin: string): Promise<string | null> {
   if (robotsCache.has(origin)) return robotsCache.get(origin) ?? null;
   let body: string | null = null;
   try {
-    const response = await fetch(origin + "/robots.txt", {
-      method: "GET",
-      redirect: "follow",
-      credentials: "omit",
-      headers: { "User-Agent": USER_AGENT, Accept: "text/plain" },
-      signal: AbortSignal.timeout(ROBOTS_TIMEOUT_MS),
-      cache: "no-store",
-    });
-    body = response.ok ? (await response.text()).slice(0, 200_000) : null;
+    // Manual redirect handling: a cross-origin robots redirect must never be
+    // able to authorise checking a competitor URL, because the file that
+    // granted permission would then belong to a different site entirely.
+    let current = origin + "/robots.txt";
+    for (let hop = 0; hop < 2; hop += 1) {
+      const response = await fetch(current, {
+        method: "GET",
+        redirect: "manual",
+        credentials: "omit",
+        headers: { "User-Agent": USER_AGENT, Accept: "text/plain" },
+        signal: AbortSignal.timeout(ROBOTS_TIMEOUT_MS),
+        cache: "no-store",
+      });
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        const next = location ? new URL(location, current) : null;
+        // Same-origin redirects are followed once; anything else is refused
+        // and treated as "no robots file we can trust".
+        if (!next || next.origin !== origin) break;
+        current = next.toString();
+        continue;
+      }
+      body = response.ok ? (await response.text()).slice(0, 200_000) : null;
+      break;
+    }
   } catch {
     body = null;
   }
@@ -115,6 +132,43 @@ async function loadRobots(origin: string): Promise<string | null> {
 /** Clears the per-process robots cache. Used by tests. */
 export function resetRobotsCache(): void {
   robotsCache.clear();
+}
+
+/**
+ * Reads a response body, stopping as soon as the cap is exceeded.
+ *
+ * Returns null rather than a truncated page: a half-read document can produce a
+ * plausible but wrong extraction, and a refusal is recoverable while a wrong
+ * price is not. Falls back to a buffered read only when the body cannot be
+ * streamed, and still refuses on size.
+ */
+async function readCapped(response: Response): Promise<string | null> {
+  const body = response.body;
+  if (!body) {
+    const text = await response.text();
+    return text.length > MAX_RESPONSE_BYTES ? null : text;
+  }
+
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  const chunks: string[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_RESPONSE_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(decoder.decode(value, { stream: true }));
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  chunks.push(decoder.decode());
+  return chunks.join("");
 }
 
 /** Fetches one competitor product page read-only, or explains why it did not. */
@@ -165,13 +219,28 @@ export async function fetchCompetitorPage(rawUrl: string): Promise<FetchOutcome>
       return { ok: false, httpStatus: response.status, reason: "Response is not HTML." };
     }
 
-    const text = await response.text();
-    return {
-      ok: true,
-      html: text.length > MAX_RESPONSE_BYTES ? text.slice(0, MAX_RESPONSE_BYTES) : text,
-      httpStatus: response.status,
-      finalUrl: url.toString(),
-    };
+    // Refuse before reading when the server declares an oversized body:
+    // slicing after response.text() would already have pulled the whole page
+    // into memory, which is what the cap exists to prevent.
+    const declared = Number(response.headers.get("content-length") ?? "");
+    if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
+      return {
+        ok: false,
+        httpStatus: response.status,
+        reason: "Response is larger than the " + String(MAX_RESPONSE_BYTES) + " byte cap.",
+      };
+    }
+
+    const html = await readCapped(response);
+    if (html == null) {
+      return {
+        ok: false,
+        httpStatus: response.status,
+        reason: "Response exceeded the " + String(MAX_RESPONSE_BYTES) + " byte cap while reading.",
+      };
+    }
+
+    return { ok: true, html, httpStatus: response.status, finalUrl: url.toString() };
   } catch (error) {
     return {
       ok: false,

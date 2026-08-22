@@ -18,9 +18,10 @@ import {
   isItemEligible,
   isRunCheckable,
   minRequestSpacingMs,
+  remainingHourlyAllowance,
   resolveBatchSize,
-  type CompetitorSkipReason,
-  type ItemSkipReason,
+  selectCompetitorUrlsForItem,
+  type UrlCandidate,
 } from "./eligibility";
 import { PricingValidationError } from "./validation";
 
@@ -56,21 +57,40 @@ export function uploadedCompetitorUrl(metadata: unknown): string | null {
   return typeof url === "string" && url.trim() ? url.trim() : null;
 }
 
-export type SkipRecord =
-  | { kind: "item"; itemId: string; reason: ItemSkipReason }
-  | { kind: "competitor"; competitorId: string; reason: CompetitorSkipReason };
+export type SkipCounts = Record<string, number>;
 
 export type BatchPlan = {
   targets: ResolvedTarget[];
-  skips: SkipRecord[];
+  /** Products selected. Distinct from targets.length, which counts URLs. */
+  itemsSelected: number;
+  skipCounts: SkipCounts;
   batchSize: number;
 };
+
+const bump = (counts: SkipCounts, key: string, by = 1): void => {
+  counts[key] = (counts[key] ?? 0) + by;
+};
+
+function safeHost(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  try {
+    return new URL(raw).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Decides what a single dispatch will check, without contacting anything.
  *
- * Separated from execution so the plan — including every refusal and its
- * reason — can be audited and tested independently of the network.
+ * batchSize counts PRODUCTS. Each selected product may resolve up to five
+ * approved competitor URLs, so a 300-product batch can produce up to 1500
+ * targets. Reading the cap as "300 URL checks" would have silently checked 60
+ * products when each has five competitors.
+ *
+ * A competitor is never given more targets than its remaining hourly
+ * allowance, so the plan itself cannot describe work that would breach a rate
+ * limit — execution then only has to pace what the plan already permits.
  */
 export async function planObservationBatch(args: {
   pricingRunId: string;
@@ -93,94 +113,110 @@ export async function planObservationBatch(args: {
 
   const competitors = await prisma.pricingCompetitor.findMany();
   const since = new Date(Date.now() - 3_600_000);
-  const recentCounts = new Map<string, number>();
-  for (const competitor of competitors) {
-    recentCounts.set(
-      competitor.id,
-      await prisma.competitorPriceObservation.count({
-        where: { competitorId: competitor.id, checkedAt: { gte: since } },
-      }),
-    );
-  }
+  const skipCounts: SkipCounts = {};
 
-  // Terms review and rate limit are evaluated once per competitor, so a
-  // refusal is recorded once rather than per item.
   const allowed = new Map<string, (typeof competitors)[number]>();
-  const skips: SkipRecord[] = [];
+  const allowance = new Map<string, number>();
   for (const competitor of competitors) {
-    const decision = canContactCompetitor(competitor, {
-      checksInLastHour: recentCounts.get(competitor.id) ?? 0,
+    const checksInLastHour = await prisma.competitorPriceObservation.count({
+      where: { competitorId: competitor.id, checkedAt: { gte: since } },
     });
-    if (decision.allowed) allowed.set(competitor.id, competitor);
-    else skips.push({ kind: "competitor", competitorId: competitor.id, reason: decision.reason });
+    const decision = canContactCompetitor(competitor, { checksInLastHour });
+    if (!decision.allowed) {
+      bump(skipCounts, "competitor:" + decision.reason);
+      continue;
+    }
+    allowed.set(competitor.id, competitor);
+    allowance.set(competitor.id, remainingHourlyAllowance(competitor, checksInLastHour));
   }
 
-  const mappings = await prisma.productCompetitorUrl.findMany({
-    where: { status: "active", competitorId: { in: [...allowed.keys()] } },
-  });
+  const allowedIds = [...allowed.keys()];
+  const mappings = allowedIds.length
+    ? await prisma.productCompetitorUrl.findMany({
+        where: { status: "active", competitorId: { in: allowedIds } },
+      })
+    : [];
+  const byOrigin = new Map<string, string>();
+  for (const competitor of allowed.values()) {
+    const host = safeHost(competitor.baseUrl);
+    if (host) byOrigin.set(host, competitor.id);
+  }
 
   const targets: ResolvedTarget[] = [];
+  let itemsSelected = 0;
+
   for (const item of run.items as unknown as ItemWithMeta[]) {
-    const mapping = mappings.find(
-      (row) =>
-        (item.productVariantId != null && row.productVariantId === item.productVariantId) ||
-        (item.productId != null && row.productId === item.productId),
-    );
+    if (itemsSelected >= batchSize) break;
+
+    const candidates: UrlCandidate[] = [];
+    for (const mapping of mappings) {
+      const isVariant =
+        item.productVariantId != null && mapping.productVariantId === item.productVariantId;
+      const isProduct = item.productId != null && mapping.productId === item.productId;
+      if (!isVariant && !isProduct) continue;
+      candidates.push({
+        competitorId: mapping.competitorId,
+        competitorUrl: mapping.competitorUrl,
+        scope: isVariant ? "variant" : "product",
+        urlVerified: mapping.verifiedAt != null,
+      });
+    }
+
     const uploaded = uploadedCompetitorUrl(item.metadata);
+    if (uploaded) {
+      const host = safeHost(uploaded);
+      const competitorId = host ? byOrigin.get(host) : undefined;
+      if (competitorId) {
+        candidates.push({
+          competitorId,
+          competitorUrl: uploaded,
+          scope: "upload",
+          urlVerified: false,
+        });
+      } else {
+        bump(skipCounts, host ? "url:unapproved_origin" : "url:invalid_url");
+      }
+    }
 
     const decision = isItemEligible(item, {
       runStatus: run.status,
-      hasCompetitorUrl: Boolean(mapping) || Boolean(uploaded),
+      hasCompetitorUrl: candidates.length > 0,
     });
     if (!decision.eligible) {
-      skips.push({ kind: "item", itemId: item.id, reason: decision.reason });
+      bump(skipCounts, "item:" + decision.reason);
       continue;
     }
-    if (targets.length >= batchSize) continue;
 
-    if (mapping) {
+    const chosen = selectCompetitorUrlsForItem(candidates);
+    const withinAllowance: UrlCandidate[] = [];
+    for (const candidate of chosen) {
+      const left = allowance.get(candidate.competitorId) ?? 0;
+      if (left <= 0) {
+        bump(skipCounts, "competitor:rate_limited");
+        continue;
+      }
+      allowance.set(candidate.competitorId, left - 1);
+      withinAllowance.push(candidate);
+    }
+    if (withinAllowance.length === 0) {
+      bump(skipCounts, "item:no_competitor_url");
+      continue;
+    }
+
+    itemsSelected += 1;
+    for (const candidate of withinAllowance) {
       targets.push({
         itemId: item.id,
         sku: item.sku,
         productName: item.productName,
-        competitorId: mapping.competitorId,
-        competitorUrl: mapping.competitorUrl,
-        urlVerified: mapping.verifiedAt != null,
+        competitorId: candidate.competitorId,
+        competitorUrl: candidate.competitorUrl,
+        urlVerified: candidate.urlVerified,
       });
-      continue;
     }
-
-    // An uploaded URL is only usable if it belongs to an allowed competitor —
-    // matched by origin, so an operator cannot introduce an unreviewed site by
-    // putting its URL in a spreadsheet.
-    const host = safeHost(uploaded);
-    const competitor = host
-      ? [...allowed.values()].find((row) => safeHost(row.baseUrl) === host)
-      : undefined;
-    if (!competitor || !uploaded) {
-      skips.push({ kind: "item", itemId: item.id, reason: "no_competitor_url" });
-      continue;
-    }
-    targets.push({
-      itemId: item.id,
-      sku: item.sku,
-      productName: item.productName,
-      competitorId: competitor.id,
-      competitorUrl: uploaded,
-      urlVerified: false,
-    });
   }
 
-  return { targets, skips, batchSize };
-}
-
-function safeHost(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  try {
-    return new URL(raw).hostname.toLowerCase().replace(/^www\./, "");
-  } catch {
-    return null;
-  }
+  return { targets, itemsSelected, skipCounts, batchSize };
 }
 
 export { minRequestSpacingMs };
@@ -189,20 +225,18 @@ export async function requestCompetitorCheck(args: {
   actorUserId: string;
   pricingRunId: string;
   batchSize?: number | null;
-}): Promise<{ targets: number; skipped: number; batchSize: number }> {
+}): Promise<{ items: number; targets: number; batchSize: number; skipCounts: SkipCounts }> {
   await requireFeature(FEATURE_FLAGS.PRICING_INTELLIGENCE);
-  // Planned before dispatch so the operator is told up front how many items
-  // will actually be checked, and so a run with nothing eligible fails here
-  // rather than queueing a job that does nothing.
   const plan = await planObservationBatch({
     pricingRunId: args.pricingRunId,
     requestedBatchSize: args.batchSize,
   });
   if (plan.targets.length === 0) {
     throw new PricingValidationError(
-      "No eligible items. Items must be pending, unblocked, have a cost and floor, and have a competitor URL from an approved competitor.",
+      "No eligible checks. Items must be pending, unblocked, have a cost and floor, and have a competitor URL belonging to a competitor whose terms review is allowed and which is within its hourly rate limit.",
     );
   }
+
   await writeAudit({
     actorUserId: args.actorUserId,
     action: "pricing.competitor_check_requested",
@@ -210,11 +244,11 @@ export async function requestCompetitorCheck(args: {
     entityId: args.pricingRunId,
     afterData: {
       batchSize: plan.batchSize,
-      targets: plan.targets.length,
-      skipped: plan.skips.length,
-      skipReasons: plan.skips.map((skip) =>
-        skip.kind === "item" ? "item:" + skip.reason : "competitor:" + skip.reason,
-      ),
+      itemsSelected: plan.itemsSelected,
+      urlTargets: plan.targets.length,
+      // Grouped rather than per-row: the operator needs to know WHY fewer
+      // checks ran than the batch size implied, not which row each was.
+      skipCounts: plan.skipCounts,
     },
   });
 
@@ -228,5 +262,10 @@ export async function requestCompetitorCheck(args: {
     },
   });
 
-  return { targets: plan.targets.length, skipped: plan.skips.length, batchSize: plan.batchSize };
+  return {
+    items: plan.itemsSelected,
+    targets: plan.targets.length,
+    batchSize: plan.batchSize,
+    skipCounts: plan.skipCounts,
+  };
 }

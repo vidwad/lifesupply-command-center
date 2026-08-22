@@ -281,8 +281,11 @@ export async function requestCompetitorCheckAction(
     return {
       ok:
         "Queued a read-only check of " +
+        String(result.items) +
+        " product(s) across " +
         String(result.targets) +
-        " item(s). No prices are changed. Refresh in a minute for observations.",
+        " competitor URL(s). No recommendations, approvals, or price changes are made. " +
+        "Refresh in a minute for observations.",
     };
   } catch (error) {
     return actionError(error, "Could not start the competitor check.");

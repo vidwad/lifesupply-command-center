@@ -15,7 +15,9 @@ export type CompetitorSkipReason =
   | "terms_not_reviewed"
   | "terms_restricted"
   | "terms_disabled"
-  | "rate_limited";
+  | "rate_limited"
+  | "robots_disallowed"
+  | "invalid_url";
 
 /** Why a run item was not checked. */
 export type ItemSkipReason =
@@ -138,4 +140,63 @@ export function resolveBatchSize(args: {
   const requested = args.requested;
   if (requested == null || !Number.isFinite(requested) || requested <= 0) return ceiling;
   return Math.min(Math.floor(requested), ceiling);
+}
+
+/**
+ * Competitor URLs checked per product, per the product owner's rule:
+ * "up to 300 products per day against up to 5 approved competitor URLs each".
+ *
+ * The cap is per PRODUCT, not per batch — a batch of 300 products may therefore
+ * produce up to 1500 targets. Raising it is a product-owner decision.
+ */
+export const MAX_COMPETITOR_URLS_PER_ITEM = 5;
+
+/** How many more requests a competitor may receive within the current hour. */
+export function remainingHourlyAllowance(
+  competitor: Pick<CompetitorLike, "rateLimitPerHour">,
+  checksInLastHour: number,
+): number {
+  const limit = Number.isFinite(competitor.rateLimitPerHour) ? competitor.rateLimitPerHour : 0;
+  if (limit <= 0) return 0;
+  return Math.max(0, limit - Math.max(0, checksInLastHour));
+}
+
+export type UrlCandidate = {
+  competitorId: string;
+  competitorUrl: string;
+  /** variant mappings win over product mappings for the same competitor. */
+  scope: "variant" | "product" | "upload";
+  urlVerified: boolean;
+};
+
+/**
+ * Chooses which competitor URLs to check for one product.
+ *
+ * Variant-level mappings first — they identify the exact item being priced,
+ * whereas a product-level mapping may point at a different size or pack. Then
+ * product-level, then any uploaded URL. Duplicates are removed by URL so a
+ * product mapping repeating a variant mapping does not spend two requests, and
+ * the result is capped at MAX_COMPETITOR_URLS_PER_ITEM.
+ */
+export function selectCompetitorUrlsForItem(
+  candidates: readonly UrlCandidate[],
+  limit: number = MAX_COMPETITOR_URLS_PER_ITEM,
+): UrlCandidate[] {
+  const max = Math.max(0, Math.floor(limit));
+  if (max === 0) return [];
+
+  const rank = { variant: 0, product: 1, upload: 2 } as const;
+  const seen = new Set<string>();
+  const out: UrlCandidate[] = [];
+
+  for (const candidate of [...candidates].sort((a, b) => rank[a.scope] - rank[b.scope])) {
+    // Checked before pushing: testing after would admit one candidate even at
+    // a limit of zero.
+    if (out.length >= max) break;
+    const key = candidate.competitorUrl.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(candidate);
+  }
+  return out;
 }

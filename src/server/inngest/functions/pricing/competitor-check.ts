@@ -65,11 +65,16 @@ export const competitorPriceCheck = inngest.createFunction(
 
       // Spacing derived from the competitor's own hourly limit, so a batch
       // cannot burst through it even though the count check passed up front.
+      // The FULL spacing is waited, never a truncated one. Capping the wait
+      // would let a batch issue requests faster than the competitor's stated
+      // hourly limit, which is the thing the limit exists to prevent. The
+      // planner has already refused to schedule more targets than the hour
+      // allows, so this only paces work that is permitted.
       const spacing = minRequestSpacingMs(competitor.rateLimitPerHour);
       const last = lastRequestAt.get(competitor.id);
       if (last != null && spacing > 0) {
         const wait = spacing - (Date.now() - last);
-        if (wait > 0) await sleep(Math.min(wait, 10_000));
+        if (wait > 0) await sleep(wait);
       }
       lastRequestAt.set(competitor.id, Date.now());
 
@@ -165,12 +170,15 @@ export const competitorPriceCheck = inngest.createFunction(
 
     const summary = {
       batchSize: plan.batchSize,
+      // Products selected vs URL checks attempted: a product may check up to
+      // five competitor URLs, so these are deliberately different numbers.
+      itemsSelected: plan.itemsSelected,
       attempted: plan.targets.length,
       valid,
       lowConfidence,
       unavailable,
       failed,
-      skipped: plan.skips.length,
+      skipCounts: plan.skipCounts,
     };
 
     await writeAudit({

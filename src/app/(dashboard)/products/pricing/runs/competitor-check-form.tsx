@@ -35,18 +35,38 @@ export function CompetitorCheckForm({
           defaultValue=""
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         >
-          <option value="">Full daily batch ({dailyBatchSize})</option>
-          <option value="5">Test run — 5 items</option>
-          <option value="10">Test run — 10 items</option>
-          <option value="25">Test run — 25 items</option>
+          <option value="">Full daily batch ({dailyBatchSize} products)</option>
+          <option value="5">Test run — 5 products</option>
+          <option value="10">Test run — 10 products</option>
+          <option value="25">Test run — 25 products</option>
         </select>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Fetches only the competitor product pages configured or uploaded for these items, from
-        competitors whose terms review is <strong>allowed</strong>. Read-only GET requests, rate
-        limited per competitor, no logins and no form submissions.{" "}
-        <strong>No recommendations or price changes are made in this phase.</strong>
-      </p>
+      <div className="space-y-2 text-xs text-muted-foreground">
+        <p>
+          <strong>
+            Batch size means products, not competitor URLs. Each product may check up to five
+            approved competitor URLs.
+          </strong>
+        </p>
+        <p>
+          <strong>
+            This is read-only. It creates competitor observations only. It does not create
+            recommendations, approvals, or BigCommerce price changes.
+          </strong>
+        </p>
+        <p>
+          Only competitors marked <code>reviewed_allowed</code> are checked. Pending or restricted
+          competitors are skipped.
+        </p>
+        <p>
+          The actual number of checks may be lower than the product batch size because of missing
+          URLs, blocked items, robots.txt, or competitor rate limits.
+        </p>
+        <p>
+          Read-only GET requests to pages you configured or uploaded. No logins, no form
+          submissions, no carts.
+        </p>
+      </div>
       {state?.error ? <p className="text-xs text-destructive">{state.error}</p> : null}
       {state?.ok ? <p className="text-xs text-muted-foreground">{state.ok}</p> : null}
       <Button type="submit" disabled={pending} variant="outline">

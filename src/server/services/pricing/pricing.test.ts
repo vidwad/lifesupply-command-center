@@ -658,3 +658,97 @@ describe("DP-3 read-only collection canaries", () => {
     }
   });
 });
+
+describe("DP-3A corrections", () => {
+  const planner = () => read("src/server/services/pricing/observations.ts");
+  const worker = () => read("src/server/inngest/functions/pricing/competitor-check.ts");
+  const collector = () => read("src/server/services/pricing/collector.ts");
+
+  it("counts the batch in products, not competitor URLs", () => {
+    // A batch of 300 read as URL targets would check only 60 products when
+    // each has five competitors.
+    const src = planner();
+    expect(src).toContain("itemsSelected");
+    expect(src).toContain("if (itemsSelected >= batchSize) break;");
+    expect(src).toContain("itemsSelected += 1;");
+  });
+
+  it("resolves multiple competitor URLs per product", () => {
+    const src = planner();
+    expect(src).toContain("selectCompetitorUrlsForItem");
+    expect(read("src/server/services/pricing/eligibility.ts")).toContain(
+      "MAX_COMPETITOR_URLS_PER_ITEM = 5",
+    );
+  });
+
+  it("caps targets at each competitor's remaining hourly allowance", () => {
+    const src = planner();
+    expect(src).toContain("remainingHourlyAllowance");
+    expect(src).toContain("allowance.set(candidate.competitorId, left - 1)");
+  });
+
+  it("waits the full spacing rather than a truncated one", () => {
+    // The earlier implementation capped the wait at 10s, which could exceed a
+    // competitor's hourly limit on a 60/hour setting.
+    const src = stripComments(worker());
+    expect(src).toContain("await sleep(wait)");
+    expect(src).not.toMatch(/Math\.min\(wait/);
+  });
+
+  it("refuses an oversized response before and during reading", () => {
+    const src = collector();
+    expect(src).toContain('response.headers.get("content-length")');
+    expect(src).toContain("readCapped");
+    expect(src).toContain("await reader.cancel()");
+  });
+
+  it("does not follow cross-origin robots redirects", () => {
+    // A cross-origin robots redirect must never authorise checking a URL: the
+    // file granting permission would belong to a different site.
+    const src = collector();
+    expect(src).toContain("next.origin !== origin");
+    expect(stripComments(src)).not.toContain('redirect: "follow"');
+  });
+
+  it("audits grouped skip counts so shortfalls are explainable", () => {
+    expect(planner()).toContain("skipCounts");
+    const eligibility = read("src/server/services/pricing/eligibility.ts");
+    for (const reason of [
+      "blocked",
+      "missing_cost",
+      "missing_floor",
+      "no_competitor_url",
+      "disabled",
+      "terms_not_reviewed",
+      "terms_restricted",
+      "rate_limited",
+      "robots_disallowed",
+      "invalid_url",
+    ]) {
+      expect(eligibility, "missing skip reason " + reason).toContain(reason);
+    }
+  });
+
+  it("states the product-vs-URL distinction and the read-only posture in the UI", () => {
+    const form = read("src/app/(dashboard)/products/pricing/runs/competitor-check-form.tsx");
+    expect(form.replace(/\s+/g, " ")).toContain("Batch size means products, not competitor URLs.");
+    expect(form.replace(/\s+/g, " ")).toContain(
+      "It does not create recommendations, approvals, or BigCommerce price changes.",
+    );
+    expect(form).toContain("reviewed_allowed");
+    expect(form.replace(/\s+/g, " ")).toContain(
+      "The actual number of checks may be lower than the product batch size",
+    );
+  });
+
+  it("still creates observations only", () => {
+    for (const src of [planner(), worker(), collector()]) {
+      expect(src).not.toContain("prisma.priceRecommendation");
+      expect(src).not.toContain("prisma.priceWritebackLog");
+      expect(stripComments(src)).not.toContain("PRICING_WRITEBACKS");
+      expect(stripComments(src)).not.toContain("EXTERNAL_WRITEBACKS");
+      expect(src).not.toContain("integrations/bigcommerce");
+    }
+    expect(worker()).toContain("prisma.competitorPriceObservation.create");
+  });
+});
