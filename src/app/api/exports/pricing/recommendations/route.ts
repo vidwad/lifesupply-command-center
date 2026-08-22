@@ -7,7 +7,10 @@
  * new activity rather than withhold a queue someone may need to review
  * precisely because the flag was tripped. Exporting contacts nothing external.
  *
- * Emits proposals. It approves nothing and writes no price anywhere.
+ * Emits proposals and, since DP-5, the internal decision recorded on each one.
+ * It decides nothing itself and writes no price anywhere. An approved_by value
+ * means a person accepted the proposal internally, NOT that a store price
+ * changed — writeback is DP-6.
  */
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
@@ -83,6 +86,21 @@ export async function GET(request: Request): Promise<Response> {
       { key: "status", label: "status", get: (r) => r.status },
       { key: "reason", label: "reason", get: (r) => r.reason ?? "" },
       { key: "expires_at", label: "expires_at", get: (r) => r.expiresAt },
+      // DP-5 decision columns. Identity is by email so a spreadsheet reader can
+      // tell two people with the same display name apart.
+      {
+        key: "approved_by",
+        label: "approved_by",
+        get: (r) => r.approvedBy?.email ?? r.approvedBy?.name ?? "",
+      },
+      { key: "approved_at", label: "approved_at", get: (r) => r.approvedAt },
+      {
+        key: "rejected_by",
+        label: "rejected_by",
+        get: (r) => r.rejectedBy?.email ?? r.rejectedBy?.name ?? "",
+      },
+      { key: "rejected_at", label: "rejected_at", get: (r) => r.rejectedAt },
+      { key: "rejection_reason", label: "rejection_reason", get: (r) => r.rejectionReason ?? "" },
     ],
     rows,
   });

@@ -25,8 +25,32 @@ describe("duplicate suppression", () => {
     expect(isStillLive({ status: "ready_for_review", expiresAt: earlier }, NOW)).toBe(false);
   });
 
-  it("does not block regeneration after a decision or expiry", () => {
-    for (const status of ["approved", "rejected", "expired", "written_back", "failed", "draft"]) {
+  // WIDENED IN DP-5. Through DP-4 every decided status regenerated freely,
+  // which meant rejecting a recommendation just brought it back on the next
+  // pass. These pin the new posture.
+  it("suppresses regeneration while a recommendation is approved", () => {
+    // An approved row is waiting on DP-6 writeback. A competing proposal for
+    // the same item alongside it would make the queue ambiguous.
+    expect(isStillLive({ status: "approved", expiresAt: later }, NOW)).toBe(true);
+    expect(isStillLive({ status: "approved", expiresAt: earlier }, NOW)).toBe(true);
+    expect(isStillLive({ status: "approved", expiresAt: null }, NOW)).toBe(true);
+  });
+
+  it("suppresses regeneration after a write-back", () => {
+    expect(isStillLive({ status: "written_back", expiresAt: earlier }, NOW)).toBe(true);
+  });
+
+  it("suppresses regeneration of a rejection until its evidence goes stale", () => {
+    // The reviewer rejected a price derived from THAT evidence, so re-asking
+    // on the same evidence is not allowed...
+    expect(isStillLive({ status: "rejected", expiresAt: later }, NOW)).toBe(true);
+    // ...but once the evidence horizon passes, a fresh check may legitimately
+    // produce a new proposal.
+    expect(isStillLive({ status: "rejected", expiresAt: earlier }, NOW)).toBe(false);
+  });
+
+  it("still regenerates when nothing live remains to protect", () => {
+    for (const status of ["expired", "failed", "draft"]) {
       expect(isStillLive({ status, expiresAt: later }, NOW), status).toBe(false);
     }
   });

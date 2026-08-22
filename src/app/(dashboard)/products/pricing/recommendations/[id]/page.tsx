@@ -2,8 +2,12 @@
  * DP-4 recommendation detail.
  *
  * Shows the proposal, the arithmetic behind it, and the observations it rests
- * on, so a reviewer can judge the number rather than trust it. There is no
- * approve or reject control: approval is DP-5 and does not exist yet.
+ * on, so a reviewer can judge the number rather than trust it.
+ *
+ * DP-5 adds approve / reject controls. They appear only when the SAME
+ * predicate the server enforces says a decision is available, so the page
+ * cannot offer a button the action would then refuse. Approving records an
+ * internal decision; it writes no price anywhere.
  */
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,7 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
+import { isExpired, showsDecisionControls } from "@/server/services/pricing/approval";
 import { getRecommendation } from "@/server/services/pricing/recommendations";
+
+import { ApproveForm, RejectForm } from "../decision-forms";
 
 export const metadata = { title: "Price recommendation" };
 export const dynamic = "force-dynamic";
@@ -38,18 +45,34 @@ function Figure({ label, value }: { label: string; value: string }): React.JSX.E
 export default async function RecommendationDetailPage({
   params,
 }: Props): Promise<React.JSX.Element> {
-  await requirePermission(PERMISSIONS.PRICING_VIEW);
+  const user = await requirePermission(PERMISSIONS.PRICING_VIEW);
   const { id } = await params;
   const recommendation = await getRecommendation(id);
   if (!recommendation) notFound();
 
   const item = recommendation.pricingRunItem;
+  const now = new Date();
+  const asRule = {
+    status: recommendation.status,
+    requiresApproval: recommendation.requiresApproval,
+    recommendedSalePrice: Number(recommendation.recommendedSalePrice),
+    floorPrice: recommendation.floorPrice == null ? null : Number(recommendation.floorPrice),
+    costPrice: recommendation.costPrice == null ? null : Number(recommendation.costPrice),
+    expiresAt: recommendation.expiresAt,
+  };
+  const expired = isExpired(asRule, now);
+  const canDecide = showsDecisionControls({
+    recommendation: asRule,
+    item: { status: item.status, blockedReason: item.blockedReason },
+    user,
+    now,
+  });
 
   return (
     <div>
       <PageHeader
         title={`${item.sku} — ${recommendation.recommendationType.replaceAll("_", " ")}`}
-        description="A proposal awaiting human review. No recommendation has been approved. No price has been changed. Approval and writeback are later phases."
+        description="Approved recommendations are internal approvals only. No BigCommerce price change occurs until a later controlled writeback phase."
         breadcrumb={
           <Link
             href="/products/pricing/recommendations"
@@ -88,7 +111,8 @@ export default async function RecommendationDetailPage({
           <CardHeader>
             <CardTitle>Status</CardTitle>
             <CardDescription>
-              Approval is a later phase; nothing here is actionable.
+              Approving is an internal decision. No BigCommerce price change occurs until a later
+              controlled writeback phase.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -105,6 +129,23 @@ export default async function RecommendationDetailPage({
               <p className="text-xs uppercase text-muted-foreground">Reason</p>
               <p className="whitespace-pre-wrap text-sm">{recommendation.reason ?? "—"}</p>
             </div>
+            {recommendation.approvedAt ? (
+              <p className="text-xs text-muted-foreground">
+                Approved by{" "}
+                {recommendation.approvedBy?.name ?? recommendation.approvedBy?.email ?? "unknown"}{" "}
+                at {when(recommendation.approvedAt)}. Internal approval only — no price was written.
+              </p>
+            ) : null}
+            {recommendation.rejectedAt ? (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Rejected by{" "}
+                  {recommendation.rejectedBy?.name ?? recommendation.rejectedBy?.email ?? "unknown"}{" "}
+                  at {when(recommendation.rejectedAt)}.
+                </p>
+                <p className="whitespace-pre-wrap text-sm">{recommendation.rejectionReason}</p>
+              </div>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               Created {when(recommendation.createdAt)}.{" "}
               <Link
@@ -117,6 +158,31 @@ export default async function RecommendationDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {expired && recommendation.status === "ready_for_review" ? (
+        <Card className="mt-4 border-destructive">
+          <CardContent className="p-4 text-sm">
+            This recommendation is expired. Re-run observation and recommendation generation before
+            approving.
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {canDecide ? (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Decision</CardTitle>
+            <CardDescription>
+              Approved recommendations are internal approvals only. No BigCommerce price change
+              occurs until a later controlled writeback phase.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <ApproveForm recommendationId={recommendation.id} />
+            <RejectForm recommendationId={recommendation.id} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="mt-4">
         <CardHeader>

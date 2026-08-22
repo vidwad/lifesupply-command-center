@@ -318,6 +318,65 @@ derived from the single cheapest usable observation, so the confidence reported
 is that observation's. A blended or agreement-weighted score would describe
 evidence that did not set the price.
 
+## 7.5 DP-5 implementation notes and decisions
+
+Recorded 2026-08-22 during the DP-5 build. Two of these change behaviour agreed
+in an earlier phase, so they are called out rather than buried.
+
+**Approval is internal. It queues nothing.** Approving sets `status=approved`,
+`approvedById`, and `approvedAt` on the `PriceRecommendation`, plus a mirrored
+workflow status on the `PricingRunItem`. No product price, no variant price, no
+`PriceWritebackLog`, no external call. An `approved_by` value in the export
+means a person accepted a proposal internally, not that a store price moved.
+
+**Self-approval is NOT blocked.** The general approvals module enforces
+separation of duties by permission rather than identity, and DP-5 follows it.
+The case is also weaker here than in an authoring flow: the user who ran
+generation did not choose the price, the engine did, so blocking them from
+deciding would add friction without adding control. The real control is that
+`pricing.approve_recommendations` is a distinct permission from
+`pricing.review_recommendations`, which is what generates the queue. If the
+product owner wants a hard identity split, the hook is `canApprove` in
+`services/pricing/approval.ts` and `PriceRecommendation` would need a
+`generatedById` column, which it does not have today.
+
+**Rejection now suppresses regeneration — a DP-4 behaviour change.** Through
+DP-4, `isStillLive` returned false for every decided status, so a rejected
+recommendation was regenerated identically on the next pass: the reviewer says
+no and the system silently asks again. `approved` and `written_back` now always
+suppress, and `rejected` suppresses until its evidence horizon (`expiresAt`)
+passes. The rejection was of a price derived from THAT evidence, so re-asking on
+fresher evidence is legitimate and re-asking on the same evidence is not.
+`expired` and `failed` still regenerate freely.
+
+**Expiry is evaluated against the clock, not the stored status.** Nothing sweeps
+rows to `expired` on a timer, so a row can be past its horizon while still
+reading `ready_for_review`. Approval re-checks the clock, and refusing an
+expired row also retires it to `expired` — housekeeping that only ever moves a
+row OUT of the reviewable state.
+
+**Approval re-validates price, floor, and cost.** The stored floor and cost are
+re-checked at decision time rather than trusted from generation. A proposal that
+no longer clears its own floor is not approvable however it got that way.
+
+**Rejection is deliberately looser than approval.** A time-expired
+`ready_for_review` row is still rejectable: refusing would strand rows in the
+queue with no way to clear them. Rejection does require a reason of at least
+three characters, normalised for CRLF before measuring.
+
+**The DP-4 sign-off copy was superseded.** DP-4 required the pages to read "No
+recommendation has been approved. No price has been changed. Approval and
+writeback are later phases." Two of those sentences became false the moment
+approval shipped, and a canary was enforcing them. Both pages now carry the DP-5
+wording — "Approved recommendations are internal approvals only. No BigCommerce
+price change occurs until a later controlled writeback phase." — which keeps the
+load-bearing promise. The generate form keeps its DP-4 wording, still true of it.
+
+**No bulk approve.** Decisions are one at a time. A bulk control is the obvious
+next convenience, but it is also the obvious way to approve a hundred prices
+without reading them, and DP-6 writeback has not been built yet. Deferred until
+there is an operator with a real queue to argue from.
+
 ## 8. Competitor Setup Requirements
 
 Add setup screens for competitor stores under:

@@ -15,7 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission, userHasPermission } from "@/server/permissions";
-import { listRecommendations } from "@/server/services/pricing/recommendations";
+import {
+  isExpired,
+  parseRecommendationFilter,
+  RECOMMENDATION_FILTERS,
+} from "@/server/services/pricing/approval";
+import {
+  listRecommendations,
+  recommendationStatusCounts,
+} from "@/server/services/pricing/recommendations";
 
 export const metadata = { title: "Price recommendations" };
 export const dynamic = "force-dynamic";
@@ -39,20 +47,29 @@ function typeVariant(type: string): "default" | "secondary" | "destructive" | "o
   return "outline";
 }
 
-export default async function RecommendationsPage(): Promise<React.JSX.Element> {
+type Props = { searchParams: Promise<{ status?: string }> };
+
+export default async function RecommendationsPage({
+  searchParams,
+}: Props): Promise<React.JSX.Element> {
   const user = await requirePermission(PERMISSIONS.PRICING_VIEW);
   const canExport = userHasPermission(user, PERMISSIONS.PRICING_EXPORT);
-  const rows = await listRecommendations();
+  const filter = parseRecommendationFilter((await searchParams).status);
+  const [rows, counts] = await Promise.all([
+    listRecommendations({ status: filter }),
+    recommendationStatusCounts(),
+  ]);
+  const now = new Date();
 
   return (
     <div>
       <PageHeader
         title="Price recommendations"
-        description="Proposals awaiting human review. No recommendation has been approved. No price has been changed. Approval and writeback are later phases. Generating a recommendation creates a queue row only — it does not approve, reject, or write back to BigCommerce."
+        description="Approved recommendations are internal approvals only. No BigCommerce price change occurs until a later controlled writeback phase. Generating a recommendation creates a queue row only — it does not write back to BigCommerce."
         actions={
           canExport ? (
             <Button asChild variant="outline">
-              <a href="/api/exports/pricing/recommendations">
+              <a href={`/api/exports/pricing/recommendations?status=${filter}`}>
                 <Download /> Export CSV
               </a>
             </Button>
@@ -60,12 +77,27 @@ export default async function RecommendationsPage(): Promise<React.JSX.Element> 
         }
       />
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        {RECOMMENDATION_FILTERS.map((option) => (
+          <Button
+            key={option}
+            asChild
+            size="sm"
+            variant={option === filter ? "default" : "outline"}
+          >
+            <Link href={`/products/pricing/recommendations?status=${option}`}>
+              {option.replaceAll("_", " ")} ({counts[option] ?? 0})
+            </Link>
+          </Button>
+        ))}
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Queue</CardTitle>
           <CardDescription>
             {rows.length === 0
-              ? "No recommendations yet. Open a pricing run that has competitor observations and generate recommendations from it."
+              ? `No recommendations with status ${filter.replaceAll("_", " ")}. Open a pricing run that has competitor observations and generate recommendations from it.`
               : `${rows.length} recommendation(s), newest first. Every row requires approval.`}
           </CardDescription>
         </CardHeader>
@@ -89,6 +121,7 @@ export default async function RecommendationsPage(): Promise<React.JSX.Element> 
                     <th className="py-2 pr-3 text-right">Confidence</th>
                     <th className="py-2 pr-3">Status</th>
                     <th className="py-2 pr-3">Evidence age</th>
+                    <th className="py-2 pr-3">Decision</th>
                     <th className="py-2 pr-3">Run</th>
                   </tr>
                 </thead>
@@ -132,8 +165,20 @@ export default async function RecommendationsPage(): Promise<React.JSX.Element> 
                         </td>
                         <td className="py-2 pr-3">
                           <Badge variant="outline">{row.status.replaceAll("_", " ")}</Badge>
+                          {row.status === "ready_for_review" && isExpired(row, now) ? (
+                            <Badge variant="destructive" className="ml-1">
+                              expired
+                            </Badge>
+                          ) : null}
                         </td>
                         <td className="py-2 pr-3">{hoursSince(item.lastCheckedAt)}</td>
+                        <td className="py-2 pr-3 text-xs">
+                          {row.approvedAt
+                            ? `approved by ${row.approvedBy?.name ?? row.approvedBy?.email ?? "unknown"}`
+                            : row.rejectedAt
+                              ? `rejected by ${row.rejectedBy?.name ?? row.rejectedBy?.email ?? "unknown"}`
+                              : "—"}
+                        </td>
                         <td className="py-2 pr-3">
                           <Link
                             href={`/products/pricing/runs/${item.pricingRun.id}`}
