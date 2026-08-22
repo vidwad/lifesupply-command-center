@@ -15,7 +15,9 @@ import {
   isExpired,
   parseRecommendationFilter,
   parseRejectionReason,
-  showsDecisionControls,
+  approveUnavailableReason,
+  showsApproveControl,
+  showsRejectControl,
   type RecommendationLike,
   type RunItemLike,
 } from "./approval";
@@ -211,18 +213,18 @@ describe("decision permission", () => {
   });
 });
 
-describe("when decision controls render", () => {
+describe("when the approve control renders", () => {
   const decider = { permissions: ["pricing.approve_recommendations"] };
+  const show = (o: Partial<RecommendationLike> = {}, i: RunItemLike = item) =>
+    showsApproveControl({ recommendation: rec(o), item: i, user: decider, now: NOW });
 
   it("shows for an eligible ready recommendation held by a decider", () => {
-    expect(showsDecisionControls({ recommendation: rec(), item, user: decider, now: NOW })).toBe(
-      true,
-    );
+    expect(show()).toBe(true);
   });
 
   it("hides from a user without the decision permission", () => {
     expect(
-      showsDecisionControls({
+      showsApproveControl({
         recommendation: rec(),
         item,
         user: { permissions: ["pricing.view", "pricing.review_recommendations"] },
@@ -232,23 +234,123 @@ describe("when decision controls render", () => {
   });
 
   it("hides for an expired recommendation", () => {
-    expect(
-      showsDecisionControls({
-        recommendation: rec({ expiresAt: past }),
-        item,
-        user: decider,
-        now: NOW,
-      }),
-    ).toBe(false);
+    expect(show({ expiresAt: past })).toBe(false);
   });
 
   for (const status of ["approved", "rejected", "expired", "written_back", "failed"] as const) {
     it("hides for a " + status + " recommendation", () => {
-      expect(
-        showsDecisionControls({ recommendation: rec({ status }), item, user: decider, now: NOW }),
-      ).toBe(false);
+      expect(show({ status })).toBe(false);
     });
   }
+
+  /**
+   * These are the cases the first version of this predicate got wrong: it
+   * checked only permission, status, and expiry, so a row the server would
+   * certainly refuse still rendered an Approve button.
+   */
+  it("hides when the server would refuse on price, floor, or cost", () => {
+    expect(show({ recommendedSalePrice: null })).toBe(false);
+    expect(show({ floorPrice: null })).toBe(false);
+    expect(show({ costPrice: null })).toBe(false);
+    expect(show({ recommendedSalePrice: 69.99, floorPrice: 70 })).toBe(false);
+    expect(show({ requiresApproval: false })).toBe(false);
+  });
+
+  it("hides when the run item is blocked or gone", () => {
+    expect(show({}, { status: "blocked", blockedReason: "missing_cost" })).toBe(false);
+    expect(show({}, null)).toBe(false);
+  });
+
+  it("agrees with canApprove on every case", () => {
+    const cases: Array<[Partial<RecommendationLike>, RunItemLike]> = [
+      [{}, item],
+      [{ expiresAt: past }, item],
+      [{ floorPrice: null }, item],
+      [{ costPrice: null }, item],
+      [{ recommendedSalePrice: 1, floorPrice: 70 }, item],
+      [{ status: "approved" }, item],
+      [{}, null],
+      [{}, { status: "blocked", blockedReason: "x" }],
+    ];
+    for (const [overrides, runItem] of cases) {
+      expect(
+        showsApproveControl({
+          recommendation: rec(overrides),
+          item: runItem,
+          user: decider,
+          now: NOW,
+        }),
+      ).toBe(canApprove(rec(overrides), runItem, NOW).allowed);
+    }
+  });
+});
+
+describe("when the reject control renders", () => {
+  const decider = { permissions: ["pricing.approve_recommendations"] };
+
+  it("shows for a ready recommendation", () => {
+    expect(showsRejectControl({ recommendation: rec(), user: decider })).toBe(true);
+  });
+
+  /**
+   * The reason approve and reject are separate predicates. Rejection exists
+   * partly to clear rows that can never be approved; gating it on
+   * approvability would strand exactly those rows in the queue.
+   */
+  it("still shows for rows that can never be approved", () => {
+    for (const overrides of [
+      { expiresAt: past },
+      { floorPrice: null },
+      { costPrice: null },
+      { recommendedSalePrice: null },
+      { recommendedSalePrice: 1, floorPrice: 70 },
+    ] as Partial<RecommendationLike>[]) {
+      expect(showsRejectControl({ recommendation: rec(overrides), user: decider })).toBe(true);
+    }
+  });
+
+  it("hides once a decision has been taken", () => {
+    for (const status of ["approved", "rejected", "written_back", "failed", "expired"] as const) {
+      expect(showsRejectControl({ recommendation: rec({ status }), user: decider })).toBe(false);
+    }
+  });
+
+  it("hides from a user without the decision permission", () => {
+    expect(
+      showsRejectControl({ recommendation: rec(), user: { permissions: ["pricing.view"] } }),
+    ).toBe(false);
+  });
+});
+
+describe("why approve is unavailable", () => {
+  const decider = { permissions: ["pricing.approve_recommendations"] };
+
+  it("explains the refusal so the missing button is not a mystery", () => {
+    const reason = approveUnavailableReason({
+      recommendation: rec({ floorPrice: null }),
+      item,
+      user: decider,
+      now: NOW,
+    });
+    expect(reason).toContain("No floor price is recorded");
+  });
+
+  it("returns null when approval is available", () => {
+    expect(
+      approveUnavailableReason({ recommendation: rec(), item, user: decider, now: NOW }),
+    ).toBeNull();
+  });
+
+  it("returns null for a user who could not decide anyway", () => {
+    expect(
+      approveUnavailableReason({
+        recommendation: rec({ floorPrice: null }),
+        item,
+        user: { permissions: ["pricing.view"] },
+        now: NOW,
+      }),
+    ).toBeNull();
+  });
 });
 
 describe("queue filters", () => {

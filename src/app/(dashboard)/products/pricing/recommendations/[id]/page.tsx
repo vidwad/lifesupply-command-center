@@ -18,7 +18,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
-import { isExpired, showsDecisionControls } from "@/server/services/pricing/approval";
+import {
+  approveUnavailableReason,
+  isExpired,
+  showsApproveControl,
+  showsRejectControl,
+} from "@/server/services/pricing/approval";
 import { getRecommendation } from "@/server/services/pricing/recommendations";
 
 import { ApproveForm, RejectForm } from "../decision-forms";
@@ -61,12 +66,13 @@ export default async function RecommendationDetailPage({
     expiresAt: recommendation.expiresAt,
   };
   const expired = isExpired(asRule, now);
-  const canDecide = showsDecisionControls({
-    recommendation: asRule,
-    item: { status: item.status, blockedReason: item.blockedReason },
-    user,
-    now,
-  });
+  const asItem = { status: item.status, blockedReason: item.blockedReason };
+  const decisionArgs = { recommendation: asRule, item: asItem, user, now };
+  const canApproveHere = showsApproveControl(decisionArgs);
+  const canRejectHere = showsRejectControl({ recommendation: asRule, user });
+  // Shown when the user COULD decide but this row is not approvable, so the
+  // absent button reads as a guardrail rather than a broken page.
+  const approveBlockedBecause = canApproveHere ? null : approveUnavailableReason(decisionArgs);
 
   return (
     <div>
@@ -168,7 +174,7 @@ export default async function RecommendationDetailPage({
         </Card>
       ) : null}
 
-      {canDecide ? (
+      {canApproveHere || canRejectHere ? (
         <Card className="mt-4">
           <CardHeader>
             <CardTitle>Decision</CardTitle>
@@ -178,8 +184,15 @@ export default async function RecommendationDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
-            <ApproveForm recommendationId={recommendation.id} />
-            <RejectForm recommendationId={recommendation.id} />
+            {canApproveHere ? (
+              <ApproveForm recommendationId={recommendation.id} />
+            ) : (
+              <p className="text-xs text-destructive">
+                Cannot approve: {approveBlockedBecause ?? "not eligible."} Rejecting is still
+                available so this row can be cleared from the queue.
+              </p>
+            )}
+            {canRejectHere ? <RejectForm recommendationId={recommendation.id} /> : null}
           </CardContent>
         </Card>
       ) : null}

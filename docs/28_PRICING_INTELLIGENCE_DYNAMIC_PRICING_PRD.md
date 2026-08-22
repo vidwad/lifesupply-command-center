@@ -372,6 +372,17 @@ wording — "Approved recommendations are internal approvals only. No BigCommerc
 price change occurs until a later controlled writeback phase." — which keeps the
 load-bearing promise. The generate form keeps its DP-4 wording, still true of it.
 
+**The UI predicate runs the full server check (DP-5A).** The first version of
+`showsApproveControl` checked only permission, status, and expiry while its own
+comment claimed to match the server, so a row with no floor, no cost, or a
+below-floor price still rendered an Approve button the action then refused.
+Approve and reject are now separate predicates: approve delegates to
+`canApprove` in full, and reject deliberately does NOT — rejection exists partly
+to clear rows that can never be approved, and gating it on approvability would
+strand exactly those rows. When approve is unavailable the page states the
+refusal reason rather than silently omitting the button. The server remains the
+enforcement layer either way; the UI simply no longer offers impossible actions.
+
 **No bulk approve.** Decisions are one at a time. A bulk control is the obvious
 next convenience, but it is also the obvious way to approve a hundred prices
 without reading them, and DP-6 writeback has not been built yet. Deferred until

@@ -212,21 +212,57 @@ export function canUserDecide(user: { permissions: string[] } | null | undefined
 }
 
 /**
- * Whether the approve/reject controls should render.
+ * Whether the APPROVE control should render.
  *
- * The same predicate the server enforces, so the UI cannot offer a control the
- * action would then refuse.
+ * Runs the full server predicate, not a subset of it. An earlier version
+ * checked only permission, status, and expiry while claiming to match the
+ * server — so a row with no floor, no cost, or a below-floor price still got an
+ * Approve button that the action then refused. Offering a button that cannot
+ * work is worse than offering none: it reads as a system fault rather than as
+ * the guardrail doing its job.
  */
-export function showsDecisionControls(args: {
+export function showsApproveControl(args: {
   recommendation: RecommendationLike;
   item: RunItemLike;
   user: { permissions: string[] } | null | undefined;
   now: Date;
 }): boolean {
   if (!canUserDecide(args.user)) return false;
-  if (args.recommendation.status !== DECIDABLE_STATUS) return false;
-  if (isExpired(args.recommendation, args.now)) return false;
-  return true;
+  return canApprove(args.recommendation, args.item, args.now).allowed;
+}
+
+/**
+ * Whether the REJECT control should render.
+ *
+ * Deliberately NOT the approve predicate. Rejection is the conservative
+ * direction and exists partly to clear rows that can never be approved — an
+ * expired one, or one whose cost went missing. Gating it on approvability would
+ * strand precisely those rows in the queue with no way out.
+ */
+export function showsRejectControl(args: {
+  recommendation: { status: string };
+  user: { permissions: string[] } | null | undefined;
+}): boolean {
+  if (!canUserDecide(args.user)) return false;
+  return args.recommendation.status === DECIDABLE_STATUS;
+}
+
+/**
+ * Why the approve control is absent, for a user who could otherwise decide.
+ *
+ * Returns null when approval is available or when the user cannot decide at
+ * all. Lets the page say "you cannot approve this because X" instead of simply
+ * omitting the button and leaving the reviewer to guess.
+ */
+export function approveUnavailableReason(args: {
+  recommendation: RecommendationLike;
+  item: RunItemLike;
+  user: { permissions: string[] } | null | undefined;
+  now: Date;
+}): string | null {
+  if (!canUserDecide(args.user)) return null;
+  const verdict = canApprove(args.recommendation, args.item, args.now);
+  return verdict.allowed ? null : verdict.message;
 }
 
 /** Statuses a recommendation list may be filtered by. */

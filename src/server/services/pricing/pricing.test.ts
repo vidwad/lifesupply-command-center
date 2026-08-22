@@ -968,3 +968,35 @@ describe("DP-5 approval canaries", () => {
     );
   });
 });
+
+describe("DP-5A: the UI predicate matches the server", () => {
+  const detail = () => read("src/app/(dashboard)/products/pricing/recommendations/[id]/page.tsx");
+
+  it("gates the approve control on the full server check, not a subset", () => {
+    const code = stripComments(read("src/server/services/pricing/approval.ts"));
+    // showsApproveControl must delegate to canApprove rather than re-implement
+    // a looser version of it. A hand-rolled subset is what let a row the server
+    // would refuse still render an Approve button.
+    expect(code).toMatch(/showsApproveControl[\s\S]*?canApprove\(/);
+    expect(code).not.toContain("showsDecisionControls");
+  });
+
+  it("keeps reject reachable when approve is not", () => {
+    const code = stripComments(read("src/server/services/pricing/approval.ts"));
+    // showsRejectControl must NOT consult canApprove: rejection exists to clear
+    // rows that can never be approved.
+    const reject = code.slice(code.indexOf("export function showsRejectControl"));
+    const body = reject.slice(
+      0,
+      reject.indexOf("}" + String.fromCharCode(10) + String.fromCharCode(10)),
+    );
+    expect(body).not.toContain("canApprove");
+  });
+
+  it("renders both controls from the split predicates", () => {
+    const code = stripComments(detail());
+    expect(code).toContain("showsApproveControl");
+    expect(code).toContain("showsRejectControl");
+    expect(code).toContain("approveUnavailableReason");
+  });
+});
