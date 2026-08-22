@@ -348,7 +348,14 @@ export async function listRecommendations(args?: {
       writebackLogs: {
         orderBy: { createdAt: "desc" },
         take: 5,
-        select: { id: true, status: true, writtenAt: true },
+        select: {
+          id: true,
+          status: true,
+          writtenAt: true,
+          rollbackAt: true,
+          rollbackPayload: true,
+          writtenBy: { select: { name: true, email: true } },
+        },
       },
       pricingRunItem: {
         include: {
@@ -360,21 +367,9 @@ export async function listRecommendations(args?: {
   });
 }
 
-/**
- * One-word writeback state for the queue.
- *
- * Distinguishes "nobody has tried" from "an attempt failed": both leave the
- * recommendation `approved`, and conflating them would hide failed writes.
- */
-export function writebackSummary(row: {
-  status: string;
-  writebackLogs: readonly { status: string }[];
-}): "written_back" | "writeback_failed" | "approved_not_written" | "not_applicable" {
-  if (row.writebackLogs.some((log) => log.status === "succeeded")) return "written_back";
-  if (row.writebackLogs.some((log) => log.status === "failed")) return "writeback_failed";
-  if (row.status === "approved") return "approved_not_written";
-  return "not_applicable";
-}
+// The queue's writeback state helper lives in rollback-read.ts as
+// `writebackState` (DP-6B): it also recognises `rolled_back`, and keeping a
+// second overlapping helper here would let the two answers drift apart.
 
 /** Counts per status, for the queue filter tabs. */
 export async function recommendationStatusCounts(): Promise<Record<string, number>> {

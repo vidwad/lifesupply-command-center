@@ -251,11 +251,16 @@ describe("no autonomous, scheduled, or bulk writeback exists", () => {
     expect(offenders, "unexpected write-service importers: " + offenders.join(", ")).toEqual([]);
   });
 
-  it("imports the BigCommerce price client only from the write service", () => {
+  it("imports the BigCommerce price client only from the write and rollback services", () => {
     const allowed = new Set([
       join("src", "server", "services", "pricing", "writeback.ts"),
+      // DP-6B. Rollback restores a price, which is a store write like any
+      // other, so it uses the same client rather than a second one.
+      join("src", "server", "services", "pricing", "rollback.ts"),
       join("src", "server", "integrations", "bigcommerce", "price-writeback.ts"),
       join("src", "server", "integrations", "bigcommerce", "price-writeback.test.ts"),
+      // Names the specifier in order to police it — the opposite of a breach.
+      join("src", "server", "services", "pricing", "rollback-canaries.test.ts"),
     ]);
     const offenders: string[] = [];
     for (const file of allSource()) {

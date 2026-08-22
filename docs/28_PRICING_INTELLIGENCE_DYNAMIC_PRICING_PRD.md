@@ -455,6 +455,66 @@ button press. Canaries assert the service contains no loop feeding the write
 call, no Inngest registration, and that no background function or worker
 entrypoint can reach it.
 
+## 7.7 DP-6B implementation notes and decisions
+
+Recorded 2026-08-22. Rollback is a live price change, so it is gated exactly as
+hard as the forward write and the decisions below are stated rather than left to
+be inferred.
+
+**A changed store price refuses, with no override.** Rollback restores a price
+captured at DP-6 write time. Before writing, the live sale price is read and
+must still equal what DP-6 wrote (within half a cent). If it has moved, that
+movement was someone or something else's decision, and reverting it would make
+rollback a way to silently clobber an unreviewed change. DP-6B refuses and says
+so. There is deliberately no force flag; adding one is a product-owner decision.
+
+**A prior state of "no sale price" refuses.** `writeBigCommerceSalePrice`
+rejects non-positive prices, and BigCommerce's semantics for clearing
+`sale_price` — null vs 0 vs omission — have never been exercised against a real
+store from this codebase. Guessing would mean either writing a real price of
+$0.00 or sending an unverified null to a live storefront. `CLEARING_SALE_PRICE_SUPPORTED`
+is therefore `false`, and such a rollback refuses with an instruction to clear
+the price manually in BigCommerce. Flipping it requires a verified clearing path
+AND an observed round trip against a real store, not a docs reading.
+
+**An absent evidence key is not the same as a recorded null.** The prior price
+comes from `rollbackPayload.liveBefore.salePrice` first, then the stored
+`oldSalePrice` column, then nothing. A recorded `null` means "there was no sale
+price"; an ABSENT key means we never captured it. Conflating them would let a
+rollback clear a price on no evidence, so only an explicitly present null counts.
+
+**The recommendation and run item keep `written_back`.** The writeback is
+historical fact — it happened — and the log's `rolled_back` status is where the
+current state lives. `PriceWritebackLog.status` already has `rolled_back`, so no
+migration was needed, and inventing a recommendation status would have required
+an enum migration for something the log already expresses. The queue's state
+helper reads the log, not the recommendation.
+
+**A failed rollback leaves the log `succeeded`.** The DP-6 write really did
+happen and is still the live state; only the attempt to undo it failed. Marking
+the log `rolled_back` would claim a store change that never occurred. The
+attempt is appended to `rollbackPayload.rollbackAttempts` with its error.
+
+**Rollback attempts are appended, never overwritten.** Refused, in-flight,
+failed, and successful attempts all append to `rollbackAttempts`, and the DP-6
+pre-write evidence underneath is never modified. A rollback that loses the
+evidence it depends on would be self-defeating.
+
+**Rollback shares the forward write's client, not a second one.** It calls
+`writeBigCommerceSalePrice`, so the "sale_price only" proof in the client covers
+rollback too, and there is exactly one module able to send a price to a store
+plus one able to restore one — both named in the canaries.
+
+**The page never loads the rollback service.** `rollback-read.ts` holds the
+display helpers, mirroring the DP-6A split. It touches no Prisma at all; the
+availability check it exposes stops short of the live-price comparison, because
+that needs a store request and a page render must not make one. A rollback whose
+store price has since moved will therefore still show a button and be refused on
+submit — the alternative is an outbound request per log on every page view.
+
+**No bulk rollback.** One writeback log per explicit press, enforced by canary:
+no loop, no scheduler, no background path, and no multi-select in the UI.
+
 ## 8. Competitor Setup Requirements
 
 Add setup screens for competitor stores under:
