@@ -224,10 +224,16 @@ export async function syncBigCommerceCatalog(input: SyncCatalogInput): Promise<S
   const brandMap = await loadBrands(input.storeRoot, input.apiToken);
   if (input.onProgress) await input.onProgress({ ...counts });
 
+  // `images` is required, not decorative: deriveImageStatus() reads bc.images,
+  // and the v3 catalog list endpoint omits the key entirely unless it is
+  // included. Without it every product parses as having no images and is
+  // flagged `missing`, which made the catalogue-quality filters meaningless
+  // (docs/35 F-13 — 249 of 250 sampled products do have an image).
+  const INCLUDE = "include=variants,images";
   const sinceParam =
     input.mode === "incremental" && input.sinceIso
-      ? `?date_modified:min=${encodeURIComponent(input.sinceIso)}&include=variants`
-      : "?include=variants";
+      ? `?date_modified:min=${encodeURIComponent(input.sinceIso)}&${INCLUDE}`
+      : `?${INCLUDE}`;
 
   let page = 1;
   while (counts.productsScanned < HARD_CAP_PRODUCTS) {

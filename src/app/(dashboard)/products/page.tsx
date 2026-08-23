@@ -2,20 +2,32 @@ import Link from "next/link";
 import { Boxes, ImageOff, Star } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
+import { Pagination } from "@/components/data/Pagination";
 import { ExportButton } from "@/components/data/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
-import { listProducts, type ListProductsFilters } from "@/server/services/products";
+import {
+  countProducts,
+  listProducts,
+  PRODUCTS_PAGE_SIZE,
+  type ListProductsFilters,
+} from "@/server/services/products";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { SyncButtons } from "@/components/sync/SyncButtons";
 
 export const metadata = { title: "Products & Catalog" };
 export const dynamic = "force-dynamic";
 
-type SearchParams = { q?: string; flag?: "missing_image" | "needs_review" };
+type SearchParams = {
+  q?: string;
+  flag?: "missing_image" | "needs_review";
+  /** Set by the shell's Division selector. */
+  division?: string;
+  page?: string;
+};
 
 export default async function ProductsPage({
   searchParams,
@@ -27,24 +39,44 @@ export default async function ProductsPage({
   const canExport = userHasPermission(user, PERMISSIONS.PRODUCTS_EXPORT);
   const canSync = userHasPermission(user, PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
 
+  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
   const filters: ListProductsFilters = {
     search: params.q?.trim() || undefined,
+    // Honours the Division selector in the app shell. Absent = all divisions.
+    divisionId: params.division?.trim() || undefined,
     imageStatus:
       params.flag === "missing_image"
         ? "missing"
         : params.flag === "needs_review"
           ? "needs_review"
           : undefined,
+    page,
   };
 
-  const products = await listProducts(filters);
+  // The count uses the same filters as the rows, so the header total and the
+  // page count can never disagree with what is actually listed.
+  const [products, totalProducts] = await Promise.all([
+    listProducts(filters),
+    countProducts(filters),
+  ]);
+
+  // Changing the flag resets to page 1 — staying on page 7 of a different
+  // filter would usually land on an empty page.
+  const pillHref = (flag: SearchParams["flag"]): string => {
+    const qs = new URLSearchParams();
+    if (flag) qs.set("flag", flag);
+    if (params.q) qs.set("q", params.q);
+    if (params.division) qs.set("division", params.division);
+    const s = qs.toString();
+    return `/products${s ? `?${s}` : ""}`;
+  };
 
   return (
     <div>
       <PageHeader
         title="Products & Catalog"
         description="Catalog quality, supplier mapping, margin, and featured selection."
-        breadcrumb={`${products.length} ${products.length === 1 ? "product" : "products"}`}
+        breadcrumb={`${totalProducts.toLocaleString()} ${totalProducts === 1 ? "product" : "products"}`}
         actions={
           <div className="flex items-center gap-3">
             {canSync ? <SyncButtons entity="products" /> : null}
@@ -55,19 +87,20 @@ export default async function ProductsPage({
 
       <div className="space-y-4 p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <FilterPill href="/products" label="All" active={!params.flag} />
+          <FilterPill href={pillHref(undefined)} label="All" active={!params.flag} />
           <FilterPill
-            href="/products?flag=missing_image"
+            href={pillHref("missing_image")}
             label="Missing images"
             active={params.flag === "missing_image"}
           />
           <FilterPill
-            href="/products?flag=needs_review"
+            href={pillHref("needs_review")}
             label="Needs review"
             active={params.flag === "needs_review"}
           />
           <form action="/products" className="ml-auto flex items-center gap-2">
             {params.flag && <input type="hidden" name="flag" value={params.flag} />}
+            {params.division && <input type="hidden" name="division" value={params.division} />}
             <input
               type="search"
               name="q"
@@ -82,7 +115,7 @@ export default async function ProductsPage({
           <EmptyState
             icon={Boxes}
             title="No products match these filters"
-            description="Adjust filters or run pnpm db:seed to populate sample products."
+            description="Adjust the filters above, or run a BigCommerce product sync to import the catalogue."
           />
         ) : (
           <DataTable>
@@ -173,6 +206,14 @@ export default async function ProductsPage({
             </TBody>
           </DataTable>
         )}
+
+        <Pagination
+          basePath="/products"
+          page={page}
+          pageSize={PRODUCTS_PAGE_SIZE}
+          totalCount={totalProducts}
+          params={{ q: params.q, flag: params.flag, division: params.division }}
+        />
       </div>
     </div>
   );
