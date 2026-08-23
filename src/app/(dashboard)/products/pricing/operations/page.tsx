@@ -212,16 +212,16 @@ export default async function PricingOperationsPage({
       <Card className="mb-4">
         <CardHeader>
           <CardTitle className="text-base">
-            Staging readiness{" "}
+            Pilot / staging readiness{" "}
             <Badge variant={preflight.ready ? "default" : "destructive"}>
               {preflight.ready ? "ready" : `${preflight.blockers} blocker(s)`}
             </Badge>
           </CardTitle>
           <CardDescription>
-            Read-only preflight for the certification exercise in{" "}
-            <code>docs/29_PRICING_INTELLIGENCE_CERTIFICATION_WORKBOOK.md</code>. It reads flags,
-            role grants, store mappings, and test data locally. It contacts no store and changes
-            nothing.
+            Read-only preflight for the certification exercise — whether run in staging (
+            <code>docs/29</code>) or as the controlled production pilot (<code>docs/34</code>). The
+            checks are identical either way. It reads flags, role grants, store mappings, and test
+            data locally. It contacts no store and changes nothing.
           </CardDescription>
         </CardHeader>
         <CardContent>

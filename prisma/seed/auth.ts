@@ -59,7 +59,11 @@ type RoleName = (typeof ROLE_DEFINITIONS)[number]["name"];
 // Refines docs/06 §12 matrix. Tune granularity in later phases.
 // -----------------------------------------------------------------------------
 
-const ROLE_PERMISSIONS: Record<RoleName, PermissionKey[]> = {
+// Exported so scripts/pricing/bootstrap-pricing-production.ts applies the SAME
+// role→permission policy the seed does. Duplicating the mapping there would let
+// the two drift, and a bootstrap that grants different permissions than the seed
+// is worse than no bootstrap.
+export const ROLE_PERMISSIONS: Record<RoleName, PermissionKey[]> = {
   "Super Admin": ALL_PERMISSION_KEYS,
 
   Executive: [
