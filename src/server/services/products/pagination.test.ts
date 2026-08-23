@@ -99,3 +99,37 @@ describe("the empty state does not recommend an unsafe action", () => {
     expect(page).not.toContain("db:seed");
   });
 });
+
+describe("zero cost is unknown, not free", () => {
+  it("does not use truthiness to test a Decimal cost", () => {
+    // `Decimal(0)` is an object and therefore truthy. The old
+    // `primary?.costPrice ? … : …` treated it as a real cost of $0.00 and
+    // reported a 100% margin on 50,024 of 50,053 production variants.
+    expect(service).not.toContain("const cost = primary?.costPrice\n      ? Number");
+    expect(service).toContain("positiveOrNull(primary?.costPrice)");
+  });
+
+  it("requires a strictly positive value", () => {
+    expect(service).toContain("Number.isFinite(n) && n > 0 ? n : null");
+  });
+
+  it("falls through to the preferred supplier cost, and only then to null", () => {
+    expect(service).toContain(
+      "positiveOrNull(primary?.costPrice) ?? positiveOrNull(p.supplierProducts[0]?.cost) ?? null",
+    );
+  });
+
+  it("leaves margin null when cost is unknown, so the column renders as a dash", () => {
+    expect(service).toContain("cost != null && price > 0 ? (price - cost) / price : null");
+    expect(page).toContain('{p.cost != null ? formatCurrency(p.cost) : "—"}');
+  });
+
+  it("agrees with how the pricing engine reads cost", () => {
+    // One definition of "has a cost" across the app: strictly positive.
+    const engine = readFileSync(
+      join(__dirname, "..", "pricing", "recommendation.ts"),
+      "utf8",
+    ).replace(/\r\n/g, "\n");
+    expect(engine).toContain("Number.isFinite(value) && value > 0");
+  });
+});

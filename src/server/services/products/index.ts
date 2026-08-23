@@ -50,6 +50,19 @@ export async function countProducts(filters: ListProductsFilters = {}): Promise<
 }
 
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
+
+/**
+ * A cost only counts if it is strictly positive.
+ *
+ * Guards two distinct traps: a Prisma `Decimal` is an object and therefore
+ * always truthy — `Decimal(0)` included — and a raw 0 is a real number that
+ * would produce a 100% margin if treated as a known cost.
+ */
+const positiveOrNull = (d: Prisma.Decimal | null | undefined): number | null => {
+  if (d == null) return null;
+  const n = Number(d);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
 const numOrNull = (d: Prisma.Decimal | null | undefined): number | null =>
   d == null ? null : Number(d);
 
@@ -82,11 +95,17 @@ export async function listProducts(filters: ListProductsFilters = {}) {
     // Aggregate price/cost from first variant (primary)
     const primary = p.variants[0];
     const price = primary ? num(primary.price) : 0;
-    const cost = primary?.costPrice
-      ? Number(primary.costPrice)
-      : p.supplierProducts[0]
-        ? Number(p.supplierProducts[0].cost)
-        : null;
+    // A zero cost means "not known", never "free". BigCommerce leaves
+    // cost_price at 0 when it is unpopulated — true of 50,024 of 50,053
+    // variants in production — and the previous truthiness check treated a
+    // Prisma Decimal(0), which is a truthy object, as a real cost of $0.00.
+    // Every such product then reported a 100% margin (docs/35 F-16).
+    //
+    // This matches how the rest of the system already reads cost: `positive()`
+    // in the pricing engine requires > 0, and the pricing upload parser
+    // "treats a zero cost as absent, never as a zero floor".
+    const cost =
+      positiveOrNull(primary?.costPrice) ?? positiveOrNull(p.supplierProducts[0]?.cost) ?? null;
     const margin = cost != null && price > 0 ? (price - cost) / price : null;
     const stock = p.variants.reduce((sum, v) => sum + (v.stockLevel ?? 0), 0);
 
