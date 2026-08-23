@@ -7,6 +7,8 @@
 
 ---
 
+> **Path change (2026-08-23).** The product owner has elected to run this exercise as a **controlled production pilot** rather than in a provisioned staging environment — see `docs/34_PRICING_INTELLIGENCE_CONTROLLED_PRODUCTION_PILOT.md`. The procedure below is unchanged and still applies; only the environment differs. Read `docs/34` §2 (product selection) and §7 (abort criteria) before starting. Pilot evidence covers **one product in one store** and is not staging certification, not multi-store, not concurrency, not automation, not bulk, and **not production readiness**. Staging provisioning is deferred, not deleted.
+
 ## 1. Purpose
 
 DP-1 through DP-6C are merged and green in CI. That proves the code does what its tests say. It does **not** prove the workflow works against a real storefront, because it has never been run against one.

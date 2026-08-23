@@ -6,6 +6,8 @@
 
 ---
 
+> **Path change (2026-08-23).** The product owner has elected to run this exercise as a **controlled production pilot** rather than in a provisioned staging environment — see `docs/34_PRICING_INTELLIGENCE_CONTROLLED_PRODUCTION_PILOT.md`. The procedure below is unchanged and still applies; only the environment differs. Read `docs/34` §2 (product selection) and §7 (abort criteria) before starting. Pilot evidence covers **one product in one store** and is not staging certification, not multi-store, not concurrency, not automation, not bulk, and **not production readiness**. Staging provisioning is deferred, not deleted.
+
 ## Exercise header — complete before step A
 
 | Field | Value |
