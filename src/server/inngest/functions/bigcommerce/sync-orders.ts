@@ -13,6 +13,7 @@ import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 import { inngest } from "@/server/inngest/client";
 import { syncBigCommerceOrders } from "@/server/integrations/bigcommerce/sync/sync-orders";
+import { bigCommerceTimestamp } from "@/server/integrations/bigcommerce/timestamps";
 import { resolveCredentialsBundleForConnection } from "@/server/services/integrations";
 
 const BC_BASE = "https://api.bigcommerce.com";
@@ -47,7 +48,7 @@ async function runOrderSync(args: {
   });
   const sinceIso =
     args.mode === "incremental" && conn.lastSuccessfulSyncAt
-      ? conn.lastSuccessfulSyncAt.toISOString()
+      ? bigCommerceTimestamp(conn.lastSuccessfulSyncAt)
       : undefined;
 
   let counts: SyncCounts | undefined;
