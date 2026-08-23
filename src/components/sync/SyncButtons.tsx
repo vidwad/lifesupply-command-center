@@ -1,17 +1,21 @@
 "use client";
 
 /**
- * Generic BC sync buttons shared by /customers and /orders.
+ * Generic BC sync buttons shared by /customers, /orders and /products.
  *
- * Two actions, fans out to all configured BC stores in parallel:
+ * Two actions, fanning out to the configured BC stores in parallel:
  *   - Full sync (confirmation-gated; takes minutes)
  *   - Incremental sync (no confirm; pulls since last successful sync)
  *
- * Pass `entity="customers"` or `entity="orders"` — that's the only
- * difference between the two pages' button bars.
+ * **Division scope.** Both actions honour the Division selector in the app
+ * shell, read from the `?division=` search param and passed to the dispatch
+ * route. "All divisions" dispatches every mapped store, as before. Stores
+ * outside the selected division come back as `skipped` with a reason and are
+ * listed in the result, so a scoped run never looks like a whole-estate run.
  */
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Loader2, RefreshCw, XCircle, Zap } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { AlertTriangle, CheckCircle2, Loader2, RefreshCw, XCircle, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -79,6 +83,8 @@ export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const searchParams = useSearchParams();
+  const divisionId = searchParams.get("division") ?? "";
 
   useEffect(() => {
     return () => {
@@ -161,7 +167,9 @@ export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
   async function dispatch(mode: "full" | "incremental"): Promise<void> {
     setState({ kind: "dispatching", mode });
     try {
-      const res = await fetch(`/api/sync/bigcommerce/${entity}/${mode}`, {
+      // Scope the fan-out to the shell's Division selector. Empty = all divisions.
+      const qs = divisionId ? `?division=${encodeURIComponent(divisionId)}` : "";
+      const res = await fetch(`/api/sync/bigcommerce/${entity}/${mode}${qs}`, {
         method: "POST",
         cache: "no-store",
       });
@@ -174,10 +182,17 @@ export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
       const queued = jobs.filter((j) => j.status === "queued");
       const skipped = jobs.filter((j) => j.status === "skipped");
       if (queued.length === 0) {
+        // Name the reasons — with a division selected, "0 dispatched" usually
+        // means the filter excluded everything, which is not an error.
+        const reasons = skipped.map((s) => s.reason).filter(Boolean);
         setState({
           kind: "fail",
           mode,
-          message: `No BC stores were dispatched. ${skipped.length} skipped.`,
+          message:
+            `No BigCommerce stores were dispatched` +
+            (divisionId ? " for the selected division" : "") +
+            `. ${skipped.length} skipped.` +
+            (reasons.length ? ` ${reasons.join(" ")}` : ""),
         });
         return;
       }
@@ -244,6 +259,20 @@ export function SyncButtons({ entity }: { entity: Entity }): React.JSX.Element {
                   : "estimated margins"}{" "}
               are preserved — only BC-owned fields are overwritten.
             </DialogDescription>
+            <DialogDescription>
+              {divisionId ? (
+                <span className="font-medium text-foreground">
+                  Scoped to the division selected at the top of the screen. Stores in other
+                  divisions will be skipped.
+                </span>
+              ) : (
+                <span className="font-medium text-foreground">
+                  No division is selected, so this runs against{" "}
+                  <span className="underline">every</span> configured BigCommerce store. Pick a
+                  division at the top of the screen to narrow it.
+                </span>
+              )}
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
@@ -309,19 +338,67 @@ function SyncStatusPanel({
   const totalCreated = state.jobs.reduce((s, j) => s + j.recordsCreated, 0);
   const totalUpdated = state.jobs.reduce((s, j) => s + j.recordsUpdated, 0);
   const totalFailed = state.jobs.reduce((s, j) => s + j.recordsFailed, 0);
-  const anyFailed = state.jobs.some((j) => j.status === "failed");
+  const failedJobs = state.jobs.filter((j) => j.status === "failed");
+  const partialJobs = state.jobs.filter((j) => j.status === "partial");
+  const seconds = Math.round(state.durationMs / 1000);
+
+  // A job can fail with recordsFailed === 0 — an HTTP error on the first page
+  // aborts before any record is processed. Reporting only per-record counts
+  // rendered that as "Done · 0 created, 0 updated", which is how a total
+  // catalog-sync failure went unnoticed in production (docs/35 F-11). Job
+  // status, not record counts, decides what this says.
+  if (failedJobs.length > 0) {
+    return (
+      <div className="flex flex-col gap-0.5 text-xs">
+        <div className="flex items-center gap-1 text-destructive">
+          <XCircle className="h-3 w-3 shrink-0" />
+          <span className="font-medium">
+            Sync failed — {failedJobs.length} of {state.jobs.length} store
+            {state.jobs.length === 1 ? "" : "s"} · {seconds}s
+          </span>
+        </div>
+        {failedJobs.map((j) => (
+          <span key={j.id} className="pl-4 text-destructive/90">
+            {j.connectionName}: {j.errorSummary?.slice(0, 220) ?? "no error detail recorded"}
+          </span>
+        ))}
+        {totalCreated + totalUpdated > 0 && (
+          <span className="pl-4 text-muted-foreground">
+            Other stores: {totalCreated.toLocaleString()} created, {totalUpdated.toLocaleString()}{" "}
+            updated
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  const summary = (
+    <>
+      {totalCreated.toLocaleString()} created, {totalUpdated.toLocaleString()} updated
+      {totalFailed > 0 && `, ${totalFailed.toLocaleString()} records failed`} · {seconds}s
+    </>
+  );
+
+  if (partialJobs.length > 0 || totalFailed > 0) {
+    return (
+      <div className="flex flex-col gap-0.5 text-xs">
+        <div className="flex items-center gap-1 text-warning">
+          <AlertTriangle className="h-3 w-3 shrink-0" />
+          <span className="font-medium">Completed with errors · {summary}</span>
+        </div>
+        {partialJobs.map((j) => (
+          <span key={j.id} className="pl-4 text-muted-foreground">
+            {j.connectionName}: {j.errorSummary?.slice(0, 220) ?? "some records failed"}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-1 text-xs">
-      {anyFailed ? (
-        <XCircle className="h-3 w-3 text-destructive" />
-      ) : (
-        <CheckCircle2 className="h-3 w-3 text-success" />
-      )}
-      <span className={anyFailed ? "text-destructive" : "text-muted-foreground"}>
-        Done · {totalCreated.toLocaleString()} created, {totalUpdated.toLocaleString()} updated
-        {totalFailed > 0 && `, ${totalFailed.toLocaleString()} failed`} ·{" "}
-        {Math.round(state.durationMs / 1000)}s
-      </span>
+      <CheckCircle2 className="h-3 w-3 text-success" />
+      <span className="text-muted-foreground">Done · {summary}</span>
     </div>
   );
 }
