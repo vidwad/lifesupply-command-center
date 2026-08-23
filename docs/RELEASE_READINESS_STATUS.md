@@ -375,13 +375,15 @@ Blockers identified during Phase 11A that are not resolvable by documentation al
 ## 9. Product-owner decisions required
 
 Source: `docs/20_PHASE_11_DEPLOYMENT_READINESS_PLAN.md` §9, extended with decisions surfaced during
-Phase 11A. All are **TBD**.
+Phase 11A. Most remain **TBD**. `DEC-01`, `DEC-02`, and `DEC-03` were recorded on 2026-08-23 for
+**staging provisioning only** — see `docs/33_STAGING_DECISION_RECORD.md` for the full text and
+rationale. None of the three accepts anything for production, and none accepts a launch gate in §6.
 
 | ID | Decision | Needed by | Decision | Decided on |
 |---|---|---|---|---|
-| DEC-01 | Confirm Render as the target for staging and production | 11B | TBD | TBD |
-| DEC-02 | Database plan and required backup/PITR capability | 11B | TBD | TBD |
-| DEC-03 | Object-storage provider and retention period | 11B | TBD | TBD |
+| DEC-01 | Confirm Render as the target for staging and production | 11B | **Accepted for staging provisioning.** Render is the staging platform; `render.staging.yaml` naming stands (`lifesupply-cc-staging-db` / `-web` / `-worker` / `-audit-retention`); applied as a **separate** Blueprint. Ownership: Product Owner **Vid Wadhwani**; technical/deployment owner **Developer / Technical Admin**. Detail: `docs/33` | 2026-08-23 (product owner) |
+| DEC-02 | Database plan and required backup/PITR capability | 11B | **Accepted for staging provisioning ONLY. Production RTO/RPO remains OPEN.** Staging uses the plan in `render.staging.yaml` (`basic-256mb`) unless Render rejects or deprecates it at provisioning time. Staging is non-production, carries no customer-facing dependency, and its recovery objective is best-effort restore or rebuild from migrations + seed. Evidence must record the plan and backup/PITR capability actually available after provisioning. Detail: `docs/33` | 2026-08-23 (product owner) |
+| DEC-03 | Object-storage provider and retention period | 11B | **Deferred for initial staging provisioning. NOT accepted for production readiness.** `S3_*` left unset unless a workflow under test requires storage; Pricing Intelligence certification does not. Provider, bucket, lifecycle, and retention remain open until needed for Product Studio, exports, or production. Detail: `docs/33` | 2026-08-23 (product owner) — deferral recorded |
 | DEC-04 | Error-monitoring service and alert recipients | 11E | TBD | TBD |
 | DEC-05 | The three authoritative BigCommerce stores and credential owners | 11D | TBD | TBD |
 | DEC-06 | QuickBooks staging: sandbox or restricted production read access | 11D | TBD | TBD |

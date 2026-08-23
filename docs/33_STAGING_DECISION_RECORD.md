@@ -2,52 +2,57 @@
 
 **Project:** LifeSupply Command Center
 **Prepared:** August 23, 2026
-**Status:** **TEMPLATE — no decision has been recorded.** Every `Decision:` field below is blank and must be completed by the product owner. Claude Code prepared the options and the context; it has not decided anything and must not.
+**Status:** **`DEC-01`, `DEC-02`, and `DEC-03` recorded 2026-08-23 by the product owner.** All three are scoped to **staging provisioning**. None accepts anything for production, and none accepts a launch gate in `docs/RELEASE_READINESS_STATUS.md` §6.
 
-**Staging baseline candidate:** `main` @ `ff5d3ca6bf8d80a8150a82398157d2a54220e874` (merge of PR #49).
+**Staging baseline:** `main` @ `ff5d3ca6bf8d80a8150a82398157d2a54220e874` (merge of PR #49).
 
-`release/phase-11-staging` **has not been cut.** It is not created until `DEC-01`, `DEC-02`, and `DEC-03` below are recorded.
+`release/phase-11-staging` **has been cut from that commit** and is unmodified. The Render Blueprint has **not** been applied — that remains an owner-authorised action performed outside this repository.
 
 ---
 
-## How to use this document
+## How to read this document
 
-Three decisions gate staging provisioning. Each section below gives what the repository already proposes, the real options with their sources, and what the decision blocks — so the choice can be made from evidence rather than from a blank form.
+Three decisions gated staging provisioning. All three are now recorded below **and** in `docs/RELEASE_READINESS_STATUS.md` §9 — a decision counts as recorded only when it appears in both places.
 
-Fill in `Decision`, `Owner`, `Date`, `Rationale`, and `Evidence / source`. Then update the matching row in `docs/RELEASE_READINESS_STATUS.md` §9. A decision is recorded when it appears in **both** places.
+Each section keeps the options and context that were on the table, so a later reader can see what was chosen *against*, not only what was chosen.
+
+**Read the scope lines carefully.** They are not identical:
+
+| Decision | Scope |
+|---|---|
+| `DEC-01` | **Accepted** for staging provisioning |
+| `DEC-02` | **Accepted for staging only.** Production RTO/RPO remains **open** |
+| `DEC-03` | **Deferred.** A recorded deferral, *not* an acceptance |
 
 ---
 
 ## DEC-01 — Render target, staging naming, ownership
 
-**What the repository already proposes**
+**What the repository already proposed**
 
 - Platform: Render, for both environments (`render.yaml`, `render.staging.yaml`).
 - Staging resource names: `lifesupply-cc-staging-db`, `-staging-web`, `-staging-worker`, `-staging-audit-retention` — all prefixed so they cannot be mistaken for production at a glance, with `DEPLOY_ENV=staging` on all three services.
 - Staging tracks branch `release/phase-11-staging`; production tracks `main`.
 - Staging is applied as a **separate Blueprint**, not an addition to the production one.
 
-**What is actually undecided**
+**What was genuinely undecided:** who owns the staging resources — who pays for them, who may change or delete them, and who is called when staging breaks.
 
-1. Is Render confirmed as the target for both environments, or is another platform under consideration?
-2. Is the `lifesupply-cc-staging-*` naming accepted as-is?
-3. **Who owns the staging resources** — who pays for them, who may change or delete them, and who is called when staging breaks?
+**What this blocked:** applying the blueprint at all (`11B-01`).
 
-**What this blocks:** applying the blueprint at all (`11B-01`).
-
-- **Decision:**
-- **Owner:**
-- **Date:**
-- **Rationale:**
-- **Evidence / source:**
+- **Decision:** **Accepted for staging provisioning.** Render is the target platform for staging. The committed `render.staging.yaml` naming convention stands: `lifesupply-cc-staging-db`, `lifesupply-cc-staging-web`, `lifesupply-cc-staging-worker`, `lifesupply-cc-staging-audit-retention`. Staging is separate from production and **must be applied as a separate Blueprint**.
+- **Owner:** Product Owner — **Vid Wadhwani**. Technical / deployment owner — **Developer / Technical Admin**.
+- **Date:** 2026-08-23
+- **Rationale:** The platform, the naming, and the separate-Blueprint approach were already what the repository proposed, and the blueprint reviewed clean (`docs/32` §2). What this decision adds is the part that was actually open — named ownership, so a person is accountable for the staging resources rather than an implied one.
+- **Evidence / source:** This record; `docs/RELEASE_READINESS_STATUS.md` §9; blueprint review in `docs/32` §2.
+- **Scope:** Staging provisioning. Does **not** decide production platform posture, and does **not** touch `DEC-12` (production auto-deploy).
 
 ---
 
 ## DEC-02 — Database plan, backup, PITR / RTO / RPO
 
-**What the repository already proposes**
+**What the repository proposed**
 
-`render.staging.yaml` requests `plan: basic-256mb` for `lifesupply-cc-staging-db` — the same tier as production. That is a placeholder, not a decision.
+`render.staging.yaml` requests `plan: basic-256mb` for `lifesupply-cc-staging-db` — the same tier as production.
 
 **The options, from `docs/24_RELIABILITY_AND_RECOVERY_PLAN.md` §9**
 
@@ -57,44 +62,36 @@ Fill in `Decision`, `Owner`, `Date`, `Rationale`, and `Evidence / source`. Then 
 | **B — PITR** | ≤ 15 min | ~2h | A Render plan with point-in-time recovery |
 | **C — PITR + rehearsed runbook** | ≤ 15 min | ≤ 1h | Option B, plus quarterly drills and pre-provisioned standby config |
 
-**Context the owner should weigh** (quoted from `docs/24` §9): the Command Center is a management and reporting layer — BigCommerce, QuickBooks, and Mailchimp hold the primary records and can be re-synced, so sync-derived data is recoverable. **Command-Center-primary data — tasks, approvals, AI outputs, audit logs, investor records — is not**, and that is what drives the RPO requirement.
+**Context weighed** (from `docs/24` §9): the Command Center is a management and reporting layer — BigCommerce, QuickBooks, and Mailchimp hold the primary records and can be re-synced, so sync-derived data is recoverable. **Command-Center-primary data — tasks, approvals, AI outputs, audit logs, investor records — is not**, and that is what drives the RPO requirement.
 
-`docs/24` §9 offers this for consideration, **not as a decision**: Option B for production, Option A acceptable for staging.
+**What this blocked:** `11B-01`, and rows `11E-08` / `11E-11` later.
 
-**This decision has two parts.** Staging and production may legitimately differ, and the record should state both. A staging plan choice does not commit production.
-
-**What this blocks:** `11B-01`, and rows `11E-08` / `11E-11` later.
-
-- **Decision (staging):**
-- **Decision (production):**
-- **Owner:**
-- **Date:**
-- **Rationale:**
-- **Evidence / source:**
+- **Decision (staging):** **Accepted.** Use the database plan currently specified in `render.staging.yaml` — `basic-256mb` — unless Render rejects or deprecates that plan at provisioning time, in which case the operator selects the nearest available tier and **records what was actually provisioned**. Staging is non-production; **no customer-facing production dependency on staging is permitted**. The staging recovery objective is best-effort restore or rebuild from migrations and seed. Evidence must record the database plan and the backup/PITR capability actually available after provisioning.
+- **Decision (production):** **OPEN.** Production RTO/RPO is a separate production-readiness decision and is expressly **not** accepted here. The three options above remain on the table for it.
+- **Owner:** Product Owner — **Vid Wadhwani**
+- **Date:** 2026-08-23
+- **Rationale:** Staging exists to be rebuilt. Its data is synthetic or re-derivable from migrations and seed, so point-in-time recovery there buys little. That reasoning deliberately does **not** transfer to production, where Command-Center-primary data cannot be re-synced from any source system — which is why production is left open rather than quietly inheriting the staging choice.
+- **Evidence / source:** This record; `docs/RELEASE_READINESS_STATUS.md` §9; options and data-loss context in `docs/24` §9.
+- **Scope:** Staging provisioning **only**. Rows `11E-08` and `11E-11` remain blocked on the production half.
 
 ---
 
 ## DEC-03 — Object-storage provider and retention
 
-**What the repository already proposes**
+**What the repository proposed**
 
 Five `S3_*` variables are declared `sync: false` on staging web and deliberately left unset. The application treats object storage as **optional**, so nothing breaks while this is undecided.
 
-**What is undecided**
+**What was undecided:** the provider (S3, Cloudflare R2, Supabase Storage, or another S3-compatible service), the retention period, and bucket naming — with `docs/21` §1.1 requiring separate staging and production buckets once chosen.
 
-1. Which provider — S3, Cloudflare R2, Supabase Storage, or another S3-compatible service.
-2. Retention period for stored evidence and reports.
-3. Bucket naming, and confirmation that **staging and production use separate buckets** (`docs/21` §1.1 requires this).
+**What this blocked:** the storage component of `11B-01`; `BLK-07`.
 
-**Worth knowing before deciding:** the Pricing Intelligence certification exercise does **not** need object storage. `DEC-03` blocks the storage line of `11B-01`, not the pricing session. If the goal is to get the certification unblocked quickly, this decision can be recorded as an explicit deferral — but it must be recorded as one, not silently skipped, or `11B-01` cannot be evidenced completely.
-
-**What this blocks:** the storage component of `11B-01`; `BLK-07`.
-
-- **Decision:**
-- **Owner:**
-- **Date:**
-- **Rationale:**
-- **Evidence / source:**
+- **Decision:** **Deferred for initial staging provisioning.** Leave all five `S3_*` values unset unless a workflow actually under test requires object storage. This is a **recorded deferral, not an acceptance**.
+- **Owner:** Product Owner — **Vid Wadhwani**
+- **Date:** 2026-08-23
+- **Rationale:** Pricing Intelligence staging certification does not touch object storage, and the application treats storage as optional, so nothing in the immediate exercise is blocked by leaving it unset. Provider, bucket, lifecycle rules, and retention policy remain open until required for Product Studio, exports, or production readiness.
+- **Evidence / source:** This record; `docs/RELEASE_READINESS_STATUS.md` §9; `docs/21` §1.1 (separate staging/production buckets when chosen); `docs/32` §6.
+- **Scope:** Initial staging provisioning. **Not accepted for production readiness.** `11B-01` cannot be evidenced as complete on the storage line while this deferral stands, and `BLK-07` remains open.
 
 ---
 
@@ -115,13 +112,13 @@ These do not block applying the blueprint. They **do** block the Pricing Intelli
 
 ---
 
-## What happens once DEC-01, DEC-02, and DEC-03 are recorded
+## What happens next
 
-In order, per `docs/32` §5 and `docs/21` §4:
+Steps 1 and 2 are **done**. Step 3 onward requires explicit product-owner authorisation and cannot be performed from this repository.
 
-1. Update `docs/RELEASE_READINESS_STATUS.md` §9 with the three decisions.
-2. Cut `release/phase-11-staging` from the accepted baseline — currently `ff5d3ca6bf8d80a8150a82398157d2a54220e874`.
-3. Apply `render.staging.yaml` as a **separate** Render Blueprint. *Owner-authorised action; not performed from this repository.*
+1. ~~Update `docs/RELEASE_READINESS_STATUS.md` §9 with the three decisions.~~ **Done 2026-08-23.**
+2. ~~Cut `release/phase-11-staging` from the accepted baseline.~~ **Done** — cut from `ff5d3ca6bf8d80a8150a82398157d2a54220e874`, unmodified.
+3. Apply `render.staging.yaml` as a **separate** Render Blueprint. *Owner-authorised action.*
 4. Create the dedicated staging Inngest environment; copy its two keys.
 5. Set the manual env vars, including copying the **staging** `MASTER_ENCRYPTION_KEY` to worker and cron.
 6. Confirm `prisma migrate status` reports none pending; run `pnpm db:seed`. Capture output for `11B-05` and `11B-06`.
@@ -135,8 +132,8 @@ Step 9 is where you learn whether the certification session can be booked.
 
 ## What this document does not do
 
-- It records no decision. Every `Decision:` field is blank by design.
-- It cuts no branch. `release/phase-11-staging` does not exist.
-- It applies no infrastructure and touches no credential.
+- It applies no infrastructure. The Render Blueprint has **not** been applied.
+- It touches no credential, production or otherwise.
 - It enables no feature flag.
-- It claims no production readiness. Recording these three decisions satisfies part of `11B-01` — no launch gate in `docs/RELEASE_READINESS_STATUS.md` §6.
+- It decides nothing for production. `DEC-02`'s production half is open; `DEC-03` is a deferral, not an acceptance.
+- It claims no production readiness. Recording these three decisions advances part of `11B-01`. It accepts **no** launch gate in `docs/RELEASE_READINESS_STATUS.md` §6, and **no** `PI-CERT` row.
