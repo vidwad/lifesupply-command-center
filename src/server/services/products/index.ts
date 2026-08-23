@@ -4,20 +4,31 @@ import { prisma } from "@/server/db/client";
 
 export type ListProductsFilters = {
   storeId?: string;
+  /** Scopes to one operating division, mirroring the shell's Division selector. */
+  divisionId?: string;
   categoryId?: string;
   status?: ProductStatus;
   imageStatus?: "missing" | "needs_review";
   search?: string;
+  /** 1-based. Out-of-range values are clamped by the caller, not here. */
+  page?: number;
 };
 
-const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
-const numOrNull = (d: Prisma.Decimal | null | undefined): number | null =>
-  d == null ? null : Number(d);
+/** Matches CUSTOMERS_PAGE_SIZE so the list pages behave alike. */
+export const PRODUCTS_PAGE_SIZE = 50;
 
-export async function listProducts(filters: ListProductsFilters = {}) {
+/**
+ * Filter clause shared by listProducts and countProducts.
+ *
+ * Extracted deliberately: the two must agree exactly, or the pagination
+ * footer computes its page count from a different population than the rows
+ * it is paging through.
+ */
+function productWhere(filters: ListProductsFilters): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = { deletedAt: null };
 
   if (filters.storeId) where.storeId = filters.storeId;
+  if (filters.divisionId) where.divisionId = filters.divisionId;
   if (filters.categoryId) where.categoryId = filters.categoryId;
   if (filters.status) where.status = filters.status;
   if (filters.imageStatus === "missing") where.imageStatus = "missing";
@@ -30,11 +41,29 @@ export async function listProducts(filters: ListProductsFilters = {}) {
       { brand: { contains: q, mode: "insensitive" } },
     ];
   }
+  return where;
+}
+
+/** Total matching the same filters as listProducts — drives the header count and paging. */
+export async function countProducts(filters: ListProductsFilters = {}): Promise<number> {
+  return prisma.product.count({ where: productWhere(filters) });
+}
+
+const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
+const numOrNull = (d: Prisma.Decimal | null | undefined): number | null =>
+  d == null ? null : Number(d);
+
+export async function listProducts(filters: ListProductsFilters = {}) {
+  const where = productWhere(filters);
+  const page = Math.max(1, Math.trunc(filters.page ?? 1));
 
   const products = await prisma.product.findMany({
     where,
-    orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
-    take: 100,
+    // `id` breaks ties so paging is stable: without it, two products sharing a
+    // name can swap between pages and one is silently never shown.
+    orderBy: [{ isFeatured: "desc" }, { name: "asc" }, { id: "asc" }],
+    skip: (page - 1) * PRODUCTS_PAGE_SIZE,
+    take: PRODUCTS_PAGE_SIZE,
     include: {
       store: { select: { id: true, name: true } },
       category: { select: { id: true, name: true } },
