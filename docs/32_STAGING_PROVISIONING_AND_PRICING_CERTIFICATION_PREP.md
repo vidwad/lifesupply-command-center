@@ -4,7 +4,11 @@
 **Prepared:** August 23, 2026
 **Status:** Provisioning plan. **No infrastructure has been created.** No Render change has been applied, no credential touched, no flag enabled.
 
-This document exists because the Pricing Intelligence certification session (`docs/29`, `docs/30`, `docs/31`) is a **NO-GO for one reason: no staging environment exists.** It is the plan for removing that blocker.
+> **PAUSED 2026-08-23 by product-owner decision.** Staging provisioning is **deferred, not cancelled**. The product owner has elected to run the Pricing Intelligence exercise as a **controlled production pilot** instead — see `docs/34_PRICING_INTELLIGENCE_CONTROLLED_PRODUCTION_PILOT.md`, which is the immediate path.
+>
+> Everything below remains valid and reviewed. `render.staging.yaml` is unchanged and was found sufficient (§2); the seed review (§3) stands; `DEC-01`, `DEC-02`, and `DEC-03` are recorded in `docs/33`. **Staging may still be provisioned later** — if the pilot surfaces problems needing repeated destructive testing, this document is ready to execute as written. `release/phase-11-staging` has not been cut and the Blueprint has not been applied.
+
+This document exists because the Pricing Intelligence certification session (`docs/29`, `docs/30`, `docs/31`) was a **NO-GO for one reason: no staging environment exists.** It is the plan for removing that blocker if and when staging is chosen.
 
 `docs/21_STAGING_ENVIRONMENT_GUIDE.md` remains the authoritative provisioning runbook. It was written for Phase 11B, before Pricing Intelligence existed, and contains **zero** references to pricing. This document adds the pricing-specific layer on top; it does not replace §4 of docs/21.
 

@@ -289,6 +289,15 @@ covered by 11C/11D/11E evidence gathered against `6db79b2`.
 contacted a real BigCommerce store from this codebase. Procedures are in
 `docs/29_PRICING_INTELLIGENCE_CERTIFICATION_WORKBOOK.md`.
 
+**Path change 2026-08-23 (`DEC-PI-02`):** these rows will be evidenced by a
+**controlled production pilot** on ONE product rather than a staging exercise —
+see `docs/34`. The procedure is unchanged; the environment differs. Any row
+evidenced this way must say so in its Evidence location ("controlled production
+pilot, one product, <date>"), because pilot evidence covers one product in one
+store and is **not** multi-store, concurrency, bulk, automation, or production
+readiness. All rows remain **Evidence Required** until the pilot is run and the
+product owner signs.
+
 | ID | Requirement | Status | Accountable role | Evidence required | Evidence location | Blocker / dependency | Target date | Decision / approval | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | PI-CERT-01 | Pricing workflow preflight documented and executable | Evidence Required | Developer / Technical Admin | Preflight output with zero blockers | Read-only preflight on `/products/pricing/operations` + `staging-preflight.test.ts` [CI]; staging output TBD | 11B-01 (staging), `DEC-05` | TBD | TBD | Checks flags, role grants, store mapping, and test data. Contacts no store |
@@ -398,6 +407,7 @@ rationale. None of the three accepts anything for production, and none accepts a
 | DEC-15 | Agreed performance thresholds for dashboards, tables, exports, reports | 11E | TBD | TBD |
 | DEC-16 | Ratify or reverse reopening feature development during the Phase 11 freeze (Product Studio, Pricing Intelligence). If ratified, record the superseding baseline and re-scope 11C/11D/11E evidence. | Immediately | **Ratified — feature development reopened.** The Phase 11 feature freeze is lifted. Phase 11 launch gates remain in force and unaffected. | 2026-08-20 (product owner) |
 | DEC-PI-01 | Which role should hold `pricing.writeback_bigcommerce` in production. Today **only Super Admin** holds it, so the staging exercise's writeback, rollback, and reconciliation steps must be run as Super Admin unless a narrower role is granted it first. Running the most dangerous steps as Super Admin is not an operating model. | Before PI-CERT-07 | TBD | TBD |
+| DEC-PI-02 | Whether to provision a separate staging environment or run the Pricing Intelligence exercise as a controlled production pilot. | Before `PI-CERT-02` | **Controlled production pilot selected.** The current production deployment is the pilot environment; no separate staging environment will be provisioned at this time. `render.staging.yaml` remains reviewed and available and staging may still be provisioned later — provisioning is **deferred, not cancelled**. `DEC-01`/`DEC-02`/`DEC-03` (`docs/33`) remain valid for whenever it is. Plan: `docs/34`. **This decision accepts no launch gate in §6 and does not make anything production-ready.** | 2026-08-23 (product owner) |
 
 ---
 
