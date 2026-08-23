@@ -1,8 +1,10 @@
 /**
  * Pricing Intelligence staging preflight — read-only readiness check.
  *
- * Answers "is this environment ready for the certification exercise in
- * docs/29?" without changing anything. It reads feature flags, role grants,
+ * Answers "is this environment ready for the certification exercise?" without
+ * changing anything. The same checks serve both paths: the staging exercise
+ * (docs/29) and the controlled production pilot (docs/34). Nothing here is
+ * environment-specific — it reports what it finds and lets the operator judge. It reads feature flags, role grants,
  * and store↔connection mappings from the local database and reports what an
  * operator must fix before starting.
  *

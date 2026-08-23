@@ -9,7 +9,11 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // scripts/ is included so the production-touching bootstrap script's safety
+    // canaries run in CI. A script that can be pointed at a production database
+    // needs its write surface asserted on every commit, not just when someone
+    // remembers to run it.
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "scripts/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["**/node_modules/**", "**/.next/**"],
     coverage: {
       provider: "v8",

@@ -25,6 +25,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "pricing:bootstrap": "tsx scripts/pricing/bootstrap-pricing-production.ts",
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "perf:seed": "tsx scripts/perf/seed-volume.ts",

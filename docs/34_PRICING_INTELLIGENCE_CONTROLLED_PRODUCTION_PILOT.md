@@ -98,12 +98,20 @@ What the pilot actually needs is exactly:
 
 It must create **no** demo data, **no** synthetic customers/orders/products, **enable no flag**, and **touch no credential**.
 
-**Not implemented in this change.** Two routes exist and the choice is the product owner's:
+**Implemented** as `scripts/pricing/bootstrap-pricing-production.ts`, run with `pnpm pricing:bootstrap`.
+
+- **Dry run is the default** — it prints exactly what would change and writes nothing.
+- `--apply` is required to write. When `DEPLOY_ENV=production`, `--apply` additionally requires `--i-understand-this-writes-to-production`.
+- It imports the seed's own `ROLE_PERMISSIONS`, so the bootstrap and the seed cannot grant different things.
+- Idempotent: `upsert` with `update: {}` for permissions and the rule, `skipDuplicates` for grants, and flags filtered to those absent. A re-run overwrites nothing an operator has deliberately changed — including a flag they turned on.
+- Canaries assert the write surface is exactly four calls (`permission.upsert`, `rolePermission.createMany`, `featureFlag.create`, `pricingRule.upsert`) and that it creates no user, customer, order, product, variant, or competitor, touches no credential, makes no outbound request, imports none of the four unsafe seed modules, and has **no path that enables a flag**.
+
+The two routes originally considered:
 
 - **Route A — targeted script.** Add `scripts/bootstrap/pricing-only.ts` that calls only the permission/role portion of `seedAuth`, plus `seedGovernance` and `seedPricing`. Small, reviewable, testable, and re-runnable. Recommended if the pilot is likely to be repeated or if another environment is provisioned later.
 - **Route B — runbook.** A short documented sequence performed by the Developer / Technical Admin using existing admin screens and a one-off invocation of the three safe modules. No new code. Adequate for a single pilot.
 
-I recommend **Route A**, but have deliberately not written it: it is a production-touching script and should be built against a decision, with its own review, rather than smuggled into a planning document.
+Route A was built. It is production-touching, so it ships dry-run-first with a canary-asserted write surface rather than on trust.
 
 ---
 
@@ -134,7 +142,7 @@ Each must be true and evidenced before step G of §6.
 
 ## 6. Execution sequence
 
-Run with `docs/31` open. Record as you go.
+Run with `docs/35_PRICING_INTELLIGENCE_CONTROLLED_PRODUCTION_PILOT_EVIDENCE.md` open. Record as you go.
 
 | Step | Action | Must be true |
 |---|---|---|
@@ -200,7 +208,7 @@ Step N is optional. If the chosen product is live, or if a second price change c
 |---|---|
 | `docs/29` Certification Workbook | Still authoritative for the **procedure**. Steps A–K apply unchanged; the environment differs |
 | `docs/30` Execution Checklist | Still the run sheet. Read `docs/34` §2 and §7 alongside it |
-| `docs/31` Evidence Log | Still the evidence template. Record the environment as **controlled production pilot** in the header |
+| `docs/31` Evidence Log | Staging-shaped. For the pilot use **`docs/35`** instead, which carries the product-safety and credential-confirmation sections a production run needs |
 | `docs/32` Staging Provisioning | **Paused by product-owner decision.** Blueprint remains reviewed and available |
 | `docs/33` Staging Decision Record | `DEC-01`/`DEC-02`/`DEC-03` remain valid for whenever staging is provisioned |
 
