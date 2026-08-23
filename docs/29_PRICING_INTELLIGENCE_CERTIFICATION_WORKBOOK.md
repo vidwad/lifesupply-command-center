@@ -30,7 +30,7 @@ It separates four kinds of evidence, and they are not interchangeable:
 
 | Assumption | Why it matters | Verified by |
 |---|---|---|
-| A staging deployment exists, separate from production | A live price change must never reach a real storefront during certification | `docs/21_STAGING_ENVIRONMENT_GUIDE.md`; row 11B-01 |
+| A staging deployment exists, separate from production | A live price change must never reach a real storefront during certification | `docs/21_STAGING_ENVIRONMENT_GUIDE.md`; row 11B-01. **Verified absent 2026-08-23 — see the no-go in §11** |
 | The staging database is **not** the production database | The exercise writes recommendations, logs, and audit rows | `docs/21` §1 isolation matrix |
 | A BigCommerce **sandbox or dedicated staging store** is available with write scope on catalogue prices | Step G writes a real sale price. It must not be a store customers can see | `DEC-05`; **not yet chosen** |
 | That store's credentials are configured in staging only | Production tokens must never be reachable from staging | `/admin/integrations` vault |
@@ -315,6 +315,7 @@ Independent of how the staging exercise goes, production remains blocked while a
 
 | No-go | Why |
 |---|---|
+| **The staging environment does not exist — `11B-01` not accepted** | Verified 2026-08-23: Render has no service matching "staging" and one database, `lifesupply-cc-db`. `render.staging.yaml` is committed but never applied. The exercise has nowhere to run. Provisioning plan: `docs/32` |
 | The staging BigCommerce store is not chosen (`DEC-05`) | The exercise cannot run |
 | The target database has no `pricing.*` permission rows (§4.1) | Nobody can reach the module at all; the seed must be re-run first |
 | `DEC-PI-01` is undecided — which role holds `pricing.writeback_bigcommerce` | Running production writebacks as Super Admin is not an operating model |
