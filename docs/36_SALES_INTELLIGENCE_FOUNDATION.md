@@ -44,12 +44,12 @@ Answering the question the brief asked first — *what sales-statistics capabili
 
 | Where | What it does | Limitation |
 |---|---|---|
-| `services/dashboard/index.ts` | Top 5 products by revenue (90d); low-margin products (< 35%, 90d) | Excludes only `cancelled` — **counts refunds as revenue** (§7.1). Hardcoded 90-day window and 35% threshold, unrelated to the pricing floor. |
+| `services/dashboard/index.ts` | Top 5 products by revenue (90d); low-margin products (< 35%, 90d) | Reports one revenue figure with **no refund deduction** — gross, called revenue (§7.1). Hardcoded 90-day window and 35% threshold, unrelated to the pricing floor. |
 | `services/analytics/index.ts` | GA4 sessions, conversion, revenue by channel | Website metrics, not order-level product analysis. |
 | `services/pricing/runs.ts` → `selectTopProducts()` | Ranks products from order history; variant → product → SKU fallback; most-recent-unit-cost inference with source recorded | Genuinely good, but **private to Pricing Intelligence** and shaped for run building, not reporting. |
 | `services/financials/*` | Period KPIs from `FinancialSummary` | Period-level; cannot attribute to a product. |
 
-**So: real capability existed, but scattered, inconsistent about refunds, and not reusable.**
+**So: real capability existed, but scattered, silent about refunds, and not reusable.**
 
 ### 2.3 Import and sync paths
 
@@ -144,7 +144,7 @@ Implemented in `src/server/services/sales-intelligence/`.
 
 | Function | Returns |
 |---|---|
-| `getSalesOverview(range, scope)` | Orders, billed revenue, product revenue, AOV, units, gross profit, margin, **plus line-item and cost coverage** |
+| `getSalesOverview(range, scope)` | **Gross Sales → Refunds → Net Sales**, refund rate, AOV, units, gross profit, margin, cancelled-order value, **plus line-item and cost coverage** |
 | `getProductSalesStats(range, scope, options)` | Per-product units, revenue, profit, margin, velocity, margin opportunity, cost coverage |
 | `getTopProductsByRevenue` / `ByUnits` | Ranked slices |
 | `getLowMarginProducts(range, scope)` | Products below the **pricing floor** margin, costed only |
@@ -177,13 +177,50 @@ Margin analysis needs a cost source — supplier price lists, QuickBooks COGS, o
 
 ## 7. Policy decisions, and why
 
-### 7.1 Refunds and cancellations are excluded — a deliberate divergence
+### 7.1 Refunds are included in Gross Sales and deducted to reach Net — `DEC-SI-01`
 
-`REVENUE_STATUSES` excludes **`cancelled` and `refunded`**. Neither is realised revenue.
+**Decision (product owner, 2026-08-24):** *"Refunds should be included in sales but shown separately as a deduction to produce Net Sales."*
 
-**The Executive Dashboard excludes only `cancelled`**, and therefore counts production's **9,375 refunded orders** as revenue. That is 10% of all orders.
+```
+    Gross Sales          20,463,182.16
+      less Refunds       (2,572,457.46)
+    ─────────────────────────────────
+    = Net Sales          17,890,724.70      refund rate 12.57%
+```
 
-This layer does not silently "fix" the dashboard. Changing a headline revenue figure that management may have been reading for months is a product-owner decision, not a side effect of adding a service. **Recorded here as a discrepancy to be resolved deliberately.**
+A refunded order **is** a sale — it happened and was billed — and the refund reverses it. So it belongs in gross, with the reversal shown as its own line.
+
+**Cancelled orders are different in kind** and stay out of gross entirely. A cancelled order never became a sale, so there is nothing to reverse and nothing to deduct. Including it would not be a presentation choice, it would be wrong — see §7.6 for why it would also be catastrophic here.
+
+`getSalesOverview()` returns `grossSales`, `refunds`, `netSales`, `refundRate`, and `cancelled` separately. The old `revenue` field is retained as a deprecated alias for `grossSales`, so nothing silently changes meaning.
+
+#### How the refund amount is established — and why 98% of it is inferred
+
+`Order.refundedTotal` is the right field and supports partial refunds. In production it is populated on only **196 of 9,376** refunded orders.
+
+| Source | Value | Orders |
+|---|---:|---:|
+| **Recorded** — `refundedTotal > 0`, trusted whatever the status | $46,882.03 | 221 |
+| **Inferred** — `refunded` status, no recorded amount → full order value | $2,525,575.43 | 9,153 |
+| **Unquantified** — known partial, amount never recorded | *excluded* | 27 |
+| **Total deducted** | **$2,572,457.46** | |
+
+**Only 1.8% of the deduction is measured.** The rest is inferred from status because the amount was never captured. `RefundBreakdown.confidence` reports this, and any UI showing the refund line should show it too: a deduction that is 98% estimated is a materially different claim from one that is 98% measured, and the number alone cannot tell them apart.
+
+Believing `refundedTotal` alone would report **$46,882** of refunds against **$2.59M** of refunded orders — a 55× understatement, and a net sales figure overstated by $2.5M.
+
+**Unquantified partials** are counted but never valued. Inferring a full refund for an order known to be *partially* refunded would overstate it — 27 production orders, up to $17,366 of order value. Both guessing high and silently treating it as zero would be wrong, so the count is surfaced as a stated limit: the refund total is an understatement of known size.
+
+#### Two data-quality findings this exposed
+
+1. **`refundedTotal` is barely synced.** 9,180 orders assert a refund with a recorded amount of zero. Worth fixing at the sync, after which the inference disappears and confidence rises toward 100%.
+2. **Order status and payment status disagree on ~5,000 orders.** 3,327 have `status = refunded` with a payment status that is neither refunded nor partially refunded (3,274 of them say `paid`); 1,756 have a refunded payment status without a refunded order status. This layer trusts order status as the business-level signal, but the disagreement is unexplained and worth investigating.
+
+#### Still outstanding: the Executive Dashboard
+
+The dashboard excludes only `cancelled` and reports a single revenue figure with **no refund deduction at all** — so it shows gross while calling it revenue. That is now inconsistent with this layer, which is explicit about which is which.
+
+Not changed here. Altering a headline figure management may have been reading for months is a product-owner decision. **Recommended follow-up: migrate the dashboard onto `getSalesOverview()` so both show the same gross → refunds → net.**
 
 ### 7.2 A zero cost means unknown, never free
 
@@ -199,7 +236,25 @@ Target margin = `(m − 1) / m` where `m` is the enabled rule's `minCostMultipli
 
 A line item with no `productId` is omitted from per-product statistics. Attributing by SKU string would silently mis-state revenue. The readiness report counts what this excludes.
 
-### 7.5 Opportunity is scaled to costed revenue only
+### 7.5 Per-product figures are GROSS — there is no per-product net
+
+`OrderItem` carries **no refund column**. Refunds are recorded only at order level, so a refund cannot be attributed to the line it reversed.
+
+Splitting an order-level refund pro-rata across its lines would invent per-product detail the source system never captured — and a partial refund is rarely pro-rata anyway: it is usually one returned item out of several.
+
+So a product's revenue in `getProductSalesStats()` **includes sales later refunded**. Read product rankings as *"what sold"*, not *"what was kept"*, and use `getSalesOverview()` for the gross → refunds → net picture.
+
+### 7.6 Cancelled orders contain junk that would swamp every figure
+
+Production holds two cancelled orders from 2021-11-08 valued at **$25,298,900** and **$22,999,000**, against a non-cancelled maximum of **$65,930**.
+
+Those two alone are $48.3M of the $52.8M cancelled total. The whole cancelled population is 3,415 orders averaging $15,454 — versus $227 for everything else.
+
+This is a second, independent reason to keep cancelled out of Gross Sales: quite apart from the accounting principle, including them would more than triple reported sales on the strength of two bad records. `getSalesOverview()` reports `cancelled.orderCount` and `cancelled.value` separately so the population stays visible rather than merely absent.
+
+**Follow-up:** those two orders should be investigated. They look like test data or a data-entry error, and they are still sitting in the production database.
+
+### 7.7 Opportunity is scaled to costed revenue only
 
 Extrapolating a known margin across uncosted lines would invent a number. Opportunity is computed on the costed portion, and `costCoverage` says how much of the product that is.
 
