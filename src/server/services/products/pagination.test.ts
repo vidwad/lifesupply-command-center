@@ -11,7 +11,12 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { PRODUCTS_PAGE_SIZE } from "./index";
+import {
+  parseProductSort,
+  parseSortDirection,
+  PRODUCT_SORT_KEYS,
+  PRODUCTS_PAGE_SIZE,
+} from "./index";
 
 const service = readFileSync(join(__dirname, "index.ts"), "utf8").replace(/\r\n/g, "\n");
 const page = readFileSync(
@@ -85,10 +90,13 @@ describe("filters survive navigation", () => {
     expect(page).toContain('<input type="hidden" name="division" value={params.division} />');
   });
 
-  it("passes every active filter to the pagination footer", () => {
-    expect(page).toContain(
-      "params={{ q: params.q, flag: params.flag, division: params.division }}",
-    );
+  it("passes every active filter AND the sort to the pagination footer", () => {
+    // Paging must not silently drop the chosen column or direction.
+    expect(page).toContain("params={{ ...carried, sort: params.sort, dir: params.dir }}");
+    expect(page).toContain("const carried = {");
+    for (const key of ["q: params.q", "flag: params.flag", "division: params.division"]) {
+      expect(page).toContain(key);
+    }
   });
 });
 
@@ -131,5 +139,90 @@ describe("zero cost is unknown, not free", () => {
       "utf8",
     ).replace(/\r\n/g, "\n");
     expect(engine).toContain("Number.isFinite(value) && value > 0");
+  });
+});
+
+describe("sortable columns", () => {
+  it("only offers sort keys the database can actually order by", () => {
+    expect([...PRODUCT_SORT_KEYS]).toEqual(["name", "sku", "category", "store", "quality"]);
+  });
+
+  it("excludes the columns derived after the query", () => {
+    // Price, Cost, Margin and Stock come from variants; Supplier from
+    // supplierProducts. Prisma cannot order by a to-many aggregate, and
+    // reordering the fetched page would present a page-local shuffle as a
+    // catalogue-wide sort — the failure shape of F-14.
+    for (const derived of ["price", "cost", "margin", "stock", "supplier"]) {
+      expect([...PRODUCT_SORT_KEYS]).not.toContain(derived);
+    }
+  });
+
+  it("rejects an unknown sort key instead of passing it to Prisma", () => {
+    // Guards against a hand-edited URL reaching orderBy.
+    expect(parseProductSort("name")).toBe("name");
+    expect(parseProductSort("margin")).toBeUndefined();
+    expect(parseProductSort("id; drop table")).toBeUndefined();
+    expect(parseProductSort(undefined)).toBeUndefined();
+  });
+
+  it("defaults to ascending and only accepts an explicit desc", () => {
+    expect(parseSortDirection(undefined)).toBe("asc");
+    expect(parseSortDirection("asc")).toBe("asc");
+    expect(parseSortDirection("desc")).toBe("desc");
+    expect(parseSortDirection("sideways")).toBe("asc");
+  });
+
+  it("keeps the id tiebreaker on every sort branch", () => {
+    // A sort without a unique final key lets rows swap between pages.
+    const branches = service.slice(
+      service.indexOf("function productOrderBy"),
+      service.indexOf("/** Total matching the same filters"),
+    );
+    const returns = branches.match(/return \[[^\]]*\];/g) ?? [];
+    expect(returns.length).toBeGreaterThanOrEqual(6);
+    for (const r of returns) expect(r).toContain('{ id: "asc" }');
+  });
+
+  it("sorts absent SKUs last rather than first", () => {
+    // A missing SKU is an absence, not the smallest value.
+    expect(service).toContain('{ sku: { sort: dir, nulls: "last" } }');
+  });
+
+  it("drops the page number when the sort changes", () => {
+    // Page 7 of a different ordering is an unrelated slice.
+    const header = readFileSync(
+      join(__dirname, "..", "..", "..", "components", "data", "SortHeader.tsx"),
+      "utf8",
+    ).replace(/\r\n/g, "\n");
+    expect(header).not.toMatch(/qs\.set\("page"/);
+    expect(header).toContain('qs.set("sort", sortKey)');
+  });
+});
+
+describe("filter pill counts", () => {
+  it("counts ignore the quality filter but honour the others", () => {
+    // Each pill must answer "what would I get if I clicked this", so the
+    // active quality filter is stripped before counting.
+    expect(service).toContain("const { imageStatus: _ignored, ...rest } = filters;");
+    expect(service).toContain("where: productWhere(rest)");
+  });
+
+  it("derives every pill count from one grouped query", () => {
+    expect(service).toContain('by: ["imageStatus"]');
+    expect(service).toContain('missingImage: by.get("missing") ?? 0');
+    expect(service).toContain('needsReview: by.get("needs_review") ?? 0');
+  });
+
+  it("renders a count on each pill", () => {
+    expect(page).toContain("count={qualityCounts.all}");
+    expect(page).toContain("count={qualityCounts.missingImage}");
+    expect(page).toContain("count={qualityCounts.needsReview}");
+    expect(page).toContain("{count.toLocaleString()}");
+  });
+
+  it("preserves the sort when a pill is clicked", () => {
+    // Sort is a view preference, not a filter — changing filter should not
+    // silently reset the column the user chose.
+    expect(page).toContain('if (sort) qs.set("sort", sort);');
   });
 });

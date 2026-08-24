@@ -12,10 +12,69 @@ export type ListProductsFilters = {
   search?: string;
   /** 1-based. Out-of-range values are clamped by the caller, not here. */
   page?: number;
+  sort?: ProductSortKey;
+  dir?: SortDirection;
 };
 
 /** Matches CUSTOMERS_PAGE_SIZE so the list pages behave alike. */
 export const PRODUCTS_PAGE_SIZE = 50;
+
+export type SortDirection = "asc" | "desc";
+
+/**
+ * Columns that can be sorted **in the database**, and therefore across the
+ * whole result set rather than the current page.
+ *
+ * Price, Cost, Margin, Stock and Supplier are deliberately absent. Each is
+ * derived in application code from the product's variants or supplier rows —
+ * `variants[0].price`, an aggregate of `stockLevel`, a margin computed after
+ * the query. Prisma cannot order by a to-many aggregate, so the only way to
+ * "sort" them here would be to reorder the 50 rows already fetched. Against
+ * 51,114 products that would present a page-local shuffle as a catalogue-wide
+ * ordering — the same class of lie as the truncated count in F-14. Sorting
+ * those properly needs denormalised columns on Product, populated by the sync.
+ */
+export const PRODUCT_SORT_KEYS = ["name", "sku", "category", "store", "quality"] as const;
+export type ProductSortKey = (typeof PRODUCT_SORT_KEYS)[number];
+
+/** Narrows an arbitrary query-string value to a supported sort key. */
+export function parseProductSort(value: string | undefined): ProductSortKey | undefined {
+  return PRODUCT_SORT_KEYS.includes(value as ProductSortKey)
+    ? (value as ProductSortKey)
+    : undefined;
+}
+
+export function parseSortDirection(value: string | undefined): SortDirection {
+  return value === "desc" ? "desc" : "asc";
+}
+
+/**
+ * Builds the orderBy. Every branch ends with `id` so paging is deterministic:
+ * without a unique final key, rows sharing a sort value can swap between
+ * pages and one is never shown.
+ */
+function productOrderBy(
+  sort: ProductSortKey | undefined,
+  dir: SortDirection,
+): Prisma.ProductOrderByWithRelationInput[] {
+  switch (sort) {
+    case "name":
+      return [{ name: dir }, { id: "asc" }];
+    case "sku":
+      // Nulls last in both directions: a product with no SKU is not the
+      // "smallest" SKU, it is an absence, and it should not head the list.
+      return [{ sku: { sort: dir, nulls: "last" } }, { id: "asc" }];
+    case "category":
+      return [{ category: { name: dir } }, { id: "asc" }];
+    case "store":
+      return [{ store: { name: dir } }, { id: "asc" }];
+    case "quality":
+      return [{ imageStatus: dir }, { descriptionStatus: dir }, { id: "asc" }];
+    default:
+      // Unsorted default: featured first, then alphabetical.
+      return [{ isFeatured: "desc" }, { name: "asc" }, { id: "asc" }];
+  }
+}
 
 /**
  * Filter clause shared by listProducts and countProducts.
@@ -49,6 +108,39 @@ export async function countProducts(filters: ListProductsFilters = {}): Promise<
   return prisma.product.count({ where: productWhere(filters) });
 }
 
+/** How many products each quality filter would return, given the other active filters. */
+export type ProductFilterCounts = {
+  all: number;
+  missingImage: number;
+  needsReview: number;
+};
+
+/**
+ * Counts for the quality filter pills.
+ *
+ * Each count honours the **other** active filters — search and division — but
+ * not the quality filter itself, so the pills read as "what would I get if I
+ * clicked this", not "what am I looking at now". One groupBy rather than three
+ * counts: at 51,114 rows the difference is worth the small amount of mapping.
+ */
+export async function countProductsByQuality(
+  filters: ListProductsFilters = {},
+): Promise<ProductFilterCounts> {
+  const { imageStatus: _ignored, ...rest } = filters;
+  const grouped = await prisma.product.groupBy({
+    by: ["imageStatus"],
+    where: productWhere(rest),
+    _count: { _all: true },
+  });
+  const by = new Map(grouped.map((row) => [row.imageStatus, row._count._all]));
+  const all = grouped.reduce((sum, row) => sum + row._count._all, 0);
+  return {
+    all,
+    missingImage: by.get("missing") ?? 0,
+    needsReview: by.get("needs_review") ?? 0,
+  };
+}
+
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
 
 /**
@@ -72,9 +164,7 @@ export async function listProducts(filters: ListProductsFilters = {}) {
 
   const products = await prisma.product.findMany({
     where,
-    // `id` breaks ties so paging is stable: without it, two products sharing a
-    // name can swap between pages and one is silently never shown.
-    orderBy: [{ isFeatured: "desc" }, { name: "asc" }, { id: "asc" }],
+    orderBy: productOrderBy(filters.sort, filters.dir ?? "asc"),
     skip: (page - 1) * PRODUCTS_PAGE_SIZE,
     take: PRODUCTS_PAGE_SIZE,
     include: {
