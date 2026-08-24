@@ -3,6 +3,7 @@ import { Boxes, ImageOff, Star } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { Pagination } from "@/components/data/Pagination";
+import { SortHeader } from "@/components/data/SortHeader";
 import { ExportButton } from "@/components/data/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -11,7 +12,10 @@ import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   countProducts,
+  countProductsByQuality,
   listProducts,
+  parseProductSort,
+  parseSortDirection,
   PRODUCTS_PAGE_SIZE,
   type ListProductsFilters,
 } from "@/server/services/products";
@@ -27,6 +31,8 @@ type SearchParams = {
   /** Set by the shell's Division selector. */
   division?: string;
   page?: string;
+  sort?: string;
+  dir?: string;
 };
 
 export default async function ProductsPage({
@@ -40,6 +46,10 @@ export default async function ProductsPage({
   const canSync = userHasPermission(user, PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
 
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+  // Unknown sort keys fall back to the default ordering rather than erroring —
+  // a hand-edited URL should not break the page.
+  const sort = parseProductSort(params.sort);
+  const dir = parseSortDirection(params.dir);
   const filters: ListProductsFilters = {
     search: params.q?.trim() || undefined,
     // Honours the Division selector in the app shell. Absent = all divisions.
@@ -51,24 +61,39 @@ export default async function ProductsPage({
           ? "needs_review"
           : undefined,
     page,
+    sort,
+    dir,
   };
 
   // The count uses the same filters as the rows, so the header total and the
-  // page count can never disagree with what is actually listed.
-  const [products, totalProducts] = await Promise.all([
+  // page count can never disagree with what is actually listed. The quality
+  // counts ignore the quality filter itself, so each pill reads as "what you
+  // would get if you clicked this".
+  const [products, totalProducts, qualityCounts] = await Promise.all([
     listProducts(filters),
     countProducts(filters),
+    countProductsByQuality(filters),
   ]);
 
   // Changing the flag resets to page 1 — staying on page 7 of a different
-  // filter would usually land on an empty page.
+  // filter would usually land on an empty page. Sort is preserved: it is a
+  // view preference, not a filter.
   const pillHref = (flag: SearchParams["flag"]): string => {
     const qs = new URLSearchParams();
     if (flag) qs.set("flag", flag);
     if (params.q) qs.set("q", params.q);
     if (params.division) qs.set("division", params.division);
+    if (sort) qs.set("sort", sort);
+    if (params.dir === "desc") qs.set("dir", "desc");
     const s = qs.toString();
     return `/products${s ? `?${s}` : ""}`;
+  };
+
+  // Params every header link and the pagination footer must carry forward.
+  const carried = {
+    q: params.q,
+    flag: params.flag,
+    division: params.division,
   };
 
   return (
@@ -87,15 +112,22 @@ export default async function ProductsPage({
 
       <div className="space-y-4 p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <FilterPill href={pillHref(undefined)} label="All" active={!params.flag} />
+          <FilterPill
+            href={pillHref(undefined)}
+            label="All"
+            count={qualityCounts.all}
+            active={!params.flag}
+          />
           <FilterPill
             href={pillHref("missing_image")}
             label="Missing images"
+            count={qualityCounts.missingImage}
             active={params.flag === "missing_image"}
           />
           <FilterPill
             href={pillHref("needs_review")}
             label="Needs review"
+            count={qualityCounts.needsReview}
             active={params.flag === "needs_review"}
           />
           <form action="/products" className="ml-auto flex items-center gap-2">
@@ -121,16 +153,56 @@ export default async function ProductsPage({
           <DataTable>
             <THead>
               <tr>
-                <TH>Product</TH>
-                <TH>SKU</TH>
-                <TH>Category</TH>
-                <TH>Store</TH>
+                <SortHeader
+                  label="Product"
+                  sortKey="name"
+                  activeKey={sort}
+                  activeDir={dir}
+                  basePath="/products"
+                  params={carried}
+                />
+                <SortHeader
+                  label="SKU"
+                  sortKey="sku"
+                  activeKey={sort}
+                  activeDir={dir}
+                  basePath="/products"
+                  params={carried}
+                />
+                <SortHeader
+                  label="Category"
+                  sortKey="category"
+                  activeKey={sort}
+                  activeDir={dir}
+                  basePath="/products"
+                  params={carried}
+                />
+                <SortHeader
+                  label="Store"
+                  sortKey="store"
+                  activeKey={sort}
+                  activeDir={dir}
+                  basePath="/products"
+                  params={carried}
+                />
+                {/* Supplier, Price, Cost, Margin and Stock are derived from
+                    variant and supplier rows after the query, so the database
+                    cannot order by them. Sorting only the fetched page would
+                    look like a catalogue-wide sort and would not be one, so
+                    these headers stay inert. See PRODUCT_SORT_KEYS. */}
                 <TH>Supplier</TH>
                 <TH align="right">Price</TH>
                 <TH align="right">Cost</TH>
                 <TH align="right">Margin</TH>
                 <TH align="right">Stock</TH>
-                <TH>Quality</TH>
+                <SortHeader
+                  label="Quality"
+                  sortKey="quality"
+                  activeKey={sort}
+                  activeDir={dir}
+                  basePath="/products"
+                  params={carried}
+                />
               </tr>
             </THead>
             <TBody>
@@ -212,24 +284,44 @@ export default async function ProductsPage({
           page={page}
           pageSize={PRODUCTS_PAGE_SIZE}
           totalCount={totalProducts}
-          params={{ q: params.q, flag: params.flag, division: params.division }}
+          params={{ ...carried, sort: params.sort, dir: params.dir }}
         />
       </div>
     </div>
   );
 }
 
-function FilterPill({ href, label, active }: { href: string; label: string; active: boolean }) {
+function FilterPill({
+  href,
+  label,
+  count,
+  active,
+}: {
+  href: string;
+  label: string;
+  /** How many products this filter would return under the other active filters. */
+  count: number;
+  active: boolean;
+}) {
   return (
     <Link
       href={href}
       className={
         active
-          ? "rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
-          : "rounded-md border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
+          ? "inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+          : "inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
       }
     >
       {label}
+      <span
+        className={
+          active
+            ? "rounded bg-primary-foreground/20 px-1.5 py-0.5 tabular-nums"
+            : "rounded bg-muted px-1.5 py-0.5 tabular-nums text-foreground/70"
+        }
+      >
+        {count.toLocaleString()}
+      </span>
     </Link>
   );
 }
