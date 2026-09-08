@@ -201,11 +201,46 @@ describe("document structure", () => {
     expect(code).toContain("<main");
   });
 
-  it("marks the current route in both navigations", () => {
+  it("marks the current route through one NavItem used by every navigation", () => {
     const code = layout();
-    expect((code.match(/aria-current=\{active \? "page" : undefined\}/g) ?? []).length).toBe(2);
+    expect((code.match(/aria-current=\{active \? "page" : undefined\}/g) ?? []).length).toBe(1);
+    // Header, mobile panel, and footer all render NavItem, never a bespoke link.
+    expect((code.match(/<NavItem\b/g) ?? []).length).toBeGreaterThanOrEqual(3);
     expect(code).toContain("aria-expanded={isMenuOpen}");
     expect(code).toContain('aria-controls="lsh-mobile-menu"');
+  });
+
+  it("hides the header on scroll-down and returns it on scroll-up, honouring reduced motion", () => {
+    // The LLD behaviour: sticky header, translated away while reading down,
+    // back on the first upward movement. Never hidden with the menu open or
+    // with keyboard focus inside it, and the transition is off under
+    // prefers-reduced-motion.
+    const code = layout();
+    expect(code).toContain("useScrollDirection()");
+    expect(code).toContain("scrollingDown && !isMenuOpen && !focusWithinHeader");
+    expect(code).toContain('headerHidden ? "-translate-y-full" : "translate-y-0"');
+    expect(code).toMatch(/transition-transform[^`"]*motion-reduce:transition-none/);
+    expect(code).toContain("onFocusCapture=");
+
+    const hook = read("src/lib/public-site/use-scroll-direction.ts");
+    expect(hook).toContain("{ passive: true }");
+    expect(hook).toContain("requestAnimationFrame(update)");
+    expect(hook).toContain("if (y <= topOffset)");
+  });
+
+  it("gives navigation links the extending red underline, with the motion switched off when asked", () => {
+    const code = layout();
+    expect(code).toContain("hover:after:w-full");
+    expect(code).toContain("after:bg-[var(--lsh-brand-red)]");
+    expect(code).toContain("motion-reduce:after:transition-none");
+    // Active: a short bar under the first letters; inactive: none.
+    expect(code).toContain('"text-white after:w-5"');
+    expect(code).toContain('"text-white/75 after:w-0 hover:text-white"');
+  });
+
+  it("keeps the primary action lift motion-safe", () => {
+    const code = layout();
+    expect(code).toMatch(/hover:-translate-y-0\.5[^"]*motion-reduce:hover:translate-y-0/);
   });
 
   it("renders exactly one h1 per page, and only from PublicHero", () => {
