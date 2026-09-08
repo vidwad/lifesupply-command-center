@@ -4,6 +4,12 @@
 
 The LifeSupply public website and Command Center now live in **one repository**: `vidwad/lifesupply-command-center`. Render remains the production backend and authenticated internal Command Center. Vercel is a database-free public-site deployment surface for preview and later public-domain traffic.
 
+## Verified preview access
+
+The public Vercel review deployment is `https://lifesupply-command-center-2ks6r71qy-vidwads-projects.vercel.app/`. On September 8, 2026, it returned `200 OK` without an SSO redirect after owner-approved Vercel Authentication removal for this preview project.
+
+The homepage, desktop header, and mobile navigation link **Command Center login** to `https://lifesupply-cc-web.onrender.com/login?redirectTo=/dashboard`. That Render route was separately verified to render the authorized-user sign-in surface rather than dashboard content. Keep the Render destination protected; never proxy dashboard credentials or Auth.js sessions through Vercel.
+
 ```text
 Visitors → Vercel public alias → LifeSupply corporate pages
                │
@@ -35,6 +41,7 @@ Render → PostgreSQL + publication workflow + audit + worker + internal APIs
 | Lint | `pnpm lint` |
 | Render build | `pnpm build` |
 | Vercel public build | `pnpm public-web:build` |
+| Public preview smoke test | `PUBLIC_SITE_BASE_URL=<Vercel-preview-URL> pnpm test:public-e2e` |
 
 ## Next implementation phases
 
@@ -53,3 +60,5 @@ Set only `PUBLIC_SITE_MODE=true`, `NEXT_PUBLIC_COMMAND_CENTER_URL=<Render web UR
 ## Required validation before a domain cutover
 
 Run `pnpm typecheck`, `pnpm test`, `pnpm lint`, `pnpm build`, and `pnpm public-web:build`; verify the Vercel preview and Render dashboard login; apply and test the additive migration in Render staging; and follow `docs/37_LIFESUPPLY_PUBLIC_CUTOVER_RUNBOOK.md` without archiving the rollback source early.
+
+For Playwright, 21st MCP, Vercel MCP, and developer-tooling guardrails, read `docs/39_TOOLING_AND_MCP_PARITY.md`. MCP credentials are local developer configuration only and must not be committed or added to Vercel or Render environments.

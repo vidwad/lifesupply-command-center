@@ -13,3 +13,15 @@
 - [ ] Configure Vercel only as the public Life Supply Health front end, using a database-free public build and a server-to-server public-read contract to Render.
 - [ ] Route the public homepage login action to the Render-hosted Command Center authentication endpoint and retain public/public-read host restrictions on Vercel.
 - [ ] Document the two-deployment, one-repository model, including Vercel preview variables, Render source-of-truth responsibilities, and rollout checks.
+- [ ] Disable Vercel Authentication for the Life Supply Health preview project as approved and verify the public preview loads without SSO while Render dashboard access remains protected.
+- [x] Inventory the LLD Recovery Academy implementation for Playwright, MCP, 21st.dev, visual review, and related design/development tooling that can be safely reused.
+- [x] Add compatible Playwright end-to-end testing, configuration, scripts, and smoke coverage for the LifeSupply public preview and protected Render dashboard login boundary.
+- [x] Document compatible MCP and design-tool setup for Claude Code, keeping credentials in user-local configuration and out of repository source or deployment environments.
+- [x] Validate the added tooling locally and update the unified Render/Vercel Claude Code handoff with install, run, and troubleshooting instructions.
+- [x] Audit lifesupplyhealth.com as the legacy visual source of truth, including brand colors, marks, typography, imagery, page patterns, navigation, and responsive conventions.
+- [x] Reconcile legacy brand cues and assets with the unified public preview, preserving recognizable identity while specifying modern accessibility and performance refinements.
+- [x] Replace the public-site navy/lime/serif styling with scoped legacy LifeSupply red/black/white tokens and Roboto Condensed/Roboto typography without altering dashboard styles or the Render login boundary.
+- [x] Create a comprehensive Claude Code front-end continuation plan covering current-content approvals, new-business-plan guardrails, page rebuild sequence, reusable components, testing, and delivery gates.
+- [x] Create and document the first ready-to-paste Claude Code prompt for targeted public front-end fine-tuning.
+- [x] Strengthen the public Playwright assertion to verify that the homepage login targets the exact protected Render origin, not merely a non-dashboard path.
+- [ ] Resolve and verify the Next `/_global-error` prerender `useContext` failure that blocks `pnpm public-web:build` before merging or promoting the public preview branch.

@@ -15,9 +15,10 @@ import { getCommandCenterLoginUrl } from "@/lib/public-site/command-center";
 export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const commandCenterLoginUrl = getCommandCenterLoginUrl();
+
   return (
-    <div className="lsh-shell min-h-screen bg-[#f4f4ef] text-[#183344]">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#123348] text-white shadow-lg shadow-[#071724]/20">
+    <div className="lsh-shell min-h-screen bg-[var(--lsh-paper)] text-[var(--lsh-charcoal)]">
+      <header className="sticky top-0 z-50 border-b border-t-4 border-white/15 border-t-[var(--lsh-brand-red)] bg-[var(--lsh-ink)] text-white shadow-lg shadow-black/25">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
           <Link
             href={LIFE_SUPPLY_ROUTES.home}
@@ -29,37 +30,39 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               alt="LifeSupply Health"
               width={184}
               height={50}
-              className="h-11 w-auto"
+              className="h-10 w-auto sm:h-11"
               priority
             />
           </Link>
+
           <nav className="hidden items-center gap-6 xl:flex" aria-label="Primary navigation">
             {LIFE_SUPPLY_NAVIGATION.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-white/80 transition hover:text-white"
+                className="lsh-display text-[11px] text-white/75 transition-colors hover:text-white"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
+
           <div className="flex items-center gap-3">
             <a
               href={commandCenterLoginUrl}
-              className="hidden rounded-full border border-white/35 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-white/10 sm:inline-flex"
+              className="lsh-display hidden border border-white/45 px-4 py-2 text-[10px] text-white transition-colors hover:border-white hover:bg-white hover:text-black sm:inline-flex"
             >
               Command Center login
             </a>
             <Link
               href={LIFE_SUPPLY_ROUTES.investorRelations}
-              className="hidden rounded-full border border-[#b5c951]/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#e3ed9a] transition hover:bg-[#b5c951] hover:text-[#102c3e] sm:inline-flex"
+              className="lsh-primary-action lsh-display hidden px-4 py-2 text-[10px] transition-colors sm:inline-flex"
             >
               Investor information
             </Link>
             <button
               type="button"
-              className="inline-flex rounded-md p-2 text-white xl:hidden"
+              className="inline-flex p-2 text-white xl:hidden"
               onClick={() => setIsMenuOpen((open) => !open)}
               aria-expanded={isMenuOpen}
               aria-controls="lsh-mobile-menu"
@@ -69,10 +72,11 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </div>
+
         {isMenuOpen ? (
           <nav
             id="lsh-mobile-menu"
-            className="border-t border-white/10 px-5 py-5 xl:hidden"
+            className="border-t border-white/15 bg-[var(--lsh-charcoal)] px-5 py-5 xl:hidden"
             aria-label="Mobile navigation"
           >
             <div className="mx-auto grid max-w-7xl gap-1">
@@ -81,14 +85,14 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="rounded-md px-3 py-3 text-sm font-semibold text-white/85 hover:bg-white/10 hover:text-white"
+                  className="lsh-display px-3 py-3 text-xs text-white/85 transition-colors hover:bg-white/10 hover:text-white"
                 >
                   {item.label}
                 </Link>
               ))}
               <a
                 href={commandCenterLoginUrl}
-                className="mt-2 rounded-md border border-white/20 px-3 py-3 text-sm font-semibold text-white hover:bg-white/10"
+                className="lsh-display mt-2 border border-white/30 px-3 py-3 text-xs text-white transition-colors hover:bg-white hover:text-black"
               >
                 Command Center login
               </a>
@@ -96,8 +100,10 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </nav>
         ) : null}
       </header>
+
       <main>{children}</main>
-      <footer className="bg-[#102c3e] text-white">
+
+      <footer className="bg-[var(--lsh-charcoal)] text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div>
             <Image
@@ -113,13 +119,13 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             </p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d8e87f]">Explore</p>
+            <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">Explore</p>
             <div className="mt-4 grid gap-2">
               {LIFE_SUPPLY_NAVIGATION.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-sm text-white/75 hover:text-white"
+                  className="text-sm text-white/75 transition-colors hover:text-white"
                 >
                   {item.label}
                 </Link>
@@ -127,9 +133,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d8e87f]">
-              Corporate office
-            </p>
+            <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">Corporate office</p>
             <address className="mt-4 text-sm not-italic leading-6 text-white/75">
               {LIFE_SUPPLY_CONTENT.brand.address.map((line) => (
                 <span key={line} className="block">
