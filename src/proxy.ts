@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
+import { NextResponse } from "next/server";
 
 import { authConfig } from "@/server/auth/config";
+import { isLifeSupplyPublicHost } from "@/lib/public-site/host";
 
 const { auth } = NextAuth(authConfig);
 
@@ -12,6 +14,24 @@ export const config = {
 export default auth((req) => {
   const isLoggedIn = !!req.auth?.user;
   const { pathname, origin } = req.nextUrl;
+  const isPublicHost = isLifeSupplyPublicHost(req.headers.get("host"));
+  const isAllowedPublicApi = pathname === "/api/health" || pathname.startsWith("/api/public/");
+
+  if (isAllowedPublicApi) {
+    return NextResponse.next();
+  }
+
+  if (isPublicHost) {
+    const isBlockedInternalPath =
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/api/");
+
+    if (isBlockedInternalPath) {
+      return NextResponse.redirect(new URL("/", origin));
+    }
+    return NextResponse.next();
+  }
 
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/forgot-password");
 

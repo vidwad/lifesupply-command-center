@@ -18,6 +18,8 @@ const ALLOWLIST: Record<string, string> = {
   "auth/[...nextauth]/route.ts": "NextAuth handler — authentication itself",
   "health/route.ts":
     "Unauthenticated uptime probe by design (docs/16 §12); body reviewed in 11B-12",
+  "public/v1/site/route.ts":
+    "Published-only public website DTO; strict schema, host firewall, and no raw internal model serialization",
 };
 
 function collectRouteFiles(dir: string): string[] {

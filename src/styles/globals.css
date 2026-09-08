@@ -136,3 +136,18 @@
     letter-spacing: -0.011em;
   }
 }
+
+@layer components {
+  .lsh-shell {
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1;
+  }
+
+  .lsh-shell h1,
+  .lsh-shell h2,
+  .lsh-shell h3 {
+    font-family: Georgia, Cambria, "Times New Roman", serif;
+    letter-spacing: -0.025em;
+  }
+}
