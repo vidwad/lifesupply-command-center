@@ -25,20 +25,49 @@ const stripComments = (source: string): string =>
 const PUBLIC_DIR = "src/components/public-site";
 const LAYOUT = `${PUBLIC_DIR}/lifesupply-layout.tsx`;
 const PAGES = `${PUBLIC_DIR}/lifesupply-pages.tsx`;
+// Stage 2 split the Home and About pages into their own files, still exported
+// through the barrel above; the canaries read all of them as one source.
+const PAGE_FAMILIES = [`${PUBLIC_DIR}/pages/home.tsx`, `${PUBLIC_DIR}/pages/about.tsx`];
+const BRAND_GRID = `${PUBLIC_DIR}/brand-grid.tsx`;
+const ACTION_LINK = `${PUBLIC_DIR}/action-link.tsx`;
 const PRIMITIVES = `${PUBLIC_DIR}/lifesupply-primitives.tsx`;
 const HERO_VIDEO = `${PUBLIC_DIR}/hero-video.tsx`;
 const MOTION = `${PUBLIC_DIR}/motion.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
+// The content model is a barrel over focused modules; the routes registry
+// carries the legacy-compatible route table.
+const CONTENT_MODULES = [
+  "brand",
+  "home",
+  "about",
+  "operations",
+  "team",
+  "investors",
+  "news",
+  "contact",
+].map((name) => `src/lib/public-site/content/${name}.ts`);
+const ROUTES_FILE = "src/lib/public-site/routes.ts";
 const PROXY = "src/proxy.ts";
 const CSS = "src/styles/globals.css";
 
 const layout = () => stripComments(read(LAYOUT));
-const pages = () => stripComments(read(PAGES));
+const pages = () => [PAGES, ...PAGE_FAMILIES].map((file) => stripComments(read(file))).join("\n");
+const brandGrid = () => stripComments(read(BRAND_GRID));
+const actionLink = () => stripComments(read(ACTION_LINK));
 const primitives = () => stripComments(read(PRIMITIVES));
 const heroVideo = () => stripComments(read(HERO_VIDEO));
 const motionPrimitives = () => stripComments(read(MOTION));
-const content = () => stripComments(read(CONTENT));
-const publicComponents = () => [layout(), pages(), primitives(), heroVideo(), motionPrimitives()];
+const content = () =>
+  [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
+const publicComponents = () => [
+  layout(),
+  pages(),
+  primitives(),
+  heroVideo(),
+  motionPrimitives(),
+  brandGrid(),
+  actionLink(),
+];
 
 /** Width and height from a PNG's IHDR chunk. */
 function pngSize(rel: string): { width: number; height: number } {
@@ -240,8 +269,13 @@ describe("motion", () => {
 
   it("declares the portrait graphics at their real pixel sizes", () => {
     const c = content();
-    const block = (key: string) =>
-      c.slice(c.indexOf(`${key}: {`), c.indexOf("}", c.indexOf(`${key}: {`)));
+    // A block may be a property (`key: {`) or, since the Stage 2 module
+    // split, an exported constant (`const key = {`).
+    const start = (key: string) => {
+      const asProperty = c.indexOf(`${key}: {`);
+      return asProperty >= 0 ? asProperty : c.indexOf(`const ${key} = {`);
+    };
+    const block = (key: string) => c.slice(start(key), c.indexOf("}", start(key)));
     const dims = (key: string) => ({
       width: Number(block(key).match(/width:\s*(\d+)/)?.[1]),
       height: Number(block(key).match(/height:\s*(\d+)/)?.[1]),
@@ -437,9 +471,9 @@ describe("routes and content governance", () => {
       "Public information is subject to update and applicable disclosure context.",
       "Health, safety, medical, and industrial supply categories across Canada",
       "Publicly reported scale, with source context.",
-      "Explore the operations, people, and investor context behind LifeSupply.",
+      "A clinic project can start at any stage.",
       "A platform approach to medical-supply access.",
-      "Operating brands in the public LifeSupply overview.",
+      "The operating websites behind the group.",
     ];
     const c = content();
     for (const sentence of sentences) {
@@ -448,5 +482,95 @@ describe("routes and content governance", () => {
       expect(pages(), sentence).not.toContain(sentence);
       expect(primitives(), sentence).not.toContain(sentence);
     }
+  });
+});
+
+describe("Stage 2 registries and navigation", () => {
+  it("resolves every external destination through the registries, never in a component", () => {
+    // Store, brand, and channel destinations live in brands.ts, actions.ts,
+    // and the content model. A component that types an https:// or a mail
+    // address by hand fails here.
+    for (const code of publicComponents()) {
+      expect(code).not.toMatch(/https?:\/\//);
+      expect(code).not.toMatch(/mailto:[a-z]/i);
+    }
+  });
+
+  it("derives the menus from the route registry and never names a planned route", () => {
+    const code = layout();
+    expect(code).toContain("buildPrimaryNavigation()");
+    expect(code).toContain("buildUtilityNavigation()");
+    for (const planned of [
+      "/clinic-solutions",
+      "/metabolic-health",
+      "/partners",
+      "/our-operations/lifesupply",
+      "/investor-relations/documents",
+      "/privacy",
+    ]) {
+      for (const source of [layout(), pages(), primitives()]) {
+        expect(source, planned).not.toContain(planned);
+      }
+    }
+  });
+
+  it("renders only the three approved figures, and no legacy count anywhere", () => {
+    const home = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
+    expect(home).toContain("homepage.publicMetrics.map");
+    const c = content();
+    for (const figure of ['"25+"', '"50K+"', '"1M+"']) expect(c, figure).toContain(figure);
+    // The conflicting counts catalogued in SOURCE_REGISTER.md §4.
+    for (const legacy of [
+      "55,000",
+      "45,000",
+      "46,000",
+      "40,000",
+      "30,000",
+      "180 distributors",
+      "200 manufacturers",
+      "A decade of",
+    ]) {
+      expect(c, legacy).not.toContain(legacy);
+      for (const code of publicComponents()) expect(code, legacy).not.toContain(legacy);
+    }
+  });
+
+  it("builds the Home and About contracts from the content model and the brand registry", () => {
+    const source = pages();
+    expect((source.match(/<BrandGrid \/>/g) ?? []).length).toBe(2);
+    for (const block of [
+      "homepage.introduction",
+      "homepage.clinicLifecycle.steps.map",
+      "homepage.metabolic",
+      "homepage.paths.map",
+      "homepage.newsroom",
+      "homepage.closing",
+      "about.footprint",
+      "about.milestones.items.map",
+      "about.direction",
+    ]) {
+      expect(source, block).toContain(block);
+    }
+    // Primary actions are registry keys rendered through ActionLink.
+    expect(source).toContain('<ActionLink action="explore_businesses"');
+    expect(source).toContain('<ActionLink action="plan_clinic"');
+    expect(source).toContain('<ActionLink action="investor_information"');
+  });
+
+  it("keeps brand cards text-only until an authentic mark with a usage record exists", () => {
+    const code = brandGrid();
+    expect(code).toContain("record.asset ?");
+    expect(code).not.toMatch(/<img[\s>]/);
+    expect(code).not.toContain("/lsh/");
+  });
+
+  it("keeps the grouped navigation keyboard-operable and the panel hover-free", () => {
+    const code = layout();
+    expect(code).toContain("group-focus-within:visible");
+    expect(code).toContain("aria-expanded={open}");
+    expect(code).toMatch(/aria-controls=\{`lsh-menu-\$\{group\.key\}`\}/);
+    expect(code).toContain('if (event.key === "Escape") setOpen(false);');
+    // The mobile panel lists group children as plain rows; nothing depends on hover there.
+    expect(code).toMatch(/id="lsh-mobile-menu"[\s\S]*?PRIMARY_NAV\.map[\s\S]*?group\.links\.map/);
   });
 });

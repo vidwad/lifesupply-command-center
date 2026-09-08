@@ -6,9 +6,10 @@ Prepared September 8, 2026. This tracker records the website workstream separate
 
 - Instruction baseline reviewed: main commit `148617e60a54d11c79786a66f0a75a1ed70f54cb`.
 - Instruction package: branch `docs/lifesupply-website-staged-development` at `654ef4b` (PR #67). Stage 1 read it with `git show`; this tracker was initialised from that branch's copy.
-- Stage 1 executed on branch `claude/website-stage-01-baseline` from the same `main` commit. Documentation and evidence only.
-- Next requested development stage: **Stage 2 — Public shell, homepage, and corporate overview** (after Stage 1 review).
-- Website implementation under this plan: **Not started** (Stage 1 produced no runtime change).
+- Stage 1 executed on branch `claude/website-stage-01-baseline` from the same `main` commit (PR #68, open). Documentation and evidence only.
+- Stage 2 executed on branch `claude/website-stage-02-shell-home-about` from the same `main` commit, while #67 and #68 were still open; runtime work depends on neither. Intended merge order: #67, #68, then the Stage 2 PR (this tracker supersedes #68's copy).
+- Next requested development stage: **Stage 3 — Four brands, Clinic Solutions, and Shop & Services** (after Stage 2 review).
+- Website implementation under this plan: **In progress** — Stage 2 delivered the registries, grouped shell, Home, and About on a review branch; nothing is merged or deployed by the stage.
 - Existing website/Command Center functionality: audited in `BASELINE_AUDIT.md`; the unified public site is live on the Vercel production alias, the legacy WordPress site still serves `lifesupplyhealth.com`.
 - Production approval, migration application, external storefront edits, and live messaging: **Not performed.**
 
@@ -17,8 +18,8 @@ Prepared September 8, 2026. This tracker records the website workstream separate
 | Stage | Scope | Status | Evidence / PR | Dependencies or decisions |
 | --- | --- | --- | --- | --- |
 | 1 | Baseline, source reconciliation, implementation specification | **Ready for Review** | `BASELINE_AUDIT.md`, `SOURCE_REGISTER.md`, `ROUTE_AND_ACTION_MAP.md`, `IMPLEMENTATION_BACKLOG.md`, `evidence/stage-01/`; PR #68 (`claude/website-stage-01-baseline`) | Business-plan PDFs (S-62) unavailable; Render migration log and env values not readable in session; four external-site admin access unconfirmed. |
-| 2 | Shell, Home, About | Not started | — | Stage 1 review; S-120 positioning copy; WEB-01/02 interim treatments; brand assets (WEB-08). Must account for BD-02/BD-03 rather than assume a green boundary. |
-| 3 | Four brands, Clinic Solutions, Shop & Services | Not started | — | Stage 2; WEB-01, WEB-03; verified category URLs only (SOURCE_REGISTER §7). |
+| 2 | Shell, Home, About | **Ready for Review** | `STAGE_02_EVIDENCE.md`, `evidence/stage-02/`; PR #69 (`claude/website-stage-02-shell-home-about`) | Kickoff decisions arrived unfilled; interim treatments applied (evidence §5). S-120 copy pending approval; WEB-01 relationships `null`; brand cards text-only (WEB-08). BD-02/BD-03 recorded, untouched. |
+| 3 | Four brands, Clinic Solutions, Shop & Services | Not started | — | Stage 2 review and merge; WEB-01, WEB-03; verified category URLs only (SOURCE_REGISTER §7); the route registry already lists the Stage 3 routes as `proposed`, so making a hub live is what adds its menu group. |
 | 4 | Metabolic Health and eight pathways | Not started | — | Stage 3; WEB-04; no sharps category URL exists (S-89). |
 | 5 | Partners, investors, leadership, resources | Not started | — | Stage 3; reconcile Stage 4 links; WEB-05/06. |
 | 6 | Publishing and document delivery | Not started | — | Stages 4–5; migration status correction (BD-05); storage decision (DEC-03/BLK-07); WEB-10. |
@@ -42,7 +43,7 @@ These are information needs, not instructions to interrupt the user before doing
 | WEB-05 | Current financing/public-market narrative and public vs confidential documents | Investors | 2025 figures approved as qualified (S-60); deck capture date unknown (S-64); 2022 PDF still live on legacy (S-64); $4.2M/CPC/TSXV/CSE/FendX planning-only (S-63) | Qualitative current business story and verified contact path. |
 | WEB-06 | Current leadership roster and approved biographies | Team | Title differences between cards and legacy profiles (S-101); John Anderson unresolved (S-102); one portrait held (S-104) | Keep historical information clearly dated; do not imply current appointments. |
 | WEB-07 | Inquiry owners, retention, consent, delivery and acknowledgment approval | Stage 7 | No intake exists (BASELINE_AUDIT §4); verified channels (S-25–S-30); action registry drafted | Working verified contact directory until live intake is ready. |
-| WEB-08 | Admin/repository access and owners for all four external sites | Stage 8 | Platforms identified (WordPress ×2, BigCommerce ×3); no brand asset files held (S-135) | Exact per-site implementation briefs and proposed status. |
+| WEB-08 | Admin/repository access and owners for all four external sites | Stage 8 | Platforms identified (WordPress ×2, BigCommerce ×3); no brand asset files held (S-135); Stage 2 brand cards render a mark automatically once `asset` is set on the registry record | Exact per-site implementation briefs and proposed status; text-only cards meanwhile. |
 | WEB-09 | Current deployment/env behavior, baseline build defects and public-host isolation | Stages 1 and 9 | Recorded: D-01–D-11; probes in BASELINE_AUDIT §5; `/_global-error` failure does not reproduce on Node 24 | Record real evidence; no weakened controls or production changes. |
 | WEB-10 | Content publication, migration and cutover approvals | Stages 6 and 10 | Publication tables appear applied on Render (indirect, D-09); no editor/approval workflow exists | Reviewable code/runbook; no inferred production acceptance. |
 
@@ -56,6 +57,8 @@ Stage 1 created:
 - `docs/website-development/IMPLEMENTATION_BACKLOG.md`
 - `docs/website-development/evidence/stage-01/` — six desktop captures (legacy corporate site, the four operating sites, the unified production alias; 2026-09-08, 1440 px) and `baseline-checks-148617e.txt`
 
+Stage 2 created `docs/website-development/STAGE_02_EVIDENCE.md` and `docs/website-development/evidence/stage-02/` (Home, About, open menus, and footer at 390, 768, and 1440 px; local browser-suite log).
+
 Later stages create or update `docs/website-development/STAGE_NN_EVIDENCE.md`. Stage 8 maintains `OPERATING_SITE_HANDOFFS.md`. Stage 9 prepares `RELEASE_CANDIDATE.md` referencing the existing cutover runbook. Record screenshots in an appropriate repository evidence folder or durable PR artifact, avoiding confidential content and excessive binary churn.
 
 ## Session log
@@ -64,3 +67,4 @@ Later stages create or update `docs/website-development/STAGE_NN_EVIDENCE.md`. S
 | --- | --- | --- | --- | --- |
 | 2026-09-08 | Instructions | Comprehensive website guide and one-stage execution workflow prepared. Existing root instructions preserved with a scoped entry point. | Documentation validation recorded in the instruction PR (#67). | Execute Stage 1 only when the product owner supplies the kickoff prompt. |
 | 2026-09-08 | 1 | Baseline audit, source register, route/action map, backlog, and evidence produced on `claude/website-stage-01-baseline` from `148617e`. No runtime change. | At `148617e`, Node 24.14.0 / pnpm 10.0.0: `format:check` fail (423 CRLF files, environment; CI green on the same commit), `typecheck` pass, `lint` pass, `test` pass (82 files, 1,092 tests), `public-web:build` pass, `build` pass; Playwright smoke against the production alias: 23 passed, 1 skipped (`evidence/stage-01/public-smoke-production-alias-148617e.txt`). Host-isolation and health probes recorded (D-02, D-03). | PR #68 opened for review (not merged). Product owner reviews Stage 1; resolve order-1 decisions in `IMPLEMENTATION_BACKLOG.md` §16; then issue the Stage 2 prompt. |
+| 2026-09-08 | 2 | Brand, route, and action registries; grouped navigation with utility links and a four-brand footer; Home and About page contracts; content model split; canaries and browser tests extended. Branch `claude/website-stage-02-shell-home-about` from `148617e`. | typecheck, lint pass; `pnpm test` 83 files / 1,114 tests pass; public and normal builds pass; local Playwright 31 passed, 3 skipped; repository `format:check` fails only on pre-existing CRLF files (BD-01). CI green on PR #69. Automatic Vercel preview `dpl_CpmiSA8QXWx7LuTpXAkcSasJoTPw` (not a deployment by the stage): Playwright 31 passed, 3 skipped; D-02 and D-03 reproduce there unchanged. | PR #69 open for review (not merged). Product owner reviews Stage 2; supplies S-120, WEB-01, and asset decisions or accepts the interim treatments; merges #67, #68, #69 in that order; then issues the Stage 3 prompt. |
