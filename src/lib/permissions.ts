@@ -105,6 +105,10 @@ export const PERMISSIONS = {
   INVESTORS_GENERATE_UPDATE: "investors.generate_update",
   INVESTORS_APPROVE_MATERIALS: "investors.approve_materials",
 
+  // Public website publication workflow
+  PUBLIC_WEB_EDIT: "public_web.edit",
+  PUBLIC_WEB_APPROVE: "public_web.approve",
+
   // Opportunities
   OPPORTUNITIES_VIEW: "opportunities.view",
   OPPORTUNITIES_UPDATE: "opportunities.update",

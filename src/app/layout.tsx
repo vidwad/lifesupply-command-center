@@ -32,12 +32,11 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "LifeSupply Command Center",
-    template: "%s | LifeSupply Command Center",
+    default: "LifeSupply Health",
+    template: "%s | LifeSupply Health",
   },
   description:
-    "Secure, role-based management platform for LifeSupply, Wellmart Medical, and related divisions.",
-  robots: { index: false, follow: false },
+    "Corporate information, operations, leadership, and investor context from LifeSupply Health.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -82,6 +82,14 @@ model User {
   priceRecommendationsRejected PriceRecommendation[] @relation("PriceRecommendationRejecter")
   priceWritebacksWritten      PriceWritebackLog[]    @relation("PriceWritebackWriter")
   productCompetitorUrlsVerified ProductCompetitorUrl[] @relation("ProductCompetitorUrlVerifier")
+  preparedPublicContent      PublicContentItem[]    @relation("PublicContentPreparer")
+  approvedPublicContent      PublicContentItem[]    @relation("PublicContentApprover")
+  preparedPublicDocuments    PublicDocument[]       @relation("PublicDocumentPreparer")
+  approvedPublicDocuments    PublicDocument[]       @relation("PublicDocumentApprover")
+  preparedPublicMetrics      PublicMetricSnapshot[] @relation("PublicMetricPreparer")
+  approvedPublicMetrics      PublicMetricSnapshot[] @relation("PublicMetricApprover")
+  preparedPublicContacts     PublicContactChannel[] @relation("PublicContactPreparer")
+  approvedPublicContacts     PublicContactChannel[] @relation("PublicContactApprover")
 
   @@index([status])
   @@map("users")
@@ -2143,6 +2151,136 @@ enum InvestorUpdateStatus {
   approved
   released
   archived
+}
+
+// =============================================================================
+// Public website publication domain
+//
+// Command Center is the approval authority. These records are intentionally
+// separate from internal operational, investor CRM, and source-system models.
+// Only `published` records are eligible for the public Web API.
+// =============================================================================
+
+enum PublicContentStatus {
+  draft
+  under_review
+  approved
+  published
+  archived
+}
+
+enum PublicContentType {
+  corporate_page
+  leadership_profile
+  news_item
+  investor_update
+  product_collection
+}
+
+model PublicContentItem {
+  id              String              @id @default(cuid())
+  siteKey         String              @default("lifesupply-health")
+  contentType     PublicContentType
+  slug            String
+  title           String
+  summary         String?             @db.Text
+  body            String?             @db.Text
+  payload         Json?
+  status          PublicContentStatus @default(draft)
+  sourceReference String?
+  effectiveAt     DateTime?
+  expiresAt       DateTime?
+  preparedById    String?
+  approvedById    String?
+  approvedAt      DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  preparedBy User? @relation("PublicContentPreparer", fields: [preparedById], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("PublicContentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@unique([siteKey, contentType, slug])
+  @@index([siteKey, contentType, status])
+  @@index([status, publishedAt])
+  @@map("public_content_items")
+}
+
+model PublicDocument {
+  id              String              @id @default(cuid())
+  siteKey         String              @default("lifesupply-health")
+  title           String
+  documentType    String
+  periodLabel     String?
+  fileKey         String
+  publicUrl       String?
+  disclosureText  String?             @db.Text
+  sourceReference String?
+  status          PublicContentStatus @default(draft)
+  preparedById    String?
+  approvedById    String?
+  approvedAt      DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  preparedBy User? @relation("PublicDocumentPreparer", fields: [preparedById], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("PublicDocumentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([siteKey, status, publishedAt])
+  @@map("public_documents")
+}
+
+model PublicMetricSnapshot {
+  id              String              @id @default(cuid())
+  siteKey         String              @default("lifesupply-health")
+  metricKey       String
+  label           String
+  value           String
+  unit            String?
+  periodLabel     String
+  basis           String?             @db.Text
+  disclosureText  String?             @db.Text
+  sourceReference String?
+  status          PublicContentStatus @default(draft)
+  preparedById    String?
+  approvedById    String?
+  approvedAt      DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  preparedBy User? @relation("PublicMetricPreparer", fields: [preparedById], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("PublicMetricApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@unique([siteKey, metricKey, periodLabel])
+  @@index([siteKey, status, publishedAt])
+  @@map("public_metric_snapshots")
+}
+
+model PublicContactChannel {
+  id             String              @id @default(cuid())
+  siteKey        String              @default("lifesupply-health")
+  label          String
+  channelType    String
+  value          String
+  contactName    String?
+  purpose        String?
+  region         String?
+  status         PublicContentStatus @default(draft)
+  verifiedAt     DateTime?
+  preparedById   String?
+  approvedById   String?
+  approvedAt     DateTime?
+  publishedAt    DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  preparedBy User? @relation("PublicContactPreparer", fields: [preparedById], references: [id], onDelete: SetNull)
+  approvedBy User? @relation("PublicContactApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([siteKey, status, publishedAt])
+  @@map("public_contact_channels")
 }
 // =============================================================================
 // Pricing Intelligence (docs/22 PRD) — DP-1 foundation. Setup data only in
