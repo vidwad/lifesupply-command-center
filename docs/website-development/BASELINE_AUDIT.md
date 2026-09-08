@@ -160,7 +160,7 @@ There is no inquiry capture anywhere in the repository. `/contact/` and `/contac
 
 ## 6. Baseline verification results
 
-Environment: Windows 10, Git Bash, Node `v24.14.0`, pnpm `10.0.0`, commit `148617e`, dependencies from the committed lockfile. Full log: `evidence/stage-01/baseline-checks-148617e.log`.
+Environment: Windows 10, Git Bash, Node `v24.14.0`, pnpm `10.0.0`, commit `148617e`, dependencies from the committed lockfile. Full log: `evidence/stage-01/baseline-checks-148617e.txt`.
 
 | Check | Command | Result | Time | Notes |
 | --- | --- | --- | --- | --- |
@@ -170,7 +170,7 @@ Environment: Windows 10, Git Bash, Node `v24.14.0`, pnpm `10.0.0`, commit `14861
 | Unit / contract tests | `pnpm test` (with `PUBLIC_SITE_MODE`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_COMMAND_CENTER_URL` unset) | pass | 14 s | 82 files, 1,092 tests |
 | Public build | `PUBLIC_SITE_MODE=true NEXT_PUBLIC_COMMAND_CENTER_URL=https://lifesupply-cc-web.onrender.com NEXT_PUBLIC_APP_URL=http://127.0.0.1:3100 pnpm public-web:build` | pass | 55 s | 12 static pages generated; the `/_global-error` prerender failure described in docs/37, docs/39, docs/40, and docs/41 **does not reproduce** on Node 24 at this commit |
 | Normal build | `pnpm build` (`PUBLIC_SITE_MODE` unset) | pass | 54 s | one deprecation warning: `package.json#prisma` config is deprecated in Prisma 7 |
-| Public browser smoke, production alias | `PUBLIC_SITE_BASE_URL=https://lifesupply-command-center-vidwads-projects.vercel.app pnpm test:public-e2e` | **pass** — 23 passed, 1 skipped, 34 s (06:58 UTC); log `evidence/stage-01/public-smoke-production-alias-148617e.log` | — | 12 tests × 2 projects (Desktop Chrome, Pixel 7); one test is desktop-skipped by design |
+| Public browser smoke, production alias | `PUBLIC_SITE_BASE_URL=https://lifesupply-command-center-vidwads-projects.vercel.app pnpm test:public-e2e` | **pass** — 23 passed, 1 skipped, 34 s (06:58 UTC); log `evidence/stage-01/public-smoke-production-alias-148617e.txt` | — | 12 tests × 2 projects (Desktop Chrome, Pixel 7); one test is desktop-skipped by design |
 | Public browser smoke, local | not repeated in Stage 1 | — | last local run at this commit: 23 passed, 1 skipped, during PR #66 verification with `--workers=1` against `next start` |
 
 Bundled secret scan (`scripts/security/scan-bundle-secrets.mjs`) runs only in CI job 2 and passed there.

@@ -16,7 +16,7 @@ Prepared September 8, 2026. This tracker records the website workstream separate
 
 | Stage | Scope | Status | Evidence / PR | Dependencies or decisions |
 | --- | --- | --- | --- | --- |
-| 1 | Baseline, source reconciliation, implementation specification | **Ready for Review** | `BASELINE_AUDIT.md`, `SOURCE_REGISTER.md`, `ROUTE_AND_ACTION_MAP.md`, `IMPLEMENTATION_BACKLOG.md`, `evidence/stage-01/`; PR: see session log | Business-plan PDFs (S-62) unavailable; Render migration log and env values not readable in session; four external-site admin access unconfirmed. |
+| 1 | Baseline, source reconciliation, implementation specification | **Ready for Review** | `BASELINE_AUDIT.md`, `SOURCE_REGISTER.md`, `ROUTE_AND_ACTION_MAP.md`, `IMPLEMENTATION_BACKLOG.md`, `evidence/stage-01/`; PR #68 (`claude/website-stage-01-baseline`) | Business-plan PDFs (S-62) unavailable; Render migration log and env values not readable in session; four external-site admin access unconfirmed. |
 | 2 | Shell, Home, About | Not started | — | Stage 1 review; S-120 positioning copy; WEB-01/02 interim treatments; brand assets (WEB-08). Must account for BD-02/BD-03 rather than assume a green boundary. |
 | 3 | Four brands, Clinic Solutions, Shop & Services | Not started | — | Stage 2; WEB-01, WEB-03; verified category URLs only (SOURCE_REGISTER §7). |
 | 4 | Metabolic Health and eight pathways | Not started | — | Stage 3; WEB-04; no sharps category URL exists (S-89). |
@@ -54,7 +54,7 @@ Stage 1 created:
 - `docs/website-development/SOURCE_REGISTER.md`
 - `docs/website-development/ROUTE_AND_ACTION_MAP.md`
 - `docs/website-development/IMPLEMENTATION_BACKLOG.md`
-- `docs/website-development/evidence/stage-01/` — six desktop captures (legacy corporate site, the four operating sites, the unified production alias; 2026-09-08, 1440 px) and `baseline-checks-148617e.log`
+- `docs/website-development/evidence/stage-01/` — six desktop captures (legacy corporate site, the four operating sites, the unified production alias; 2026-09-08, 1440 px) and `baseline-checks-148617e.txt`
 
 Later stages create or update `docs/website-development/STAGE_NN_EVIDENCE.md`. Stage 8 maintains `OPERATING_SITE_HANDOFFS.md`. Stage 9 prepares `RELEASE_CANDIDATE.md` referencing the existing cutover runbook. Record screenshots in an appropriate repository evidence folder or durable PR artifact, avoiding confidential content and excessive binary churn.
 
@@ -63,4 +63,4 @@ Later stages create or update `docs/website-development/STAGE_NN_EVIDENCE.md`. S
 | Date | Stage | Change | Verification | Next action |
 | --- | --- | --- | --- | --- |
 | 2026-09-08 | Instructions | Comprehensive website guide and one-stage execution workflow prepared. Existing root instructions preserved with a scoped entry point. | Documentation validation recorded in the instruction PR (#67). | Execute Stage 1 only when the product owner supplies the kickoff prompt. |
-| 2026-09-08 | 1 | Baseline audit, source register, route/action map, backlog, and evidence produced on `claude/website-stage-01-baseline` from `148617e`. No runtime change. | At `148617e`, Node 24.14.0 / pnpm 10.0.0: `format:check` fail (423 CRLF files, environment; CI green on the same commit), `typecheck` pass, `lint` pass, `test` pass (82 files, 1,092 tests), `public-web:build` pass, `build` pass; Playwright smoke against the production alias: 23 passed, 1 skipped (`evidence/stage-01/public-smoke-production-alias-148617e.log`). Host-isolation and health probes recorded (D-02, D-03). | Product owner reviews Stage 1; resolve order-1 decisions in `IMPLEMENTATION_BACKLOG.md` §16; then issue the Stage 2 prompt. |
+| 2026-09-08 | 1 | Baseline audit, source register, route/action map, backlog, and evidence produced on `claude/website-stage-01-baseline` from `148617e`. No runtime change. | At `148617e`, Node 24.14.0 / pnpm 10.0.0: `format:check` fail (423 CRLF files, environment; CI green on the same commit), `typecheck` pass, `lint` pass, `test` pass (82 files, 1,092 tests), `public-web:build` pass, `build` pass; Playwright smoke against the production alias: 23 passed, 1 skipped (`evidence/stage-01/public-smoke-production-alias-148617e.txt`). Host-isolation and health probes recorded (D-02, D-03). | PR #68 opened for review (not merged). Product owner reviews Stage 1; resolve order-1 decisions in `IMPLEMENTATION_BACKLOG.md` §16; then issue the Stage 2 prompt. |
