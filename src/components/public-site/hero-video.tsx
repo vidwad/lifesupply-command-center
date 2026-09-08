@@ -53,10 +53,13 @@ export function HeroVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
 
+  // Act on the visitor's intent, not on the element's `paused` flag: before
+  // autoplay has actually begun that flag is still true, and a click on
+  // "Pause" in that window would otherwise start playback instead.
   const togglePlayback = () => {
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) {
+    if (paused) {
       void video.play();
       setPaused(false);
     } else {
