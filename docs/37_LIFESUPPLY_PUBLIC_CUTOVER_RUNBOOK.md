@@ -10,11 +10,11 @@ This runbook consolidates the LifeSupply Health public website into the LifeSupp
 
 | Deployment target | Source | Hostname | Required environment posture |
 |---|---|---|---|
-| Public website | This repository, same consolidation commit | `lifesupplyhealth.com`, `www.lifesupplyhealth.com` | `PUBLIC_SITE_HOSTS` set to public domains; public routes/API only |
-| Internal Command Center | This repository, same consolidation commit | Existing internal Command Center hostname | `PUBLIC_SITE_HOSTS` excludes internal host; existing Auth.js and operational secrets remain enabled |
+| Public website | This repository, Vercel public-web build | Vercel preview alias first; `lifesupplyhealth.com` later | `PUBLIC_SITE_MODE=true` for preview; database-free build; only public routes and external Render login link |
+| Internal Command Center | This repository, Render Docker service | Existing Render Command Center hostname | `PUBLIC_SITE_MODE` unset; Auth.js, Prisma/PostgreSQL, publishing workflow, and operational secrets remain enabled |
 | Background worker | This repository, same consolidation commit | No public hostname | Existing Inngest, browser automation, and integration credentials only |
 
-One repository does not imply one process, one hostname, one secret set, or one public attack surface. The public web deployment must not receive browser-automation, supplier-portal, integration-vault, or internal action secrets.
+One repository does not imply one process, one hostname, one secret set, or one public attack surface. The Vercel public-web deployment must not receive `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `MASTER_ENCRYPTION_KEY`, browser-automation, supplier-portal, integration-vault, or internal action secrets. Render remains the only migration executor.
 
 ## Database migration
 
@@ -41,7 +41,7 @@ An editor may prepare a record. A user with `PUBLIC_WEB_APPROVE` must approve a 
 
 ## Public routes and API
 
-The public host serves the root corporate pages, legacy WordPress-compatible aliases, `/api/public/v1/*`, and `/api/health`. It redirects dashboard, admin, and all non-public API paths to the public homepage. The strict public site DTO intentionally exposes only approved corporate profile, contacts, and published content primitives.
+The Vercel public host serves the root corporate pages and legacy WordPress-compatible aliases. It blocks dashboard, admin, login, password, and non-public API paths by returning visitors to the public homepage. Its **Command Center login** action opens the Render-hosted `/login?redirectTo=/dashboard` route directly. The Render host serves the strict published-only `/api/public/v1/*` and `/api/health` endpoints; public readers use those endpoints server-to-server after publication content is approved.
 
 Use the public endpoint server-to-server from a dedicated public-web deployment if the public site is later separated from the Command Center runtime. Never ship Command Center bearer tokens to browser code.
 
@@ -49,7 +49,8 @@ Use the public endpoint server-to-server from a dedicated public-web deployment 
 
 - [ ] Public host renders `/`, `/about-us/`, `/our-operations/`, `/our-team/`, `/investor-relations/`, `/news/`, `/contact/`, `/contact-2/`, `/shop/`, and retained leadership profile routes.
 - [ ] Public host redirects `/dashboard`, `/admin`, `/api/integrations/*`, `/api/exports/*`, and `/api/sync/*` to `/`.
-- [ ] Public host allows `/api/health` and `/api/public/v1/site`; the public endpoint returns no operational or customer fields.
+- [ ] Render host allows `/api/health` and `/api/public/v1/site`; the public endpoint returns no operational or customer fields.
+- [ ] Vercel homepage, header, and mobile navigation open the Render `/login?redirectTo=/dashboard` route for Command Center access.
 - [ ] Internal host continues to require Auth.js access for dashboard pages and non-public APIs.
 - [ ] Published content appears only after approval, while drafts and archived records never appear in public API responses.
 - [ ] A simulated database outage yields the generic no-store `503` public API response rather than a stack trace or internal data.
