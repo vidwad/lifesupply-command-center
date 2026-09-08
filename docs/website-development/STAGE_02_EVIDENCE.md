@@ -73,7 +73,8 @@ Environment: Windows 10, Node `v24.14.0`, pnpm `10.0.0`, committed lockfile.
 | Public build | `PUBLIC_SITE_MODE=true … pnpm public-web:build` | pass |
 | Normal build | `pnpm build` | pass |
 | Public browser suite, local | `PUBLIC_SITE_BASE_URL=http://127.0.0.1:3100 pnpm test:public-e2e --workers=1` against `next start` of the public build | pass — 31 passed, 3 skipped (desktop-only or mobile-only tests) |
-| Public browser suite, preview | see `STATUS.md` session log | recorded after the automatic Vercel preview deployment for the PR branch, if reachable |
+| Public browser suite, preview | `PUBLIC_SITE_BASE_URL=https://lifesupply-command-center-git-claude-we-74d769-vidwads-projects.vercel.app pnpm test:public-e2e` | pass — 31 passed, 3 skipped, against the automatic Vercel preview for PR #69 (`dpl_CpmiSA8QXWx7LuTpXAkcSasJoTPw`, commit `2b9d087`); log `evidence/stage-02/public-smoke-preview-2b9d087.txt` |
+| CI on PR #69 | GitHub Actions run 34199582853 | both jobs pass |
 
 ## 5. Decisions applied as interim treatments
 
@@ -87,6 +88,8 @@ Environment: Windows 10, Node `v24.14.0`, pnpm `10.0.0`, committed lockfile.
 
 - **D-02 (`/api/health` 500 on the public alias):** unchanged and untouched. No Stage 2 page calls the health endpoint; it affects probes, not visitors.
 - **D-03 (dashboard route families redirect via `/login` on the public host):** unchanged and untouched. Stage 2 adds no link to any such path: the canaries assert that no public component contains `/dashboard`, `/login`, or `/admin` hrefs, the route registry contains none, and the browser test "points every internal shell link at a route that exists" requests every internal header, footer, and utility link and expects 200. The boundary itself still needs the bounded fix in BD-03.
+- **Preview probes (2026-09-08 07:32 UTC, `https://lifesupply-command-center-git-claude-we-74d769-vidwads-projects.vercel.app`):** `/` 200; `/dashboard`, `/admin`, `/login` 307 → `/`; `/customers` 307 → `/login` (D-03 reproduces); `/api/health` 500 (D-02 reproduces); `/api/public/v1/site` 503 by design; `X-Robots-Tag: noindex` present.
+- **Trailing slashes (new observation for Stage 9):** the deployed site answers `/about-us/`, `/our-operations/`, `/shop/`, and `/contact/` with a 308 to the slash-less path, because `next.config.ts` sets no `trailingSlash`. The registry and the legacy URLs carry trailing slashes; the browser test that walks internal links passes because Playwright follows the redirect. Stage 9's canonical decision (WB-901/WB-902) must choose one form and set `trailingSlash` accordingly; it is not a Stage 2 change.
 - **D-05 (`/contact-2/` duplicate):** the new shell never links to `/contact-2/`; the route is left for Stage 9.
 - **D-11 (auto-deploy from `main`):** merging this PR would put the new shell and pages live on the Vercel production alias immediately. The PR is not merged.
 
