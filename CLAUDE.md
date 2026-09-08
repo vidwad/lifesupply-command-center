@@ -1,5 +1,50 @@
 # CLAUDE.md — LifeSupply Command Center
 
+
+## Public website development — scoped entry point (September 8, 2026)
+
+For LifeSupplyHealth.com, public-site expansion, Clinic Solutions, operating-brand integration, or the website stage sequence requested by Vid, **read `docs/website-development/CLAUDE.md` in full before planning or editing**. That is the comprehensive website development CLAUDE.md. Also read:
+
+- `docs/website-development/STATUS.md` — stage status, decisions, evidence.
+- `docs/website-development/KICKOFF_PROMPT.md` — initial Stage 1 prompt and later-stage template.
+
+This scoped website workstream supplements the Command Center instructions below. The earlier "sole active workstream" wording refers to the historical Command Center release plan; website work now follows the separate sequence below when explicitly requested. All existing Phase 11 security, data, approval, migration, and release gates remain in force. Website development does not accept a Command Center launch gate.
+
+The website brief updates the earlier public sitemap and page-family order for the approved planning direction. Preserve the red/black/white brand system and original assets. Preserve the existing public website codebase, staff dashboard, authenticated modules, separate public/internal deployment surfaces, and source-system controls.
+
+| Website stage | Deliverable |
+|---|---|
+| 1 | Baseline audit, source reconciliation, route/action map, and implementation backlog. |
+| 2 | Shared public shell, navigation, Home, and About. |
+| 3 | Four operating brands, Clinic Solutions, technology/fulfilment, and Shop & Services. |
+| 4 | Metabolic Health, eight configurable care-supply pathways, and refills information. |
+| 5 | Partners, investors, leadership, news/resources, and supporting policy pages. |
+| 6 | Governed content publishing and document delivery. |
+| 7 | Validated inquiry capture and Command Center handoffs. |
+| 8 | Operating-site integration and commercial measurement. |
+| 9 | SEO, accessibility, legacy migration, and release verification. |
+| 10 | Authorized public cutover and stabilization. |
+
+**Execute exactly one requested stage per run.** Read its prerequisites and acceptance criteria; finish its work, verification, evidence, commit, push, and review PR; then stop. Do not automatically start the next stage, merge, or deploy. Do not repeat completed Command Center phases.
+
+The four operating destinations are:
+
+- LifeSupply: https://lifesupply.ca/
+- Wellmart Medical: https://wellmartmedical.com/
+- LifeSupply Clinics: https://www.lifesupplyclinics.com/
+- Balkowitsch Worldwide: https://balkowitsch.com/
+
+LifeSupply Clinics is presented as clinic development, construction/fit-outs, and equipment services within verified delivery arrangements; do not imply it is an owned patient-care clinic network. The Canadian storefront roles overlap; clinic-procurement versus home-care emphasis is a recommended marketing direction, not an exclusive customer restriction. Preserve their existing accounts, checkout, currencies, and customer-support boundaries.
+
+Metabolic kits are configurable supply entry points. Distinguish starter equipment, usage-driven consumables, clinic procurement, and proposed contracted services. Pharmacy, compounding, peptide synthesis, research, manufacturing, financing and public-market transactions need individually accurate status. Do not invent availability, clinical claims, financial metrics, completed partnerships, or approvals.
+
+Keep the Vercel public surface database-free, using the current public build contract. Render retains the protected Command Center, database, migrations, workers, operational secrets and internal APIs. Preserve the external login helper. Publish only eligible content through the existing governed model. No operational records or confidential investor documents in public assets or API output.
+
+**First action:** Use `docs/website-development/KICKOFF_PROMPT.md` for Stage 1. The instruction package itself does not implement any website stage. If it has not yet merged, the kickoff explains how to read it from `origin/docs/lifesupply-website-staged-development` while creating the documentation-only Stage 1 branch from current main.
+
+---
+
+
 **Project:** LifeSupply Command Center  
 **Document status:** Current Claude Code project memory and development control file  
 **Originally prepared:** May 9, 2026  
