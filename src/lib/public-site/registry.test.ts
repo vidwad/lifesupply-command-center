@@ -230,12 +230,12 @@ describe("route registry", () => {
       STAGE_5_ROUTES.terms,
       STAGE_5_ROUTES.accessibility,
     ]);
-    // Templates without an approved record stay proposed and out of every menu.
+    // Stage 6: the item templates are live, served from the published read model, never in a menu.
     for (const path of ["/news/[slug]/", "/resources/[slug]/"]) {
-      expect(isLiveRoute(path), path).toBe(false);
+      expect(isLiveRoute(path), path).toBe(true);
+      expect(ROUTES.find((route) => route.path === path)?.navGroup).toBeNull();
     }
-    expect(news.current).toEqual([]);
-    expect(news.resources).toEqual([]);
+    expect(news.historical).toHaveLength(4);
   });
 
   it("resolves every team title through a dated legacy profile and keeps the board to the approved six", () => {

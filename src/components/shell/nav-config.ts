@@ -11,6 +11,7 @@ import {
   ClipboardList,
   FileText,
   Gauge,
+  Globe,
   LayoutDashboard,
   LineChart,
   ListChecks,
@@ -165,6 +166,12 @@ export const PRIMARY_NAV: NavItem[] = [
     href: "/automation",
     icon: Wrench,
     permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
+  },
+  {
+    label: "Public Website",
+    href: "/public-web",
+    icon: Globe,
+    permission: PERMISSIONS.PUBLIC_WEB_EDIT,
   },
   {
     label: "Admin Settings",

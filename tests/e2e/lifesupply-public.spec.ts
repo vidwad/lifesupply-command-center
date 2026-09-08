@@ -557,13 +557,22 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/news");
     const main = page.locator("main");
-    await expect(main.getByText("No company news has been published on this site.")).toBeVisible();
+    // Governed sections read the Command Center published endpoints: the honest empty note or,
+    // when the service is unreachable, the fail-closed unavailable note; never blank.
     await expect(
-      main.getByText("No resources have been published yet.", { exact: false }),
+      main.getByText(
+        /No company news has been published on this site\.|Company news is temporarily unavailable/,
+      ),
+    ).toBeVisible();
+    await expect(
+      main.getByText(/No resources have been published yet|Resources are temporarily unavailable/),
     ).toBeVisible();
     await expect(main.locator('a[href^="https://"]')).toHaveCount(4);
+    // An unpublished slug is a 404 when the service answers; an outage renders the unavailable page.
     const missing = await page.request.get("/news/anything");
-    expect(missing.status()).toBe(404);
+    expect([404, 200]).toContain(missing.status());
+    if (missing.status() === 200)
+      expect(await missing.text()).toContain("cannot be shown right now");
     const footer = page.locator("footer");
     for (const [path, label] of [
       ["/privacy", "Privacy"],
@@ -579,6 +588,42 @@ test.describe("LifeSupply public site", () => {
     await expect(
       page.locator("main").getByText("do not set cookies", { exact: false }),
     ).toBeVisible();
+  });
+
+  test("shows governed sections as empty or unavailable, never blank, and lists no draft", async ({
+    page,
+  }) => {
+    await page.goto("/news");
+    const main = page.locator("main");
+    // Three section headings, in order: company news, historical, resources.
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+      "Company news",
+      "Historical releases",
+      "Resources",
+    ]);
+    // Nothing under "Company news" links to an item unless the read model published it.
+    const items = main.locator('a[href^="/news/"]');
+    const count = await items.count();
+    for (let index = 0; index < count; index += 1) {
+      const response = await page.request.get((await items.nth(index).getAttribute("href"))!);
+      expect(response.ok()).toBe(true);
+    }
+    // The preview route never appears on the public site and is not reachable without a session.
+    await expect(page.locator('a[href*="public-web"]')).toHaveCount(0);
+    const preview = await page.request.get("/public-web-preview/anything", { maxRedirects: 0 });
+    expect([307, 302, 404]).toContain(preview.status());
+  });
+
+  test("keeps the published document list fail-closed on the documents page", async ({ page }) => {
+    await page.goto("/investor-relations/documents");
+    const main = page.locator("main");
+    await expect(main.getByRole("heading", { name: "Published public documents" })).toBeVisible();
+    await expect(
+      main.getByText(
+        /No public document has been published yet|The published document list is temporarily unavailable/,
+      ),
+    ).toBeVisible();
+    await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
   });
 
   test("opens and closes the mobile navigation from the keyboard", async ({ page, isMobile }) => {

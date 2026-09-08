@@ -284,12 +284,12 @@ export const ROUTES: readonly RouteRecord[] = [
   { path: "/privacy/", label: "Privacy", stage: 5, status: "live", navGroup: "legal" },
   { path: "/terms/", label: "Terms of use", stage: 5, status: "live", navGroup: "legal" },
   { path: "/accessibility/", label: "Accessibility", stage: 5, status: "live", navGroup: "legal" },
-  // Templates exist; a record becomes a live page only when it is approved (Stage 6 model).
+  // Stage 6: served on demand from the published read model; a slug that is not published is a 404.
   {
     path: "/news/[slug]/",
     label: "News item",
     stage: 6,
-    status: "proposed",
+    status: "live",
     navGroup: null,
     routeFile: "src/app/news/[slug]/page.tsx",
   },
@@ -297,7 +297,7 @@ export const ROUTES: readonly RouteRecord[] = [
     path: "/resources/[slug]/",
     label: "Resource",
     stage: 6,
-    status: "proposed",
+    status: "live",
     navGroup: null,
     routeFile: "src/app/resources/[slug]/page.tsx",
   },

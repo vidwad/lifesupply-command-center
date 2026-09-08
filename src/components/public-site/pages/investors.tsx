@@ -13,6 +13,8 @@ import {
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { investorRelations, type BusinessStatus } from "@/lib/public-site/content/investors";
+import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
+import type { PublishedDocumentDto } from "@/server/public-web/contracts";
 import { METABOLIC_ROUTES, STAGE_3_ROUTES, STAGE_5_ROUTES } from "@/lib/public-site/routes";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
@@ -315,8 +317,66 @@ export function AdvancedTherapeuticsPage() {
   );
 }
 
+/** Governed public documents from the published read model; fails closed when unreachable. */
+function PublishedDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
+  const copy = investorRelations.documents.published;
+  return (
+    <Reveal className="mt-12">
+      <Eyebrow as="h2">{copy.title}</Eyebrow>
+      {!published.ok ? (
+        <p
+          role="status"
+          className="mt-4 border-l-2 border-[var(--lsh-brand-red)] pl-4 text-sm leading-6 text-[var(--lsh-muted)]"
+        >
+          {copy.unavailable}
+        </p>
+      ) : published.data.length === 0 ? (
+        <p className="mt-4 border-l-2 border-[var(--lsh-rule-strong)] pl-4 text-sm leading-6 text-[var(--lsh-muted)]">
+          {copy.empty}
+        </p>
+      ) : (
+        <ul className="mt-6 grid gap-4 md:grid-cols-2">
+          {published.data.map((doc) => (
+            <li
+              key={doc.id}
+              className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6"
+            >
+              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                {doc.documentType.replace("_", " ")}
+                {doc.periodLabel ? ` · ${doc.periodLabel}` : ""}
+              </p>
+              <h3 className="lsh-display mt-2 text-xl text-[var(--lsh-charcoal)]">{doc.title}</h3>
+              {doc.disclosureText ? (
+                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
+                  {doc.disclosureText}
+                </p>
+              ) : null}
+              <p className="mt-4">
+                {doc.downloadPath ? (
+                  <a
+                    href={publishedDocumentUrl(doc.downloadPath)}
+                    className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-4 py-2 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
+                  >
+                    {copy.download} <ArrowRight size={14} aria-hidden="true" />
+                  </a>
+                ) : (
+                  <span className="text-xs text-[var(--lsh-muted)]">On request</span>
+                )}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Reveal>
+  );
+}
+
 /** `/investor-relations/documents/` */
-export function InvestorDocumentsPage() {
+export function InvestorDocumentsPage({
+  published,
+}: {
+  published: Published<PublishedDocumentDto[]>;
+}) {
   const d = investorRelations.documents;
   return (
     <LifeSupplyLayout>
@@ -381,6 +441,7 @@ export function InvestorDocumentsPage() {
               </tbody>
             </table>
           </Reveal>
+          <PublishedDocuments published={published} />
           <Reveal className="mt-10 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
             <p className="leading-7 text-[var(--lsh-muted)]">{d.requestNote}</p>
           </Reveal>
