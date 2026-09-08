@@ -1,0 +1,289 @@
+/**
+ * Canaries for the public LifeSupply front end.
+ *
+ * The brief for the public site (docs/41) states rules that are easy to
+ * break silently during visual work: the login must stay external to Render,
+ * the proxy must keep internal paths off the public host, images must go
+ * through next/image at their real size, copy must come from the content
+ * model, and every route needs exactly one h1. None of those would fail a
+ * type check. These assert them against the shipped source so a future
+ * styling PR cannot loosen them without a deliberate edit here.
+ *
+ * There is no DOM test environment in this repository, so these scan source
+ * rather than render — the same approach the pricing canaries use.
+ */
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { describe, expect, it } from "vitest";
+
+const ROOT = join(__dirname, "..", "..", "..");
+const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
+const stripComments = (source: string): string =>
+  source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1");
+
+const PUBLIC_DIR = "src/components/public-site";
+const LAYOUT = `${PUBLIC_DIR}/lifesupply-layout.tsx`;
+const PAGES = `${PUBLIC_DIR}/lifesupply-pages.tsx`;
+const PRIMITIVES = `${PUBLIC_DIR}/lifesupply-primitives.tsx`;
+const CONTENT = "src/lib/public-site/lifesupply-content.ts";
+const PROXY = "src/proxy.ts";
+const CSS = "src/styles/globals.css";
+
+const layout = () => stripComments(read(LAYOUT));
+const pages = () => stripComments(read(PAGES));
+const primitives = () => stripComments(read(PRIMITIVES));
+const content = () => stripComments(read(CONTENT));
+const publicComponents = () => [layout(), pages(), primitives()];
+
+/** Width and height from a PNG's IHDR chunk. */
+function pngSize(rel: string): { width: number; height: number } {
+  const bytes = readFileSync(join(ROOT, rel));
+  expect(bytes.subarray(1, 4).toString(), `${rel} is not a PNG`).toBe("PNG");
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+
+describe("the Command Center login boundary in the public UI", () => {
+  it("resolves the login URL in exactly one component, and only through getCommandCenterLoginUrl()", () => {
+    const calls = primitives().match(/getCommandCenterLoginUrl\(\)/g) ?? [];
+    expect(calls).toHaveLength(1);
+    expect(layout()).not.toContain("getCommandCenterLoginUrl(");
+    expect(pages()).not.toContain("getCommandCenterLoginUrl(");
+  });
+
+  it("renders the visible login control from that one component everywhere", () => {
+    // The Playwright smoke test finds this control by its accessible name.
+    expect(primitives()).toContain("Command Center login");
+    expect(layout()).toContain("<CommandCenterLoginLink");
+    expect(pages()).toContain("<CommandCenterLoginLink");
+    expect(layout()).not.toContain("Command Center login");
+    expect(pages()).not.toContain("Command Center login");
+  });
+
+  it("contains no same-host dashboard or login href anywhere in the public components", () => {
+    for (const code of publicComponents()) {
+      expect(code).not.toMatch(/["'`]\/dashboard/);
+      expect(code).not.toMatch(/["'`]\/login/);
+      expect(code).not.toMatch(/["'`]\/admin/);
+    }
+  });
+});
+
+describe("the proxy keeps internal paths off the public host", () => {
+  const proxy = () => stripComments(read(PROXY));
+
+  it("still detects the public host through the shared helper", () => {
+    expect(proxy()).toContain('isLifeSupplyPublicHost(req.headers.get("host"))');
+  });
+
+  it("still blocks every internal path on the public host and sends visitors home", () => {
+    const code = proxy();
+    for (const path of ["/dashboard", "/admin", "/login", "/forgot-password", "/api/"]) {
+      expect(code, path).toContain(`pathname.startsWith("${path}")`);
+    }
+    expect(code).toContain('NextResponse.redirect(new URL("/", origin))');
+  });
+
+  it("still leaves only the published public API and health check open", () => {
+    const code = proxy();
+    expect(code).toContain('pathname === "/api/health"');
+    expect(code).toContain('pathname.startsWith("/api/public/")');
+  });
+});
+
+describe("original assets", () => {
+  it("are rendered through next/image, never a raw img tag", () => {
+    for (const code of publicComponents()) {
+      expect(code).not.toMatch(/<img[\s>]/);
+    }
+  });
+
+  it("declare the mark and lockup at their real pixel dimensions", () => {
+    // A wrong intrinsic size makes next/image reserve the wrong box and
+    // shifts the layout on load. The content model is checked against the
+    // PNG headers so swapping an asset without updating its size fails here.
+    const c = content();
+    const declared = (key: string) => Number(c.match(new RegExp(`${key}:\\s*(\\d+)`))?.[1]);
+    expect({ width: declared("imageWidth"), height: declared("imageHeight") }).toEqual(
+      pngSize("public/lsh/lifesupply-mark.png"),
+    );
+    expect({
+      width: declared("portfolioImageWidth"),
+      height: declared("portfolioImageHeight"),
+    }).toEqual(pngSize("public/lsh/lifesupply-portfolio-lockup.png"));
+  });
+
+  it("read those dimensions from the content model rather than hard-coding them", () => {
+    expect(layout()).toContain("width={brand.imageWidth}");
+    expect(layout()).toContain("height={brand.imageHeight}");
+    expect(pages()).toContain("width={brand.portfolioImageWidth}");
+    expect(pages()).toContain("height={brand.portfolioImageHeight}");
+  });
+
+  it("place the white-on-transparent lockup on an ink field, not on paper", () => {
+    // It shipped on a white section at 75% opacity, where it was invisible.
+    expect(pages()).toContain("<ImageBand");
+    expect(pages()).not.toMatch(/portfolioImage[\s\S]{0,300}opacity-75/);
+    expect(primitives()).toMatch(/function ImageBand[\s\S]*?bg-\[var\(--lsh-charcoal\)\]/);
+  });
+});
+
+describe("brand tokens", () => {
+  it("are consumed as variables — no raw hex colour survives in the public components", () => {
+    for (const code of publicComponents()) {
+      expect(code).not.toMatch(/#[0-9a-fA-F]{6}\b/);
+      expect(code).not.toMatch(/#[0-9a-fA-F]{3}\b/);
+    }
+  });
+
+  it("define the legacy palette and the rule hairlines on the scoped shell", () => {
+    const css = read(CSS);
+    const shell = css.slice(css.indexOf(".lsh-shell {"), css.indexOf(".lsh-shell h1"));
+    for (const token of [
+      "--lsh-brand-red: #de0000",
+      "--lsh-red-hover: #b63737",
+      "--lsh-red-on-ink:",
+      "--lsh-ink: #000000",
+      "--lsh-charcoal: #1d1d1d",
+      "--lsh-paper: #ffffff",
+      "--lsh-rule:",
+      "--lsh-rule-strong:",
+      "--lsh-display-font:",
+      "--lsh-body-font:",
+    ]) {
+      expect(shell, token).toContain(token);
+    }
+  });
+});
+
+describe("motion and focus", () => {
+  const css = () => read(CSS);
+
+  it("keeps hover feedback for reduced-motion users and gates only the lift", () => {
+    const source = css();
+    const feedback = source.indexOf(".lsh-lift:hover {");
+    const motionGate = source.indexOf("@media (prefers-reduced-motion: no-preference)");
+    expect(feedback).toBeGreaterThan(-1);
+    expect(motionGate).toBeGreaterThan(feedback);
+
+    // The ungated block carries colour and shadow, and no transform.
+    const ungated = source.slice(feedback, source.indexOf("}", feedback));
+    expect(ungated).toContain("border-color");
+    expect(ungated).toContain("box-shadow");
+    expect(ungated).not.toContain("transform");
+
+    // The transform lives inside the gate.
+    const gated = source.slice(motionGate);
+    expect(gated).toContain("transform: translateY(-4px)");
+  });
+
+  it("collapses transitions under prefers-reduced-motion: reduce", () => {
+    expect(css()).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.lsh-shell \*[\s\S]*?transition-duration: 0\.01ms !important/,
+    );
+  });
+
+  it("gives keyboard focus a visible ring, including on red surfaces", () => {
+    const source = css();
+    expect(source).toContain(".lsh-shell :is(a, button):focus-visible");
+    expect(source).toMatch(
+      /\.lsh-primary-action[^{]*:focus-visible[\s\S]*?box-shadow: 0 0 0 6px var\(--lsh-brand-red\)/,
+    );
+  });
+});
+
+describe("document structure", () => {
+  it("has a skip link that lands on the main landmark", () => {
+    const code = layout();
+    expect(code).toContain('href="#lsh-main"');
+    expect(code).toContain('id="lsh-main"');
+    expect(code).toContain("tabIndex={-1}");
+    expect(code).toContain("<main");
+  });
+
+  it("marks the current route in both navigations", () => {
+    const code = layout();
+    expect((code.match(/aria-current=\{active \? "page" : undefined\}/g) ?? []).length).toBe(2);
+    expect(code).toContain("aria-expanded={isMenuOpen}");
+    expect(code).toContain('aria-controls="lsh-mobile-menu"');
+  });
+
+  it("renders exactly one h1 per page, and only from PublicHero", () => {
+    const pageSource = pages();
+    const exportedPages = (
+      pageSource.match(/^export function \w+Page\b|^export function LifeSupplyHome\b/gm) ?? []
+    ).length;
+    const heroes = (pageSource.match(/<PublicHero\b/g) ?? []).length;
+    expect(exportedPages).toBeGreaterThan(0);
+    expect(heroes).toBe(exportedPages);
+    expect(pageSource).not.toContain("<h1");
+    expect(layout()).not.toContain("<h1");
+    expect((primitives().match(/<h1\b/g) ?? []).length).toBe(1);
+  });
+
+  it("wraps every page in the shared layout", () => {
+    const pageSource = pages();
+    const exportedPages = (
+      pageSource.match(/^export function \w+Page\b|^export function LifeSupplyHome\b/gm) ?? []
+    ).length;
+    expect((pageSource.match(/<LifeSupplyLayout>/g) ?? []).length).toBe(exportedPages);
+  });
+});
+
+describe("routes and content governance", () => {
+  it("keeps every public route file in place and pointed at the shared pages", () => {
+    for (const route of [
+      "src/app/page.tsx",
+      "src/app/about-us/page.tsx",
+      "src/app/our-operations/page.tsx",
+      "src/app/our-team/page.tsx",
+      "src/app/investor-relations/page.tsx",
+      "src/app/news/page.tsx",
+      "src/app/contact/page.tsx",
+      "src/app/contact-2/page.tsx",
+      "src/app/shop/page.tsx",
+      "src/app/[slug]/page.tsx",
+    ]) {
+      expect(existsSync(join(ROOT, route)), route).toBe(true);
+      expect(read(route), route).toContain("@/components/public-site/lifesupply-pages");
+    }
+  });
+
+  it("keeps the route table unchanged", () => {
+    const c = content();
+    for (const path of [
+      '"/"',
+      '"/about-us/"',
+      '"/our-operations/"',
+      '"/our-team/"',
+      '"/investor-relations/"',
+      '"/news/"',
+      '"/contact/"',
+      '"/contact-2/"',
+      '"/shop/"',
+    ]) {
+      expect(c, path).toContain(path);
+    }
+  });
+
+  it("sources the shell and anchor-page copy from the content model, not from JSX", () => {
+    // Sentences the first pass embedded in components. They now live in the
+    // content model only; a component that re-embeds one fails here.
+    const sentences = [
+      "Corporate information, operating context, and investor resources",
+      "Public information is subject to update and applicable disclosure context.",
+      "Health, safety, medical, and industrial supply categories across Canada",
+      "Publicly reported scale, with source context.",
+      "Explore the operations, people, and investor context behind LifeSupply.",
+      "A platform approach to medical-supply access.",
+      "Operating brands in the public LifeSupply overview.",
+    ];
+    const c = content();
+    for (const sentence of sentences) {
+      expect(c, sentence).toContain(sentence);
+      expect(layout(), sentence).not.toContain(sentence);
+      expect(pages(), sentence).not.toContain(sentence);
+      expect(primitives(), sentence).not.toContain(sentence);
+    }
+  });
+});
