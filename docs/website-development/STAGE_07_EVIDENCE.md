@@ -74,3 +74,7 @@ The endpoint exists on the Command Center host but refuses every submission twic
 ## 8. External-site work, deployment, migration, and external sends
 
 None by the stage. Merging deploys the endpoint (refusing) and the queue screens. No migration is included. No message can be sent: the send flag is off and no sink is configured.
+
+## 9. Post-merge verification (recorded 2026-09-08 after PR #76 merged as `0743a56`)
+
+About three minutes after the merge, Render answered `GET /api/public/v1/inquiries` 405; `POST` without an Origin 403 with the generic message; `POST` with the production alias as Origin 403, because `PUBLIC_SITE_ORIGINS` is not configured, which is the intended state until WEB-07 and WEB-10 are recorded; `/public-web/inquiries` without a session redirected to login. The production alias `/contact` still renders the verified directory with no form element.
