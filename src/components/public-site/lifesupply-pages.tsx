@@ -1,18 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Building2, ExternalLink, Mail, Phone, ShieldCheck } from "lucide-react";
+import { ArrowRight, ExternalLink, Mail, Phone, ShieldCheck } from "lucide-react";
 
-import { HeroVideo } from "@/components/public-site/hero-video";
+import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
-  Container,
   EditorialStat,
   Eyebrow,
-  ImageBand,
-  InfoBand,
   PrimaryAction,
   PublicHero,
-  SecondaryAction,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import {
@@ -31,199 +27,16 @@ import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifes
  *
  * Each page renders exactly one PublicHero, which is the route's single h1.
  *
- * Motion: sections reveal once as they scroll into view, grids stagger their
- * cards, cards carry a pointer spotlight over the shared lift, and figures
- * count up to the approved text. All of it collapses to the final state for
- * visitors who prefer reduced motion (see motion.tsx).
+ * Stage 2 moved the Home and About pages into `./pages/` (their page
+ * contracts are complete); they are re-exported here so the route files keep
+ * one import. The pages below keep their Stage 1 baseline until their own
+ * stage (Operations and Shop in Stage 3; Team, Investors, News in Stage 5;
+ * Contact in Stages 3 and 7).
  */
+export { AboutPage } from "@/components/public-site/pages/about";
+export { LifeSupplyHome } from "@/components/public-site/pages/home";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
-
-/** The operating-brand cards, shared by the homepage and the About page. */
-function BrandCards() {
-  const { about } = LIFE_SUPPLY_CONTENT;
-  return (
-    <Stagger className="grid gap-5 lg:grid-cols-3">
-      {about.brands.map((brandItem) => (
-        <StaggerItem key={brandItem.name} className="h-full">
-          <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-            <a
-              href={brandItem.url}
-              target="_blank"
-              rel="noreferrer"
-              className="group flex h-full flex-col p-7"
-            >
-              <Building2
-                className="text-[var(--lsh-brand-red)] transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:transition-none"
-                aria-hidden="true"
-              />
-              <h3 className="lsh-display mt-8 text-2xl text-[var(--lsh-charcoal)]">
-                {brandItem.name}
-              </h3>
-              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{brandItem.description}</p>
-              <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-6 text-[11px] text-[var(--lsh-brand-red)]">
-                Visit brand{" "}
-                <ExternalLink
-                  size={15}
-                  aria-hidden="true"
-                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
-                />
-              </span>
-            </a>
-          </SpotlightCard>
-        </StaggerItem>
-      ))}
-    </Stagger>
-  );
-}
-
-export function LifeSupplyHome() {
-  const { homepage, about } = LIFE_SUPPLY_CONTENT;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        size="home"
-        eyebrow={homepage.eyebrow}
-        title={homepage.title}
-        description={homepage.description}
-        media={<HeroVideo {...homepage.heroMedia} />}
-        actions={
-          <>
-            <PrimaryAction href={LIFE_SUPPLY_ROUTES.about}>Explore LifeSupply</PrimaryAction>
-            <SecondaryAction href={LIFE_SUPPLY_ROUTES.investorRelations}>
-              Investor relations
-            </SecondaryAction>
-          </>
-        }
-      />
-
-      {/* The legacy red information band, carrying the operating-context statement. */}
-      <Reveal>
-        <InfoBand
-          eyebrow={homepage.operatingContext.eyebrow}
-          statement={homepage.operatingContext.statement}
-        />
-      </Reveal>
-
-      {/* Hairline grid: the rule colour shows only through the 1px gaps, so no padding on the grid itself. */}
-      <section className="px-5 lg:px-8">
-        <Stagger className="mx-auto grid max-w-7xl gap-px bg-[var(--lsh-rule)] lg:grid-cols-3">
-          {homepage.pillars.map((pillar) => (
-            <StaggerItem key={pillar.index} className="h-full">
-              <SpotlightCard as="article" className="group h-full bg-[var(--lsh-paper)] px-7 py-10">
-                <p className="lsh-display text-sm text-[var(--lsh-brand-red)]">{pillar.index}</p>
-                <span
-                  className="mt-3 block h-1 w-8 bg-[var(--lsh-brand-red)] transition-[width] duration-300 group-hover:w-16 motion-reduce:transition-none"
-                  aria-hidden="true"
-                />
-                <h2 className="lsh-display mt-6 text-3xl text-[var(--lsh-charcoal)]">
-                  {pillar.title}
-                </h2>
-                <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{pillar.text}</p>
-              </SpotlightCard>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
-
-      <section>
-        <Container className="grid gap-12 py-20 lg:grid-cols-[0.8fr_1.2fr]">
-          <Reveal>
-            <SectionHeading
-              eyebrow={homepage.glance.eyebrow}
-              title={homepage.glance.title}
-              description={homepage.glance.description}
-            />
-          </Reveal>
-          <Stagger className="grid gap-4 sm:grid-cols-3">
-            {homepage.publicMetrics.map((metric) => (
-              <StaggerItem key={metric.label} className="h-full">
-                <EditorialStat value={metric.value} label={metric.label} />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </section>
-
-      {/* The operating brands, from the About page's approved portfolio copy. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <SectionHeading eyebrow={about.portfolio.eyebrow} title={about.portfolio.title} />
-          </Reveal>
-          <div className="mt-10">
-            <BrandCards />
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 py-16 lg:px-8">
-        <Reveal className="mx-auto flex max-w-7xl flex-col justify-between gap-7 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:flex-row lg:items-center lg:pl-8">
-          <SectionHeading eyebrow={homepage.overview.eyebrow} title={homepage.overview.title} />
-          <div className="shrink-0">
-            <PrimaryAction href={LIFE_SUPPLY_ROUTES.operations}>Our operations</PrimaryAction>
-          </div>
-        </Reveal>
-      </section>
-    </LifeSupplyLayout>
-  );
-}
-
-export function AboutPage() {
-  const { about, brand } = LIFE_SUPPLY_CONTENT;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={about.hero.eyebrow}
-        title={about.hero.title}
-        description={about.growth}
-      />
-
-      {/* The label is the heading; the statement is the content. */}
-      <section className="px-5 py-20 lg:px-8">
-        <Stagger className="mx-auto grid max-w-7xl gap-px bg-[var(--lsh-rule)] lg:grid-cols-2">
-          <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-8 lg:p-10">
-            <Eyebrow as="h2">{about.labels.mission}</Eyebrow>
-            <p className="lsh-display mt-5 text-3xl leading-[1.1] text-[var(--lsh-charcoal)]">
-              {about.mission}
-            </p>
-          </StaggerItem>
-          <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white lg:p-10">
-            <Eyebrow as="h2" tone="onDark">
-              {about.labels.vision}
-            </Eyebrow>
-            <p className="lsh-display mt-5 text-3xl leading-[1.1] text-white">{about.vision}</p>
-          </StaggerItem>
-        </Stagger>
-      </section>
-
-      <section className="bg-[var(--lsh-paper)] pb-20">
-        <Container>
-          <Reveal>
-            <SectionHeading eyebrow={about.portfolio.eyebrow} title={about.portfolio.title} />
-          </Reveal>
-          <div className="mt-10">
-            <BrandCards />
-          </div>
-          {/*
-           * The lockup is white on transparent. The first pass placed it on this
-           * white section at 75% opacity, where it could not be seen at all. It
-           * now sits on the charcoal band it needs, at its intrinsic 389×93.
-           */}
-          <Reveal className="mt-14">
-            <ImageBand
-              src={brand.portfolioImage}
-              alt={brand.portfolioImageAlt}
-              width={brand.portfolioImageWidth}
-              height={brand.portfolioImageHeight}
-              eyebrow={about.portfolio.eyebrow}
-            />
-          </Reveal>
-        </Container>
-      </section>
-    </LifeSupplyLayout>
-  );
-}
 
 export function OperationsPage() {
   const { operations, operationsTimeline } = LIFE_SUPPLY_CONTENT;
@@ -574,9 +387,7 @@ export function ShopBoundaryPage() {
             availability, fulfillment, payment, and customer-service information.
           </p>
           <div className="mt-8 flex justify-center">
-            <PrimaryAction href="https://lifesupply.ca" external>
-              Visit LifeSupply.ca
-            </PrimaryAction>
+            <ActionLink action="shop_lifesupply">Visit LifeSupply.ca</ActionLink>
           </div>
         </Reveal>
       </section>

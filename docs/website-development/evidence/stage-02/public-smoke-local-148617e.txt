@@ -1,0 +1,44 @@
+
+> lifesupply-command-center@0.0.1 test:public-e2e C:\Users\Vid Wadhwani\Documents\GitHub\lifesupply-command-center
+> playwright test "--workers=1" "--reporter=list"
+
+
+Running 34 tests using 1 worker
+
+  ok  1 [chromium] › tests\e2e\lifesupply-public.spec.ts:6:7 › LifeSupply public site › renders a corporate homepage with a separate Command Center login boundary (2.0s)
+  ok  2 [chromium] › tests\e2e\lifesupply-public.spec.ts:29:7 › LifeSupply public site › keeps principal public corporate routes reachable (906ms)
+  ok  3 [chromium] › tests\e2e\lifesupply-public.spec.ts:43:7 › LifeSupply public site › gives each anchor page exactly one h1 (927ms)
+  ok  4 [chromium] › tests\e2e\lifesupply-public.spec.ts:50:7 › LifeSupply public site › offers a skip link as the first keyboard stop (908ms)
+  ok  5 [chromium] › tests\e2e\lifesupply-public.spec.ts:62:7 › LifeSupply public site › marks the current route in the navigation that is in use (697ms)
+  ok  6 [chromium] › tests\e2e\lifesupply-public.spec.ts:78:7 › LifeSupply public site › hides the header while reading down and brings it back on scroll up (1.2s)
+  ok  7 [chromium] › tests\e2e\lifesupply-public.spec.ts:94:7 › LifeSupply public site › plays a silent, looping, inline background video in the hero, with no control (937ms)
+  ok  8 [chromium] › tests\e2e\lifesupply-public.spec.ts:112:7 › LifeSupply public site › counts the reported figures up to exactly the approved text (2.1s)
+  ok  9 [chromium] › tests\e2e\lifesupply-public.spec.ts:123:7 › LifeSupply public site › keeps the hero heading one accessible sentence while its words animate (616ms)
+  ok 10 [chromium] › tests\e2e\lifesupply-public.spec.ts:136:7 › LifeSupply public site › shows the poster instead of footage for visitors who prefer reduced motion (871ms)
+  ok 11 [chromium] › tests\e2e\lifesupply-public.spec.ts:156:7 › LifeSupply public site › carries the external login in the utility strip on every viewport (712ms)
+  ok 12 [chromium] › tests\e2e\lifesupply-public.spec.ts:164:7 › LifeSupply public site › opens the grouped desktop navigation from the keyboard and lists the four brands (1.0s)
+  -  13 [chromium] › tests\e2e\lifesupply-public.spec.ts:199:7 › LifeSupply public site › lists every group and utility link in the mobile panel without a hover
+  ok 14 [chromium] › tests\e2e\lifesupply-public.spec.ts:224:7 › LifeSupply public site › names the four operating brands in the footer with verified external links (632ms)
+  ok 15 [chromium] › tests\e2e\lifesupply-public.spec.ts:242:7 › LifeSupply public site › points every internal shell link at a route that exists (1.0s)
+  ok 16 [chromium] › tests\e2e\lifesupply-public.spec.ts:259:7 › LifeSupply public site › gives the homepage clinic, program, partner, and investor paths verified destinations (862ms)
+  -  17 [chromium] › tests\e2e\lifesupply-public.spec.ts:292:7 › LifeSupply public site › opens and closes the mobile navigation from the keyboard
+  ok 18 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:6:7 › LifeSupply public site › renders a corporate homepage with a separate Command Center login boundary (1.9s)
+  ok 19 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:29:7 › LifeSupply public site › keeps principal public corporate routes reachable (860ms)
+  ok 20 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:43:7 › LifeSupply public site › gives each anchor page exactly one h1 (949ms)
+  ok 21 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:50:7 › LifeSupply public site › offers a skip link as the first keyboard stop (1.2s)
+  ok 22 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:62:7 › LifeSupply public site › marks the current route in the navigation that is in use (1.1s)
+  ok 23 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:78:7 › LifeSupply public site › hides the header while reading down and brings it back on scroll up (1.4s)
+  ok 24 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:94:7 › LifeSupply public site › plays a silent, looping, inline background video in the hero, with no control (1.3s)
+  ok 25 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:112:7 › LifeSupply public site › counts the reported figures up to exactly the approved text (2.0s)
+  ok 26 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:123:7 › LifeSupply public site › keeps the hero heading one accessible sentence while its words animate (787ms)
+  ok 27 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:136:7 › LifeSupply public site › shows the poster instead of footage for visitors who prefer reduced motion (827ms)
+  ok 28 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:156:7 › LifeSupply public site › carries the external login in the utility strip on every viewport (806ms)
+  -  29 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:164:7 › LifeSupply public site › opens the grouped desktop navigation from the keyboard and lists the four brands
+  ok 30 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:199:7 › LifeSupply public site › lists every group and utility link in the mobile panel without a hover (1.7s)
+  ok 31 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:224:7 › LifeSupply public site › names the four operating brands in the footer with verified external links (718ms)
+  ok 32 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:242:7 › LifeSupply public site › points every internal shell link at a route that exists (1.6s)
+  ok 33 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:259:7 › LifeSupply public site › gives the homepage clinic, program, partner, and investor paths verified destinations (947ms)
+  ok 34 [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:292:7 › LifeSupply public site › opens and closes the mobile navigation from the keyboard (802ms)
+
+  3 skipped
+  31 passed (40.1s)

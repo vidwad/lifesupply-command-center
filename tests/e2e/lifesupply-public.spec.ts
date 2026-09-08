@@ -71,7 +71,8 @@ test.describe("LifeSupply public site", () => {
       : page.getByRole("navigation", { name: "Primary navigation" });
     const current = nav.locator('a[aria-current="page"]');
     await expect(current).toHaveCount(1);
-    await expect(current).toHaveText(/about us/i);
+    // The grouped header marks the About group's trigger; the mobile panel marks the same link.
+    await expect(current).toHaveText(/^about/i);
   });
 
   test("hides the header while reading down and brings it back on scroll up", async ({ page }) => {
@@ -139,12 +140,17 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/");
     await expect(page.locator("video")).toHaveCount(0);
     await expect(page.locator('img[src*="hero-poster"]')).toHaveCount(1);
-    // Reveal animations collapse too: content is visible without scrolling into it.
-    const pillar = page.getByRole("heading", { name: "Experienced" });
-    await expect(pillar).toBeVisible();
-    expect(await pillar.evaluate((el) => getComputedStyle(el.closest("article")!).opacity)).toBe(
-      "1",
-    );
+    // Reveal animations collapse too: a section far below the fold is fully
+    // opaque without scrolling to it. The nearest ancestor carrying an inline
+    // style is the motion wrapper; with reduced motion there is none.
+    const heading = page.getByRole("heading", { name: "Metabolic-health supply services." });
+    await expect(heading).toBeVisible();
+    const opacity = await heading.evaluate((el) => {
+      let node: HTMLElement | null = el.parentElement;
+      while (node && !node.getAttribute("style")) node = node.parentElement;
+      return node ? getComputedStyle(node).opacity : "1";
+    });
+    expect(opacity).toBe("1");
   });
 
   test("carries the external login in the utility strip on every viewport", async ({ page }) => {
@@ -153,6 +159,134 @@ test.describe("LifeSupply public site", () => {
     const strip = page.getByRole("link", { name: "Command Center login" }).first();
     await expect(strip).toBeVisible();
     expect(new URL((await strip.getAttribute("href"))!).origin).toBe(RENDER_ORIGIN);
+  });
+
+  test("opens the grouped desktop navigation from the keyboard and lists the four brands", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "desktop navigation only");
+    await page.goto("/");
+    const trigger = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", {
+      name: "Our Businesses",
+    });
+    await trigger.focus();
+    // Focus inside the group reveals the dropdown, so Tab reaches every row.
+    const menu = page.locator("#lsh-menu-businesses");
+    await expect(menu).toBeVisible();
+    const brandLinks = menu.locator("a");
+    await expect(brandLinks).toHaveCount(4);
+    const hosts = await brandLinks.evaluateAll((links) =>
+      links.map((link) => new URL((link as HTMLAnchorElement).href).host),
+    );
+    expect(hosts).toEqual([
+      "lifesupply.ca",
+      "wellmartmedical.com",
+      "www.lifesupplyclinics.com",
+      "balkowitsch.com",
+    ]);
+    // The chevron is a real button for touch and assistive technology.
+    const chevron = page.getByRole("button", { name: "Open Our Businesses menu" });
+    await chevron.click();
+    await expect(page.getByRole("button", { name: "Close Our Businesses menu" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await page.keyboard.press("Escape");
+    await expect(chevron).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("lists every group and utility link in the mobile panel without a hover", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, "mobile navigation only");
+    await page.goto("/");
+    await page.getByRole("button", { name: "Open navigation" }).click();
+    const panel = page.locator("#lsh-mobile-menu");
+    for (const name of [
+      "Our Businesses",
+      "Investors",
+      "About",
+      "Our team",
+      "News & resources",
+      "Shop & Services",
+      "Contact",
+      "LifeSupply",
+      "Wellmart Medical",
+      "LifeSupply Clinics",
+      "Balkowitsch Worldwide",
+    ]) {
+      await expect(panel.getByRole("link", { name, exact: true }).first(), name).toBeVisible();
+    }
+  });
+
+  test("names the four operating brands in the footer with verified external links", async ({
+    page,
+  }) => {
+    await page.goto("/about-us");
+    const footer = page.getByRole("contentinfo");
+    const hosts = await footer
+      .locator('a[target="_blank"]')
+      .evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).host));
+    for (const host of [
+      "lifesupply.ca",
+      "wellmartmedical.com",
+      "www.lifesupplyclinics.com",
+      "balkowitsch.com",
+    ]) {
+      expect(hosts, host).toContain(host);
+    }
+  });
+
+  test("points every internal shell link at a route that exists", async ({ page, isMobile }) => {
+    await page.goto("/");
+    if (isMobile) await page.getByRole("button", { name: "Open navigation" }).click();
+    const hrefs = await page
+      .locator(
+        'header a[href^="/"], footer a[href^="/"], nav[aria-label="Utility navigation"] a[href^="/"]',
+      )
+      .evaluateAll((links) =>
+        Array.from(new Set(links.map((link) => (link as HTMLAnchorElement).getAttribute("href")!))),
+      );
+    expect(hrefs.length).toBeGreaterThan(5);
+    for (const href of hrefs) {
+      const response = await page.request.get(href);
+      expect(response.ok(), href).toBe(true);
+    }
+  });
+
+  test("gives the homepage clinic, program, partner, and investor paths verified destinations", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const main = page.locator("main");
+    await expect(main.getByRole("link", { name: "Book a consultation" })).toHaveAttribute(
+      "href",
+      "https://www.lifesupplyclinics.com/contact-us/",
+    );
+    await expect(main.getByRole("link", { name: "Request an equipment quote" })).toHaveAttribute(
+      "href",
+      "https://www.lifesupplyclinics.com/buy-clinic-equipment/",
+    );
+    await expect(main.getByRole("link", { name: "Request a supply review" })).toHaveAttribute(
+      "href",
+      "mailto:ben@lifesupply.com",
+    );
+    await expect(main.getByRole("link", { name: "Discuss a supply program" })).toHaveAttribute(
+      "href",
+      "mailto:info@lifesupply.com",
+    );
+    await expect(main.getByRole("link", { name: "Start a partner conversation" })).toHaveAttribute(
+      "href",
+      "mailto:info@lifesupply.com",
+    );
+    await expect(
+      main.getByRole("link", { name: "Investor relations", exact: true }),
+    ).toHaveAttribute("href", /^\/investor-relations\/?$/); // next/link drops the trailing slash
+    // Four brand cards, all external, all verified hosts.
+    const cards = main.locator('a[href^="https://"]:has-text("Visit ")');
+    await expect(cards).toHaveCount(4);
   });
 
   test("opens and closes the mobile navigation from the keyboard", async ({ page, isMobile }) => {

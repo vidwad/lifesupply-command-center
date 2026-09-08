@@ -3,16 +3,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Mail, Menu, Phone, X } from "lucide-react";
+import { ChevronDown, ExternalLink, Mail, Menu, Phone, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CommandCenterLoginLink, Eyebrow } from "@/components/public-site/lifesupply-primitives";
+import { OPERATING_BRANDS, brandGeography } from "@/lib/public-site/brands";
+import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 import {
-  LIFE_SUPPLY_CONTENT,
   LIFE_SUPPLY_NAVIGATION,
-  LIFE_SUPPLY_ROUTES,
-} from "@/lib/public-site/lifesupply-content";
+  buildPrimaryNavigation,
+  buildUtilityNavigation,
+  type NavGroup,
+  type NavLink,
+} from "@/lib/public-site/routes";
 import { useScrollDirection } from "@/lib/public-site/use-scroll-direction";
+
+/** Derived once from the route registry: only live destinations reach a menu. */
+const PRIMARY_NAV = buildPrimaryNavigation();
+const UTILITY_NAV = buildUtilityNavigation();
 
 /** Routes are stored with a trailing slash; the live pathname may or may not carry one. */
 function isActiveRoute(pathname: string | null, href: string) {
@@ -26,47 +34,147 @@ function isActiveRoute(pathname: string | null, href: string) {
  * whole label; hovering extends the bar across the word. The link is only as
  * wide as its text, so the bar never stretches across a grid column. The
  * extension is the only motion, and it is switched off under reduced motion.
+ *
+ *   inline  header and footer lists
+ *   menu    rows inside a dropdown or the mobile panel
+ *
+ * External destinations (the operating brands) open in a new tab and carry
+ * the external icon; internal ones use next/link. `forceActive` lets a group
+ * trigger show as current when one of its children is the current page.
  */
 function NavItem({
   href,
   label,
   onNavigate,
   className = "",
+  variant = "inline",
+  external = false,
+  forceActive = false,
 }: {
   href: string;
   label: string;
   onNavigate?: () => void;
   className?: string;
+  variant?: "inline" | "menu";
+  external?: boolean;
+  forceActive?: boolean;
 }) {
   const pathname = usePathname();
-  const active = isActiveRoute(pathname, href);
+  const active = forceActive || (!external && isActiveRoute(pathname, href));
+  const classes =
+    variant === "inline"
+      ? `lsh-display relative inline-flex w-fit items-center gap-1 pb-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
+          active ? "text-white after:w-5" : "text-white/75 after:w-0 hover:text-white"
+        } ${className}`.trim()
+      : `flex items-center gap-2 border-l-2 px-4 py-2.5 text-sm transition-colors hover:bg-white/10 hover:text-white ${
+          active ? "border-[var(--lsh-brand-red)] text-white" : "border-transparent text-white/80"
+        } ${className}`.trim();
+  const content = (
+    <>
+      {label}
+      {external ? <ExternalLink size={12} aria-hidden="true" /> : null}
+    </>
+  );
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" onClick={onNavigate} className={classes}>
+        {content}
+      </a>
+    );
+  }
   return (
     <Link
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`lsh-display relative inline-flex w-fit items-center pb-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
-        active ? "text-white after:w-5" : "text-white/75 after:w-0 hover:text-white"
-      } ${className}`.trim()}
+      className={classes}
     >
-      {label}
+      {content}
     </Link>
+  );
+}
+
+/**
+ * A primary-navigation group: the trigger is a real link to the group's hub
+ * page, and its dropdown lists the live children. The dropdown opens on
+ * hover, on keyboard focus inside the group (so Tab reaches every row), and
+ * on the chevron button for touch and assistive technology; Escape closes
+ * it. No destination in a menu is ever a planned route (routes.ts).
+ */
+function NavGroupMenu({ group }: { group: NavGroup }) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const childActive = group.links.some(
+    (link) => !link.external && isActiveRoute(pathname, link.href),
+  );
+
+  if (group.links.length === 0) {
+    return <NavItem href={group.href} label={group.label} />;
+  }
+
+  return (
+    <div
+      className="group relative flex items-center gap-1"
+      onMouseLeave={() => setOpen(false)}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
+      <NavItem href={group.href} label={group.label} forceActive={childActive} />
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-controls={`lsh-menu-${group.key}`}
+        aria-label={`${open ? "Close" : "Open"} ${group.label} menu`}
+        className="grid h-6 w-6 place-items-center text-white/75 transition-colors hover:text-white"
+      >
+        <ChevronDown
+          size={14}
+          aria-hidden="true"
+          className={`transition-transform duration-200 group-focus-within:rotate-180 group-hover:rotate-180 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div
+        id={`lsh-menu-${group.key}`}
+        className={`absolute left-0 top-full z-50 w-64 pt-4 transition-all duration-200 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 motion-reduce:transition-none ${
+          open ? "visible opacity-100" : "invisible opacity-0"
+        }`}
+      >
+        <ul className="border border-white/15 bg-[var(--lsh-charcoal)] p-2 shadow-xl shadow-black/40">
+          {group.links.map((link) => (
+            <li key={link.href}>
+              <NavItem
+                href={link.href}
+                label={link.label}
+                external={link.external}
+                variant="menu"
+                onNavigate={() => setOpen(false)}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
 
 /**
- * Public shell, behaving like the LLD Recovery Academy header:
+ * Public shell.
  *
- *   - a charcoal utility strip above the header carries contact and the
- *     external Command Center login, so the header row is navigation only;
+ *   - a charcoal utility strip carries contact and the external Command
+ *     Center login, so the header row is navigation only;
  *   - the header hides as the visitor reads down and returns the moment they
  *     scroll up (never while the mobile menu is open, never while keyboard
  *     focus is inside it, and never near the top of the page);
- *   - navigation links use NavItem above; the primary action lifts on hover;
- *   - the mobile toggle is a bordered square and the panel closes on route
- *     change.
+ *   - primary navigation is grouped (Our Businesses / Investors / About
+ *     today; further groups appear as their hub routes go live), with
+ *     utility links for Shop & Services and Contact;
+ *   - the mobile panel lists every group and link without a hover
+ *     requirement and closes on route change;
+ *   - the footer names the four operating brands with their verified links.
  *
  * The mark is white on transparent and must stay on ink (docs/40).
  */
@@ -96,6 +204,10 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
+
+  const renderUtility = (link: NavLink, onNavigate?: () => void) => (
+    <NavItem key={link.href} href={link.href} label={link.label} onNavigate={onNavigate} />
+  );
 
   return (
     <div className="lsh-shell min-h-screen bg-[var(--lsh-paper)] text-[var(--lsh-charcoal)]">
@@ -127,7 +239,12 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               </a>
             ) : null}
           </div>
-          <CommandCenterLoginLink variant="utility" />
+          <nav className="flex items-center gap-5" aria-label="Utility navigation">
+            <div className="hidden items-center gap-5 md:flex">
+              {UTILITY_NAV.map((link) => renderUtility(link))}
+            </div>
+            <CommandCenterLoginLink variant="utility" />
+          </nav>
         </div>
       </div>
 
@@ -160,8 +277,8 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="hidden items-center gap-7 xl:flex" aria-label="Primary navigation">
-            {LIFE_SUPPLY_NAVIGATION.map((item) => (
-              <NavItem key={item.href} href={item.href} label={item.label} />
+            {PRIMARY_NAV.map((group) => (
+              <NavGroupMenu key={group.key} group={group} />
             ))}
           </nav>
 
@@ -192,27 +309,46 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
         {isMenuOpen ? (
           <nav
             id="lsh-mobile-menu"
-            className="border-t border-white/15 bg-[var(--lsh-charcoal)] px-5 py-6 xl:hidden"
+            className="max-h-[calc(100vh-4.5rem)] overflow-y-auto border-t border-white/15 bg-[var(--lsh-charcoal)] px-5 py-6 xl:hidden"
             aria-label="Mobile navigation"
           >
-            <div className="mx-auto grid max-w-7xl justify-items-start gap-4">
-              {LIFE_SUPPLY_NAVIGATION.map((item) => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  onNavigate={closeMenu}
-                  className="text-xs"
-                />
+            <div className="mx-auto grid max-w-7xl gap-6">
+              {PRIMARY_NAV.map((group) => (
+                <div key={group.key} className="grid justify-items-start gap-2">
+                  <NavItem
+                    href={group.href}
+                    label={group.label}
+                    onNavigate={closeMenu}
+                    className="text-xs"
+                  />
+                  {group.links.length > 0 ? (
+                    <ul className="grid w-full gap-0.5 border-l border-white/15">
+                      {group.links.map((link) => (
+                        <li key={link.href}>
+                          <NavItem
+                            href={link.href}
+                            label={link.label}
+                            external={link.external}
+                            variant="menu"
+                            onNavigate={closeMenu}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
               ))}
-              <Link
-                href={LIFE_SUPPLY_ROUTES.investorRelations}
-                onClick={closeMenu}
-                className="lsh-primary-action lsh-display mt-2 inline-flex px-4 py-3 text-xs sm:hidden"
-              >
-                Investor information
-              </Link>
-              <CommandCenterLoginLink variant="menu" />
+              <div className="grid justify-items-start gap-3 border-t border-white/15 pt-5">
+                {UTILITY_NAV.map((link) => renderUtility(link, closeMenu))}
+                <Link
+                  href={LIFE_SUPPLY_ROUTES.investorRelations}
+                  onClick={closeMenu}
+                  className="lsh-primary-action lsh-display mt-2 inline-flex px-4 py-3 text-xs sm:hidden"
+                >
+                  Investor information
+                </Link>
+                <CommandCenterLoginLink variant="menu" />
+              </div>
             </div>
           </nav>
         ) : null}
@@ -223,7 +359,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] text-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_0.8fr_1fr] lg:px-8">
           <div>
             <Image
               src={brand.image}
@@ -236,10 +372,23 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <Eyebrow as="h2" tone="onDark">
+              Operating brands
+            </Eyebrow>
+            <ul className="mt-5 grid justify-items-start gap-3">
+              {OPERATING_BRANDS.map((record) => (
+                <li key={record.key} className="grid">
+                  <NavItem href={record.canonicalUrl} label={record.name} external />
+                  <span className="mt-1 text-[11px] text-white/50">{brandGeography(record)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <Eyebrow as="h2" tone="onDark">
               Explore
             </Eyebrow>
             <ul className="mt-5 grid justify-items-start gap-3">
-              {LIFE_SUPPLY_NAVIGATION.map((item) => (
+              {[...LIFE_SUPPLY_NAVIGATION, ...UTILITY_NAV].map((item) => (
                 <li key={item.href}>
                   <NavItem href={item.href} label={item.label} />
                 </li>
