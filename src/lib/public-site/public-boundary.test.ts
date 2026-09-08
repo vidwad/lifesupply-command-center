@@ -27,7 +27,15 @@ const LAYOUT = `${PUBLIC_DIR}/lifesupply-layout.tsx`;
 const PAGES = `${PUBLIC_DIR}/lifesupply-pages.tsx`;
 // Stage 2 split the Home and About pages into their own files, still exported
 // through the barrel above; the canaries read all of them as one source.
-const PAGE_FAMILIES = [`${PUBLIC_DIR}/pages/home.tsx`, `${PUBLIC_DIR}/pages/about.tsx`];
+const PAGE_FAMILIES = [
+  "home",
+  "about",
+  "operations",
+  "brands",
+  "clinic-solutions",
+  "shop",
+  "contact",
+].map((name) => `${PUBLIC_DIR}/pages/${name}.tsx`);
 const BRAND_GRID = `${PUBLIC_DIR}/brand-grid.tsx`;
 const ACTION_LINK = `${PUBLIC_DIR}/action-link.tsx`;
 const PRIMITIVES = `${PUBLIC_DIR}/lifesupply-primitives.tsx`;
@@ -41,6 +49,9 @@ const CONTENT_MODULES = [
   "home",
   "about",
   "operations",
+  "businesses",
+  "clinics",
+  "shop",
   "team",
   "investors",
   "news",
@@ -440,6 +451,15 @@ describe("routes and content governance", () => {
       "src/app/contact-2/page.tsx",
       "src/app/shop/page.tsx",
       "src/app/[slug]/page.tsx",
+      "src/app/our-operations/lifesupply/page.tsx",
+      "src/app/our-operations/wellmart-medical/page.tsx",
+      "src/app/our-operations/lifesupply-clinics/page.tsx",
+      "src/app/our-operations/balkowitsch/page.tsx",
+      "src/app/our-operations/technology-fulfilment/page.tsx",
+      "src/app/clinic-solutions/page.tsx",
+      "src/app/clinic-solutions/design-build/page.tsx",
+      "src/app/clinic-solutions/equipment/page.tsx",
+      "src/app/clinic-solutions/ongoing-supplies/page.tsx",
     ]) {
       expect(existsSync(join(ROOT, route)), route).toBe(true);
       expect(read(route), route).toContain("@/components/public-site/lifesupply-pages");
@@ -501,12 +521,13 @@ describe("Stage 2 registries and navigation", () => {
     expect(code).toContain("buildPrimaryNavigation()");
     expect(code).toContain("buildUtilityNavigation()");
     for (const planned of [
-      "/clinic-solutions",
       "/metabolic-health",
       "/partners",
-      "/our-operations/lifesupply",
       "/investor-relations/documents",
+      "/investor-relations/growth-strategy",
       "/privacy",
+      "/terms",
+      "/accessibility",
     ]) {
       for (const source of [layout(), pages(), primitives()]) {
         expect(source, planned).not.toContain(planned);
@@ -572,5 +593,67 @@ describe("Stage 2 registries and navigation", () => {
     expect(code).toContain('if (event.key === "Escape") setOpen(false);');
     // The mobile panel lists group children as plain rows; nothing depends on hover there.
     expect(code).toMatch(/id="lsh-mobile-menu"[\s\S]*?PRIMARY_NAV\.map[\s\S]*?group\.links\.map/);
+  });
+});
+
+describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
+  const clinicPages = () => stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
+  const brandPages = () => stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
+  const shopPage = () => stripComments(read(`${PUBLIC_DIR}/pages/shop.tsx`));
+  const contactPage = () => stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
+  const clinicsContent = () => stripComments(read("src/lib/public-site/content/clinics.ts"));
+
+  it("keeps clinic development distinct from patient care on every clinic page", () => {
+    // The distinction sentence is content; every Clinic Solutions page and
+    // the Clinics brand page render it. Nothing anywhere describes owned
+    // clinics or patient care as a company service.
+    expect(clinicsContent()).toContain("does not operate patient-care clinics");
+    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(4);
+    expect(brandPages()).toContain("{clinics.distinction}");
+    for (const source of [content(), ...publicComponents()]) {
+      expect(source).not.toMatch(/\bour (patient-care )?clinics\b/i);
+      expect(source).not.toMatch(/\bpatient care (is|we) (provided|provide)/i);
+    }
+  });
+
+  it("attributes delivery roles only as the Clinics site states them", () => {
+    expect(clinicsContent()).toContain("core partners");
+    expect(clinicsContent()).toContain("attributes no construction work to LifeSupply beyond");
+    expect(brandPages()).toContain("{clinics.attribution}");
+    expect(clinicPages()).toContain("{clinics.attribution}");
+  });
+
+  it("treats post-opening supply as conditional on every clinic page", () => {
+    expect(clinicsContent()).toContain("creates no supply commitment");
+    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(4);
+    expect(brandPages()).toContain("{clinics.postOpening}");
+  });
+
+  it("never restates store terms: thresholds, delivery times, or prices", () => {
+    for (const source of [content(), ...publicComponents()]) {
+      expect(source).not.toMatch(/\$\s?\d{2,3}(\.\d{2})?\b(?![KM])/);
+      expect(source).not.toMatch(/business days/i);
+      expect(source).not.toMatch(/free shipping (on|over|in) /i);
+    }
+    expect(shopPage()).not.toMatch(/add to cart|checkout|\bprice\b/i);
+  });
+
+  it("reads categories, support channels, and project links from the registries and content", () => {
+    expect(brandPages()).toContain("record.categories.map");
+    expect(brandPages()).toContain("record.storeLinks.map");
+    expect(brandPages()).toContain("clinics.projects.items.map");
+    expect(contactPage()).toContain("contact.intents.map");
+    expect(contactPage()).toContain("contact.existingOrder");
+    expect(shopPage()).toContain("shop.choices.map");
+    expect(shopPage()).toContain("brandGeography(record)");
+  });
+
+  it("gives every Stage 3 page one PublicHero and the shared layout", () => {
+    for (const source of [clinicPages(), brandPages(), shopPage(), contactPage()]) {
+      const exported = (source.match(/^export function \w+Page\b/gm) ?? []).length;
+      expect(exported).toBeGreaterThan(0);
+      expect((source.match(/<PublicHero\b/g) ?? []).length).toBe(exported);
+      expect((source.match(/<LifeSupplyLayout>/g) ?? []).length).toBe(exported);
+    }
   });
 });

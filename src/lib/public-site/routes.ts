@@ -2,12 +2,13 @@
  * Route registry — every public route the plan names, with the state it is
  * in today (ROUTE_AND_ACTION_MAP.md §3). Navigation is derived from this
  * table: only `live` routes reach a menu, so a planned page can be recorded
- * here without ever producing a dead link.
+ * here without ever producing a dead link. Flipping a route to `live` is
+ * what adds it, and its group, to the menus.
  *
  * `LIFE_SUPPLY_ROUTES` keeps the legacy-compatible paths the canaries and
  * the route files depend on. Trailing slashes are part of the contract.
  */
-import { OPERATING_BRANDS } from "@/lib/public-site/brands";
+import type { OperatingBrandKey } from "@/lib/public-site/brands";
 
 export const LIFE_SUPPLY_ROUTES = {
   home: "/",
@@ -19,6 +20,22 @@ export const LIFE_SUPPLY_ROUTES = {
   contact: "/contact/",
   legacyContact: "/contact-2/",
   shop: "/shop/",
+} as const;
+
+/** Stage 3 pages. */
+export const BRAND_ROUTES: Record<OperatingBrandKey, string> = {
+  lifesupply: "/our-operations/lifesupply/",
+  wellmart: "/our-operations/wellmart-medical/",
+  clinics: "/our-operations/lifesupply-clinics/",
+  balkowitsch: "/our-operations/balkowitsch/",
+};
+
+export const STAGE_3_ROUTES = {
+  technology: "/our-operations/technology-fulfilment/",
+  clinicSolutions: "/clinic-solutions/",
+  designBuild: "/clinic-solutions/design-build/",
+  equipment: "/clinic-solutions/equipment/",
+  ongoingSupplies: "/clinic-solutions/ongoing-supplies/",
 } as const;
 
 export type NavGroupKey =
@@ -50,66 +67,66 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "businesses",
   },
   {
-    path: "/our-operations/lifesupply/",
+    path: BRAND_ROUTES.lifesupply,
     label: "LifeSupply",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "businesses",
   },
   {
-    path: "/our-operations/wellmart-medical/",
+    path: BRAND_ROUTES.wellmart,
     label: "Wellmart Medical",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "businesses",
   },
   {
-    path: "/our-operations/lifesupply-clinics/",
+    path: BRAND_ROUTES.clinics,
     label: "LifeSupply Clinics",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "businesses",
   },
   {
-    path: "/our-operations/balkowitsch/",
+    path: BRAND_ROUTES.balkowitsch,
     label: "Balkowitsch Worldwide",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "businesses",
   },
   {
-    path: "/our-operations/technology-fulfilment/",
+    path: STAGE_3_ROUTES.technology,
     label: "Technology & fulfilment",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "businesses",
   },
   {
-    path: "/clinic-solutions/",
+    path: STAGE_3_ROUTES.clinicSolutions,
     label: "Clinic Solutions",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "clinic",
   },
   {
-    path: "/clinic-solutions/design-build/",
+    path: STAGE_3_ROUTES.designBuild,
     label: "Design & build",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "clinic",
   },
   {
-    path: "/clinic-solutions/equipment/",
+    path: STAGE_3_ROUTES.equipment,
     label: "Equipment",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "clinic",
   },
   {
-    path: "/clinic-solutions/ongoing-supplies/",
+    path: STAGE_3_ROUTES.ongoingSupplies,
     label: "Ongoing supplies",
     stage: 3,
-    status: "proposed",
+    status: "live",
     navGroup: "clinic",
   },
   {
@@ -240,12 +257,13 @@ export interface NavGroup {
 /**
  * Primary navigation contract (guide §3): Our Businesses / Clinic Solutions /
  * Metabolic Health / Partners / Investors / About. A group appears only when
- * its hub route is live; a child appears only when it is a live route or a
- * verified brand destination. Today that yields three groups.
+ * its hub route is live; a child appears only when it is a live route. Since
+ * Stage 3, the operating brands have their own pages under Our Businesses,
+ * so the store links themselves live on those pages and in the footer.
  */
-const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string; brandLinks?: boolean }[] = [
-  { key: "businesses", label: "Our Businesses", hub: "/our-operations/", brandLinks: true },
-  { key: "clinic", label: "Clinic Solutions", hub: "/clinic-solutions/" },
+const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string }[] = [
+  { key: "businesses", label: "Our Businesses", hub: "/our-operations/" },
+  { key: "clinic", label: "Clinic Solutions", hub: STAGE_3_ROUTES.clinicSolutions },
   { key: "metabolic", label: "Metabolic Health", hub: "/metabolic-health/" },
   { key: "partners", label: "Partners", hub: "/partners/" },
   { key: "investors", label: "Investors", hub: "/investor-relations/" },
@@ -263,16 +281,7 @@ export function buildPrimaryNavigation(): NavGroup[] {
     key: group.key,
     label: group.label,
     href: group.hub,
-    links: [
-      ...liveChildren(group.key, group.hub),
-      ...(group.brandLinks
-        ? OPERATING_BRANDS.map((record) => ({
-            label: record.name,
-            href: record.canonicalUrl,
-            external: true,
-          }))
-        : []),
-    ],
+    links: liveChildren(group.key, group.hub),
   }));
 }
 
@@ -285,9 +294,12 @@ export function buildUtilityNavigation(): NavLink[] {
 }
 
 /**
- * Flat list of every live internal route that appears in a menu, for the
- * footer "Explore" column and for tests. Derived, never hand-maintained.
+ * Flat list of the top-level live pages for the footer "Explore" column and
+ * for tests: hub pages and the About-group pages, not every child.
  */
 export const LIFE_SUPPLY_NAVIGATION: readonly NavLink[] = LIVE_ROUTES.filter(
-  (route) => route.navGroup !== null && route.navGroup !== "utility",
+  (route) =>
+    route.navGroup !== null &&
+    route.navGroup !== "utility" &&
+    (PRIMARY_GROUPS.some((group) => group.hub === route.path) || route.navGroup === "about"),
 ).map((route) => ({ label: route.label, href: route.path }));
