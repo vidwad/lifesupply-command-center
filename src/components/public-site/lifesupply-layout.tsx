@@ -63,7 +63,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               alt=""
               width={brand.imageWidth}
               height={brand.imageHeight}
-              className="h-7 w-auto sm:h-8"
+              className="h-8 w-auto sm:h-9"
               priority
             />
           </Link>

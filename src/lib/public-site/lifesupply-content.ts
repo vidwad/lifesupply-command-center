@@ -32,13 +32,16 @@ export const LIFE_SUPPLY_CONTENT = {
   brand: {
     name: "LifeSupply Health",
     /**
-     * Original mark: white wordmark + red angular device on a transparent
-     * ground, 169×28 px. It is legible only on ink/charcoal — never place it
-     * on paper (docs/40 asset policy).
+     * Official LifeSupply logo, supplied by the product owner on 2026-09-08:
+     * white wordmark, red angular device with grey speed lines, transparent
+     * ground. The 821×262 export was trimmed to its opaque 661×93 box (a 1:1
+     * pixel copy, no resampling) so the artwork fills the box next/image
+     * reserves. Legible only on ink/charcoal — never place it on paper
+     * (docs/40 asset policy). Replaces the earlier 169×28 export.
      */
     image: "/lsh/lifesupply-mark.png",
-    imageWidth: 169,
-    imageHeight: 28,
+    imageWidth: 661,
+    imageHeight: 93,
     /**
      * Portfolio lockup — LIFESUPPLY, DEXTON, MEDdirect marks in white on a
      * transparent ground, 389×93 px. Same rule: ink/charcoal backgrounds only.
