@@ -101,6 +101,13 @@ test.describe("LifeSupply public site", () => {
     // React sets muted as a property, not an attribute, so read the property.
     expect(await video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(true);
 
+    // Let autoplay actually begin so the pause below stops a playing loop.
+    await expect
+      .poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused && v.currentTime > 0), {
+        timeout: 10_000,
+      })
+      .toBe(true);
+
     await page.getByRole("button", { name: "Pause background video" }).click();
     await expect(page.getByRole("button", { name: "Play background video" })).toBeVisible();
     expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
