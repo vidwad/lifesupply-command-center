@@ -68,6 +68,23 @@ export const LIFE_SUPPLY_CONTENT = {
     description:
       "LifeSupply is an established ecommerce and supply-platform company serving health, safety, medical, and industrial product categories across Canada and the United States.",
     /**
+     * Background footage for the hero: the legacy lifesupplyhealth.com hero
+     * video (wp-content/uploads/2021/10/LSHomeVid.mp4, 19 s, 1488×836), cut
+     * to its two caption-free scenes (instruments flat-lay 9.75–11.75 s and
+     * tablet 16–19 s), slowed 2× with motion interpolation, desaturated, and
+     * cross-faded into a seamless 8.4 s loop at 1280×720. The city scene and
+     * every captioned stretch were dropped: they carry the old mark and
+     * figures that are not approved copy. Decorative only; no copy lives in
+     * the footage. The poster is the loop's first frame.
+     */
+    heroMedia: {
+      webm: "/lsh/hero/hero-loop.webm",
+      mp4: "/lsh/hero/hero-loop.mp4",
+      poster: "/lsh/hero/hero-poster.jpg",
+      posterWidth: 1600,
+      posterHeight: 900,
+    },
+    /**
      * moved from JSX (hero side column). A restatement of `description`
      * above, rendered since PR #60; now the statement in the red information
      * band. Not a new claim.

@@ -90,6 +90,32 @@ test.describe("LifeSupply public site", () => {
     await expect.poll(async () => (await header.boundingBox())?.y ?? -1, { timeout: 3000 }).toBe(0);
   });
 
+  test("plays a silent, looping, inline background video in the hero with a pause control", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const video = page.locator("video");
+    await expect(video).toHaveCount(1);
+    await expect(video).toHaveAttribute("playsinline", "");
+    await expect(video).toHaveAttribute("loop", "");
+    // React sets muted as a property, not an attribute, so read the property.
+    expect(await video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(true);
+
+    await page.getByRole("button", { name: "Pause background video" }).click();
+    await expect(page.getByRole("button", { name: "Play background video" })).toBeVisible();
+    expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+  });
+
+  test("shows the poster instead of footage for visitors who prefer reduced motion", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await expect(page.locator("video")).toHaveCount(0);
+    await expect(page.locator('img[src*="hero-poster"]')).toHaveCount(1);
+    await expect(page.getByRole("button", { name: /background video/ })).toHaveCount(0);
+  });
+
   test("carries the external login in the utility strip on every viewport", async ({ page }) => {
     await page.goto("/about-us");
     // The strip precedes the header, so it is the first login control in the DOM.

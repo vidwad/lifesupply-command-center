@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Building2, ExternalLink, Mail, Phone, ShieldCheck } from "lucide-react";
 
+import { HeroVideo } from "@/components/public-site/hero-video";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   CommandCenterLoginLink,
@@ -33,6 +34,7 @@ export function LifeSupplyHome() {
         eyebrow={homepage.eyebrow}
         title={homepage.title}
         description={homepage.description}
+        media={<HeroVideo {...homepage.heroMedia} />}
         actions={
           <>
             <PrimaryAction href={LIFE_SUPPLY_ROUTES.about}>Explore LifeSupply</PrimaryAction>
