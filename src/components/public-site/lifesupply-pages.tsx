@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Building2, ExternalLink, Mail, Phone, ShieldCheck } from "lucide-react";
 
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
+import { getCommandCenterLoginUrl } from "@/lib/public-site/command-center";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 
 function PageHero({
@@ -15,11 +16,15 @@ function PageHero({
   description: string;
 }) {
   return (
-    <section className="relative overflow-hidden bg-[#123348] px-5 py-20 text-white lg:px-8 lg:py-28">
-      <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_80%_10%,#b5c951_0,transparent_28%),radial-gradient(circle_at_10%_90%,#7aa0a5_0,transparent_38%)]" />
+    <section className="relative overflow-hidden bg-[var(--lsh-ink)] px-5 py-20 text-white lg:px-8 lg:py-28">
+      <div className="absolute inset-0 opacity-90 [background-image:radial-gradient(circle_at_82%_12%,rgba(222,0,0,0.72),transparent_27%),linear-gradient(125deg,rgba(29,29,29,0.96),rgba(0,0,0,0.96))]" />
+      <div
+        className="absolute bottom-0 left-0 h-1 w-28 bg-[var(--lsh-brand-red)]"
+        aria-hidden="true"
+      />
       <div className="relative mx-auto max-w-4xl">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d8e87f]">{eyebrow}</p>
-        <h1 className="mt-5 max-w-3xl font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl">
+        <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">{eyebrow}</p>
+        <h1 className="lsh-display mt-5 max-w-3xl text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
           {title}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-white/75">{description}</p>
@@ -38,10 +43,12 @@ function SectionTitle({
 }) {
   return (
     <div className="max-w-3xl">
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#617a36]">{eyebrow}</p>
-      <h2 className="mt-4 font-serif text-3xl leading-tight text-[#173546] sm:text-4xl">{title}</h2>
+      <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">{eyebrow}</p>
+      <h2 className="lsh-display mt-4 text-3xl leading-[1.08] text-[var(--lsh-charcoal)] sm:text-4xl">
+        {title}
+      </h2>
       {description ? (
-        <p className="mt-4 text-base leading-7 text-[#45606d]">{description}</p>
+        <p className="mt-4 text-base leading-7 text-[var(--lsh-muted)]">{description}</p>
       ) : null}
     </div>
   );
@@ -50,7 +57,7 @@ function PrimaryLink({ href, children }: { href: string; children: React.ReactNo
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 rounded-full bg-[#b5c951] px-5 py-3 text-sm font-bold text-[#173546] transition hover:bg-[#d5e873]"
+      className="lsh-primary-action lsh-display inline-flex items-center gap-2 px-5 py-3 text-[11px] transition-colors"
     >
       {children}
       <ArrowRight size={16} />
@@ -62,14 +69,18 @@ export function LifeSupplyHome() {
   const { homepage } = LIFE_SUPPLY_CONTENT;
   return (
     <LifeSupplyLayout>
-      <section className="relative overflow-hidden bg-[#123348] px-5 pb-20 pt-20 text-white lg:px-8 lg:pb-28 lg:pt-28">
-        <div className="absolute inset-0 opacity-45 [background-image:radial-gradient(circle_at_78%_20%,#b5c951_0,transparent_26%),radial-gradient(circle_at_18%_100%,#46727c_0,transparent_38%)]" />
+      <section className="relative overflow-hidden bg-[var(--lsh-ink)] px-5 pb-20 pt-20 text-white lg:px-8 lg:pb-28 lg:pt-28">
+        <div className="absolute inset-0 opacity-90 [background-image:radial-gradient(circle_at_80%_16%,rgba(222,0,0,0.88),transparent_28%),linear-gradient(120deg,rgba(29,29,29,0.98),rgba(0,0,0,0.96))]" />
+        <div
+          className="absolute bottom-0 left-0 h-1 w-40 bg-[var(--lsh-brand-red)]"
+          aria-hidden="true"
+        />
         <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d8e87f]">
+            <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
               {homepage.eyebrow}
             </p>
-            <h1 className="mt-6 max-w-4xl font-serif text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
+            <h1 className="lsh-display mt-6 max-w-4xl text-5xl leading-[0.96] sm:text-6xl lg:text-7xl">
               {homepage.title}
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/75">{homepage.description}</p>
@@ -77,29 +88,33 @@ export function LifeSupplyHome() {
               <PrimaryLink href={LIFE_SUPPLY_ROUTES.about}>Explore LifeSupply</PrimaryLink>
               <Link
                 href={LIFE_SUPPLY_ROUTES.investorRelations}
-                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-3 text-sm font-bold text-white hover:bg-white/10"
+                className="lsh-display inline-flex items-center gap-2 border border-white/35 px-5 py-3 text-[11px] text-white transition-colors hover:border-white hover:bg-white hover:text-black"
               >
                 Investor relations <ArrowRight size={16} />
               </Link>
+              <a
+                href={getCommandCenterLoginUrl()}
+                className="lsh-display inline-flex items-center gap-2 border border-white/35 px-5 py-3 text-[11px] text-white transition-colors hover:border-white hover:bg-white hover:text-black"
+              >
+                Command Center login <ExternalLink size={16} />
+              </a>
             </div>
           </div>
           <div className="border-l border-white/15 pl-6 lg:pl-10">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">
-              Public operating context
-            </p>
-            <p className="mt-4 font-serif text-3xl leading-tight text-white/90">
+            <p className="lsh-display text-[11px] text-white/50">Public operating context</p>
+            <p className="lsh-display mt-4 text-3xl leading-[1.05] text-white/95">
               Health, safety, medical, and industrial supply categories across Canada and the United
               States.
             </p>
           </div>
         </div>
       </section>
-      <section className="mx-auto grid max-w-7xl gap-px bg-[#d3dbd5] px-5 lg:grid-cols-3 lg:px-8">
+      <section className="mx-auto grid max-w-7xl gap-px bg-[#d6d6d6] px-5 lg:grid-cols-3 lg:px-8">
         {homepage.pillars.map((pillar) => (
-          <article key={pillar.index} className="bg-[#f4f4ef] px-7 py-10">
-            <p className="text-xs font-bold tracking-[0.18em] text-[#6a8541]">{pillar.index}</p>
-            <h2 className="mt-7 font-serif text-3xl text-[#173546]">{pillar.title}</h2>
-            <p className="mt-4 leading-7 text-[#4e6570]">{pillar.text}</p>
+          <article key={pillar.index} className="bg-[var(--lsh-paper)] px-7 py-10">
+            <p className="lsh-display text-sm text-[var(--lsh-brand-red)]">{pillar.index}</p>
+            <h2 className="lsh-display mt-7 text-3xl text-[var(--lsh-charcoal)]">{pillar.title}</h2>
+            <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{pillar.text}</p>
           </article>
         ))}
       </section>
@@ -113,21 +128,21 @@ export function LifeSupplyHome() {
           {homepage.publicMetrics.map((metric) => (
             <div
               key={metric.label}
-              className="border-t-2 border-[#b5c951] bg-white px-5 py-7 shadow-sm"
+              className="border-t-4 border-[var(--lsh-brand-red)] bg-white px-5 py-7 shadow-sm"
             >
-              <p className="font-serif text-4xl text-[#173546]">{metric.value}</p>
-              <p className="mt-3 text-sm leading-5 text-[#5b6d73]">{metric.label}</p>
+              <p className="lsh-display text-4xl text-[var(--lsh-charcoal)]">{metric.value}</p>
+              <p className="mt-3 text-sm leading-5 text-[var(--lsh-muted)]">{metric.label}</p>
             </div>
           ))}
         </div>
       </section>
-      <section className="bg-[#dce7d7] px-5 py-16 lg:px-8">
+      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-7 lg:flex-row lg:items-center">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#617a36]">
+            <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
               Corporate overview
             </p>
-            <h2 className="mt-3 font-serif text-3xl text-[#173546]">
+            <h2 className="lsh-display mt-3 text-3xl text-[var(--lsh-charcoal)]">
               Explore the operations, people, and investor context behind LifeSupply.
             </h2>
           </div>
@@ -148,13 +163,15 @@ export function AboutPage() {
         description={about.growth}
       />
       <section className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-2 lg:px-8">
-        <div className="rounded-3xl bg-[#e5ece0] p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#617a36]">Mission</p>
-          <p className="mt-5 font-serif text-3xl leading-tight text-[#173546]">{about.mission}</p>
+        <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-8">
+          <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">Mission</p>
+          <p className="lsh-display mt-5 text-3xl leading-[1.1] text-[var(--lsh-charcoal)]">
+            {about.mission}
+          </p>
         </div>
-        <div className="rounded-3xl bg-[#163a4c] p-8 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d8e87f]">Vision</p>
-          <p className="mt-5 font-serif text-3xl leading-tight text-white/95">{about.vision}</p>
+        <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white">
+          <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">Vision</p>
+          <p className="lsh-display mt-5 text-3xl leading-[1.1] text-white">{about.vision}</p>
         </div>
       </section>
       <section className="bg-white px-5 py-20 lg:px-8">
@@ -170,12 +187,14 @@ export function AboutPage() {
                 href={brandItem.url}
                 target="_blank"
                 rel="noreferrer"
-                className="group rounded-2xl border border-[#dbe3df] p-7 transition hover:-translate-y-1 hover:shadow-lg"
+                className="lsh-lift group border border-[#d6d6d6] p-7"
               >
-                <Building2 className="text-[#6d873c]" />
-                <h3 className="mt-8 font-serif text-2xl text-[#173546]">{brandItem.name}</h3>
-                <p className="mt-3 leading-7 text-[#586e78]">{brandItem.description}</p>
-                <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#31586a]">
+                <Building2 className="text-[var(--lsh-brand-red)]" />
+                <h3 className="lsh-display mt-8 text-2xl text-[var(--lsh-charcoal)]">
+                  {brandItem.name}
+                </h3>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{brandItem.description}</p>
+                <span className="lsh-display mt-6 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
                   Visit brand <ExternalLink size={15} />
                 </span>
               </a>
@@ -205,16 +224,18 @@ export function OperationsPage() {
       <section className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
         <div className="grid gap-4">
           {LIFE_SUPPLY_CONTENT.operations.map((operation, index) => (
-            <article key={operation.title} className="flex gap-5 border-b border-[#d7dfd9] pb-6">
-              <span className="font-serif text-3xl text-[#9aae50]">0{index + 1}</span>
+            <article key={operation.title} className="flex gap-5 border-b border-[#d6d6d6] pb-6">
+              <span className="lsh-display text-3xl text-[var(--lsh-brand-red)]">0{index + 1}</span>
               <div>
-                <h2 className="font-serif text-2xl text-[#173546]">{operation.title}</h2>
-                <p className="mt-2 leading-7 text-[#566d78]">{operation.description}</p>
+                <h2 className="lsh-display text-2xl text-[var(--lsh-charcoal)]">
+                  {operation.title}
+                </h2>
+                <p className="mt-2 leading-7 text-[var(--lsh-muted)]">{operation.description}</p>
               </div>
             </article>
           ))}
         </div>
-        <div className="overflow-hidden rounded-3xl bg-[#dce7d7] p-4">
+        <div className="overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-4">
           <Image
             src={LIFE_SUPPLY_CONTENT.operationsTimeline}
             alt="LifeSupply operations timeline"
@@ -243,7 +264,7 @@ export function TeamPage() {
             <Link
               key={member.slug}
               href={`/${member.slug}/`}
-              className="group rounded-2xl border border-[#dce4df] bg-white p-7 transition hover:-translate-y-1 hover:shadow-lg"
+              className="lsh-lift group border border-[#d6d6d6] bg-white p-7"
             >
               <div className="flex items-start gap-5">
                 {"image" in member ? (
@@ -255,7 +276,7 @@ export function TeamPage() {
                     className="h-20 w-20 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#dce7d7] font-serif text-2xl text-[#31586a]">
+                  <div className="lsh-display flex h-20 w-20 items-center justify-center rounded-full bg-[var(--lsh-surface)] text-2xl text-[var(--lsh-brand-red)]">
                     {member.name
                       .split(" ")
                       .map((part) => part[0])
@@ -263,29 +284,24 @@ export function TeamPage() {
                   </div>
                 )}
                 <div>
-                  <h2 className="font-serif text-2xl text-[#173546]">{member.name}</h2>
-                  <p className="mt-1 text-sm font-bold uppercase tracking-[0.12em] text-[#66813d]">
+                  <h2 className="lsh-display text-2xl text-[var(--lsh-charcoal)]">{member.name}</h2>
+                  <p className="lsh-display mt-1 text-[10px] text-[var(--lsh-brand-red)]">
                     {member.role}
                   </p>
                 </div>
               </div>
-              <p className="mt-6 leading-7 text-[#566d78]">{member.summary}</p>
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#31586a]">
+              <p className="mt-6 leading-7 text-[var(--lsh-muted)]">{member.summary}</p>
+              <span className="lsh-display mt-6 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
                 View profile <ArrowRight size={15} />
               </span>
             </Link>
           ))}
         </div>
-        <div className="mt-16 rounded-2xl bg-[#163a4c] p-8 text-white">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d8e87f]">
-            Board of directors
-          </p>
+        <div className="mt-16 border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white">
+          <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">Board of directors</p>
           <div className="mt-6 flex flex-wrap gap-3">
             {board.map((name) => (
-              <span
-                key={name}
-                className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/80"
-              >
+              <span key={name} className="border border-white/20 px-4 py-2 text-sm text-white/80">
                 {name}
               </span>
             ))}
@@ -306,7 +322,7 @@ export function InvestorRelationsPage() {
         description={investor.description}
       />
       <section className="mx-auto grid max-w-7xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-        <div className="overflow-hidden rounded-3xl bg-[#e5ece0] p-4">
+        <div className="overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-4">
           <Image
             src={investor.preview}
             alt="LifeSupply investor presentation preview"
@@ -325,29 +341,31 @@ export function InvestorRelationsPage() {
             {investor.currentReport.highlights.map((item) => (
               <div
                 key={item.label}
-                className="border-t-2 border-[#b5c951] bg-white px-4 py-6 shadow-sm"
+                className="border-t-4 border-[var(--lsh-brand-red)] bg-white px-4 py-6 shadow-sm"
               >
-                <p className="font-serif text-3xl text-[#173546]">{item.value}</p>
-                <p className="mt-2 text-sm text-[#596e78]">{item.label}</p>
+                <p className="lsh-display text-3xl text-[var(--lsh-charcoal)]">{item.value}</p>
+                <p className="mt-2 text-sm text-[var(--lsh-muted)]">{item.label}</p>
               </div>
             ))}
           </div>
-          <div className="mt-8 rounded-2xl border border-[#d9e2dc] bg-[#f9faf8] p-6">
-            <div className="flex items-center gap-2 text-sm font-bold text-[#4c6b35]">
+          <div className="mt-8 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+            <div className="lsh-display flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
               <ShieldCheck size={18} /> Disclosure context
             </div>
-            <p className="mt-3 leading-7 text-[#4d626d]">{investor.expansionContext.description}</p>
+            <p className="mt-3 leading-7 text-[var(--lsh-muted)]">
+              {investor.expansionContext.description}
+            </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href={`mailto:${investor.contact.email}`}
-              className="inline-flex items-center gap-2 rounded-full bg-[#173546] px-5 py-3 text-sm font-bold text-white"
+              className="lsh-primary-action lsh-display inline-flex items-center gap-2 px-5 py-3 text-[11px]"
             >
               <Mail size={16} /> {investor.contact.email}
             </a>
             <a
               href={`tel:${investor.contact.phone.replace(/[^+\d]/g, "")}`}
-              className="inline-flex items-center gap-2 rounded-full border border-[#bfcfc5] px-5 py-3 text-sm font-bold text-[#173546]"
+              className="lsh-display inline-flex items-center gap-2 border border-[#bdbdbd] px-5 py-3 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
             >
               <Phone size={16} /> {investor.contact.phone}
             </a>
@@ -374,13 +392,13 @@ export function NewsPage() {
               href={item.href}
               target="_blank"
               rel="noreferrer"
-              className="group rounded-2xl border border-[#dce4df] bg-white p-7 transition hover:border-[#b5c951] hover:shadow-lg"
+              className="lsh-lift group border border-[#d6d6d6] bg-white p-7"
             >
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#687e42]">
+              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
                 {item.date} · {item.source}
               </p>
-              <h2 className="mt-3 font-serif text-2xl text-[#173546]">{item.title}</h2>
-              <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#31586a]">
+              <h2 className="lsh-display mt-3 text-2xl text-[var(--lsh-charcoal)]">{item.title}</h2>
+              <span className="lsh-display mt-5 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
                 Read source <ExternalLink size={15} />
               </span>
             </a>
@@ -401,22 +419,23 @@ export function ContactPage() {
       />
       <section className="mx-auto grid max-w-7xl gap-5 px-5 py-20 md:grid-cols-2 lg:px-8">
         {LIFE_SUPPLY_CONTENT.contact.channels.map((channel) => (
-          <article key={channel.label} className="rounded-2xl border border-[#dbe3df] bg-white p-7">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#69833e]">
-              {channel.label}
-            </p>
-            <h2 className="mt-3 font-serif text-2xl text-[#173546]">{channel.name}</h2>
-            <div className="mt-5 grid gap-2 text-sm text-[#526873]">
+          <article
+            key={channel.label}
+            className="border-t-4 border-[var(--lsh-brand-red)] bg-white p-7 shadow-sm"
+          >
+            <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{channel.label}</p>
+            <h2 className="lsh-display mt-3 text-2xl text-[var(--lsh-charcoal)]">{channel.name}</h2>
+            <div className="mt-5 grid gap-2 text-sm text-[var(--lsh-muted)]">
               <a
                 href={`mailto:${channel.email}`}
-                className="inline-flex items-center gap-2 hover:text-[#173546]"
+                className="inline-flex items-center gap-2 transition-colors hover:text-[var(--lsh-brand-red)]"
               >
                 <Mail size={15} /> {channel.email}
               </a>
               {"phone" in channel ? (
                 <a
                   href={`tel:${channel.phone.replace(/[^+\d]/g, "")}`}
-                  className="inline-flex items-center gap-2 hover:text-[#173546]"
+                  className="inline-flex items-center gap-2 transition-colors hover:text-[var(--lsh-brand-red)]"
                 >
                   <Phone size={15} /> {channel.phone}
                 </a>
@@ -425,7 +444,7 @@ export function ContactPage() {
           </article>
         ))}
       </section>
-      <section className="bg-[#e5ece0] px-5 py-16 lg:px-8">
+      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionTitle eyebrow="Operating entities" title="LifeSupply public subsidiaries" />
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
@@ -435,11 +454,13 @@ export function ContactPage() {
                 href={entity.url}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-2xl bg-white p-6"
+                className="lsh-lift border border-transparent bg-white p-6"
               >
-                <h3 className="font-serif text-xl text-[#173546]">{entity.name}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#596f78]">{entity.detail}</p>
-                <p className="mt-3 text-sm font-semibold text-[#31586a]">{entity.phone}</p>
+                <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">{entity.name}</h3>
+                <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{entity.detail}</p>
+                <p className="lsh-display mt-3 text-[10px] text-[var(--lsh-brand-red)]">
+                  {entity.phone}
+                </p>
               </a>
             ))}
           </div>
@@ -458,8 +479,10 @@ export function ShopBoundaryPage() {
         description="This corporate website does not process transactions. Future product discovery will be published from a channel-approved Command Center projection, while orders remain in the designated commerce system."
       />
       <section className="mx-auto max-w-4xl px-5 py-20 text-center lg:px-8">
-        <p className="font-serif text-3xl text-[#173546]">Looking for medical products?</p>
-        <p className="mx-auto mt-4 max-w-2xl leading-7 text-[#586e78]">
+        <p className="lsh-display text-3xl text-[var(--lsh-charcoal)]">
+          Looking for medical products?
+        </p>
+        <p className="mx-auto mt-4 max-w-2xl leading-7 text-[var(--lsh-muted)]">
           Visit LifeSupply’s consumer-facing ecommerce channel for current catalogue, availability,
           fulfillment, payment, and customer-service information.
         </p>
@@ -467,7 +490,7 @@ export function ShopBoundaryPage() {
           href="https://lifesupply.ca"
           target="_blank"
           rel="noreferrer"
-          className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#173546] px-6 py-3 text-sm font-bold text-white"
+          className="lsh-primary-action lsh-display mt-8 inline-flex items-center gap-2 px-6 py-3 text-[11px]"
         >
           Visit LifeSupply.ca <ExternalLink size={16} />
         </a>
@@ -483,12 +506,12 @@ export function LegacyProfilePage({ slug }: { slug: string }) {
     <LifeSupplyLayout>
       <PageHero eyebrow="Leadership profile" title={profile.name} description={profile.role} />
       <section className="mx-auto max-w-3xl px-5 py-20 lg:px-8">
-        <div className="rounded-3xl border border-[#dbe3df] bg-white p-8 sm:p-12">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#687e42]">
+        <div className="border-t-4 border-[var(--lsh-brand-red)] bg-white p-8 shadow-sm sm:p-12">
+          <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
             Historical public profile
           </p>
-          <p className="mt-6 text-lg leading-8 text-[#4f6570]">{profile.bio}</p>
-          <p className="mt-8 border-t border-[#dce4df] pt-6 text-sm leading-6 text-[#6a7d84]">
+          <p className="mt-6 text-lg leading-8 text-[var(--lsh-muted)]">{profile.bio}</p>
+          <p className="mt-8 border-t border-[#d6d6d6] pt-6 text-sm leading-6 text-[var(--lsh-muted)]">
             This preserved biography is sourced from the prior public website. The Command Center
             publication workflow will govern subsequent current-role or biography updates.
           </p>

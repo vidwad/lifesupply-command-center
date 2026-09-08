@@ -56,3 +56,6 @@ test-results
 
 # Local files
 *.local
+
+# Developer-local MCP credentials and overrides
+.mcp.json

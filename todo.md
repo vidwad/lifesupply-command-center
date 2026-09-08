@@ -1,0 +1,29 @@
+# LifeSupply Command Center Consolidation TODO
+
+- [ ] Inspect the merged Command Center public-site routes, host routing, homepage navigation, existing Vercel configuration, and standalone Life Supply Health rollback repository.
+- [ ] Complete remaining public LifeSupply website structure and add a clear, accessible homepage path to the authenticated Command Center dashboard.
+- [ ] Add focused tests for public-home dashboard login behavior and host-safe navigation.
+- [ ] Create a Vercel preview deployment from the unified repository without assigning the LifeSupply custom domain.
+- [ ] Validate public, internal, login, and Vercel preview access paths while preserving internal API and dashboard protection.
+- [ ] Update the public-site cutover runbook and Claude Code handoff with Vercel preview, login, database-migration, domain-deferral, and rollback guidance.
+- [ ] Delete the redundant standalone `vidwad/life-supply-health` repository only after preserving its tagged rollback reference in the unified repository documentation.
+- [ ] Commit and push the completed unified website, Vercel preview, dashboard login, documentation, and repository-retirement records to Command Center `main`.
+- [ ] Deliver the final unified LifeSupply Command Center handoff for local Claude Code development.
+- [ ] Retain Render as the only Command Center backend, database, worker, and authenticated dashboard runtime; do not move its production credentials or migration execution to Vercel.
+- [ ] Configure Vercel only as the public Life Supply Health front end, using a database-free public build and a server-to-server public-read contract to Render.
+- [ ] Route the public homepage login action to the Render-hosted Command Center authentication endpoint and retain public/public-read host restrictions on Vercel.
+- [ ] Document the two-deployment, one-repository model, including Vercel preview variables, Render source-of-truth responsibilities, and rollout checks.
+- [ ] Disable Vercel Authentication for the Life Supply Health preview project as approved and verify the public preview loads without SSO while Render dashboard access remains protected.
+- [x] Inventory the LLD Recovery Academy implementation for Playwright, MCP, 21st.dev, visual review, and related design/development tooling that can be safely reused.
+- [x] Add compatible Playwright end-to-end testing, configuration, scripts, and smoke coverage for the LifeSupply public preview and protected Render dashboard login boundary.
+- [x] Document compatible MCP and design-tool setup for Claude Code, keeping credentials in user-local configuration and out of repository source or deployment environments.
+- [x] Validate the added tooling locally and update the unified Render/Vercel Claude Code handoff with install, run, and troubleshooting instructions.
+- [x] Audit lifesupplyhealth.com as the legacy visual source of truth, including brand colors, marks, typography, imagery, page patterns, navigation, and responsive conventions.
+- [x] Reconcile legacy brand cues and assets with the unified public preview, preserving recognizable identity while specifying modern accessibility and performance refinements.
+- [x] Replace the public-site navy/lime/serif styling with scoped legacy LifeSupply red/black/white tokens and Roboto Condensed/Roboto typography without altering dashboard styles or the Render login boundary.
+- [x] Create a comprehensive Claude Code front-end continuation plan covering current-content approvals, new-business-plan guardrails, page rebuild sequence, reusable components, testing, and delivery gates.
+- [x] Create and document the first ready-to-paste Claude Code prompt for targeted public front-end fine-tuning.
+- [x] Strengthen the public Playwright assertion to verify that the homepage login targets the exact protected Render origin, not merely a non-dashboard path.
+- [ ] Resolve and verify the Next `/_global-error` prerender `useContext` failure that blocks `pnpm public-web:build` before merging or promoting the public preview branch.
+- [ ] Squash-merge PR #60 after confirming the LifeSupply planning documents and successful checks, as authorized by the repository owner.
+- [ ] Verify the merged `main` commit retains the Claude Code planning artifacts and report the local VS Code continuation prompt.

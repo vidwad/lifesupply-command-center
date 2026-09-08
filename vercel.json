@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "pnpm vercel-build",
+  "buildCommand": "pnpm public-web:build",
   "installCommand": "pnpm install --frozen-lockfile",
   "regions": ["iad1"],
   "functions": {
