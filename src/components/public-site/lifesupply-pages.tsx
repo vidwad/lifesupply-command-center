@@ -22,7 +22,8 @@ import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifes
  * Page families live in `./pages/` and are re-exported here so the route
  * files keep one import: Home and About (Stage 2); Our Businesses, the four
  * brand pages, Technology & fulfilment, Clinic Solutions, Shop & Services,
- * and Contact (Stage 3). The pages below keep their baseline until their
+ * and Contact (Stage 3); Metabolic Health, the care-kit hub, the kit pages,
+ * and Refills (Stage 4). The pages below keep their baseline until their
  * own stage (Team, Investors, News, and profiles in Stage 5).
  */
 export { AboutPage } from "@/components/public-site/pages/about";
@@ -39,6 +40,12 @@ export {
 } from "@/components/public-site/pages/clinic-solutions";
 export { ContactPage } from "@/components/public-site/pages/contact";
 export { LifeSupplyHome } from "@/components/public-site/pages/home";
+export {
+  CareKitPage,
+  CareKitsPage,
+  MetabolicHealthPage,
+  RefillsPage,
+} from "@/components/public-site/pages/metabolic";
 export { OperationsPage } from "@/components/public-site/pages/operations";
 export { ShopServicesPage } from "@/components/public-site/pages/shop";
 

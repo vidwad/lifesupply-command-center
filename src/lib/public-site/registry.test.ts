@@ -8,14 +8,23 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { ACTIONS, actionHref, isExternalAction, type ActionKey } from "@/lib/public-site/actions";
-import { BRANDS, OPERATING_BRANDS, brandGeography, getBrand } from "@/lib/public-site/brands";
+import {
+  BRANDS,
+  OPERATING_BRANDS,
+  brandGeography,
+  getBrand,
+  getBrandCategory,
+} from "@/lib/public-site/brands";
+import { KIT_SLUGS, metabolic } from "@/lib/public-site/content/metabolic";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import {
   BRAND_ROUTES,
   LIFE_SUPPLY_NAVIGATION,
   LIVE_ROUTES,
+  METABOLIC_ROUTES,
   ROUTES,
   STAGE_3_ROUTES,
+  kitRoute,
   buildPrimaryNavigation,
   buildUtilityNavigation,
   isLiveRoute,
@@ -113,7 +122,8 @@ describe("route registry", () => {
 
   it("keeps every live route backed by a route file and every planned route out of the menus", () => {
     for (const route of LIVE_ROUTES) {
-      expect(existsSync(routeFile(route.path)), route.path).toBe(true);
+      const file = route.routeFile ? join(ROOT, route.routeFile) : routeFile(route.path);
+      expect(existsSync(file), route.path).toBe(true);
     }
     const menuHrefs = [
       ...buildPrimaryNavigation().flatMap((group) => [
@@ -151,6 +161,7 @@ describe("route registry", () => {
     expect(groups.map((group) => group.label)).toEqual([
       "Our Businesses",
       "Clinic Solutions",
+      "Metabolic Health",
       "Investors",
       "About",
     ]);
@@ -174,6 +185,19 @@ describe("route registry", () => {
     for (const group of groups) {
       expect(group.links.map((link) => link.href)).not.toContain(group.href);
     }
+  });
+
+  it("makes the Stage 4 pages live under the Metabolic Health group, kit pages out of the menu", () => {
+    for (const path of [...Object.values(METABOLIC_ROUTES), ...KIT_SLUGS.map(kitRoute)]) {
+      expect(isLiveRoute(path), path).toBe(true);
+    }
+    const group = buildPrimaryNavigation().find((entry) => entry.key === "metabolic")!;
+    expect(group.href).toBe(METABOLIC_ROUTES.hub);
+    expect(group.links.map((link) => link.href)).toEqual([
+      METABOLIC_ROUTES.careKits,
+      METABOLIC_ROUTES.refills,
+    ]);
+    expect(KIT_SLUGS).toHaveLength(8);
   });
 
   it("keeps Shop & Services and Contact as utility links", () => {
@@ -249,10 +273,34 @@ describe("action registry", () => {
       ...clinics.ongoingSupplies.actions,
       ...shop.choices.map((choice) => choice.action),
       ...contact.intents.map((intent) => intent.action),
+      ...metabolic.hub.actions,
+      ...metabolic.kitsHub.actions,
+      ...metabolic.refills.actions,
     ];
     for (const key of declared) {
       expect(Object.keys(ACTIONS), key).toContain(key);
     }
+  });
+
+  it("resolves every kit browse reference to a registered category, and states why when there is none", () => {
+    for (const kit of metabolic.kits) {
+      for (const ref of kit.browse) {
+        expect(
+          () => getBrandCategory(ref.brand, ref.category),
+          `${kit.id} ${ref.category}`,
+        ).not.toThrow();
+      }
+      if (kit.browse.length === 0) expect(kit.browseNote, kit.id).toBeTruthy();
+      expect(kit.availability, kit.id).toBe("in_development");
+      expect(kit.approvedContents, kit.id).toBeNull();
+      expect(
+        kit.exclusions.some((rule) => /medication/i.test(rule)),
+        kit.id,
+      ).toBe(true);
+    }
+    // K03 has no store destination (S-89).
+    expect(metabolic.kits.find((kit) => kit.id === "K03")!.browse).toEqual([]);
+    expect(() => getBrandCategory("lifesupply", "Sharps containers")).toThrow();
   });
 
   it("keeps the published Clinics project links on the Clinics host", () => {

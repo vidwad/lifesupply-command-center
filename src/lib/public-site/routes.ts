@@ -9,6 +9,7 @@
  * the route files depend on. Trailing slashes are part of the contract.
  */
 import type { OperatingBrandKey } from "@/lib/public-site/brands";
+import { KIT_SLUGS } from "@/lib/public-site/content/metabolic";
 
 export const LIFE_SUPPLY_ROUTES = {
   home: "/",
@@ -38,6 +39,17 @@ export const STAGE_3_ROUTES = {
   ongoingSupplies: "/clinic-solutions/ongoing-supplies/",
 } as const;
 
+/** Stage 4 pages. Kit pages are a dynamic route; `kitRoute()` builds their paths. */
+export const METABOLIC_ROUTES = {
+  hub: "/metabolic-health/",
+  careKits: "/metabolic-health/care-kits/",
+  refills: "/metabolic-health/refills/",
+} as const;
+
+export function kitRoute(slug: string): string {
+  return `${METABOLIC_ROUTES.careKits}${slug}/`;
+}
+
 export type NavGroupKey =
   | "businesses"
   | "clinic"
@@ -54,6 +66,8 @@ export interface RouteRecord {
   stage: 2 | 3 | 4 | 5 | 6 | 7 | 9;
   status: "live" | "proposed" | "redirect";
   navGroup: NavGroupKey | null;
+  /** For dynamic routes: the route file that serves the path (default: the static file for the path). */
+  routeFile?: string;
 }
 
 export const ROUTES: readonly RouteRecord[] = [
@@ -130,24 +144,34 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "clinic",
   },
   {
-    path: "/metabolic-health/",
+    path: METABOLIC_ROUTES.hub,
     label: "Metabolic Health",
     stage: 4,
-    status: "proposed",
+    status: "live",
     navGroup: "metabolic",
   },
   {
-    path: "/metabolic-health/care-kits/",
+    path: METABOLIC_ROUTES.careKits,
     label: "Care kits",
     stage: 4,
-    status: "proposed",
+    status: "live",
     navGroup: "metabolic",
   },
+  ...KIT_SLUGS.map(
+    (slug): RouteRecord => ({
+      path: kitRoute(slug),
+      label: slug,
+      stage: 4,
+      status: "live",
+      navGroup: null,
+      routeFile: "src/app/metabolic-health/care-kits/[kit]/page.tsx",
+    }),
+  ),
   {
-    path: "/metabolic-health/refills/",
+    path: METABOLIC_ROUTES.refills,
     label: "Refills",
     stage: 4,
-    status: "proposed",
+    status: "live",
     navGroup: "metabolic",
   },
   { path: "/partners/", label: "Partners", stage: 5, status: "proposed", navGroup: "partners" },
@@ -264,7 +288,7 @@ export interface NavGroup {
 const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string }[] = [
   { key: "businesses", label: "Our Businesses", hub: "/our-operations/" },
   { key: "clinic", label: "Clinic Solutions", hub: STAGE_3_ROUTES.clinicSolutions },
-  { key: "metabolic", label: "Metabolic Health", hub: "/metabolic-health/" },
+  { key: "metabolic", label: "Metabolic Health", hub: METABOLIC_ROUTES.hub },
   { key: "partners", label: "Partners", hub: "/partners/" },
   { key: "investors", label: "Investors", hub: "/investor-relations/" },
   { key: "about", label: "About", hub: "/about-us/" },

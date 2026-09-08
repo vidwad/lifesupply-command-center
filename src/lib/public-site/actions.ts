@@ -14,7 +14,12 @@
  * `CommandCenterLoginLink` may resolve it.
  */
 import { getBrand } from "@/lib/public-site/brands";
-import { BRAND_ROUTES, LIFE_SUPPLY_ROUTES, STAGE_3_ROUTES } from "@/lib/public-site/routes";
+import {
+  BRAND_ROUTES,
+  LIFE_SUPPLY_ROUTES,
+  METABOLIC_ROUTES,
+  STAGE_3_ROUTES,
+} from "@/lib/public-site/routes";
 
 export type ActionKey =
   | "explore_businesses"
@@ -25,6 +30,9 @@ export type ActionKey =
   | "clinic_solutions"
   | "view_clinic_projects"
   | "discuss_program"
+  | "metabolic_hub"
+  | "explore_kits"
+  | "refills_information"
   | "partner_inquiry"
   | "supplier_inquiry"
   | "us_business_inquiry"
@@ -139,6 +147,30 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     destination: external("https://www.lifesupplyclinics.com/our-projects/"),
     ownerChannel: null,
     verifiedAt: VERIFIED,
+  },
+  metabolic_hub: {
+    key: "metabolic_hub",
+    label: "Metabolic Health",
+    intent: "navigation",
+    destination: internal(METABOLIC_ROUTES.hub),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  explore_kits: {
+    key: "explore_kits",
+    label: "Explore the pathways",
+    intent: "navigation",
+    destination: internal(METABOLIC_ROUTES.careKits),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  refills_information: {
+    key: "refills_information",
+    label: "How refills work",
+    intent: "navigation",
+    destination: internal(METABOLIC_ROUTES.refills),
+    ownerChannel: null,
+    verifiedAt: null,
   },
   discuss_program: {
     key: "discuss_program",

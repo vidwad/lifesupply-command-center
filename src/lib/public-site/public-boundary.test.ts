@@ -35,6 +35,7 @@ const PAGE_FAMILIES = [
   "clinic-solutions",
   "shop",
   "contact",
+  "metabolic",
 ].map((name) => `${PUBLIC_DIR}/pages/${name}.tsx`);
 const BRAND_GRID = `${PUBLIC_DIR}/brand-grid.tsx`;
 const ACTION_LINK = `${PUBLIC_DIR}/action-link.tsx`;
@@ -52,6 +53,7 @@ const CONTENT_MODULES = [
   "businesses",
   "clinics",
   "shop",
+  "metabolic",
   "team",
   "investors",
   "news",
@@ -460,6 +462,10 @@ describe("routes and content governance", () => {
       "src/app/clinic-solutions/design-build/page.tsx",
       "src/app/clinic-solutions/equipment/page.tsx",
       "src/app/clinic-solutions/ongoing-supplies/page.tsx",
+      "src/app/metabolic-health/page.tsx",
+      "src/app/metabolic-health/care-kits/page.tsx",
+      "src/app/metabolic-health/care-kits/[kit]/page.tsx",
+      "src/app/metabolic-health/refills/page.tsx",
     ]) {
       expect(existsSync(join(ROOT, route)), route).toBe(true);
       expect(read(route), route).toContain("@/components/public-site/lifesupply-pages");
@@ -521,7 +527,6 @@ describe("Stage 2 registries and navigation", () => {
     expect(code).toContain("buildPrimaryNavigation()");
     expect(code).toContain("buildUtilityNavigation()");
     for (const planned of [
-      "/metabolic-health",
       "/partners",
       "/investor-relations/documents",
       "/investor-relations/growth-strategy",
@@ -655,5 +660,60 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
       expect((source.match(/<PublicHero\b/g) ?? []).length).toBe(exported);
       expect((source.match(/<LifeSupplyLayout>/g) ?? []).length).toBe(exported);
     }
+  });
+});
+
+describe("Stage 4 Metabolic Health and the eight pathways", () => {
+  const metabolicPage = () => stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
+  const metabolicContent = () => stripComments(read("src/lib/public-site/content/metabolic.ts"));
+
+  it("states the in-development status and the disclaimer on every metabolic page", () => {
+    const page = metabolicPage();
+    expect((page.match(/<StatusBand \/>/g) ?? []).length).toBe(4);
+    expect(metabolicContent()).toContain("No pathway is purchasable on this site");
+    expect(metabolicContent()).toContain("does not diagnose, prescribe, or recommend");
+  });
+
+  it("makes no SKU, price, discount, insurance, storage, or clinical claim", () => {
+    const c = metabolicContent();
+    for (const banned of [
+      /\bSKU\b/i,
+      /\$\s?\d/,
+      /\bdiscount\b/i,
+      /\d+\s?% off/i,
+      /\binsurance\b|\bcovered by\b/i,
+      /keeps? (it |supplies )?(cold|cool)/i,
+      /\bclinically (proven|shown)\b/i,
+      // "prescribed device" is compatibility language; the site itself never diagnoses or prescribes.
+      /(?<!does not )diagnos/i,
+      /(?<!does not diagnose, )prescribes?/i,
+    ]) {
+      expect(c, String(banned)).not.toMatch(banned);
+    }
+    expect(metabolicPage()).not.toMatch(/add to cart|buy now|\bcheckout\b/i);
+  });
+
+  it("excludes medication from every pathway and never claims a universal device", () => {
+    const c = metabolicContent();
+    expect((c.match(/MEDICATION_EXCLUDED/g) ?? []).length).toBeGreaterThanOrEqual(9);
+    expect(c).toContain("An insulin syringe is not universal injectable equipment");
+    expect(c).not.toMatch(/(fits|works with|suits) (all|any|every) (pen|device|syringe|meter)/i);
+    expect(c).not.toMatch(/\buniversal (pack|pen|syringe|needle|kit)\b/i);
+  });
+
+  it("keeps starter items out of refills and claims no refill service that does not exist", () => {
+    const c = metabolicContent();
+    expect(c).toContain("Starter items are not refills.");
+    expect(c).toContain("no automatic shipment, no reminder service, and no subscription");
+    expect(c).not.toMatch(/subscribe and save|auto-?ship (is|now) available/i);
+  });
+
+  it("resolves browse links only through the brand registry and says so when there is none", () => {
+    const page = metabolicPage();
+    expect(page).toContain("getBrandCategory(ref.brand, ref.category)");
+    expect(page).toContain("{kit.browseNote}");
+    expect(metabolicContent()).toContain(
+      "No operating store publishes a sharps-container category today",
+    );
   });
 });
