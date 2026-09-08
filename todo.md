@@ -25,3 +25,5 @@
 - [x] Create and document the first ready-to-paste Claude Code prompt for targeted public front-end fine-tuning.
 - [x] Strengthen the public Playwright assertion to verify that the homepage login targets the exact protected Render origin, not merely a non-dashboard path.
 - [ ] Resolve and verify the Next `/_global-error` prerender `useContext` failure that blocks `pnpm public-web:build` before merging or promoting the public preview branch.
+- [ ] Squash-merge PR #60 after confirming the LifeSupply planning documents and successful checks, as authorized by the repository owner.
+- [ ] Verify the merged `main` commit retains the Claude Code planning artifacts and report the local VS Code continuation prompt.
