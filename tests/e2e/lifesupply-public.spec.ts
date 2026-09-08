@@ -90,7 +90,7 @@ test.describe("LifeSupply public site", () => {
     await expect.poll(async () => (await header.boundingBox())?.y ?? -1, { timeout: 3000 }).toBe(0);
   });
 
-  test("plays a silent, looping, inline background video in the hero with a pause control", async ({
+  test("plays a silent, looping, inline background video in the hero, with no control", async ({
     page,
   }) => {
     await page.goto("/");
@@ -100,17 +100,36 @@ test.describe("LifeSupply public site", () => {
     await expect(video).toHaveAttribute("loop", "");
     // React sets muted as a property, not an attribute, so read the property.
     expect(await video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(true);
-
-    // Let autoplay actually begin so the pause below stops a playing loop.
     await expect
       .poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused && v.currentTime > 0), {
         timeout: 10_000,
       })
       .toBe(true);
+    await expect(page.getByRole("button", { name: /background video/ })).toHaveCount(0);
+  });
 
-    await page.getByRole("button", { name: "Pause background video" }).click();
-    await expect(page.getByRole("button", { name: "Play background video" })).toBeVisible();
-    expect(await video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+  test("counts the reported figures up to exactly the approved text", async ({ page }) => {
+    await page.goto("/");
+    const glance = page.getByText("years of operations cited in the 2025 annual report");
+    await glance.scrollIntoViewIfNeeded();
+    const stats = page.locator("p.lsh-display.text-4xl");
+    await expect(stats).toHaveCount(3);
+    await expect(stats.nth(0)).toHaveText("25+", { timeout: 8_000 });
+    await expect(stats.nth(1)).toHaveText("50K+");
+    await expect(stats.nth(2)).toHaveText("1M+");
+  });
+
+  test("keeps the hero heading one accessible sentence while its words animate", async ({
+    page,
+  }) => {
+    await page.goto("/about-us");
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "A platform approach to medical-supply access.",
+      }),
+    ).toBeVisible();
   });
 
   test("shows the poster instead of footage for visitors who prefer reduced motion", async ({
@@ -120,7 +139,12 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/");
     await expect(page.locator("video")).toHaveCount(0);
     await expect(page.locator('img[src*="hero-poster"]')).toHaveCount(1);
-    await expect(page.getByRole("button", { name: /background video/ })).toHaveCount(0);
+    // Reveal animations collapse too: content is visible without scrolling into it.
+    const pillar = page.getByRole("heading", { name: "Experienced" });
+    await expect(pillar).toBeVisible();
+    expect(await pillar.evaluate((el) => getComputedStyle(el.closest("article")!).opacity)).toBe(
+      "1",
+    );
   });
 
   test("carries the external login in the utility strip on every viewport", async ({ page }) => {

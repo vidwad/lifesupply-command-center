@@ -24,6 +24,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ExternalLink, LogIn } from "lucide-react";
 
+import { CountUp, Enter, HeroTitle } from "@/components/public-site/motion";
 import { getCommandCenterLoginUrl } from "@/lib/public-site/command-center";
 
 type Tone = "onLight" | "onDark";
@@ -131,24 +132,32 @@ export function PublicHero({
             isHome ? "max-w-5xl" : "max-w-4xl"
           }`}
         >
-          <Eyebrow tone="onDark">{eyebrow}</Eyebrow>
-          <h1
+          <Enter>
+            <Eyebrow tone="onDark">{eyebrow}</Eyebrow>
+          </Enter>
+          {/* The single h1 for the route, entering word by word (motion.tsx). */}
+          <HeroTitle
+            text={title}
             className={`lsh-display mt-5 ${
               isHome
                 ? "text-[clamp(2.5rem,7.2vw,5.75rem)] leading-[0.94]"
                 : "text-[clamp(2rem,5vw,4rem)] leading-[1.02]"
             }`}
-          >
-            {title}
-          </h1>
+          />
           {description ? (
-            <p
-              className={`mt-6 max-w-2xl leading-8 text-white/80 ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
-            >
-              {description}
-            </p>
+            <Enter delay={0.45}>
+              <p
+                className={`mt-6 max-w-2xl leading-8 text-white/80 ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
+              >
+                {description}
+              </p>
+            </Enter>
           ) : null}
-          {actions ? <div className="mt-9 flex flex-wrap gap-3">{actions}</div> : null}
+          {actions ? (
+            <Enter delay={0.6}>
+              <div className="mt-9 flex flex-wrap gap-3">{actions}</div>
+            </Enter>
+          ) : null}
         </div>
       </div>
     </section>
@@ -319,7 +328,9 @@ export function CommandCenterLoginLink({
 export function EditorialStat({ value, label }: { value: string; label: string }) {
   return (
     <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] px-5 py-7 shadow-sm">
-      <p className="lsh-display text-4xl text-[var(--lsh-charcoal)]">{value}</p>
+      <p className="lsh-display text-4xl text-[var(--lsh-charcoal)]">
+        <CountUp value={value} />
+      </p>
       <p className="mt-3 text-sm leading-5 text-[var(--lsh-muted)]">{label}</p>
     </div>
   );

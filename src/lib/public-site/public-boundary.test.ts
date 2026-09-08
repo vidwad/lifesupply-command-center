@@ -27,6 +27,7 @@ const LAYOUT = `${PUBLIC_DIR}/lifesupply-layout.tsx`;
 const PAGES = `${PUBLIC_DIR}/lifesupply-pages.tsx`;
 const PRIMITIVES = `${PUBLIC_DIR}/lifesupply-primitives.tsx`;
 const HERO_VIDEO = `${PUBLIC_DIR}/hero-video.tsx`;
+const MOTION = `${PUBLIC_DIR}/motion.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 const PROXY = "src/proxy.ts";
 const CSS = "src/styles/globals.css";
@@ -35,8 +36,9 @@ const layout = () => stripComments(read(LAYOUT));
 const pages = () => stripComments(read(PAGES));
 const primitives = () => stripComments(read(PRIMITIVES));
 const heroVideo = () => stripComments(read(HERO_VIDEO));
+const motionPrimitives = () => stripComments(read(MOTION));
 const content = () => stripComments(read(CONTENT));
-const publicComponents = () => [layout(), pages(), primitives(), heroVideo()];
+const publicComponents = () => [layout(), pages(), primitives(), heroVideo(), motionPrimitives()];
 
 /** Width and height from a PNG's IHDR chunk. */
 function pngSize(rel: string): { width: number; height: number } {
@@ -178,7 +180,7 @@ describe("the hero footage", () => {
     expect(pages()).toContain("<HeroVideo {...homepage.heroMedia} />");
   });
 
-  it("is decorative, silent, inline, looped, and pausable", () => {
+  it("is decorative, silent, inline, looped, and pauses itself off screen", () => {
     const code = heroVideo();
     expect(code).toContain('aria-hidden="true"');
     expect(code).toMatch(
@@ -186,9 +188,11 @@ describe("the hero footage", () => {
     );
     // VP9 first, H.264 fallback.
     expect(code.indexOf('type="video/webm"')).toBeLessThan(code.indexOf('type="video/mp4"'));
-    // WCAG 2.2.2: auto-playing motion longer than five seconds needs a pause.
-    expect(code).toContain("Pause background video");
-    expect(code).toContain("aria-pressed={paused}");
+    // No on-screen control, by product-owner decision (2026-09-08); the
+    // loop pauses itself when the hero leaves the viewport instead.
+    expect(code).not.toContain("<button");
+    expect(code).toContain("new IntersectionObserver(");
+    expect(code).toContain("video.pause()");
   });
 
   it("gives reduced-motion visitors the poster only, and renders no footage on the server", () => {
@@ -198,7 +202,50 @@ describe("the hero footage", () => {
     // The server snapshot is "reduced", so the video element never reaches
     // the HTML and no bytes are requested before the preference is known.
     expect(code).toMatch(/useSyncExternalStore\([\s\S]*?\(\) => true,?\s*\)/);
-    expect(code).not.toContain("useEffect");
+    // The only effect drives the element from an observer; it writes no state.
+    expect(code).not.toMatch(/useEffect\([\s\S]*?set[A-Z]\w*\(/);
+  });
+});
+
+describe("motion", () => {
+  it("collapses every animation for reduced-motion visitors", () => {
+    const code = motionPrimitives();
+    // Each exported primitive consults the preference. Count the components
+    // and the calls: they must match, so a new primitive cannot skip it.
+    const exported = code.match(/^export function \w+/gm) ?? [];
+    const consulted = code.match(/useReducedMotion\(\)/g) ?? [];
+    expect(exported.length).toBeGreaterThanOrEqual(7);
+    // SpotlightCard is pointer-only decoration with no animation of its own.
+    expect(consulted.length).toBe(exported.length - 1);
+  });
+
+  it("counts figures up to exactly the approved text", () => {
+    // The formatted target is derived from the content string, so the number
+    // a visitor ends on is the number that was approved, decimals included.
+    const code = motionPrimitives();
+    expect(code).toContain("latest.toFixed(decimals)");
+    expect(code).toMatch(/if \(!parsed \|\| reduce\)[\s\S]*?\{value\}/);
+  });
+
+  it("keeps the hero title a single real heading", () => {
+    // Words are spans inside one motion.h1, not separate elements, so the
+    // accessible name is the full sentence and the one-h1 rule holds.
+    const code = motionPrimitives();
+    expect(code).toMatch(/<motion\.h1[\s\S]*?words\.map[\s\S]*?<\/motion\.h1>/);
+  });
+
+  it("declares the portrait graphics at their real pixel sizes", () => {
+    const c = content();
+    const block = (key: string) =>
+      c.slice(c.indexOf(`${key}: {`), c.indexOf("}", c.indexOf(`${key}: {`)));
+    const dims = (key: string) => ({
+      width: Number(block(key).match(/width:\s*(\d+)/)?.[1]),
+      height: Number(block(key).match(/height:\s*(\d+)/)?.[1]),
+    });
+    expect(dims("operationsTimeline")).toEqual(jpegSize("public/lsh/operations-timeline.jpg"));
+    expect(dims("preview")).toEqual(pngSize("public/lsh/investor-presentation-preview.png"));
+    expect(pages()).toContain("width={operationsTimeline.width}");
+    expect(pages()).toContain("width={investor.preview.width}");
   });
 });
 
@@ -327,7 +374,10 @@ describe("document structure", () => {
     expect(heroes).toBe(exportedPages);
     expect(pageSource).not.toContain("<h1");
     expect(layout()).not.toContain("<h1");
-    expect((primitives().match(/<h1\b/g) ?? []).length).toBe(1);
+    expect(primitives()).not.toContain("<h1");
+    // The heading element itself is HeroTitle's motion.h1, rendered once, by PublicHero.
+    expect((primitives().match(/<HeroTitle\b/g) ?? []).length).toBe(1);
+    expect((motionPrimitives().match(/<motion\.h1\b/g) ?? []).length).toBe(1);
   });
 
   it("wraps every page in the shared layout", () => {

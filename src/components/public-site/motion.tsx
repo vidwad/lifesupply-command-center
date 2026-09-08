@@ -1,0 +1,305 @@
+"use client";
+
+/**
+ * Motion primitives for the public LifeSupply site.
+ *
+ * Adapted from 21st.dev components, re-cut on the brand tokens and with one
+ * rule they do not all carry: every animation collapses to its final state
+ * for visitors who prefer reduced motion, so nothing here is ever the only
+ * way to reach content.
+ *
+ *   Reveal / Stagger / StaggerItem   ibelick "In view" (motion useInView)
+ *   HeroTitle                        tom_ui "Words Stagger"
+ *   CountUp                          danielpetho "Number Ticker"
+ *   SpotlightCard                    preetsuthar17 "Spotlight Card"
+ *   ScrollBeam                       Aceternity "Timeline" beam
+ *
+ * Colour is expressed only through the --lsh-* tokens or rgba(); the
+ * boundary canaries reject raw hex in public components.
+ */
+import {
+  animate,
+  motion,
+  useInView,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type Transition,
+  type Variants,
+} from "motion/react";
+import { useEffect, useRef, useState } from "react";
+
+const EASE: Transition["ease"] = [0.23, 1, 0.32, 1];
+
+const rise: Variants = {
+  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
+
+/** Fade, rise, and un-blur once, when the element scrolls into view. */
+export function Reveal({
+  children,
+  delay = 0,
+  className,
+  as = "div",
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+  as?: "div" | "section" | "li" | "article";
+}) {
+  const reduce = useReducedMotion();
+  const Tag = motion[as];
+  return (
+    <Tag
+      className={className}
+      variants={reduce ? undefined : rise}
+      initial={reduce ? false : "hidden"}
+      whileInView="visible"
+      viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+      transition={{ duration: 0.7, ease: EASE, delay }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+/** Fade and rise on mount, for hero copy that is on screen before any scroll. */
+export function Enter({
+  children,
+  delay = 0,
+  className,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      className={className}
+      variants={reduce ? undefined : rise}
+      initial={reduce ? false : "hidden"}
+      animate="visible"
+      transition={{ duration: 0.7, ease: EASE, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+const staggerParent: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+
+/** A list or grid whose children (StaggerItem) enter one after another. */
+export function Stagger({
+  children,
+  className,
+  as = "div",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  as?: "div" | "ul";
+}) {
+  const reduce = useReducedMotion();
+  const Tag = motion[as];
+  return (
+    <Tag
+      className={className}
+      variants={reduce ? undefined : staggerParent}
+      initial={reduce ? false : "hidden"}
+      whileInView="visible"
+      viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+export function StaggerItem({
+  children,
+  className,
+  as = "div",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  as?: "div" | "li" | "article";
+}) {
+  const reduce = useReducedMotion();
+  const Tag = motion[as];
+  return (
+    <Tag
+      className={className}
+      variants={reduce ? undefined : rise}
+      transition={{ duration: 0.6, ease: EASE }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+/**
+ * The route's h1, entering word by word. The words stay real text inside a
+ * single heading element, so the accessible name and the one-h1 rule are
+ * unchanged; only the presentation is staggered.
+ */
+export function HeroTitle({ text, className }: { text: string; className?: string }) {
+  const reduce = useReducedMotion();
+  const words = text.split(" ");
+  const word: Variants = {
+    hidden: { opacity: 0, y: 14, filter: "blur(8px)" },
+    visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: EASE } },
+  };
+  const parent: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.06, delayChildren: 0.15 } },
+  };
+  return (
+    <motion.h1
+      className={className}
+      variants={reduce ? undefined : parent}
+      initial={reduce ? false : "hidden"}
+      animate="visible"
+    >
+      {words.map((item, index) => (
+        // The separating space must be a text node OUTSIDE the inline-block:
+        // trailing whitespace inside an inline-block collapses to nothing.
+        <span key={`${item}-${index}`}>
+          <motion.span className="inline-block" variants={reduce ? undefined : word}>
+            {item}
+          </motion.span>
+          {index < words.length - 1 ? " " : null}
+        </span>
+      ))}
+    </motion.h1>
+  );
+}
+
+/** "$6.75M" → { prefix: "$", value: 6.75, decimals: 2, suffix: "M" }. */
+function parseFigure(raw: string) {
+  const match = raw.match(/^([^\d]*)(\d[\d,]*(?:\.\d+)?)(.*)$/);
+  if (!match) return null;
+  const [, prefix, digits, suffix] = match;
+  const decimals = digits?.split(".")[1]?.length ?? 0;
+  return {
+    prefix: prefix ?? "",
+    value: Number(digits?.replace(/,/g, "")),
+    decimals,
+    suffix: suffix ?? "",
+  };
+}
+
+/**
+ * A reported figure that counts up from zero the first time it scrolls into
+ * view. The formatted string is the same text the content model holds, so
+ * what the visitor ends on is exactly what was approved. Figures the parser
+ * does not understand, and reduced-motion visitors, get the static text.
+ */
+export function CountUp({ value, className }: { value: string; className?: string }) {
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -40px 0px" });
+  const parsed = parseFigure(value);
+  const count = useMotionValue(0);
+  const decimals = parsed?.decimals ?? 0;
+  const text = useTransform(count, (latest) => latest.toFixed(decimals));
+
+  useEffect(() => {
+    if (!inView || !parsed || reduce) return;
+    const controls = animate(count, parsed.value, { duration: 1.6, ease: EASE });
+    return () => controls.stop();
+    // `parsed` is derived from `value`, which is the only input that matters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, value, reduce]);
+
+  if (!parsed || reduce) {
+    return (
+      <span ref={ref} className={className}>
+        {value}
+      </span>
+    );
+  }
+  return (
+    <span ref={ref} className={`tabular-nums ${className ?? ""}`.trim()}>
+      {parsed.prefix}
+      <motion.span>{text}</motion.span>
+      {parsed.suffix}
+    </span>
+  );
+}
+
+/**
+ * A card with a red spotlight that follows the pointer. The glow is a
+ * pointer-only flourish on top of the .lsh-lift hover state, so keyboard and
+ * touch visitors lose nothing; the card's own border and shadow still answer.
+ */
+export function SpotlightCard({
+  children,
+  className = "",
+  as: Tag = "div",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  as?: "div" | "article";
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(0);
+
+  const onMouseMove = (event: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    setPosition({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+  };
+
+  return (
+    <Tag
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseEnter={() => setOpacity(1)}
+      onMouseLeave={() => setOpacity(0)}
+      className={`relative overflow-hidden ${className}`.trim()}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500 ease-out"
+        aria-hidden="true"
+        style={{
+          opacity,
+          background: `radial-gradient(360px circle at ${position.x}px ${position.y}px, rgba(222,0,0,0.14), transparent 70%)`,
+        }}
+      />
+      <div className="relative">{children}</div>
+    </Tag>
+  );
+}
+
+/**
+ * A vertical rule beside a list that fills in brand red as the visitor
+ * scrolls through it. Scale-based, so it needs no measurement of the list.
+ */
+export function ScrollBeam({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 75%", "end 55%"] });
+  const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  return (
+    <div ref={ref} className={`relative ${className}`.trim()}>
+      <div className="absolute bottom-0 left-0 top-0 w-0.5 bg-[var(--lsh-rule)]" aria-hidden="true">
+        <motion.div
+          className="absolute inset-0 origin-top bg-[var(--lsh-brand-red)]"
+          style={{ scaleY: reduce ? 1 : scaleY }}
+        />
+      </div>
+      {children}
+    </div>
+  );
+}

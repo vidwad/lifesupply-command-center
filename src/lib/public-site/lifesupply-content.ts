@@ -340,7 +340,13 @@ export const LIFE_SUPPLY_CONTENT = {
     title: "Investor information, presented with context.",
     description:
       "The investor section presents current annual-report context alongside historical news and materials, with a clear distinction between disclosed information, forward-looking statements, and offering-specific content.",
-    preview: "/lsh/investor-presentation-preview.png",
+    /** A tall portrait capture of the deck; declared at its real pixel size (checked by the canaries). */
+    preview: {
+      src: "/lsh/investor-presentation-preview.png",
+      alt: "LifeSupply investor presentation preview",
+      width: 1233,
+      height: 2634,
+    },
     contact: { email: "invest@lifesupply.com", phone: "604-677-4146" },
     currentReport: {
       period: "Year ended December 31, 2025",
@@ -433,5 +439,11 @@ export const LIFE_SUPPLY_CONTENT = {
       },
     ],
   },
-  operationsTimeline: "/lsh/operations-timeline.jpg",
+  /** A portrait graphic; declared at its real pixel size (checked by the canaries). */
+  operationsTimeline: {
+    src: "/lsh/operations-timeline.jpg",
+    alt: "LifeSupply operations timeline",
+    width: 1099,
+    height: 2560,
+  },
 } as const;
