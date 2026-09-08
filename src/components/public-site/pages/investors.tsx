@@ -13,6 +13,7 @@ import {
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { investorRelations, type BusinessStatus } from "@/lib/public-site/content/investors";
+import { measurementAttributes } from "@/lib/public-site/measurement";
 import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
 import type { PublishedDocumentDto } from "@/server/public-web/contracts";
 import { METABOLIC_ROUTES, STAGE_3_ROUTES, STAGE_5_ROUTES } from "@/lib/public-site/routes";
@@ -354,6 +355,9 @@ function PublishedDocuments({ published }: { published: Published<PublishedDocum
               <p className="mt-4">
                 {doc.downloadPath ? (
                   <a
+                    {...measurementAttributes("public_document_download", {
+                      documentType: doc.documentType,
+                    })}
                     href={publishedDocumentUrl(doc.downloadPath)}
                     className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-4 py-2 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
                   >

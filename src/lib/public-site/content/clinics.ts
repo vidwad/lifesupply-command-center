@@ -131,6 +131,8 @@ export const clinics = {
 
   /** Brand page (`/our-operations/lifesupply-clinics/`). */
   brandPage: {
+    // Stage 8: contextual links to the program and the supply store.
+    related: ["metabolic_hub", "brand_lifesupply"],
     eyebrow: "Operating brand · British Columbia",
     title: "LifeSupply Clinics: clinic planning, design, build, and equipment.",
     intro:
@@ -147,6 +149,8 @@ export const clinics = {
 
   /** Clinic Solutions hub (`/clinic-solutions/`). */
   hub: {
+    // Stage 8: contextual links from the clinic lifecycle to the program and collaboration pages.
+    related: ["metabolic_hub", "partner_clinics"],
     eyebrow: "Clinic Solutions",
     title: "Plan it, equip it, or keep it supplied.",
     intro:
@@ -238,5 +242,6 @@ export const clinics = {
       text: "Approved substitutions, par-level restocking, automatic replenishment, and contracted procurement services are not offered on this site today. Where a clinic needs them, they are discussed and agreed separately.",
     },
     actions: ["clinic_supply_review", "shop_lifesupply"],
+    related: ["metabolic_hub", "partner_clinics"],
   },
 } as const;

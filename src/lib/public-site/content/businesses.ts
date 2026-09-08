@@ -78,6 +78,8 @@ export const businesses = {
         text: "Customer service by phone and email during the store's published hours. Order, delivery, and return questions go to the store.",
       },
       actions: ["shop_lifesupply", "clinic_supply_review"],
+      // Stage 8: the clinic and program journeys this store serves.
+      related: ["clinic_solutions", "metabolic_hub"],
     },
     wellmart: {
       eyebrow: "Operating brand · Canada",
@@ -165,5 +167,6 @@ export const businesses = {
       text: "Order, delivery, return, and product questions belong to the store that took the order. Each brand page links its support channel; this corporate site does not handle orders.",
     },
     actions: ["clinic_supply_review"],
+    related: ["metabolic_hub", "clinic_solutions"],
   },
 } as const;

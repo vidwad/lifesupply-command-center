@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ExternalLink } from "lucide-react";
 
-import { ActionLink } from "@/components/public-site/action-link";
+import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
@@ -122,6 +122,7 @@ export function ClinicSolutionsPage() {
         </Stagger>
       </section>
       <ConditionalClose actions={["plan_clinic", "equipment_quote", "clinic_supply_review"]} />
+      <RelatedActions actions={clinics.hub.related} />
     </LifeSupplyLayout>
   );
 }
@@ -251,6 +252,7 @@ export function OngoingSuppliesPage() {
         </Container>
       </section>
       <ConditionalClose actions={page.actions} />
+      <RelatedActions actions={clinics.ongoingSupplies.related} />
     </LifeSupplyLayout>
   );
 }
