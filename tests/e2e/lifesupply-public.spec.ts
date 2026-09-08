@@ -34,6 +34,16 @@ test.describe("LifeSupply public site", () => {
       "/investor-relations",
       "/news",
       "/contact",
+      "/shop",
+      "/our-operations/lifesupply",
+      "/our-operations/wellmart-medical",
+      "/our-operations/lifesupply-clinics",
+      "/our-operations/balkowitsch",
+      "/our-operations/technology-fulfilment",
+      "/clinic-solutions",
+      "/clinic-solutions/design-build",
+      "/clinic-solutions/equipment",
+      "/clinic-solutions/ongoing-supplies",
     ]) {
       const response = await page.goto(route);
       expect(response?.ok(), `${route} should return a successful response`).toBe(true);
@@ -175,15 +185,16 @@ test.describe("LifeSupply public site", () => {
     const menu = page.locator("#lsh-menu-businesses");
     await expect(menu).toBeVisible();
     const brandLinks = menu.locator("a");
-    await expect(brandLinks).toHaveCount(4);
-    const hosts = await brandLinks.evaluateAll((links) =>
-      links.map((link) => new URL((link as HTMLAnchorElement).href).host),
+    await expect(brandLinks).toHaveCount(5);
+    const paths = await brandLinks.evaluateAll((links) =>
+      links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, "")),
     );
-    expect(hosts).toEqual([
-      "lifesupply.ca",
-      "wellmartmedical.com",
-      "www.lifesupplyclinics.com",
-      "balkowitsch.com",
+    expect(paths).toEqual([
+      "/our-operations/lifesupply",
+      "/our-operations/wellmart-medical",
+      "/our-operations/lifesupply-clinics",
+      "/our-operations/balkowitsch",
+      "/our-operations/technology-fulfilment",
     ]);
     // The chevron is a real button for touch and assistive technology.
     const chevron = page.getByRole("button", { name: "Open Our Businesses menu" });
@@ -206,6 +217,10 @@ test.describe("LifeSupply public site", () => {
     const panel = page.locator("#lsh-mobile-menu");
     for (const name of [
       "Our Businesses",
+      "Clinic Solutions",
+      "Design & build",
+      "Equipment",
+      "Ongoing supplies",
       "Investors",
       "About",
       "Our team",
@@ -216,6 +231,7 @@ test.describe("LifeSupply public site", () => {
       "Wellmart Medical",
       "LifeSupply Clinics",
       "Balkowitsch Worldwide",
+      "Technology & fulfilment",
     ]) {
       await expect(panel.getByRole("link", { name, exact: true }).first(), name).toBeVisible();
     }
@@ -287,6 +303,99 @@ test.describe("LifeSupply public site", () => {
     // Four brand cards, all external, all verified hosts.
     const cards = main.locator('a[href^="https://"]:has-text("Visit ")');
     await expect(cards).toHaveCount(4);
+  });
+
+  test("sends each store brand page to its own store, and the Clinics page to the Clinics site", async ({
+    page,
+  }) => {
+    for (const [route, host, action] of [
+      ["/our-operations/lifesupply", "lifesupply.ca", "Shop LifeSupply"],
+      ["/our-operations/wellmart-medical", "wellmartmedical.com", "Shop Wellmart Medical"],
+      ["/our-operations/balkowitsch", "balkowitsch.com", "Shop Balkowitsch Worldwide"],
+      ["/our-operations/lifesupply-clinics", "www.lifesupplyclinics.com", "Book a consultation"],
+    ] as const) {
+      await page.goto(route);
+      await expect(page.locator("h1")).toHaveCount(1);
+      const primary = page.locator("main").getByRole("link", { name: action }).first();
+      const href = await primary.getAttribute("href");
+      expect(new URL(href!).host, route).toBe(host);
+      // Every external link on a brand page stays on that brand's host or an approved channel.
+      const hosts = await page
+        .locator('main a[href^="https://"]')
+        .evaluateAll((links) =>
+          links.map((link) => new URL((link as HTMLAnchorElement).href).host),
+        );
+      expect(new Set(hosts), route).toEqual(new Set([host]));
+    }
+  });
+
+  test("routes the three clinic needs and lets an open clinic skip construction", async ({
+    page,
+  }) => {
+    await page.goto("/clinic-solutions");
+    const main = page.locator("main");
+    for (const [name, path] of [
+      ["Design and build", "/clinic-solutions/design-build"],
+      ["Equipment", "/clinic-solutions/equipment"],
+      ["Ongoing supplies", "/clinic-solutions/ongoing-supplies"],
+    ] as const) {
+      const link = main.getByRole("link", { name, exact: true });
+      await expect(link).toHaveAttribute("href", new RegExp(`^${path}/?$`));
+      const response = await page.request.get(path);
+      expect(response.ok(), path).toBe(true);
+    }
+    await expect(main.getByText("does not operate patient-care clinics")).toBeVisible();
+    await page.goto("/clinic-solutions/ongoing-supplies");
+    // The action appears in the hero and again in the closing band.
+    await expect(
+      page.locator("main").getByRole("link", { name: "Request a supply review" }).first(),
+    ).toHaveAttribute("href", "mailto:ben@lifesupply.com");
+  });
+
+  test("names geography and currency for the four choices on Shop & Services, and sells nothing", async ({
+    page,
+  }) => {
+    await page.goto("/shop");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/store or service/i);
+    const main = page.locator("main");
+    await expect(main.getByText("Canada · CAD")).toHaveCount(3);
+    await expect(main.getByText("United States · USD")).toHaveCount(1);
+    await expect(main.getByText(/add to cart/i)).toHaveCount(0);
+    const hosts = await main
+      .locator('a[href^="https://"]')
+      .evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).host));
+    for (const host of [
+      "lifesupply.ca",
+      "wellmartmedical.com",
+      "www.lifesupplyclinics.com",
+      "balkowitsch.com",
+    ]) {
+      expect(hosts, host).toContain(host);
+    }
+  });
+
+  test("routes contact intents to verified pages or approved channels without a form", async ({
+    page,
+  }) => {
+    await page.goto("/contact");
+    const main = page.locator("main");
+    await expect(main.locator("form")).toHaveCount(0);
+    await expect(main.getByRole("link", { name: "Book a consultation" })).toHaveAttribute(
+      "href",
+      "https://www.lifesupplyclinics.com/contact-us/",
+    );
+    await expect(
+      main.getByRole("link", { name: "Acquisition or strategic inquiry" }),
+    ).toHaveAttribute("href", "mailto:abdul@lifesupply.com");
+    await expect(main.getByRole("link", { name: "Shareholder services" })).toHaveAttribute(
+      "href",
+      "mailto:invest@lifesupply.com",
+    );
+    // Existing orders go to the store that took them.
+    await expect(main.getByRole("link", { name: "LifeSupply support" })).toHaveAttribute(
+      "href",
+      "https://lifesupply.ca/contact/",
+    );
   });
 
   test("opens and closes the mobile navigation from the keyboard", async ({ page, isMobile }) => {

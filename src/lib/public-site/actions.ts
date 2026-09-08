@@ -14,7 +14,7 @@
  * `CommandCenterLoginLink` may resolve it.
  */
 import { getBrand } from "@/lib/public-site/brands";
-import { LIFE_SUPPLY_ROUTES } from "@/lib/public-site/routes";
+import { BRAND_ROUTES, LIFE_SUPPLY_ROUTES, STAGE_3_ROUTES } from "@/lib/public-site/routes";
 
 export type ActionKey =
   | "explore_businesses"
@@ -22,14 +22,27 @@ export type ActionKey =
   | "plan_clinic"
   | "equipment_quote"
   | "clinic_supply_review"
+  | "clinic_solutions"
+  | "view_clinic_projects"
   | "discuss_program"
   | "partner_inquiry"
+  | "supplier_inquiry"
+  | "us_business_inquiry"
+  | "acquisition_inquiry"
+  | "general_inquiry"
   | "investor_information"
   | "investor_materials"
+  | "shareholder_services"
   | "shop_lifesupply"
   | "shop_wellmart"
   | "shop_clinics"
   | "shop_balkowitsch"
+  | "shop_services"
+  | "brand_lifesupply"
+  | "brand_wellmart"
+  | "brand_clinics"
+  | "brand_balkowitsch"
+  | "technology_fulfilment"
   | "contact_directory";
 
 export type ActionDestination =
@@ -38,18 +51,23 @@ export type ActionDestination =
   | { kind: "mailto"; value: string }
   | { kind: "tel"; value: string };
 
+export type InquiryIntent =
+  | "clinic_development"
+  | "equipment_quote"
+  | "ongoing_procurement"
+  | "metabolic_program"
+  | "pharmacy"
+  | "supplier"
+  | "investor"
+  | "shareholder"
+  | "acquisition"
+  | "general"
+  | "existing_order_support";
+
 export interface ActionRecord {
   key: ActionKey;
   label: string;
-  intent:
-    | "navigation"
-    | "commerce"
-    | "clinic_development"
-    | "equipment_quote"
-    | "ongoing_procurement"
-    | "metabolic_program"
-    | "partner"
-    | "investor";
+  intent: InquiryIntent | "navigation" | "commerce" | "partner";
   destination: ActionDestination;
   /** Approved directory channel that owns the follow-up, once WEB-07 assigns one. */
   ownerChannel: string | null;
@@ -57,12 +75,18 @@ export interface ActionRecord {
   verifiedAt: string | null;
 }
 
+const VERIFIED = "2026-09-08";
+
+const internal = (path: string): ActionDestination => ({ kind: "internal", path });
+const external = (url: string): ActionDestination => ({ kind: "external", url });
+const mail = (value: string): ActionDestination => ({ kind: "mailto", value });
+
 export const ACTIONS: Record<ActionKey, ActionRecord> = {
   explore_businesses: {
     key: "explore_businesses",
     label: "Explore our businesses",
     intent: "navigation",
-    destination: { kind: "internal", path: LIFE_SUPPLY_ROUTES.operations },
+    destination: internal(LIFE_SUPPLY_ROUTES.operations),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -70,7 +94,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "about_group",
     label: "About LifeSupply",
     intent: "navigation",
-    destination: { kind: "internal", path: LIFE_SUPPLY_ROUTES.about },
+    destination: internal(LIFE_SUPPLY_ROUTES.about),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -79,35 +103,48 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Book a consultation",
     intent: "clinic_development",
     // The Clinics site's own consultation page (S-73).
-    destination: { kind: "external", url: "https://www.lifesupplyclinics.com/contact-us/" },
+    destination: external("https://www.lifesupplyclinics.com/contact-us/"),
     ownerChannel: "info@lifesupplyclinics.com",
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
   },
   equipment_quote: {
     key: "equipment_quote",
     label: "Request an equipment quote",
     intent: "equipment_quote",
     // The Clinics site's own quote page (S-73).
-    destination: {
-      kind: "external",
-      url: "https://www.lifesupplyclinics.com/buy-clinic-equipment/",
-    },
+    destination: external("https://www.lifesupplyclinics.com/buy-clinic-equipment/"),
     ownerChannel: "info@lifesupplyclinics.com",
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
   },
   clinic_supply_review: {
     key: "clinic_supply_review",
     label: "Request a supply review",
     intent: "ongoing_procurement",
-    destination: { kind: "mailto", value: "ben@lifesupply.com" },
+    destination: mail("ben@lifesupply.com"),
     ownerChannel: "Online sales & product lines",
     verifiedAt: null,
+  },
+  clinic_solutions: {
+    key: "clinic_solutions",
+    label: "Clinic Solutions",
+    intent: "navigation",
+    destination: internal(STAGE_3_ROUTES.clinicSolutions),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  view_clinic_projects: {
+    key: "view_clinic_projects",
+    label: "See published projects",
+    intent: "clinic_development",
+    destination: external("https://www.lifesupplyclinics.com/our-projects/"),
+    ownerChannel: null,
+    verifiedAt: VERIFIED,
   },
   discuss_program: {
     key: "discuss_program",
     label: "Discuss a supply program",
     intent: "metabolic_program",
-    destination: { kind: "mailto", value: "info@lifesupply.com" },
+    destination: mail("info@lifesupply.com"),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -115,15 +152,47 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "partner_inquiry",
     label: "Start a partner conversation",
     intent: "partner",
-    destination: { kind: "mailto", value: "info@lifesupply.com" },
+    destination: mail("info@lifesupply.com"),
     ownerChannel: null,
+    verifiedAt: null,
+  },
+  supplier_inquiry: {
+    key: "supplier_inquiry",
+    label: "Submit a supplier inquiry",
+    intent: "supplier",
+    destination: mail("info@lifesupply.com"),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  us_business_inquiry: {
+    key: "us_business_inquiry",
+    label: "U.S. business inquiry",
+    intent: "general",
+    destination: mail("info@lifesupply.com"),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  acquisition_inquiry: {
+    key: "acquisition_inquiry",
+    label: "Acquisition or strategic inquiry",
+    intent: "acquisition",
+    destination: mail("abdul@lifesupply.com"),
+    ownerChannel: "Mergers & acquisitions",
+    verifiedAt: null,
+  },
+  general_inquiry: {
+    key: "general_inquiry",
+    label: "General inquiry",
+    intent: "general",
+    destination: mail("info@lifesupply.com"),
+    ownerChannel: "Corporate office",
     verifiedAt: null,
   },
   investor_information: {
     key: "investor_information",
     label: "Investor relations",
     intent: "investor",
-    destination: { kind: "internal", path: LIFE_SUPPLY_ROUTES.investorRelations },
+    destination: internal(LIFE_SUPPLY_ROUTES.investorRelations),
     ownerChannel: "Investor relations",
     verifiedAt: null,
   },
@@ -131,7 +200,15 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "investor_materials",
     label: "Request investor materials",
     intent: "investor",
-    destination: { kind: "mailto", value: "invest@lifesupply.com" },
+    destination: mail("invest@lifesupply.com"),
+    ownerChannel: "Investor relations",
+    verifiedAt: null,
+  },
+  shareholder_services: {
+    key: "shareholder_services",
+    label: "Shareholder services",
+    intent: "shareholder",
+    destination: mail("invest@lifesupply.com"),
     ownerChannel: "Investor relations",
     verifiedAt: null,
   },
@@ -139,39 +216,87 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "shop_lifesupply",
     label: "Shop LifeSupply",
     intent: "commerce",
-    destination: { kind: "external", url: getBrand("lifesupply").canonicalUrl },
+    destination: external(getBrand("lifesupply").canonicalUrl),
     ownerChannel: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
   },
   shop_wellmart: {
     key: "shop_wellmart",
     label: "Shop Wellmart Medical",
     intent: "commerce",
-    destination: { kind: "external", url: getBrand("wellmart").canonicalUrl },
+    destination: external(getBrand("wellmart").canonicalUrl),
     ownerChannel: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
   },
   shop_clinics: {
     key: "shop_clinics",
     label: "Visit LifeSupply Clinics",
     intent: "clinic_development",
-    destination: { kind: "external", url: getBrand("clinics").canonicalUrl },
+    destination: external(getBrand("clinics").canonicalUrl),
     ownerChannel: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
   },
   shop_balkowitsch: {
     key: "shop_balkowitsch",
     label: "Shop Balkowitsch Worldwide",
     intent: "commerce",
-    destination: { kind: "external", url: getBrand("balkowitsch").canonicalUrl },
+    destination: external(getBrand("balkowitsch").canonicalUrl),
     ownerChannel: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
+  },
+  shop_services: {
+    key: "shop_services",
+    label: "Shop & Services",
+    intent: "navigation",
+    destination: internal(LIFE_SUPPLY_ROUTES.shop),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  brand_lifesupply: {
+    key: "brand_lifesupply",
+    label: "About LifeSupply.ca",
+    intent: "navigation",
+    destination: internal(BRAND_ROUTES.lifesupply),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  brand_wellmart: {
+    key: "brand_wellmart",
+    label: "About Wellmart Medical",
+    intent: "navigation",
+    destination: internal(BRAND_ROUTES.wellmart),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  brand_clinics: {
+    key: "brand_clinics",
+    label: "About LifeSupply Clinics",
+    intent: "navigation",
+    destination: internal(BRAND_ROUTES.clinics),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  brand_balkowitsch: {
+    key: "brand_balkowitsch",
+    label: "About Balkowitsch Worldwide",
+    intent: "navigation",
+    destination: internal(BRAND_ROUTES.balkowitsch),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  technology_fulfilment: {
+    key: "technology_fulfilment",
+    label: "Technology & fulfilment",
+    intent: "navigation",
+    destination: internal(STAGE_3_ROUTES.technology),
+    ownerChannel: null,
+    verifiedAt: null,
   },
   contact_directory: {
     key: "contact_directory",
     label: "Contact",
     intent: "navigation",
-    destination: { kind: "internal", path: LIFE_SUPPLY_ROUTES.contact },
+    destination: internal(LIFE_SUPPLY_ROUTES.contact),
     ownerChannel: null,
     verifiedAt: null,
   },

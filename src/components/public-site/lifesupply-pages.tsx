@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ExternalLink, Mail, Phone, ShieldCheck } from "lucide-react";
 
-import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   EditorialStat,
@@ -11,87 +10,39 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import {
-  Reveal,
-  ScrollBeam,
-  SpotlightCard,
-  Stagger,
-  StaggerItem,
-} from "@/components/public-site/motion";
+import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 
 /*
  * Every visible sentence below is a prop from LIFE_SUPPLY_CONTENT. The only
- * strings authored in this file are imperative UI labels on links and the
- * short section labels that name a block ("Operations timeline").
+ * strings authored in this file are imperative UI labels on links.
  *
  * Each page renders exactly one PublicHero, which is the route's single h1.
  *
- * Stage 2 moved the Home and About pages into `./pages/` (their page
- * contracts are complete); they are re-exported here so the route files keep
- * one import. The pages below keep their Stage 1 baseline until their own
- * stage (Operations and Shop in Stage 3; Team, Investors, News in Stage 5;
- * Contact in Stages 3 and 7).
+ * Page families live in `./pages/` and are re-exported here so the route
+ * files keep one import: Home and About (Stage 2); Our Businesses, the four
+ * brand pages, Technology & fulfilment, Clinic Solutions, Shop & Services,
+ * and Contact (Stage 3). The pages below keep their baseline until their
+ * own stage (Team, Investors, News, and profiles in Stage 5).
  */
 export { AboutPage } from "@/components/public-site/pages/about";
+export {
+  ClinicsBrandPage,
+  StoreBrandPage,
+  TechnologyFulfilmentPage,
+} from "@/components/public-site/pages/brands";
+export {
+  ClinicSolutionsPage,
+  DesignBuildPage,
+  EquipmentPage,
+  OngoingSuppliesPage,
+} from "@/components/public-site/pages/clinic-solutions";
+export { ContactPage } from "@/components/public-site/pages/contact";
 export { LifeSupplyHome } from "@/components/public-site/pages/home";
+export { OperationsPage } from "@/components/public-site/pages/operations";
+export { ShopServicesPage } from "@/components/public-site/pages/shop";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
-
-export function OperationsPage() {
-  const { operations, operationsTimeline } = LIFE_SUPPLY_CONTENT;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow="Our operations"
-        title="Connected channels designed around medical-product access."
-        description="The public operating narrative describes online commerce, fulfillment, retail, wholesale, and regulated-care infrastructure as complementary functions."
-      />
-
-      {/* The divisions as a beam that fills in as the visitor reads down them. */}
-      <section className="mx-auto max-w-4xl px-5 py-20 lg:px-8">
-        <ScrollBeam className="pl-10">
-          <div className="grid gap-12">
-            {operations.map((operation, index) => (
-              <Reveal key={operation.title} as="article" className="relative">
-                <span
-                  className="absolute -left-10 top-2 h-3 w-3 -translate-x-[calc(50%-1px)] rounded-full bg-[var(--lsh-brand-red)] ring-4 ring-[var(--lsh-paper)]"
-                  aria-hidden="true"
-                />
-                <p className="lsh-display text-sm text-[var(--lsh-brand-red)]">0{index + 1}</p>
-                <h2 className="lsh-display mt-2 text-3xl text-[var(--lsh-charcoal)]">
-                  {operation.title}
-                </h2>
-                <p className="mt-3 max-w-2xl leading-7 text-[var(--lsh-muted)]">
-                  {operation.description}
-                </p>
-              </Reveal>
-            ))}
-          </div>
-        </ScrollBeam>
-      </section>
-
-      {/* The timeline graphic is portrait; it gets its own column rather than a cropped landscape slot. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <div className="mx-auto max-w-2xl">
-          <Reveal>
-            <Eyebrow as="h2">Operations timeline</Eyebrow>
-            <div className="mt-6 overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-4 shadow-sm">
-              <Image
-                src={operationsTimeline.src}
-                alt={operationsTimeline.alt}
-                width={operationsTimeline.width}
-                height={operationsTimeline.height}
-                sizes="(min-width: 768px) 640px, 100vw"
-                className="h-auto w-full"
-              />
-            </div>
-          </Reveal>
-        </div>
-      </section>
-    </LifeSupplyLayout>
-  );
-}
 
 export function TeamPage() {
   const { management, board } = LIFE_SUPPLY_CONTENT.team;
@@ -285,111 +236,6 @@ export function NewsPage() {
             </StaggerItem>
           ))}
         </Stagger>
-      </section>
-    </LifeSupplyLayout>
-  );
-}
-
-export function ContactPage() {
-  const { channels, subsidiaries } = LIFE_SUPPLY_CONTENT.contact;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow="Contact"
-        title="Direct public channels for the right LifeSupply conversation."
-        description="Published contact details are treated as a verified corporate directory. Future form routing will be managed through the Command Center publication and approval workflow."
-      />
-      <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
-        <Stagger className="grid gap-5 md:grid-cols-2">
-          {channels.map((channel) => (
-            <StaggerItem key={channel.label} className="h-full">
-              <SpotlightCard
-                as="article"
-                className="lsh-lift h-full border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7"
-              >
-                <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                  {channel.label}
-                </p>
-                <h2 className="lsh-display mt-3 text-2xl text-[var(--lsh-charcoal)]">
-                  {channel.name}
-                </h2>
-                <div className="mt-5 grid gap-2 text-sm text-[var(--lsh-muted)]">
-                  <a
-                    href={`mailto:${channel.email}`}
-                    className="inline-flex w-fit items-center gap-2 transition-colors hover:text-[var(--lsh-brand-red)]"
-                  >
-                    <Mail size={15} aria-hidden="true" /> {channel.email}
-                  </a>
-                  {"phone" in channel ? (
-                    <a
-                      href={telHref(channel.phone)}
-                      className="inline-flex w-fit items-center gap-2 transition-colors hover:text-[var(--lsh-brand-red)]"
-                    >
-                      <Phone size={15} aria-hidden="true" /> {channel.phone}
-                    </a>
-                  ) : null}
-                </div>
-              </SpotlightCard>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
-      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <SectionHeading eyebrow="Operating entities" title="LifeSupply public subsidiaries" />
-          </Reveal>
-          <Stagger className="mt-8 grid gap-4 lg:grid-cols-3">
-            {subsidiaries.map((entity) => (
-              <StaggerItem key={entity.name} className="h-full">
-                <SpotlightCard className="lsh-lift h-full border border-transparent bg-[var(--lsh-paper)]">
-                  <a
-                    href={entity.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex h-full flex-col p-6"
-                  >
-                    <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">
-                      {entity.name}
-                    </h3>
-                    <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                      {entity.detail}
-                    </p>
-                    <p className="lsh-display mt-auto pt-3 text-[10px] text-[var(--lsh-brand-red)]">
-                      {entity.phone}
-                    </p>
-                  </a>
-                </SpotlightCard>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-    </LifeSupplyLayout>
-  );
-}
-
-export function ShopBoundaryPage() {
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow="Product access"
-        title="Commerce occurs through LifeSupply’s approved operating channels."
-        description="This corporate website does not process transactions. Future product discovery will be published from a channel-approved Command Center projection, while orders remain in the designated commerce system."
-      />
-      <section className="mx-auto max-w-4xl px-5 py-20 text-center lg:px-8">
-        <Reveal>
-          <p className="lsh-display text-3xl text-[var(--lsh-charcoal)]">
-            Looking for medical products?
-          </p>
-          <p className="mx-auto mt-4 max-w-2xl leading-7 text-[var(--lsh-muted)]">
-            Visit LifeSupply’s consumer-facing ecommerce channel for current catalogue,
-            availability, fulfillment, payment, and customer-service information.
-          </p>
-          <div className="mt-8 flex justify-center">
-            <ActionLink action="shop_lifesupply">Visit LifeSupply.ca</ActionLink>
-          </div>
-        </Reveal>
       </section>
     </LifeSupplyLayout>
   );

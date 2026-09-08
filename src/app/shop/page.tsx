@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 
-import { ShopBoundaryPage } from "@/components/public-site/lifesupply-pages";
+import { ShopServicesPage } from "@/components/public-site/lifesupply-pages";
 
 export const metadata: Metadata = {
-  title: "Product access",
-  description: "LifeSupply Health commerce channel information.",
+  title: "Shop & Services",
+  description:
+    "Choose the right LifeSupply store or service: geography, currency, destination, and support.",
 };
 
 export default function Page() {
-  return <ShopBoundaryPage />;
+  return <ShopServicesPage />;
 }
