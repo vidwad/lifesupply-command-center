@@ -74,6 +74,30 @@ test.describe("LifeSupply public site", () => {
     await expect(current).toHaveText(/about us/i);
   });
 
+  test("hides the header while reading down and brings it back on scroll up", async ({ page }) => {
+    await page.goto("/");
+    const header = page.locator("header");
+    await expect(header).toBeInViewport();
+
+    // Well past the 96px "always show" zone; one downward step is a direction.
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await expect
+      .poll(async () => (await header.boundingBox())?.y ?? 0, { timeout: 3000 })
+      .toBeLessThan(0);
+
+    // Any upward movement returns it immediately.
+    await page.evaluate(() => window.scrollTo(0, 900));
+    await expect.poll(async () => (await header.boundingBox())?.y ?? -1, { timeout: 3000 }).toBe(0);
+  });
+
+  test("carries the external login in the utility strip on every viewport", async ({ page }) => {
+    await page.goto("/about-us");
+    // The strip precedes the header, so it is the first login control in the DOM.
+    const strip = page.getByRole("link", { name: "Command Center login" }).first();
+    await expect(strip).toBeVisible();
+    expect(new URL((await strip.getAttribute("href"))!).origin).toBe(RENDER_ORIGIN);
+  });
+
   test("opens and closes the mobile navigation from the keyboard", async ({ page, isMobile }) => {
     test.skip(!isMobile, "mobile navigation only");
     await page.goto("/about-us");
