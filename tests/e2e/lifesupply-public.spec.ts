@@ -44,6 +44,11 @@ test.describe("LifeSupply public site", () => {
       "/clinic-solutions/design-build",
       "/clinic-solutions/equipment",
       "/clinic-solutions/ongoing-supplies",
+      "/metabolic-health",
+      "/metabolic-health/care-kits",
+      "/metabolic-health/care-kits/glp-1-support",
+      "/metabolic-health/care-kits/sharps-supplies",
+      "/metabolic-health/refills",
     ]) {
       const response = await page.goto(route);
       expect(response?.ok(), `${route} should return a successful response`).toBe(true);
@@ -218,6 +223,9 @@ test.describe("LifeSupply public site", () => {
     for (const name of [
       "Our Businesses",
       "Clinic Solutions",
+      "Metabolic Health",
+      "Care kits",
+      "Refills",
       "Design & build",
       "Equipment",
       "Ongoing supplies",
@@ -396,6 +404,60 @@ test.describe("LifeSupply public site", () => {
       "href",
       "https://lifesupply.ca/contact/",
     );
+  });
+
+  test("lists eight pathways, each an information page with no purchase and the program channel", async ({
+    page,
+  }) => {
+    await page.goto("/metabolic-health/care-kits");
+    const main = page.locator("main");
+    const kitLinks = main.locator('a[href^="/metabolic-health/care-kits/"]');
+    await expect(kitLinks).toHaveCount(8);
+    const hrefs = await kitLinks.evaluateAll((links) =>
+      links.map((link) => (link as HTMLAnchorElement).getAttribute("href")!),
+    );
+    for (const href of hrefs) {
+      const response = await page.request.get(href);
+      expect(response.ok(), href).toBe(true);
+    }
+    await expect(main.getByText("In development").first()).toBeVisible();
+    await expect(main.getByText(/add to cart|buy now/i)).toHaveCount(0);
+    await expect(
+      main.getByRole("link", { name: "Discuss a supply program" }).first(),
+    ).toHaveAttribute("href", "mailto:info@lifesupply.com");
+  });
+
+  test("says K03 has no store destination and keeps browse links on registered store hosts", async ({
+    page,
+  }) => {
+    await page.goto("/metabolic-health/care-kits/sharps-supplies");
+    const main = page.locator("main");
+    await expect(
+      main.getByText(/No operating store publishes a sharps-container category/),
+    ).toBeVisible();
+    await expect(main.locator('a[href^="https://"]')).toHaveCount(0);
+
+    await page.goto("/metabolic-health/care-kits/diabetes-supplies");
+    const hosts = await page
+      .locator('main a[href^="https://"]')
+      .evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).host));
+    expect(hosts.length).toBeGreaterThan(0);
+    for (const host of hosts)
+      expect(["lifesupply.ca", "wellmartmedical.com", "balkowitsch.com"]).toContain(host);
+  });
+
+  test("states on the refills page that no automatic shipment or subscription exists", async ({
+    page,
+  }) => {
+    await page.goto("/metabolic-health/refills");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      /starter items are not refills/i,
+    );
+    await expect(
+      page
+        .locator("main")
+        .getByText(/no automatic shipment, no reminder service, and no subscription/),
+    ).toBeVisible();
   });
 
   test("opens and closes the mobile navigation from the keyboard", async ({ page, isMobile }) => {

@@ -246,6 +246,13 @@ export function getBrand(key: BrandKey): BrandRecord {
   return record;
 }
 
+/** A verified category by its registered label; throws so a typo can never render a guessed URL. */
+export function getBrandCategory(key: BrandKey, label: string): VerifiedLink {
+  const category = getBrand(key).categories.find((entry) => entry.label === label);
+  if (!category) throw new Error(`Unknown category for ${key}: ${label}`);
+  return category;
+}
+
 /** "Canada · CAD" style descriptor used on cards; never a legal statement. */
 export function brandGeography(record: BrandRecord): string {
   const country = record.country === "CA" ? "Canada" : "United States";

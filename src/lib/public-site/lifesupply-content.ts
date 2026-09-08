@@ -4,7 +4,8 @@
  * only imperative UI labels of their own ("Visit brand", "Skip to content").
  *
  * Stage 2 split the model into focused modules under `./content/` by
- * content family; Stage 3 added `businesses`, `clinics`, and `shop`. This
+ * content family; Stage 3 added `businesses`, `clinics`, and `shop`;
+ * Stage 4 added `metabolic`. This
  * barrel keeps the import path and the shape stable. Provenance notes live
  * beside each block in the modules. Brands, routes, and actions have their
  * own typed registries (`brands.ts`, `routes.ts`, `actions.ts`), which is
@@ -17,6 +18,7 @@ import { clinics } from "@/lib/public-site/content/clinics";
 import { contact } from "@/lib/public-site/content/contact";
 import { homepage } from "@/lib/public-site/content/home";
 import { investorRelations } from "@/lib/public-site/content/investors";
+import { metabolic } from "@/lib/public-site/content/metabolic";
 import { news } from "@/lib/public-site/content/news";
 import { operations, operationsTimeline } from "@/lib/public-site/content/operations";
 import { shop } from "@/lib/public-site/content/shop";
@@ -32,6 +34,7 @@ export const LIFE_SUPPLY_CONTENT = {
   businesses,
   clinics,
   shop,
+  metabolic,
   team,
   investorRelations,
   news,
