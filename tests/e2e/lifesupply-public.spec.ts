@@ -49,6 +49,20 @@ test.describe("LifeSupply public site", () => {
       "/metabolic-health/care-kits/glp-1-support",
       "/metabolic-health/care-kits/sharps-supplies",
       "/metabolic-health/refills",
+      "/partners",
+      "/partners/clinics",
+      "/partners/pharmacies",
+      "/partners/suppliers",
+      "/partners/acquisitions",
+      "/investor-relations/growth-strategy",
+      "/investor-relations/advanced-therapeutics",
+      "/investor-relations/documents",
+      "/investor-relations/shareholder-services",
+      "/investor-relations/disclosures",
+      "/privacy",
+      "/terms",
+      "/accessibility",
+      "/john-anderson-2",
     ]) {
       const response = await page.goto(route);
       expect(response?.ok(), `${route} should return a successful response`).toBe(true);
@@ -226,6 +240,16 @@ test.describe("LifeSupply public site", () => {
       "Metabolic Health",
       "Care kits",
       "Refills",
+      "Partners",
+      "Clinics",
+      "Pharmacies",
+      "Suppliers",
+      "Acquisitions",
+      "Growth strategy",
+      "Advanced therapeutics",
+      "Documents",
+      "Shareholder services",
+      "Disclosures",
       "Design & build",
       "Equipment",
       "Ongoing supplies",
@@ -297,13 +321,13 @@ test.describe("LifeSupply public site", () => {
       "href",
       "mailto:ben@lifesupply.com",
     );
-    await expect(main.getByRole("link", { name: "Discuss a supply program" })).toHaveAttribute(
+    await expect(main.getByRole("link", { name: "Metabolic Health", exact: true })).toHaveAttribute(
       "href",
-      "mailto:info@lifesupply.com",
+      /^\/metabolic-health\/?$/,
     );
-    await expect(main.getByRole("link", { name: "Start a partner conversation" })).toHaveAttribute(
+    await expect(main.getByRole("link", { name: "Explore partner relationships" })).toHaveAttribute(
       "href",
-      "mailto:info@lifesupply.com",
+      /^\/partners\/?$/,
     );
     await expect(
       main.getByRole("link", { name: "Investor relations", exact: true }),
@@ -457,6 +481,103 @@ test.describe("LifeSupply public site", () => {
       page
         .locator("main")
         .getByText(/no automatic shipment, no reminder service, and no subscription/),
+    ).toBeVisible();
+  });
+
+  test("routes the four partner relationships and separates them from procurement", async ({
+    page,
+  }) => {
+    await page.goto("/partners");
+    const main = page.locator("main");
+    for (const path of [
+      "/partners/clinics",
+      "/partners/pharmacies",
+      "/partners/suppliers",
+      "/partners/acquisitions",
+    ]) {
+      await expect(main.locator(`a[href="${path}"]`).first()).toBeVisible();
+    }
+    await expect(main.getByRole("link", { name: "Clinic Solutions" })).toHaveAttribute(
+      "href",
+      /^\/clinic-solutions\/?$/,
+    );
+    await page.goto("/partners/acquisitions");
+    await expect(
+      page
+        .locator("main")
+        .getByText(/No transaction, letter of intent, or discussion is announced/),
+    ).toBeVisible();
+    await expect(
+      page.locator("main").getByRole("link", { name: "Acquisition or strategic inquiry" }).first(),
+    ).toHaveAttribute("href", "mailto:abdul@lifesupply.com");
+  });
+
+  test("keeps investor documents at a request step with no file link, and shows the figures scoped", async ({
+    page,
+  }) => {
+    await page.goto("/investor-relations/documents");
+    const main = page.locator("main");
+    await expect(main.locator("table tbody tr")).toHaveCount(3);
+    await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
+    await expect(main.getByRole("link", { name: "Request investor materials" })).toHaveAttribute(
+      "href",
+      "mailto:invest@lifesupply.com",
+    );
+    await page.goto("/investor-relations/disclosures");
+    await expect(
+      page
+        .locator("main")
+        .getByText("Unaudited consolidated financial information", { exact: false })
+        .first(),
+    ).toBeVisible();
+    await expect(
+      page.locator("main").getByText("Forward-looking statements").first(),
+    ).toBeVisible();
+  });
+
+  test("shows dated legacy titles on the team page, links six directors, and keeps the retained profile addresses", async ({
+    page,
+  }) => {
+    await page.goto("/our-team");
+    const main = page.locator("main");
+    await expect(
+      main.getByText("Titles as published on the prior LifeSupply website."),
+    ).toBeVisible();
+    await expect(main.getByText("Chief Financial Officer", { exact: true })).toBeVisible();
+    const board = main.locator("ul").filter({ hasText: "Keith Dolo" }).locator("a");
+    await expect(board).toHaveCount(6);
+    await expect(main.getByText("John Anderson")).toHaveCount(0);
+    const response = await page.goto("/john-anderson-2");
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("John Anderson");
+  });
+
+  test("keeps the newsroom honest and the policy pages linked from the footer", async ({
+    page,
+  }) => {
+    await page.goto("/news");
+    const main = page.locator("main");
+    await expect(main.getByText("No company news has been published on this site.")).toBeVisible();
+    await expect(
+      main.getByText("No resources have been published yet.", { exact: false }),
+    ).toBeVisible();
+    await expect(main.locator('a[href^="https://"]')).toHaveCount(4);
+    const missing = await page.request.get("/news/anything");
+    expect(missing.status()).toBe(404);
+    const footer = page.locator("footer");
+    for (const [path, label] of [
+      ["/privacy", "Privacy"],
+      ["/terms", "Terms of use"],
+      ["/accessibility", "Accessibility"],
+    ]) {
+      await expect(footer.getByRole("link", { name: label, exact: true })).toHaveAttribute(
+        "href",
+        new RegExp(`^${path}/?$`),
+      );
+    }
+    await page.goto("/privacy");
+    await expect(
+      page.locator("main").getByText("do not set cookies", { exact: false }),
     ).toBeVisible();
   });
 

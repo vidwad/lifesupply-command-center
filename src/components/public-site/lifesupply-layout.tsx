@@ -12,6 +12,7 @@ import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifes
 import {
   LIFE_SUPPLY_NAVIGATION,
   buildPrimaryNavigation,
+  buildLegalNavigation,
   buildUtilityNavigation,
   type NavGroup,
   type NavLink,
@@ -21,6 +22,7 @@ import { useScrollDirection } from "@/lib/public-site/use-scroll-direction";
 /** Derived once from the route registry: only live destinations reach a menu. */
 const PRIMARY_NAV = buildPrimaryNavigation();
 const UTILITY_NAV = buildUtilityNavigation();
+const LEGAL_NAV = buildLegalNavigation();
 
 /** Routes are stored with a trailing slash; the live pathname may or may not carry one. */
 function isActiveRoute(pathname: string | null, href: string) {
@@ -412,6 +414,13 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           <span>
             © {new Date().getFullYear()} LifeSupply Health Supplies Inc. {brand.legalNotice}
           </span>
+          <ul className="flex flex-wrap gap-x-5 gap-y-2">
+            {LEGAL_NAV.map((link) => (
+              <li key={link.href}>
+                <NavItem href={link.href} label={link.label} />
+              </li>
+            ))}
+          </ul>
           <CommandCenterLoginLink variant="utility" />
         </div>
       </footer>

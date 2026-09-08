@@ -1,13 +1,29 @@
 /**
- * Team copy. Approved as already published; unchanged in Stage 2. Card
- * titles differ from the dated legacy profile titles (S-101) and John
- * Anderson exists only as a legacy profile (S-102); both wait on WEB-06.
+ * Team copy, reconciled in Stage 5 (WB-505).
+ *
+ * WEB-06 (current roster and approved biographies) arrived unfilled, so the
+ * safer public label is the dated title from each person's legacy profile
+ * (S-101), stated as such. The card titles that differed from those profiles
+ * are no longer shown. John Anderson exists only as a legacy profile (S-102);
+ * his profile page is retained at its original slug and he is not listed on
+ * the board until confirmed. One portrait is held (S-104); other cards use
+ * initials. Biographies remain the preserved public profiles.
  */
 export const team = {
+  hero: {
+    eyebrow: "Our team",
+    title: "Leadership across operations, finance, business development, and technology.",
+    description:
+      "Titles and biographies are as published on the prior LifeSupply website, with their profiles preserved at their original addresses. Current appointments are confirmed through the company before this page is updated.",
+  },
+  labels: {
+    management: "Management",
+    board: "Board of directors",
+    titlesNote: "Titles as published on the prior LifeSupply website.",
+  },
   management: [
     {
       name: "Abdul Ladha",
-      role: "Chairman & CEO",
       slug: "abdul-ladha",
       summary:
         "Electrical engineer, entrepreneur, business leader, and philanthropist with 30 years of business and capital-market experience.",
@@ -15,60 +31,55 @@ export const team = {
     },
     {
       name: "Ben Hastibakhsh",
-      role: "Business Development",
       slug: "ben-hastibakhsh",
       summary:
         "VP of Business Development and co-founder of Wellmart Health, with a public record in home medical equipment growth.",
     },
     {
       name: "Gary Li",
-      role: "Finance",
       slug: "gary-li",
       summary:
         "VP of Finance with more than 11 years of management experience across private and public companies.",
     },
     {
       name: "Craig Loverock",
-      role: "Finance",
       slug: "craig-loverock",
       summary:
         "Financial executive with more than 25 years in accounting and finance roles in North America and the United Kingdom.",
     },
     {
       name: "Mike Gill",
-      role: "Retail Operations",
       slug: "mike-gill",
       summary:
         "Retail operations leader with experience across national retailers and flagship store launches.",
     },
     {
       name: "Chris Ishola",
-      role: "Finance",
       slug: "christopher-ishola",
       summary:
         "Chartered Professional Accountant with more than 30 years of experience across manufacturing and healthcare sectors.",
     },
     {
       name: "Ross Jelveh",
-      role: "Integration",
       slug: "ross-jelveh-2",
       summary:
         "Technology and business leader with experience in enterprise-level application integration and ecommerce optimization.",
     },
   ],
+  /** The approved board list (S-100), each linked to the preserved profile. */
   board: [
-    "Abdul Ladha",
-    "Keith Dolo",
-    "Barrett Sleeman",
-    "Dr. David Vogt",
-    "Dr. Margaret Clarke",
-    "Dr. Dedeshya Holowenko",
+    { name: "Abdul Ladha", slug: "abdul-ladha" },
+    { name: "Keith Dolo", slug: "keith-dolo-2" },
+    { name: "Barrett Sleeman", slug: "barrett-e-g-sleeman" },
+    { name: "Dr. David Vogt", slug: "david-vogt" },
+    { name: "Dr. Margaret Clarke", slug: "dr-margaret-clarke-2" },
+    { name: "Dr. Dedeshya Holowenko", slug: "dr-dedeshya-holowenko" },
   ],
   legacyProfiles: [
     {
       slug: "abdul-ladha",
       name: "Abdul Ladha",
-      role: "Director",
+      role: "Chairman & CEO",
       bio: "Abdul Ladha is an electrical engineer, entrepreneur, business leader, and philanthropist with 30 years of business and capital-market experience. His legacy profile notes that he was Chairman and CEO of Ableauctions.com Inc., founded the Spark Global Philanthropic Foundation, and periodically instructed at the Sauder School of Business, University of British Columbia.",
     },
     {
@@ -144,4 +155,13 @@ export const team = {
       bio: "The legacy profile identifies John Anderson as a mergers-and-acquisitions attorney and partner with Stikeman Elliott, with more than 30 years of experience on major Canadian transactions.",
     },
   ],
+  profileNote:
+    "This preserved biography and title are from the prior public website. Current roles are confirmed through the company before a profile is updated.",
 } as const;
+
+/** The dated legacy title for a slug; every card and board entry resolves through here. */
+export function legacyTitle(slug: string): string {
+  const profile = team.legacyProfiles.find((entry) => entry.slug === slug);
+  if (!profile) throw new Error(`No legacy profile for ${slug}`);
+  return profile.role;
+}

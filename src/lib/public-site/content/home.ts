@@ -119,19 +119,18 @@ export const homepage = {
     eyebrow: "In development",
     title: "Metabolic-health supply services.",
     text: "LifeSupply is developing a supply-services offer for metabolic-health programs: non-drug supplies, clinic procurement, kitting and fulfilment, and contracted workflow support. Availability will be published when it is confirmed; nothing on this site is a purchasable program yet.",
-    action: "discuss_program",
-    actionLabel: "Discuss a supply program",
+    action: "metabolic_hub",
+    actionLabel: "Metabolic Health",
   },
 
-  // Stage 2 draft. Two paths; the partner route does not exist yet, so the
-  // action is the approved corporate channel.
+  // Stage 2 draft; Stage 5 reconciled the partner path to the Partners hub.
   paths: [
     {
       eyebrow: "Partners",
       title: "Clinics, pharmacies, suppliers, and acquisition counterparties.",
       text: "Program and design collaboration, non-drug supply programs, supplier onboarding, and acquisition discussions each start with a conversation.",
-      action: "partner_inquiry",
-      actionLabel: "Start a partner conversation",
+      action: "partners_hub",
+      actionLabel: "Explore partner relationships",
     },
     {
       eyebrow: "Investors",
