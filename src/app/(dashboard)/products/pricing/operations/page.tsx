@@ -116,9 +116,9 @@ export default async function PricingOperationsPage({
         actions={
           canExport ? (
             <Button asChild variant="outline">
-              <a href="/api/exports/pricing/writebacks">
+              <Link href="/api/exports/pricing/writebacks">
                 <Download /> Export CSV
-              </a>
+              </Link>
             </Button>
           ) : null
         }
