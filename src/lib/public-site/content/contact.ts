@@ -1,6 +1,11 @@
 /**
- * Verified contact directory. Approved as already published; unchanged in
- * Stage 2. The action registry may only use email addresses that appear in
+ * Verified contact directory (approved as already published; unchanged) and
+ * the Stage 3 intent routing for `/contact/`: each intent points at a
+ * registry action that resolves to a verified page or an approved channel.
+ * There is no form; Stage 7 replaces these destinations with the intake.
+ * Existing-order support goes to the originating store (guide §5).
+ *
+ * The action registry may only use email addresses that appear in
  * `channels` (checked by registry.test.ts).
  */
 export const contact = {
@@ -51,4 +56,63 @@ export const contact = {
       url: "https://dexton.com",
     },
   ],
+
+  // Stage 3: intent routing, no form.
+  routing: {
+    eyebrow: "Start with what you need",
+    title: "Routed to the right conversation.",
+    text: "Each intent goes to a verified page or an approved channel. A form will follow once its routing, retention, and ownership are approved.",
+  },
+  intents: [
+    {
+      label: "Clinic development",
+      text: "Planning, design, construction, renovation, or fit-out.",
+      action: "plan_clinic",
+    },
+    {
+      label: "Equipment quote",
+      text: "Room-by-room equipment planning and a quote.",
+      action: "equipment_quote",
+    },
+    {
+      label: "Ongoing procurement",
+      text: "Routine supply for a clinic that is already open.",
+      action: "clinic_supply_review",
+    },
+    {
+      label: "Metabolic-health program",
+      text: "Supply services for a program, in development.",
+      action: "discuss_program",
+    },
+    {
+      label: "Pharmacy supply program",
+      text: "Non-drug supplies and fulfilment for a pharmacy.",
+      action: "discuss_program",
+    },
+    {
+      label: "Supplier or manufacturer",
+      text: "Categories, regions, product data, and onboarding.",
+      action: "supplier_inquiry",
+    },
+    {
+      label: "Investor",
+      text: "Current context and materials.",
+      action: "investor_materials",
+    },
+    {
+      label: "Shareholder services",
+      text: "Administrative queries about a holding.",
+      action: "shareholder_services",
+    },
+    {
+      label: "Acquisition or strategic transaction",
+      text: "Confidential first conversation.",
+      action: "acquisition_inquiry",
+    },
+    { label: "General", text: "Anything else.", action: "general_inquiry" },
+  ],
+  existingOrder: {
+    title: "Existing order?",
+    text: "Contact the store that took the order. This site cannot see or change store orders.",
+  },
 } as const;

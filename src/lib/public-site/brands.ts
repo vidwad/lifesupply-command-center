@@ -7,12 +7,18 @@
  * legal relationship is recorded only when the product owner confirms it
  * (WEB-01), and no relationship is inferred from a website label.
  *
- * `canonicalUrl` values were fetched and returned HTTP 200 on the
- * `verifiedAt` date (SOURCE_REGISTER.md §1). They carry no query string or
- * tracking parameter; `registry.test.ts` enforces that. The Command Center
- * is not a brand: its login is rendered only by `CommandCenterLoginLink`.
+ * Every URL here (`canonicalUrl`, `supportUrl`, `categories`, `storeLinks`)
+ * was fetched and returned HTTP 200 on the `verifiedAt` date
+ * (SOURCE_REGISTER.md §1 and §7; Stage 3 re-verification 2026-09-08). They
+ * carry no query string or tracking parameter; `registry.test.ts` enforces
+ * that. Category links are the store's own category pages, listed only when
+ * they were observed on the store; no category is guessed. The Command
+ * Center is not a brand: its login is rendered only by
+ * `CommandCenterLoginLink`.
  */
 export type BrandKey = "corporate" | "lifesupply" | "wellmart" | "clinics" | "balkowitsch";
+
+export type OperatingBrandKey = Exclude<BrandKey, "corporate">;
 
 export type BrandAvailability =
   | "operating"
@@ -20,6 +26,11 @@ export type BrandAvailability =
   | "in_development"
   | "under_evaluation"
   | "unavailable";
+
+export interface VerifiedLink {
+  label: string;
+  url: string;
+}
 
 export interface BrandRecord {
   key: BrandKey;
@@ -38,6 +49,12 @@ export interface BrandRecord {
   supportUrl: string | null;
   supportPhone: string | null;
   supportEmail: string | null;
+  /** Support hours exactly as the brand publishes them; `null` when not observed. */
+  supportHours: string | null;
+  /** Verified category pages on the brand's own site (observed, never guessed). */
+  categories: VerifiedLink[];
+  /** Verified policy or service pages on the brand's own site. */
+  storeLinks: VerifiedLink[];
   /** Authentic mark with its provenance; `null` until an approved file exists (WB-207). */
   asset: { src: string; width: number; height: number; source: string; usage: string } | null;
   /** SOURCE_REGISTER.md rows that support this record. */
@@ -47,6 +64,8 @@ export interface BrandRecord {
   publishStatus: "published" | "draft";
   availability: BrandAvailability;
 }
+
+const VERIFIED = "2026-09-08";
 
 export const BRANDS: readonly BrandRecord[] = [
   {
@@ -62,6 +81,9 @@ export const BRANDS: readonly BrandRecord[] = [
     supportUrl: null,
     supportPhone: null,
     supportEmail: "info@lifesupply.com",
+    supportHours: null,
+    categories: [],
+    storeLinks: [],
     asset: {
       src: "/lsh/lifesupply-mark.png",
       width: 661,
@@ -71,7 +93,7 @@ export const BRANDS: readonly BrandRecord[] = [
     },
     source: "S-01, S-13, S-27",
     owner: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
     publishStatus: "published",
     availability: "operating",
   },
@@ -88,10 +110,26 @@ export const BRANDS: readonly BrandRecord[] = [
     supportUrl: "https://lifesupply.ca/contact/",
     supportPhone: "1-855-755-5433",
     supportEmail: "info@lifesupply.com",
+    supportHours: "Monday to Friday, 9 AM to 5 PM Pacific",
+    categories: [
+      { label: "Clinic supplies", url: "https://lifesupply.ca/clinic-supplies/" },
+      { label: "Dental clinic supplies", url: "https://lifesupply.ca/dental-clinic-supplies/" },
+      { label: "Needles and syringes", url: "https://lifesupply.ca/needles-syringes/" },
+      { label: "Diabetic", url: "https://lifesupply.ca/diabetic/" },
+      { label: "Blood glucose meters", url: "https://lifesupply.ca/blood-glucose-meters/" },
+      { label: "Biometric monitors", url: "https://lifesupply.ca/biometric-monitors/" },
+      { label: "Medical thermometers", url: "https://lifesupply.ca/medical-thermometers/" },
+      { label: "First aid", url: "https://lifesupply.ca/first-aid/" },
+      { label: "Mobility aids", url: "https://lifesupply.ca/mobility-aids/" },
+    ],
+    storeLinks: [
+      { label: "Shipping and ordering", url: "https://lifesupply.ca/shipping-ordering/" },
+      { label: "Return policy", url: "https://lifesupply.ca/return-policy/" },
+    ],
     asset: null,
-    source: "S-02, S-10, S-25, S-30, S-80–S-84",
+    source: "S-02, S-10, S-25, S-30, S-52, S-80–S-84",
     owner: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
     publishStatus: "published",
     availability: "operating",
   },
@@ -107,10 +145,27 @@ export const BRANDS: readonly BrandRecord[] = [
     supportUrl: "https://wellmartmedical.com/contact-us/",
     supportPhone: "1-855-755-5433",
     supportEmail: "info@wellmartmedical.com",
+    supportHours: "9 AM to 5 PM Pacific",
+    categories: [
+      {
+        label: "Home medical equipment",
+        url: "https://wellmartmedical.com/home-medical-equipment/",
+      },
+      { label: "Mobility", url: "https://wellmartmedical.com/mobility/" },
+      { label: "Bath safety", url: "https://wellmartmedical.com/bath-safety/" },
+      { label: "Incontinence", url: "https://wellmartmedical.com/incontinence/" },
+      { label: "Ostomy", url: "https://wellmartmedical.com/ostomy/" },
+      { label: "Respiratory", url: "https://wellmartmedical.com/respiratory/" },
+      { label: "Diabetic", url: "https://wellmartmedical.com/diabetic/" },
+      { label: "Health monitors", url: "https://wellmartmedical.com/health-monitors/" },
+      { label: "Needles and syringes", url: "https://wellmartmedical.com/needles-and-syringes/" },
+      { label: "Skin and wound", url: "https://wellmartmedical.com/skin-and-wound/" },
+    ],
+    storeLinks: [],
     asset: null,
-    source: "S-03, S-12, S-29, S-85–S-87",
+    source: "S-03, S-12, S-29, S-52, S-85–S-87",
     owner: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
     publishStatus: "published",
     availability: "operating",
   },
@@ -127,10 +182,20 @@ export const BRANDS: readonly BrandRecord[] = [
     supportUrl: "https://www.lifesupplyclinics.com/contact-us/",
     supportPhone: "1-855-755-5433",
     supportEmail: "info@lifesupplyclinics.com",
+    supportHours: null,
+    categories: [],
+    storeLinks: [
+      { label: "Our services", url: "https://www.lifesupplyclinics.com/our-services/" },
+      { label: "Our projects", url: "https://www.lifesupplyclinics.com/our-projects/" },
+      {
+        label: "Buy clinic equipment",
+        url: "https://www.lifesupplyclinics.com/buy-clinic-equipment/",
+      },
+    ],
     asset: null,
     source: "S-04, S-16, S-28, S-70–S-75",
     owner: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
     publishStatus: "published",
     availability: "operating",
   },
@@ -147,10 +212,24 @@ export const BRANDS: readonly BrandRecord[] = [
     supportUrl: "https://balkowitsch.com/contact-us/",
     supportPhone: "(800) 355-2956",
     supportEmail: "sales@balkowitsch.com",
+    supportHours: "8 AM to 4 PM",
+    categories: [
+      { label: "Health", url: "https://balkowitsch.com/categories/health.html" },
+      {
+        label: "Digital measuring devices",
+        url: "https://balkowitsch.com/categories/digital-measuring-devices.html",
+      },
+      { label: "Wound care", url: "https://balkowitsch.com/categories/wound-care.html" },
+      { label: "Living aids", url: "https://balkowitsch.com/categories/living-aids.html" },
+    ],
+    storeLinks: [
+      { label: "Shipping and returns", url: "https://balkowitsch.com/shipping-returns/" },
+      { label: "FAQ", url: "https://balkowitsch.com/faq/" },
+    ],
     asset: null,
-    source: "S-05, S-15, S-24, S-88",
+    source: "S-05, S-15, S-24, S-52, S-88",
     owner: null,
-    verifiedAt: "2026-09-08",
+    verifiedAt: VERIFIED,
     publishStatus: "published",
     availability: "operating",
   },
