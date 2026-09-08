@@ -58,11 +58,11 @@ Use the public endpoint server-to-server from a dedicated public-web deployment 
 
 ## Current validation status
 
-The consolidation branch passes TypeScript validation and **1,057 tests across 80 test files**. The focused public-host, DTO, and route-permission checks pass. The complete route graph also compiles and completes under `pnpm exec next build --debug-prerender`.
+The consolidation branch passes TypeScript validation and **1,057 tests across 80 test files**. The focused public-host, DTO, and route-permission checks pass. GitHub Actions also completes the normal `prisma generate && next build` production build successfully on Node 24.
 
-The default Next.js 16.2.6 production build currently fails during `/_global-error` prerendering with `useContext` null after successful compilation and type checking. The unchanged Command Center `main` branch reproduces the same failure at `/investors/new`, confirming that it predates this public-site consolidation. A similar Next.js 16 production build issue has been reported upstream.[1]
+The sandbox default Node 22 runtime reproduced a `/_global-error` prerender `useContext` issue on both this branch and unchanged Command Center `main`. A similar Next.js 16 production build issue has been reported upstream.[1] The hosted Node 24 build does not reproduce the failure. This repository therefore pins the supported runtime to Node 24 through `.nvmrc` and the `engines` field.
 
-Do **not** treat `--debug-prerender` as a production build command. Before public cutover, resolve the upstream Next.js build issue through an approved dependency update or a maintained framework workaround, then rerun the normal production build. This branch deliberately does not pin an unreviewed framework major version.
+Use Node 24 or later for local and deployment builds. Do **not** treat `--debug-prerender` as a production build command; it was used only to diagnose the Node 22 environment behavior.
 
 ## Rollback
 
