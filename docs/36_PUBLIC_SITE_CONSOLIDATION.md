@@ -20,6 +20,8 @@ On September 7, 2026, the unified public homepage and Investor Relations page we
 
 The branch introduces additive `PublicContentItem`, `PublicDocument`, `PublicMetricSnapshot`, and `PublicContactChannel` models with `draft`, `under_review`, `approved`, `published`, and `archived` states. A strict public DTO contract and `GET /api/public/v1/site` read model expose only published, time-valid, allowlisted fields.
 
+> **Correction (September 8, 2026, website Stage 6):** the Render production API behaviour shows `20260907235000_public_web_foundation` **is applied** in production (D-09); the sentence below described the state when this document was written. The Render container applies every migration in `prisma/migrations/` on deploy, so later additive migrations are prepared under `docs/website-development/migrations/` until WEB-10 approves them.
+
 The included migration is intentionally **not applied** by this branch. Apply it only through the Command Center’s normal staging and production migration process after backup and release approval.
 
 ## Cutover requirements

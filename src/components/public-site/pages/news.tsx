@@ -10,22 +10,49 @@ import {
   PublicHero,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import type { ActionKey } from "@/lib/public-site/actions";
-import { getNewsItem, getResource, news } from "@/lib/public-site/content/news";
+import { ACTIONS, type ActionKey } from "@/lib/public-site/actions";
+import { news } from "@/lib/public-site/content/news";
+import type { Published } from "@/lib/public-site/published";
 import { LIFE_SUPPLY_ROUTES, newsItemRoute, resourceRoute } from "@/lib/public-site/routes";
+import type { PublicNewsItemDto, PublicResourceDto } from "@/server/public-web/contracts";
 
-/** A section that says plainly when it is empty rather than filling itself. */
-function EmptyNote({ text }: { text: string }) {
+/** A section that says plainly when it is empty or unreachable rather than filling itself. */
+function Note({ text, tone = "empty" }: { text: string; tone?: "empty" | "unavailable" }) {
   return (
-    <p className="mt-4 border-l-2 border-[var(--lsh-rule-strong)] pl-4 text-sm leading-6 text-[var(--lsh-muted)]">
+    <p
+      className={`mt-4 border-l-2 pl-4 text-sm leading-6 text-[var(--lsh-muted)] ${
+        tone === "unavailable" ? "border-[var(--lsh-brand-red)]" : "border-[var(--lsh-rule-strong)]"
+      }`}
+      role={tone === "unavailable" ? "status" : undefined}
+    >
       {text}
     </p>
   );
 }
 
-/** `/news/` — current news, historical releases, and resources kept apart. */
-export function NewsPage() {
-  const { hero, sections, current, historical, resources } = news;
+/** Format an ISO calendar date for display without a timezone shift. */
+export function displayDate(iso: string) {
+  const parts = iso.split("-").map(Number);
+  const year = parts[0] ?? 1970;
+  const month = parts[1] ?? 1;
+  const day = parts[2] ?? 1;
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** `/news/` — governed current news and resources, plus the static historical releases. */
+export function NewsPage({
+  current,
+  resources,
+}: {
+  current: Published<PublicNewsItemDto[]>;
+  resources: Published<PublicResourceDto[]>;
+}) {
+  const { hero, sections, historical } = news;
   return (
     <LifeSupplyLayout>
       <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
@@ -33,16 +60,18 @@ export function NewsPage() {
         <Container className="grid gap-16">
           <Reveal>
             <Eyebrow as="h2">{sections.current.title}</Eyebrow>
-            {current.length === 0 ? (
-              <EmptyNote text={sections.current.empty} />
+            {!current.ok ? (
+              <Note text={sections.current.unavailable} tone="unavailable" />
+            ) : current.data.length === 0 ? (
+              <Note text={sections.current.empty} />
             ) : (
               <ul className="mt-6 grid gap-4">
-                {current.map((item) => (
+                {current.data.map((item) => (
                   <li key={item.slug}>
                     <SpotlightCard className="lsh-lift border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
                       <Link href={newsItemRoute(item.slug)} className="group grid gap-3 p-7">
                         <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                          {item.date}
+                          {displayDate(item.date)}
                         </p>
                         <h3 className="lsh-display text-2xl text-[var(--lsh-charcoal)]">
                           {item.title}
@@ -99,16 +128,18 @@ export function NewsPage() {
 
           <Reveal>
             <Eyebrow as="h2">{sections.resources.title}</Eyebrow>
-            {resources.length === 0 ? (
-              <EmptyNote text={sections.resources.empty} />
+            {!resources.ok ? (
+              <Note text={sections.resources.unavailable} tone="unavailable" />
+            ) : resources.data.length === 0 ? (
+              <Note text={sections.resources.empty} />
             ) : (
               <ul className="mt-6 grid gap-4 md:grid-cols-2">
-                {resources.map((item) => (
+                {resources.data.map((item) => (
                   <li key={item.slug}>
                     <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
                       <Link href={resourceRoute(item.slug)} className="group grid gap-3 p-7">
                         <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                          Reviewed {item.reviewed}
+                          Reviewed {displayDate(item.reviewed)}
                         </p>
                         <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">
                           {item.title}
@@ -127,14 +158,25 @@ export function NewsPage() {
   );
 }
 
-/** `/news/[slug]/` — dated announcement template; renders only approved records. */
-export function NewsItemPage({ slug }: { slug: string }) {
-  const item = getNewsItem(slug);
-  if (!item) return null;
+/** Rendered when a governed page cannot be fetched: the section fails closed, never blank. */
+export function PublishedUnavailablePage() {
+  const copy = news.itemUnavailable;
+  return (
+    <LifeSupplyLayout>
+      <PublicHero eyebrow={copy.eyebrow} title={copy.title} description={copy.text} />
+      <section className="mx-auto max-w-3xl px-5 py-20 lg:px-8">
+        <PrimaryAction href={LIFE_SUPPLY_ROUTES.news}>Back to news</PrimaryAction>
+      </section>
+    </LifeSupplyLayout>
+  );
+}
+
+/** `/news/[slug]/` — a dated announcement from the published read model. */
+export function NewsItemView({ item }: { item: PublicNewsItemDto }) {
   return (
     <LifeSupplyLayout>
       <PublicHero
-        eyebrow={`Company news · ${item.date}`}
+        eyebrow={`Company news · ${displayDate(item.date)}`}
         title={item.title}
         description={item.summary}
       />
@@ -162,9 +204,9 @@ export function NewsItemPage({ slug }: { slug: string }) {
 }
 
 /** `/resources/[slug]/` — practical guidance with its author, reviewer, and dates. */
-export function ResourcePage({ slug }: { slug: string }) {
-  const item = getResource(slug);
-  if (!item) return null;
+export function ResourceView({ item }: { item: PublicResourceDto }) {
+  // The action key is authored in the Command Center; an unknown key falls back to the general channel.
+  const action: ActionKey = item.action in ACTIONS ? (item.action as ActionKey) : "general_inquiry";
   return (
     <LifeSupplyLayout>
       <PublicHero eyebrow="Resource" title={item.title} description={item.summary} />
@@ -173,7 +215,7 @@ export function ResourcePage({ slug }: { slug: string }) {
           <span>Author: {item.author}</span>
           <span>Reviewer: {item.reviewer}</span>
           <span>
-            Published {item.published} · Reviewed {item.reviewed}
+            Published {displayDate(item.published)} · Reviewed {displayDate(item.reviewed)}
           </span>
         </Reveal>
         <Reveal className="grid gap-5 text-lg leading-8 text-[var(--lsh-muted)]">
@@ -182,7 +224,7 @@ export function ResourcePage({ slug }: { slug: string }) {
           ))}
         </Reveal>
         <Reveal className="mt-8 flex flex-wrap gap-3">
-          <ActionLink action={item.action as ActionKey} />
+          <ActionLink action={action} />
           <PrimaryAction href={LIFE_SUPPLY_ROUTES.news}>All resources</PrimaryAction>
         </Reveal>
       </section>

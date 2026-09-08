@@ -12,7 +12,7 @@
  * There is no DOM test environment in this repository, so these scan source
  * rather than render — the same approach the pricing canaries use.
  */
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -423,7 +423,9 @@ describe("document structure", () => {
   it("renders exactly one h1 per page, and only from PublicHero", () => {
     const pageSource = pages();
     const exportedPages = (
-      pageSource.match(/^export function \w+Page\b|^export function LifeSupplyHome\b/gm) ?? []
+      pageSource.match(
+        /^export function \w+Page\b|^export function \w+View\b|^export function LifeSupplyHome\b/gm,
+      ) ?? []
     ).length;
     const heroes = (pageSource.match(/<PublicHero\b/g) ?? []).length;
     expect(exportedPages).toBeGreaterThan(0);
@@ -439,7 +441,9 @@ describe("document structure", () => {
   it("wraps every page in the shared layout", () => {
     const pageSource = pages();
     const exportedPages = (
-      pageSource.match(/^export function \w+Page\b|^export function LifeSupplyHome\b/gm) ?? []
+      pageSource.match(
+        /^export function \w+Page\b|^export function \w+View\b|^export function LifeSupplyHome\b/gm,
+      ) ?? []
     ).length;
     expect((pageSource.match(/<LifeSupplyLayout>/g) ?? []).length).toBe(exportedPages);
   });
@@ -774,9 +778,13 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(new Set(dollars)).toEqual(new Set(["$6.75M", "$2.20M", "$284K"]));
   });
 
-  it("keeps documents at a request step: no file hosted, no download link, no confidential file in public/", () => {
+  it("keeps static documents at a request step and downloads only through the published read model", () => {
     expect(stage5Content()).not.toMatch(/\.pdf/i);
-    expect(stage5Pages()).not.toMatch(/download/i);
+    const investors = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
+    // The only download link is built from a published record's same-origin path; never a literal file.
+    expect(investors).toContain("publishedDocumentUrl(doc.downloadPath)");
+    expect(investors).not.toMatch(/href="https?:\/\//);
+    expect(investors).not.toMatch(/\bdownload=/);
     expect(existsSync(join(ROOT, "public/documents"))).toBe(false);
     expect(existsSync(join(ROOT, "public/investors"))).toBe(false);
   });
@@ -789,10 +797,11 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(stage5Content()).not.toContain("investor-presentation-preview");
   });
 
-  it("publishes no company news or resource without a record, and fabricates no author or date", () => {
+  it("authors no company news or resource statically, and fabricates no author or date", () => {
     const c = stripComments(read("src/lib/public-site/content/news.ts"));
-    expect(c).toContain("current: [] as readonly NewsItem[]");
-    expect(c).toContain("resources: [] as readonly Resource[]");
+    // Since Stage 6 these families are governed; the static module holds only the historical record.
+    expect(c).not.toMatch(/^\s{2}current:/m);
+    expect(c).not.toMatch(/^\s{2}resources:/m);
     expect(c).not.toMatch(/author: "/);
     expect(c).not.toMatch(/reviewer: "/);
     const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
@@ -826,5 +835,83 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect((page.match(/<ForwardLooking /g) ?? []).length).toBeGreaterThanOrEqual(3);
     expect(page).toContain("d.forwardLooking.text");
     expect(page).toContain("<StatusTag status=");
+  });
+});
+
+describe("Stage 6 governed publishing on the public site", () => {
+  const publishedClient = () => stripComments(read("src/lib/public-site/published.ts"));
+
+  it("reaches published content only through the fail-closed client, never a database", () => {
+    const sources = [
+      ...publicComponents(),
+      ...CONTENT_MODULES.map((path) => read(path)),
+      publishedClient(),
+    ];
+    for (const source of sources) {
+      expect(source).not.toMatch(/@\/server\/db|@prisma\/client|DATABASE_URL|prisma\./);
+    }
+    for (const route of [
+      "src/app/news/page.tsx",
+      "src/app/news/[slug]/page.tsx",
+      "src/app/resources/[slug]/page.tsx",
+      "src/app/investor-relations/documents/page.tsx",
+    ]) {
+      const source = read(route);
+      expect(source, route).toContain("@/lib/public-site/published");
+      expect(source, route).not.toMatch(/@\/server\/db|@\/server\/public-web\/readers/);
+    }
+    expect(publishedClient()).toContain("return { ok: false }");
+    expect(publishedClient()).toContain("safeParse");
+  });
+
+  it("fails closed in every governed section: an outage reads as unavailable, never as empty", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
+    expect(page).toContain("sections.current.unavailable");
+    expect(page).toContain("sections.resources.unavailable");
+    expect(page).toContain("export function PublishedUnavailablePage");
+    const investors = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
+    expect(investors).toContain("copy.unavailable");
+    for (const route of ["src/app/news/[slug]/page.tsx", "src/app/resources/[slug]/page.tsx"]) {
+      expect(read(route), route).toContain("if (!result.ok) return <PublishedUnavailablePage />;");
+      expect(read(route), route).toContain("robots: { index: false }");
+    }
+  });
+
+  it("keeps the published-only rule on the server: readers filter by status and window, routes answer a generic 503", () => {
+    const readers = stripComments(read("src/server/public-web/readers.ts"));
+    expect(readers).toContain("status: PublicContentStatus.published");
+    expect(readers).toContain("isTimeValid(row, now)");
+    const http = stripComments(read("src/server/public-web/http.ts"));
+    expect(http).toContain('"Public website data is temporarily unavailable."');
+    expect(http).toContain('"Cache-Control": "no-store"');
+    const workflow = stripComments(read("src/server/public-web/workflow.ts"));
+    expect(workflow).toContain("PERMISSIONS.PUBLIC_WEB_APPROVE");
+    expect(workflow).toContain("current.preparedById === actor.id");
+    expect(workflow).toContain("updatedAt: expectedUpdatedAt");
+    expect(workflow).toContain("writeAudit(");
+  });
+
+  it("never previews a draft on the public site; the preview route is permission-gated and unindexed", () => {
+    const preview = read("src/app/(print)/public-web-preview/[id]/page.tsx");
+    expect(preview).toContain("requirePermission(PERMISSIONS.PUBLIC_WEB_EDIT)");
+    expect(preview).toContain("robots: { index: false, follow: false }");
+    for (const source of [...publicComponents(), publishedClient()]) {
+      expect(source).not.toContain("public-web-preview");
+    }
+  });
+
+  it("adds no migration file: the Render container applies migrations on every deploy", () => {
+    const migrations = readdirSync(join(ROOT, "prisma/migrations")).filter(
+      (name) => /^\d{14}_/.test(name) && Number(name.slice(0, 14)) > 20260907235000,
+    );
+    expect(migrations).toEqual([]);
+    expect(
+      existsSync(
+        join(
+          ROOT,
+          "docs/website-development/migrations/stage-06-public-web-governance/migration.sql",
+        ),
+      ),
+    ).toBe(true);
   });
 });

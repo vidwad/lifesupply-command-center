@@ -39,7 +39,12 @@ export {
   InvestorRelationsPage,
   ShareholderServicesPage,
 } from "@/components/public-site/pages/investors";
-export { NewsItemPage, NewsPage, ResourcePage } from "@/components/public-site/pages/news";
+export {
+  NewsItemView,
+  NewsPage,
+  PublishedUnavailablePage,
+  ResourceView,
+} from "@/components/public-site/pages/news";
 export { OperationsPage } from "@/components/public-site/pages/operations";
 export {
   PartnerAcquisitionsPage,

@@ -1,19 +1,14 @@
 /**
- * Newsroom for Stage 5 (WB-506): three families kept apart.
+ * Newsroom copy (Stage 5, updated in Stage 6).
  *
  * - `historical`: the four 2022 releases approved as already published,
- *   linking to their public sources with their original dates.
- * - `current`: company news published on this site. None exists; the array
- *   is empty rather than filled, and the page says so.
- * - `resources`: practical guidance with a named author, reviewer, and
- *   dates. None has been approved, so none is listed. The six briefs the
- *   guide suggests are recorded in STAGE_05_EVIDENCE.md as candidates, not
- *   as content.
- *
- * `NewsItem` and `Resource` are the templates the `/news/[slug]/` and
- * `/resources/[slug]/` routes render once a record is approved (Stage 6
- * moves them to the published DTO). No date, author, or reviewer is
- * fabricated to fill a layout.
+ *   linking to their public sources with their original dates. Stable
+ *   approved copy; stays static under the eligibility policy.
+ * - Company news and resources are governed content since Stage 6: the
+ *   public pages read them from the Command Center's published-only
+ *   endpoints (`src/lib/public-site/published.ts`). Nothing about them is
+ *   authored here. When the endpoint is unavailable the section says so
+ *   rather than showing an empty list.
  */
 
 export interface HistoricalRelease {
@@ -21,30 +16,6 @@ export interface HistoricalRelease {
   title: string;
   source: string;
   href: string;
-}
-
-export interface NewsItem {
-  slug: string;
-  title: string;
-  /** Original publication date, preserved. */
-  date: string;
-  summary: string;
-  body: readonly string[];
-  source: { label: string; href: string } | null;
-  related: readonly { label: string; route: string }[];
-}
-
-export interface Resource {
-  slug: string;
-  title: string;
-  summary: string;
-  body: readonly string[];
-  author: string;
-  reviewer: string;
-  published: string;
-  reviewed: string;
-  /** Action-registry key. */
-  action: string;
 }
 
 export const news = {
@@ -58,6 +29,8 @@ export const news = {
     current: {
       title: "Company news",
       empty: "No company news has been published on this site.",
+      unavailable:
+        "Company news is temporarily unavailable. The historical record below is unaffected.",
     },
     historical: {
       title: "Historical releases",
@@ -67,10 +40,14 @@ export const news = {
       title: "Resources",
       empty:
         "No resources have been published yet. Each will carry its author, reviewer, and review date.",
+      unavailable: "Resources are temporarily unavailable.",
     },
   },
-  current: [] as readonly NewsItem[],
-  resources: [] as readonly Resource[],
+  itemUnavailable: {
+    eyebrow: "Temporarily unavailable",
+    title: "This page cannot be shown right now.",
+    text: "The published content service is not reachable. Please try again shortly; the rest of the site is unaffected.",
+  },
   historical: [
     {
       date: "June 14, 2022",
@@ -98,11 +75,3 @@ export const news = {
     },
   ] satisfies readonly HistoricalRelease[],
 } as const;
-
-export function getNewsItem(slug: string): NewsItem | null {
-  return news.current.find((item) => item.slug === slug) ?? null;
-}
-
-export function getResource(slug: string): Resource | null {
-  return news.resources.find((item) => item.slug === slug) ?? null;
-}

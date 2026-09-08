@@ -20,6 +20,18 @@ const ALLOWLIST: Record<string, string> = {
     "Unauthenticated uptime probe by design (docs/16 §12); body reviewed in 11B-12",
   "public/v1/site/route.ts":
     "Published-only public website DTO; strict schema, host firewall, and no raw internal model serialization",
+  "public/v1/news/route.ts":
+    "Stage 6 published-only family projection (readers.ts); generic 503 on failure",
+  "public/v1/news/[slug]/route.ts":
+    "Stage 6 published-only item; 404 unless published and in window",
+  "public/v1/resources/route.ts":
+    "Stage 6 published-only family projection; generic 503 on failure",
+  "public/v1/resources/[slug]/route.ts":
+    "Stage 6 published-only item; 404 unless published and in window",
+  "public/v1/documents/route.ts":
+    "Stage 6 published-only document metadata; no raw URL, no internal field",
+  "public/v1/documents/[id]/file/route.ts":
+    "Stage 6 download path; re-checks published status and host allowlist per request, 404 otherwise",
 };
 
 function collectRouteFiles(dir: string): string[] {

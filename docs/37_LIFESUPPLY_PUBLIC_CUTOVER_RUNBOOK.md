@@ -20,6 +20,8 @@ One repository does not imply one process, one hostname, one secret set, or one 
 
 The additive migration `20260907235000_public_web_foundation` creates the publication-domain tables and enums. It is intentionally un-applied in this branch.
 
+> **Correction (September 8, 2026, website Stage 6):** this migration is applied in production, as the live `/api/public/v1/site` response demonstrates (D-09). Treat the steps below as the procedure for the *next* additive migration, currently prepared and not applied at `docs/website-development/migrations/stage-06-public-web-governance/`. Because `Dockerfile` runs `prisma migrate deploy` on every deploy and the web service auto-deploys from `main`, a migration must never be merged before its rehearsal and WEB-10 sign-off.
+
 1. Back up the production database and verify restore procedures.
 2. Apply the migration in a staging database with `pnpm prisma migrate deploy`.
 3. Run `pnpm prisma generate` and the full test suite.

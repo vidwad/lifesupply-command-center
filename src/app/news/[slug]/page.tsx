@@ -1,26 +1,26 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { NewsItemPage } from "@/components/public-site/lifesupply-pages";
-import { getNewsItem, news } from "@/lib/public-site/content/news";
+import { NewsItemView, PublishedUnavailablePage } from "@/components/public-site/lifesupply-pages";
+import { fetchPublishedNewsItem } from "@/lib/public-site/published";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-/** Only approved records render; with none approved, every slug is a 404. */
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return news.current.map((item) => ({ slug: item.slug }));
-}
+/** Rendered on demand from the published read model and cached; a withdrawn item 404s after revalidation. */
+// Segment config must be a literal; keep in step with PUBLISHED_REVALIDATE_SECONDS (300).
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const item = getNewsItem(slug);
-  return item ? { title: item.title, description: item.summary } : {};
+  const result = await fetchPublishedNewsItem(slug);
+  if (!result.ok) return { title: "Temporarily unavailable", robots: { index: false } };
+  return result.data ? { title: result.data.title, description: result.data.summary } : {};
 }
 
 export default async function Page({ params }: PageProps) {
   const { slug } = await params;
-  if (!getNewsItem(slug)) notFound();
-  return <NewsItemPage slug={slug} />;
+  const result = await fetchPublishedNewsItem(slug);
+  if (!result.ok) return <PublishedUnavailablePage />;
+  if (!result.data) notFound();
+  return <NewsItemView item={result.data} />;
 }

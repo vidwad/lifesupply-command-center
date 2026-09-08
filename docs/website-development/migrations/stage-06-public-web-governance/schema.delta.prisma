@@ -1,0 +1,57 @@
+// Prisma model delta matching migration.sql. NOT applied. Paste when adopting.
+
+enum PublicAvailability {
+  operating
+  pilot
+  in_development
+  under_evaluation
+  unavailable
+
+  @@map("public_availability")
+}
+
+enum PublicDocumentAccess {
+  public
+  restricted_request
+  historical
+
+  @@map("public_document_access")
+}
+
+// enum PublicContentType: add
+//   resource_item
+
+// model PublicContentItem: add
+//   revision      Int                 @default(1)
+//   reviewerId    String?
+//   audience      String[]            @default([])
+//   relatedBrands String[]            @default([])
+//   availability  PublicAvailability?
+//   metadata      Json?
+//   archivedAt    DateTime?
+//   reviewer      User?               @relation("PublicContentReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+//   @@index([siteKey, status, effectiveAt, expiresAt])
+// model User: add
+//   reviewedPublicContent PublicContentItem[] @relation("PublicContentReviewer")
+
+// model PublicDocument: add
+//   accessClass     PublicDocumentAccess @default(public)
+//   version         String?
+//   effectiveAt     DateTime?
+//   expiresAt       DateTime?
+//   storageProvider String?
+//   checksum        String?
+//   byteSize        Int?
+//   contentType     String?
+//   archivedAt      DateTime?
+//   @@index([siteKey, accessClass, status])
+
+// model PublicMetricSnapshot: add
+//   effectiveAt DateTime?
+//   expiresAt   DateTime?
+//   currency    String?
+//   entityScope String?
+
+// model PublicContactChannel: add
+//   effectiveAt DateTime?
+//   expiresAt   DateTime?

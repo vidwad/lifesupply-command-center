@@ -277,6 +277,14 @@ export const investorRelations = {
         note: "Earlier corporate presentation from the prior website; available on request for the record.",
       },
     ] satisfies readonly DocumentRecord[],
+    published: {
+      title: "Published public documents",
+      empty:
+        "No public document has been published yet. Approved public documents appear here with their date and version.",
+      unavailable:
+        "The published document list is temporarily unavailable. The records below are unaffected.",
+      download: "Download",
+    },
     requestNote:
       "Requests are answered by the investor-relations contact. Restricted materials are provided only to suitable recipients and are not distributed through this site.",
     actions: ["investor_materials"],
