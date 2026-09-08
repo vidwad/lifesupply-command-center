@@ -1,6 +1,6 @@
 import { ExternalLink, Mail, Phone } from "lucide-react";
 
-import { ActionLink } from "@/components/public-site/action-link";
+import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
@@ -168,6 +168,7 @@ export function StoreBrandPage({
           </Reveal>
         </Container>
       </section>
+      <RelatedActions actions={"related" in page ? page.related : undefined} />
     </LifeSupplyLayout>
   );
 }
@@ -321,6 +322,7 @@ export function ClinicsBrandPage() {
           />
         </div>
       </section>
+      <RelatedActions actions={clinics.brandPage.related} />
     </LifeSupplyLayout>
   );
 }
@@ -397,6 +399,7 @@ export function TechnologyFulfilmentPage() {
           </div>
         </Reveal>
       </section>
+      <RelatedActions actions={LIFE_SUPPLY_CONTENT.businesses.technology.related} />
     </LifeSupplyLayout>
   );
 }

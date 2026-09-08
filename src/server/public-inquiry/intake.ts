@@ -27,6 +27,7 @@ import {
   retentionUntil,
   validateInquiry,
 } from "@/server/public-inquiry/contract";
+import { recordServerEvent } from "@/server/measurement/events";
 import { getInquiryStore, type InquiryStore } from "@/server/public-inquiry/store";
 import { isFeatureOn } from "@/server/services/feature-flags";
 
@@ -110,6 +111,8 @@ export async function receiveInquiry(
         entityId: record.id,
         afterData: redactForLog(record),
       });
+      // Server-confirmed measurement: only after the row exists, never for a duplicate.
+      recordServerEvent("inquiry_submitted", { intent: record.intent, brand: record.sourceBrand });
     }
     return { ok: true, reference: record.reference, duplicate: !created };
   } catch (error) {

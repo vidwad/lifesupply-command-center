@@ -36,6 +36,8 @@ export type ActionKey =
   | "refills_information"
   | "partner_inquiry"
   | "partners_hub"
+  | "partner_clinics"
+  | "partner_pharmacies"
   | "clinic_collaboration"
   | "growth_strategy"
   | "advanced_therapeutics"
@@ -191,6 +193,22 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Explore partner relationships",
     intent: "navigation",
     destination: internal(STAGE_5_ROUTES.partners),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  partner_clinics: {
+    key: "partner_clinics",
+    label: "Clinic collaboration",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.partnerClinics),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  partner_pharmacies: {
+    key: "partner_pharmacies",
+    label: "Pharmacy supply programs",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.partnerPharmacies),
     ownerChannel: null,
     verifiedAt: null,
   },

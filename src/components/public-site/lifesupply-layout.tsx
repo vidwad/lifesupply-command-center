@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { CommandCenterLoginLink, Eyebrow } from "@/components/public-site/lifesupply-primitives";
 import { OPERATING_BRANDS, brandGeography } from "@/lib/public-site/brands";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
+import { measurementAttributes } from "@/lib/public-site/measurement";
 import {
   LIFE_SUPPLY_NAVIGATION,
   buildPrimaryNavigation,
@@ -52,6 +53,7 @@ function NavItem({
   variant = "inline",
   external = false,
   forceActive = false,
+  attributes,
 }: {
   href: string;
   label: string;
@@ -59,6 +61,8 @@ function NavItem({
   className?: string;
   variant?: "inline" | "menu";
   external?: boolean;
+  /** Inert measurement data attributes (measurement.ts); never a handler. */
+  attributes?: Record<string, string>;
   forceActive?: boolean;
 }) {
   const pathname = usePathname();
@@ -79,13 +83,21 @@ function NavItem({
   );
   if (external) {
     return (
-      <a href={href} target="_blank" rel="noreferrer" onClick={onNavigate} className={classes}>
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        onClick={onNavigate}
+        className={classes}
+        {...attributes}
+      >
         {content}
       </a>
     );
   }
   return (
     <Link
+      {...attributes}
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
@@ -379,7 +391,14 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             <ul className="mt-5 grid justify-items-start gap-3">
               {OPERATING_BRANDS.map((record) => (
                 <li key={record.key} className="grid">
-                  <NavItem href={record.canonicalUrl} label={record.name} external />
+                  <NavItem
+                    href={record.canonicalUrl}
+                    label={record.name}
+                    external
+                    attributes={measurementAttributes("brand_destination_click", {
+                      brand: record.key,
+                    })}
+                  />
                   <span className="mt-1 text-[11px] text-white/50">{brandGeography(record)}</span>
                 </li>
               ))}

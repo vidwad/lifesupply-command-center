@@ -626,6 +626,63 @@ test.describe("LifeSupply public site", () => {
     await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
   });
 
+  test("marks outbound brand links with inert measurement attributes and loads no tracker or cookie", async ({
+    page,
+    context,
+  }) => {
+    await page.goto("/");
+    const brandLinks = page.locator('a[data-measure="brand_destination_click"]');
+    expect(await brandLinks.count()).toBeGreaterThanOrEqual(4);
+    const brands = await brandLinks.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("data-measure-brand")),
+    );
+    for (const brand of ["lifesupply", "wellmart", "clinics", "balkowitsch"])
+      expect(brands).toContain(brand);
+    const scriptHosts = await page.evaluate(() =>
+      Array.from(document.scripts)
+        .map((script) => script.src)
+        .filter((src) => src && !src.startsWith(location.origin)),
+    );
+    expect(scriptHosts).toEqual([]);
+    // The Vercel public site sets no cookie. A local or Render-hosted run passes through the
+    // Auth.js proxy wrapper, which sets two technical cookies (D-12); never a tracking cookie.
+    const cookieNames = (await context.cookies()).map((cookie) => cookie.name).sort();
+    expect(
+      cookieNames.every((name) =>
+        /^(__Secure-|__Host-)?authjs\.(csrf-token|callback-url)$/.test(name),
+      ),
+      cookieNames.join(","),
+    ).toBe(true);
+    await page.goto("/clinic-solutions");
+    await expect(
+      page.locator('a[data-measure="clinic_consultation_click"]').first(),
+    ).toHaveAttribute("href", "https://www.lifesupplyclinics.com/contact-us/");
+  });
+
+  test("offers contextual related links that resolve, between the program, clinic, and store pages", async ({
+    page,
+  }) => {
+    for (const [route, expected] of [
+      ["/metabolic-health", /^\/clinic-solutions\/?$/],
+      ["/our-operations/lifesupply", /^\/metabolic-health\/?$/],
+      ["/clinic-solutions/ongoing-supplies", /^\/partners\/clinics\/?$/],
+    ] as const) {
+      await page.goto(route);
+      const related = page.getByRole("region", { name: "Related" });
+      await expect(related).toBeVisible();
+      const hrefs = await related
+        .locator("a")
+        .evaluateAll((links) => links.map((link) => link.getAttribute("href")!));
+      expect(
+        hrefs.some((href) => expected.test(href)),
+        `${route} -> ${expected}`,
+      ).toBe(true);
+      for (const href of hrefs) {
+        if (href.startsWith("/")) expect((await page.request.get(href)).ok(), href).toBe(true);
+      }
+    }
+  });
+
   test("opens and closes the mobile navigation from the keyboard", async ({ page, isMobile }) => {
     test.skip(!isMobile, "mobile navigation only");
     await page.goto("/about-us");

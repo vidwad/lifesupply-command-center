@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
+import { measurementAttributes } from "@/lib/public-site/measurement";
 
 import { SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { OPERATING_BRANDS, brandGeography } from "@/lib/public-site/brands";
@@ -18,6 +19,7 @@ export function BrandGrid() {
         <StaggerItem key={record.key} className="h-full">
           <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
             <a
+              {...measurementAttributes("brand_destination_click", { brand: record.key })}
               href={record.canonicalUrl}
               target="_blank"
               rel="noreferrer"

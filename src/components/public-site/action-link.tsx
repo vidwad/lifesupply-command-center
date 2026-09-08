@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ExternalLink, Mail } from "lucide-react";
 
 import { getAction, actionHref, type ActionKey } from "@/lib/public-site/actions";
+import { actionMeasurement } from "@/lib/public-site/measurement";
 
 const BASE = "lsh-display inline-flex items-center gap-2 px-5 py-3 text-[11px] transition-colors";
 
@@ -34,6 +35,8 @@ export function ActionLink({
   const href = actionHref(action);
   const label = children ?? record.label;
   const classes = `${VARIANTS[variant]} ${className}`.trim();
+  // Inert data attributes from the measurement taxonomy; no script reads them today.
+  const measure = actionMeasurement(action);
 
   switch (record.destination.kind) {
     case "internal":
@@ -44,13 +47,13 @@ export function ActionLink({
       );
     case "external":
       return (
-        <a href={href} target="_blank" rel="noreferrer" className={classes}>
+        <a href={href} target="_blank" rel="noreferrer" className={classes} {...measure}>
           {label} <ExternalLink size={16} aria-hidden="true" />
         </a>
       );
     case "mailto":
       return (
-        <a href={href} className={classes}>
+        <a href={href} className={classes} {...measure}>
           {label} <Mail size={16} aria-hidden="true" />
         </a>
       );
@@ -61,4 +64,29 @@ export function ActionLink({
         </a>
       );
   }
+}
+
+/**
+ * Contextual links between journeys (Stage 8). Keys resolve through the
+ * registry like every other action; an empty or missing list renders
+ * nothing, so a page never shows a heading with no links under it.
+ */
+export function RelatedActions({
+  actions,
+  heading = "Related",
+}: {
+  actions?: readonly string[];
+  heading?: string;
+}) {
+  if (!actions || actions.length === 0) return null;
+  return (
+    <section className="px-5 py-12 lg:px-8" aria-label={heading}>
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 border-t border-[var(--lsh-rule)] pt-8">
+        <span className="lsh-display text-[11px] text-[var(--lsh-muted)]">{heading}</span>
+        {actions.map((action) => (
+          <ActionLink key={action} action={action as ActionKey} variant="text" />
+        ))}
+      </div>
+    </section>
+  );
 }
