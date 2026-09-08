@@ -25,6 +25,8 @@ export default auth((req) => {
     const isBlockedInternalPath =
       pathname.startsWith("/dashboard") ||
       pathname.startsWith("/admin") ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/forgot-password") ||
       pathname.startsWith("/api/");
 
     if (isBlockedInternalPath) {

@@ -10,9 +10,11 @@ import {
   LIFE_SUPPLY_NAVIGATION,
   LIFE_SUPPLY_ROUTES,
 } from "@/lib/public-site/lifesupply-content";
+import { getCommandCenterLoginUrl } from "@/lib/public-site/command-center";
 
 export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const commandCenterLoginUrl = getCommandCenterLoginUrl();
   return (
     <div className="lsh-shell min-h-screen bg-[#f4f4ef] text-[#183344]">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#123348] text-white shadow-lg shadow-[#071724]/20">
@@ -43,6 +45,12 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <a
+              href={commandCenterLoginUrl}
+              className="hidden rounded-full border border-white/35 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-white/10 sm:inline-flex"
+            >
+              Command Center login
+            </a>
             <Link
               href={LIFE_SUPPLY_ROUTES.investorRelations}
               className="hidden rounded-full border border-[#b5c951]/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#e3ed9a] transition hover:bg-[#b5c951] hover:text-[#102c3e] sm:inline-flex"
@@ -78,6 +86,12 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                   {item.label}
                 </Link>
               ))}
+              <a
+                href={commandCenterLoginUrl}
+                className="mt-2 rounded-md border border-white/20 px-3 py-3 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                Command Center login
+              </a>
             </div>
           </nav>
         ) : null}

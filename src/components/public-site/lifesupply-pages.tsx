@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Building2, ExternalLink, Mail, Phone, ShieldCheck } from "lucide-react";
 
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
+import { getCommandCenterLoginUrl } from "@/lib/public-site/command-center";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 
 function PageHero({
@@ -81,6 +82,12 @@ export function LifeSupplyHome() {
               >
                 Investor relations <ArrowRight size={16} />
               </Link>
+              <a
+                href={getCommandCenterLoginUrl()}
+                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-3 text-sm font-bold text-white hover:bg-white/10"
+              >
+                Command Center login <ExternalLink size={16} />
+              </a>
             </div>
           </div>
           <div className="border-l border-white/15 pl-6 lg:pl-10">
