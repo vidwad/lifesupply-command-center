@@ -78,7 +78,11 @@ describe("the Command Center login boundary in the public UI", () => {
     // The Playwright smoke test finds this control by its accessible name.
     expect(primitives()).toContain("Command Center login");
     expect(layout()).toContain("<CommandCenterLoginLink");
-    expect(pages()).toContain("<CommandCenterLoginLink");
+    // Never a hero action: the Command Center is a management tool, not a
+    // public destination (product owner, 2026-09-08). It appears only in the
+    // shell's utility strip, mobile panel, and footer row.
+    expect(pages()).not.toContain("<CommandCenterLoginLink");
+    expect(primitives()).not.toContain('"hero"');
     expect(layout()).not.toContain("Command Center login");
     expect(pages()).not.toContain("Command Center login");
   });
