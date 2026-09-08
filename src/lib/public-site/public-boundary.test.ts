@@ -915,3 +915,64 @@ describe("Stage 6 governed publishing on the public site", () => {
     ).toBe(true);
   });
 });
+
+describe("Stage 7 inquiry capture stays unpublished until its decisions are recorded", () => {
+  it("renders the inquiry form on no public page and keeps the contact directory in place", () => {
+    for (const source of [
+      ...publicComponents().filter((code) => !code.includes("export function InquiryForm")),
+      layout(),
+      primitives(),
+    ]) {
+      expect(source).not.toContain("InquiryForm");
+      expect(source).not.toContain("inquiry-form");
+    }
+    for (const route of [
+      "src/app/contact/page.tsx",
+      "src/app/partners/page.tsx",
+      "src/app/investor-relations/page.tsx",
+    ]) {
+      expect(read(route), route).not.toContain("inquiry-form");
+    }
+    const contactContent = stripComments(read("src/lib/public-site/content/contact.ts"));
+    expect(contactContent).toContain("intents:");
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`))).not.toContain("<form");
+  });
+
+  it("puts no visitor data in URLs, logs, or audit rows, and never trusts a browser recipient", () => {
+    const form = stripComments(read(`${PUBLIC_DIR}/inquiry-form.tsx`));
+    expect(form).toContain('method: "POST"');
+    expect(form).not.toMatch(/searchParams|\?email=|location\.search/);
+    expect(form).toContain('sourcePath.split("?")[0]');
+    const contract = stripComments(read("src/server/public-inquiry/contract.ts"));
+    expect(contract).toContain('"recipient"');
+    expect(contract).toContain('"redirect"');
+    expect(contract).toContain(".strict()");
+    const intake = stripComments(read("src/server/public-inquiry/intake.ts"));
+    expect(intake).toContain("redactForLog(record)");
+    expect(intake).not.toMatch(/afterData:\s*record\b|contact\.email/);
+    const delivery = stripComments(read("src/server/public-inquiry/delivery.ts"));
+    expect(delivery).toContain('lastError: "Delivery failed"');
+  });
+
+  it("adds no migration file and ships the inquiry table as a prepared artifact", () => {
+    const migrations = readdirSync(join(ROOT, "prisma/migrations")).filter(
+      (name) => /^\d{14}_/.test(name) && Number(name.slice(0, 14)) > 20260907235000,
+    );
+    expect(migrations).toEqual([]);
+    expect(
+      existsSync(
+        join(ROOT, "docs/website-development/migrations/stage-07-public-inquiry/migration.sql"),
+      ),
+    ).toBe(true);
+    expect(stripComments(read("src/server/public-inquiry/store.ts"))).toContain(
+      "to_regclass('public.public_inquiries')",
+    );
+  });
+
+  it("leaves the privacy page unchanged because no collection is live", () => {
+    const privacy = stripComments(read("src/lib/public-site/content/policies.ts"));
+    expect(privacy).toContain(
+      "There is no form, no account, no newsletter sign-up, and no inquiry intake on this site.",
+    );
+  });
+});

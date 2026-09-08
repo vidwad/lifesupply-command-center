@@ -1,0 +1,65 @@
+
+Running 60 tests using 1 worker
+
+[1/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:6:7 › LifeSupply public site › renders a corporate homepage with a separate Command Center login boundary
+[2/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:29:7 › LifeSupply public site › keeps principal public corporate routes reachable
+[3/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:72:7 › LifeSupply public site › gives each anchor page exactly one h1
+[4/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:79:7 › LifeSupply public site › offers a skip link as the first keyboard stop
+[5/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:91:7 › LifeSupply public site › marks the current route in the navigation that is in use
+[6/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:107:7 › LifeSupply public site › hides the header while reading down and brings it back on scroll up
+[7/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:123:7 › LifeSupply public site › plays a silent, looping, inline background video in the hero, with no control
+[8/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:141:7 › LifeSupply public site › counts the reported figures up to exactly the approved text
+[9/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:152:7 › LifeSupply public site › keeps the hero heading one accessible sentence while its words animate
+[10/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:165:7 › LifeSupply public site › shows the poster instead of footage for visitors who prefer reduced motion
+[11/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:185:7 › LifeSupply public site › carries the external login in the utility strip on every viewport
+[12/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:193:7 › LifeSupply public site › opens the grouped desktop navigation from the keyboard and lists the four brands
+[13/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:229:7 › LifeSupply public site › lists every group and utility link in the mobile panel without a hover
+[14/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:272:7 › LifeSupply public site › names the four operating brands in the footer with verified external links
+[15/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:290:7 › LifeSupply public site › points every internal shell link at a route that exists
+[16/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:307:7 › LifeSupply public site › gives the homepage clinic, program, partner, and investor paths verified destinations
+[17/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:340:7 › LifeSupply public site › sends each store brand page to its own store, and the Clinics page to the Clinics site
+[18/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:364:7 › LifeSupply public site › routes the three clinic needs and lets an open clinic skip construction
+[19/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:387:7 › LifeSupply public site › names geography and currency for the four choices on Shop & Services, and sells nothing
+[20/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:409:7 › LifeSupply public site › routes contact intents to verified pages or approved channels without a form
+[21/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:433:7 › LifeSupply public site › lists eight pathways, each an information page with no purchase and the program channel
+[22/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:454:7 › LifeSupply public site › says K03 has no store destination and keeps browse links on registered store hosts
+[23/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:473:7 › LifeSupply public site › states on the refills page that no automatic shipment or subscription exists
+[24/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:487:7 › LifeSupply public site › routes the four partner relationships and separates them from procurement
+[25/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:515:7 › LifeSupply public site › keeps investor documents at a request step with no file link, and shows the figures scoped
+[26/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:538:7 › LifeSupply public site › shows dated legacy titles on the team page, links six directors, and keeps the retained profile addresses
+[27/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:555:7 › LifeSupply public site › keeps the newsroom honest and the policy pages linked from the footer
+[28/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:593:7 › LifeSupply public site › shows governed sections as empty or unavailable, never blank, and lists no draft
+[29/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:617:7 › LifeSupply public site › keeps the published document list fail-closed on the documents page
+[30/60] [chromium] › tests\e2e\lifesupply-public.spec.ts:629:7 › LifeSupply public site › opens and closes the mobile navigation from the keyboard
+[31/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:6:7 › LifeSupply public site › renders a corporate homepage with a separate Command Center login boundary
+[32/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:29:7 › LifeSupply public site › keeps principal public corporate routes reachable
+[33/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:72:7 › LifeSupply public site › gives each anchor page exactly one h1
+[34/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:79:7 › LifeSupply public site › offers a skip link as the first keyboard stop
+[35/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:91:7 › LifeSupply public site › marks the current route in the navigation that is in use
+[36/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:107:7 › LifeSupply public site › hides the header while reading down and brings it back on scroll up
+[37/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:123:7 › LifeSupply public site › plays a silent, looping, inline background video in the hero, with no control
+[38/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:141:7 › LifeSupply public site › counts the reported figures up to exactly the approved text
+[39/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:152:7 › LifeSupply public site › keeps the hero heading one accessible sentence while its words animate
+[40/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:165:7 › LifeSupply public site › shows the poster instead of footage for visitors who prefer reduced motion
+[41/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:185:7 › LifeSupply public site › carries the external login in the utility strip on every viewport
+[42/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:193:7 › LifeSupply public site › opens the grouped desktop navigation from the keyboard and lists the four brands
+[43/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:229:7 › LifeSupply public site › lists every group and utility link in the mobile panel without a hover
+[44/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:272:7 › LifeSupply public site › names the four operating brands in the footer with verified external links
+[45/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:290:7 › LifeSupply public site › points every internal shell link at a route that exists
+[46/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:307:7 › LifeSupply public site › gives the homepage clinic, program, partner, and investor paths verified destinations
+[47/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:340:7 › LifeSupply public site › sends each store brand page to its own store, and the Clinics page to the Clinics site
+[48/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:364:7 › LifeSupply public site › routes the three clinic needs and lets an open clinic skip construction
+[49/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:387:7 › LifeSupply public site › names geography and currency for the four choices on Shop & Services, and sells nothing
+[50/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:409:7 › LifeSupply public site › routes contact intents to verified pages or approved channels without a form
+[51/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:433:7 › LifeSupply public site › lists eight pathways, each an information page with no purchase and the program channel
+[52/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:454:7 › LifeSupply public site › says K03 has no store destination and keeps browse links on registered store hosts
+[53/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:473:7 › LifeSupply public site › states on the refills page that no automatic shipment or subscription exists
+[54/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:487:7 › LifeSupply public site › routes the four partner relationships and separates them from procurement
+[55/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:515:7 › LifeSupply public site › keeps investor documents at a request step with no file link, and shows the figures scoped
+[56/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:538:7 › LifeSupply public site › shows dated legacy titles on the team page, links six directors, and keeps the retained profile addresses
+[57/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:555:7 › LifeSupply public site › keeps the newsroom honest and the policy pages linked from the footer
+[58/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:593:7 › LifeSupply public site › shows governed sections as empty or unavailable, never blank, and lists no draft
+[59/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:617:7 › LifeSupply public site › keeps the published document list fail-closed on the documents page
+[60/60] [mobile-chrome] › tests\e2e\lifesupply-public.spec.ts:629:7 › LifeSupply public site › opens and closes the mobile navigation from the keyboard
+  3 skipped
+  57 passed (1.2m)

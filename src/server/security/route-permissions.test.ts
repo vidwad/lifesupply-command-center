@@ -32,6 +32,8 @@ const ALLOWLIST: Record<string, string> = {
     "Stage 6 published-only document metadata; no raw URL, no internal field",
   "public/v1/documents/[id]/file/route.ts":
     "Stage 6 download path; re-checks published status and host allowlist per request, 404 otherwise",
+  "public/v1/inquiries/route.ts":
+    "Stage 7 public intake, unauthenticated by design; size, origin, validation, flag, rate limit, readiness, and idempotency enforced in receiveInquiry",
 };
 
 function collectRouteFiles(dir: string): string[] {

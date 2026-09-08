@@ -1,0 +1,10 @@
+# Local intake route behaviour without a database (Stage 7, 2026-09-08T21:52:43Z); PUBLIC_SITE_ORIGINS=http://127.0.0.1:3100; final build
+GET -> 405
+POST no Origin -> 403 {"error":"The request did not come from the public website."}
+POST evil Origin -> 403
+POST allowed Origin, recipient injection -> 400 {"error":"Please correct the highlighted fields.","issues":[{"path":"to","message":"Not accepted"}]}
+POST allowed Origin, existing_order_support -> 400
+POST allowed Origin, valid body, no database (flag lookup fails, fail closed) -> 503 {"error":"Inquiries are not being accepted online yet. Please use the contact directory."}
+POST 20 KB body -> 413
+GET /public-web/inquiries without session -> 307
+Server log lines containing visitor data: 0
