@@ -12,7 +12,7 @@
  * There is no DOM test environment in this repository, so these scan source
  * rather than render — the same approach the pricing canaries use.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -26,6 +26,7 @@ const PUBLIC_DIR = "src/components/public-site";
 const LAYOUT = `${PUBLIC_DIR}/lifesupply-layout.tsx`;
 const PAGES = `${PUBLIC_DIR}/lifesupply-pages.tsx`;
 const PRIMITIVES = `${PUBLIC_DIR}/lifesupply-primitives.tsx`;
+const HERO_VIDEO = `${PUBLIC_DIR}/hero-video.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 const PROXY = "src/proxy.ts";
 const CSS = "src/styles/globals.css";
@@ -33,8 +34,9 @@ const CSS = "src/styles/globals.css";
 const layout = () => stripComments(read(LAYOUT));
 const pages = () => stripComments(read(PAGES));
 const primitives = () => stripComments(read(PRIMITIVES));
+const heroVideo = () => stripComments(read(HERO_VIDEO));
 const content = () => stripComments(read(CONTENT));
-const publicComponents = () => [layout(), pages(), primitives()];
+const publicComponents = () => [layout(), pages(), primitives(), heroVideo()];
 
 /** Width and height from a PNG's IHDR chunk. */
 function pngSize(rel: string): { width: number; height: number } {
@@ -42,6 +44,25 @@ function pngSize(rel: string): { width: number; height: number } {
   expect(bytes.subarray(1, 4).toString(), `${rel} is not a PNG`).toBe("PNG");
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
+
+/** Width and height from a JPEG's first start-of-frame marker. */
+function jpegSize(rel: string): { width: number; height: number } {
+  const bytes = readFileSync(join(ROOT, rel));
+  expect(bytes.readUInt16BE(0).toString(16), `${rel} is not a JPEG`).toBe("ffd8");
+  let offset = 2;
+  while (offset < bytes.length) {
+    expect(bytes[offset], `${rel}: marker expected at ${offset}`).toBe(0xff);
+    const marker = bytes[offset + 1] ?? 0;
+    const isStartOfFrame = marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker);
+    if (isStartOfFrame) {
+      return { height: bytes.readUInt16BE(offset + 5), width: bytes.readUInt16BE(offset + 7) };
+    }
+    offset += 2 + bytes.readUInt16BE(offset + 2);
+  }
+  throw new Error(`${rel}: no start-of-frame marker`);
+}
+
+const fileSize = (rel: string) => statSync(join(ROOT, rel)).size;
 
 describe("the Command Center login boundary in the public UI", () => {
   it("resolves the login URL in exactly one component, and only through getCommandCenterLoginUrl()", () => {
@@ -125,6 +146,59 @@ describe("original assets", () => {
     expect(pages()).toContain("<ImageBand");
     expect(pages()).not.toMatch(/portfolioImage[\s\S]{0,300}opacity-75/);
     expect(primitives()).toMatch(/function ImageBand[\s\S]*?bg-\[var\(--lsh-charcoal\)\]/);
+  });
+});
+
+describe("the hero footage", () => {
+  // The legacy hero video, reduced to its caption-free scenes. The budget
+  // keeps the homepage's first paint honest: the poster is what shows first,
+  // and the loop is fetched only after the browser has said motion is fine.
+  const ASSETS = {
+    webm: "public/lsh/hero/hero-loop.webm",
+    mp4: "public/lsh/hero/hero-loop.mp4",
+    poster: "public/lsh/hero/hero-poster.jpg",
+  };
+
+  it("ships the loop in both containers and the poster, within the byte budget", () => {
+    for (const rel of Object.values(ASSETS)) expect(existsSync(join(ROOT, rel)), rel).toBe(true);
+    expect(fileSize(ASSETS.webm)).toBeLessThan(2_500_000);
+    expect(fileSize(ASSETS.mp4)).toBeLessThan(3_000_000);
+    expect(fileSize(ASSETS.poster)).toBeLessThan(400_000);
+  });
+
+  it("declares the poster at its real pixel size and points at the shipped files", () => {
+    const c = content();
+    const declared = (key: string) => Number(c.match(new RegExp(`${key}:\\s*(\\d+)`))?.[1]);
+    expect({ width: declared("posterWidth"), height: declared("posterHeight") }).toEqual(
+      jpegSize(ASSETS.poster),
+    );
+    for (const rel of Object.values(ASSETS)) {
+      expect(c).toContain(`"${rel.replace(/^public/, "")}"`);
+    }
+    expect(pages()).toContain("<HeroVideo {...homepage.heroMedia} />");
+  });
+
+  it("is decorative, silent, inline, looped, and pausable", () => {
+    const code = heroVideo();
+    expect(code).toContain('aria-hidden="true"');
+    expect(code).toMatch(
+      /<video[\s\S]*?\bautoPlay\b[\s\S]*?\bmuted\b[\s\S]*?\bloop\b[\s\S]*?\bplaysInline\b/,
+    );
+    // VP9 first, H.264 fallback.
+    expect(code.indexOf('type="video/webm"')).toBeLessThan(code.indexOf('type="video/mp4"'));
+    // WCAG 2.2.2: auto-playing motion longer than five seconds needs a pause.
+    expect(code).toContain("Pause background video");
+    expect(code).toContain("aria-pressed={paused}");
+  });
+
+  it("gives reduced-motion visitors the poster only, and renders no footage on the server", () => {
+    const code = heroVideo();
+    expect(code).toContain("useSyncExternalStore(");
+    expect(code).toContain("(prefers-reduced-motion: reduce)");
+    // The server snapshot is "reduced", so the video element never reaches
+    // the HTML and no bytes are requested before the preference is known.
+    expect(code).toMatch(/useSyncExternalStore\([\s\S]*?\(\) => true,?\s*\)/);
+    expect(code).not.toContain("useEffect");
   });
 });
 

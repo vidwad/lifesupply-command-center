@@ -91,27 +91,41 @@ export function PublicHero({
   description,
   size = "page",
   actions,
+  media,
 }: {
   eyebrow: string;
   title: string;
   description?: string;
   size?: "home" | "page";
   actions?: React.ReactNode;
+  /** Optional decorative media layer (HeroVideo) rendered beneath the colour field. */
+  media?: React.ReactNode;
 }) {
   const isHome = size === "home";
   return (
     <section
       className={`relative overflow-hidden bg-[var(--lsh-ink)] px-5 text-white lg:px-8 ${
         isHome ? "pb-20 pt-16 lg:pb-28 lg:pt-24" : "py-16 lg:py-24"
-      }`}
+      } ${media ? "flex min-h-[32rem] items-center lg:min-h-[42rem]" : ""}`}
     >
-      {/* Composed colour field, not imagery: docs/40 defers the media slot rather than substituting stock. */}
+      {media}
+      {/*
+       * The colour field. Without media it is the composed ink ground docs/40
+       * asks for instead of stock imagery. Over footage it thins to a
+       * left-heavy scrim so the copy keeps its contrast where it sits while
+       * the scene shows through on the right, with the red hue kept at the
+       * top corner.
+       */}
       <div
-        className="absolute inset-0 [background-image:radial-gradient(circle_at_85%_10%,rgba(222,0,0,0.55),transparent_30%),linear-gradient(120deg,rgba(29,29,29,0.98),rgba(0,0,0,1))]"
+        className={`absolute inset-0 ${
+          media
+            ? "[background-image:radial-gradient(circle_at_85%_10%,rgba(222,0,0,0.5),transparent_32%),linear-gradient(105deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.8)_45%,rgba(0,0,0,0.55)_100%)]"
+            : "[background-image:radial-gradient(circle_at_85%_10%,rgba(222,0,0,0.55),transparent_30%),linear-gradient(120deg,rgba(29,29,29,0.98),rgba(0,0,0,1))]"
+        }`}
         aria-hidden="true"
       />
       <RedRule className={`absolute bottom-0 left-0 ${isHome ? "w-40" : "w-28"}`} />
-      <div className="relative mx-auto max-w-7xl">
+      <div className="relative mx-auto w-full max-w-7xl">
         <div
           className={`border-l-4 border-[var(--lsh-brand-red)] pl-5 sm:pl-7 ${
             isHome ? "max-w-5xl" : "max-w-4xl"
