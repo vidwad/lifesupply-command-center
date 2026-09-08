@@ -67,7 +67,9 @@ Environment: Windows 10, Node `v24.14.0`, pnpm `10.0.0`, committed lockfile.
 | Public build | `PUBLIC_SITE_MODE=true … pnpm public-web:build` | pass — 21 static pages |
 | Public browser suite, local | `PUBLIC_SITE_BASE_URL=http://127.0.0.1:3100 pnpm test:public-e2e --workers=1` against `next start` of the public build | pass — 39 passed, 3 skipped (desktop-only or mobile-only tests); log `evidence/stage-03/public-smoke-local.txt` |
 | External destinations | 44 URLs fetched | all HTTP 200 at 15:14 UTC; the list is in `brands.ts`, `actions.ts`, and `content/clinics.ts` |
-| Public browser suite, preview; CI | see `STATUS.md` session log | recorded after the automatic Vercel preview for the PR branch |
+| Public browser suite, preview | `PUBLIC_SITE_BASE_URL=https://lifesupply-command-center-git-claude-we-7af406-vidwads-projects.vercel.app pnpm test:public-e2e` | pass — 39 passed, 3 skipped, against the automatic Vercel preview for PR #70 (`dpl_7ow7EVh8BQJap81VLqJHwAAjMq8C`, commit `91750db`); log `evidence/stage-03/public-smoke-preview.txt` |
+| Preview probes (15:39 UTC) | `curl` | `/`, the four brand pages, `/clinic-solutions/*`, `/shop`, `/contact` all 200; `/dashboard` 307 → `/`; `/customers` 307 → `/login` (D-03 reproduces); `/api/health` 500 (D-02 reproduces) |
+| CI on PR #70 | GitHub Actions | **did not run**: `ci.yml` triggers only on pull requests to `main` and pushes to `main`, and this PR is based on the Stage 2 branch. The same commit passed typecheck, lint, the full unit suite, and both builds locally (rows above); Actions will run when the PR re-targets to `main` after #69 merges. |
 
 ## 5. Decisions applied as interim treatments
 
