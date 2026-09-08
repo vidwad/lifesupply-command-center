@@ -15,7 +15,12 @@ import {
   getBrand,
   getBrandCategory,
 } from "@/lib/public-site/brands";
+import { investorRelations } from "@/lib/public-site/content/investors";
 import { KIT_SLUGS, metabolic } from "@/lib/public-site/content/metabolic";
+import { news } from "@/lib/public-site/content/news";
+import { partners } from "@/lib/public-site/content/partners";
+import { policies } from "@/lib/public-site/content/policies";
+import { legacyTitle, team } from "@/lib/public-site/content/team";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import {
   BRAND_ROUTES,
@@ -24,7 +29,10 @@ import {
   METABOLIC_ROUTES,
   ROUTES,
   STAGE_3_ROUTES,
+  STAGE_5_ROUTES,
+  buildLegalNavigation,
   kitRoute,
+  profileRoute,
   buildPrimaryNavigation,
   buildUtilityNavigation,
   isLiveRoute,
@@ -162,6 +170,7 @@ describe("route registry", () => {
       "Our Businesses",
       "Clinic Solutions",
       "Metabolic Health",
+      "Partners",
       "Investors",
       "About",
     ]);
@@ -198,6 +207,64 @@ describe("route registry", () => {
       METABOLIC_ROUTES.refills,
     ]);
     expect(KIT_SLUGS).toHaveLength(8);
+  });
+
+  it("makes the Stage 5 pages live: Partners with four children, Investors with five, three policy pages", () => {
+    for (const path of Object.values(STAGE_5_ROUTES)) expect(isLiveRoute(path), path).toBe(true);
+    const groups = buildPrimaryNavigation();
+    expect(groups.find((g) => g.key === "partners")!.links.map((l) => l.href)).toEqual([
+      STAGE_5_ROUTES.partnerClinics,
+      STAGE_5_ROUTES.partnerPharmacies,
+      STAGE_5_ROUTES.partnerSuppliers,
+      STAGE_5_ROUTES.partnerAcquisitions,
+    ]);
+    expect(groups.find((g) => g.key === "investors")!.links.map((l) => l.href)).toEqual([
+      STAGE_5_ROUTES.growthStrategy,
+      STAGE_5_ROUTES.advancedTherapeutics,
+      STAGE_5_ROUTES.investorDocuments,
+      STAGE_5_ROUTES.shareholderServices,
+      STAGE_5_ROUTES.disclosures,
+    ]);
+    expect(buildLegalNavigation().map((l) => l.href)).toEqual([
+      STAGE_5_ROUTES.privacy,
+      STAGE_5_ROUTES.terms,
+      STAGE_5_ROUTES.accessibility,
+    ]);
+    // Templates without an approved record stay proposed and out of every menu.
+    for (const path of ["/news/[slug]/", "/resources/[slug]/"]) {
+      expect(isLiveRoute(path), path).toBe(false);
+    }
+    expect(news.current).toEqual([]);
+    expect(news.resources).toEqual([]);
+  });
+
+  it("resolves every team title through a dated legacy profile and keeps the board to the approved six", () => {
+    for (const member of team.management)
+      expect(legacyTitle(member.slug), member.slug).toBeTruthy();
+    for (const director of team.board) {
+      expect(
+        team.legacyProfiles.some((p) => p.slug === director.slug),
+        director.name,
+      ).toBe(true);
+      expect(profileRoute(director.slug)).toBe(`/${director.slug}/`);
+    }
+    expect(team.board.map((d) => d.name)).not.toContain("John Anderson");
+    expect(team.legacyProfiles.some((p) => p.slug === "john-anderson-2")).toBe(true);
+    expect(() => legacyTitle("nobody")).toThrow();
+  });
+
+  it("keeps investor documents at a request step with no hosted file, and every figure scoped", () => {
+    for (const record of investorRelations.documents.records) {
+      expect(record.href, record.title).toBeNull();
+      expect(record.date, record.title).toBeTruthy();
+      expect(["Public", "Restricted, on request", "Historical"]).toContain(record.category);
+    }
+    expect(investorRelations.currentReport.entity).toContain("LifeSupply Health Supplies Inc.");
+    expect(investorRelations.currentReport.status).toMatch(/unaudited/i);
+    for (const theme of investorRelations.advancedTherapeutics.themes) {
+      expect(theme.status, theme.title).toBe("Under evaluation");
+      expect(theme.dependencies.length, theme.title).toBeGreaterThan(0);
+    }
   });
 
   it("keeps Shop & Services and Contact as utility links", () => {
@@ -276,6 +343,19 @@ describe("action registry", () => {
       ...metabolic.hub.actions,
       ...metabolic.kitsHub.actions,
       ...metabolic.refills.actions,
+      ...partners.hub.relationships.map((r) => r.action),
+      partners.hub.procurement.action,
+      ...partners.clinics.actions,
+      ...partners.pharmacies.actions,
+      ...partners.suppliers.actions,
+      ...partners.acquisitions.actions,
+      ...investorRelations.hub.actions,
+      ...investorRelations.growthStrategy.actions,
+      ...investorRelations.advancedTherapeutics.actions,
+      ...investorRelations.documents.actions,
+      ...investorRelations.shareholderServices.actions,
+      ...investorRelations.disclosures.actions,
+      ...Object.values(policies).map((p) => p.action),
     ];
     for (const key of declared) {
       expect(Object.keys(ACTIONS), key).toContain(key);

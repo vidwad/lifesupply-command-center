@@ -19,6 +19,7 @@ import {
   LIFE_SUPPLY_ROUTES,
   METABOLIC_ROUTES,
   STAGE_3_ROUTES,
+  STAGE_5_ROUTES,
 } from "@/lib/public-site/routes";
 
 export type ActionKey =
@@ -34,6 +35,11 @@ export type ActionKey =
   | "explore_kits"
   | "refills_information"
   | "partner_inquiry"
+  | "partners_hub"
+  | "clinic_collaboration"
+  | "growth_strategy"
+  | "advanced_therapeutics"
+  | "investor_documents"
   | "supplier_inquiry"
   | "us_business_inquiry"
   | "acquisition_inquiry"
@@ -177,6 +183,46 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Discuss a supply program",
     intent: "metabolic_program",
     destination: mail("info@lifesupply.com"),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  partners_hub: {
+    key: "partners_hub",
+    label: "Explore partner relationships",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.partners),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  clinic_collaboration: {
+    key: "clinic_collaboration",
+    label: "Discuss clinic collaboration",
+    intent: "partner",
+    destination: mail("info@lifesupply.com"),
+    ownerChannel: "info@lifesupply.com",
+    verifiedAt: null,
+  },
+  growth_strategy: {
+    key: "growth_strategy",
+    label: "Growth strategy",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.growthStrategy),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  advanced_therapeutics: {
+    key: "advanced_therapeutics",
+    label: "Advanced therapeutics",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.advancedTherapeutics),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  investor_documents: {
+    key: "investor_documents",
+    label: "Documents index",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.investorDocuments),
     ownerChannel: null,
     verifiedAt: null,
   },

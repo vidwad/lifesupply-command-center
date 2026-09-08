@@ -214,7 +214,7 @@ export function LifeSupplyHome() {
             </Link>
           </Reveal>
           <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-4">
-            {news.map((item) => (
+            {news.historical.map((item) => (
               <StaggerItem key={item.href} className="h-full">
                 <a
                   href={item.href}

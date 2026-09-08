@@ -36,6 +36,11 @@ const PAGE_FAMILIES = [
   "shop",
   "contact",
   "metabolic",
+  "partners",
+  "investors",
+  "team",
+  "news",
+  "policies",
 ].map((name) => `${PUBLIC_DIR}/pages/${name}.tsx`);
 const BRAND_GRID = `${PUBLIC_DIR}/brand-grid.tsx`;
 const ACTION_LINK = `${PUBLIC_DIR}/action-link.tsx`;
@@ -56,7 +61,9 @@ const CONTENT_MODULES = [
   "metabolic",
   "team",
   "investors",
+  "partners",
   "news",
+  "policies",
   "contact",
 ].map((name) => `src/lib/public-site/content/${name}.ts`);
 const ROUTES_FILE = "src/lib/public-site/routes.ts";
@@ -294,9 +301,7 @@ describe("motion", () => {
       height: Number(block(key).match(/height:\s*(\d+)/)?.[1]),
     });
     expect(dims("operationsTimeline")).toEqual(jpegSize("public/lsh/operations-timeline.jpg"));
-    expect(dims("preview")).toEqual(pngSize("public/lsh/investor-presentation-preview.png"));
     expect(pages()).toContain("width={operationsTimeline.width}");
-    expect(pages()).toContain("width={investor.preview.width}");
   });
 });
 
@@ -466,6 +471,21 @@ describe("routes and content governance", () => {
       "src/app/metabolic-health/care-kits/page.tsx",
       "src/app/metabolic-health/care-kits/[kit]/page.tsx",
       "src/app/metabolic-health/refills/page.tsx",
+      "src/app/partners/page.tsx",
+      "src/app/partners/clinics/page.tsx",
+      "src/app/partners/pharmacies/page.tsx",
+      "src/app/partners/suppliers/page.tsx",
+      "src/app/partners/acquisitions/page.tsx",
+      "src/app/investor-relations/growth-strategy/page.tsx",
+      "src/app/investor-relations/advanced-therapeutics/page.tsx",
+      "src/app/investor-relations/documents/page.tsx",
+      "src/app/investor-relations/shareholder-services/page.tsx",
+      "src/app/investor-relations/disclosures/page.tsx",
+      "src/app/privacy/page.tsx",
+      "src/app/terms/page.tsx",
+      "src/app/accessibility/page.tsx",
+      "src/app/news/[slug]/page.tsx",
+      "src/app/resources/[slug]/page.tsx",
     ]) {
       expect(existsSync(join(ROOT, route)), route).toBe(true);
       expect(read(route), route).toContain("@/components/public-site/lifesupply-pages");
@@ -526,16 +546,16 @@ describe("Stage 2 registries and navigation", () => {
     const code = layout();
     expect(code).toContain("buildPrimaryNavigation()");
     expect(code).toContain("buildUtilityNavigation()");
-    for (const planned of [
-      "/partners",
-      "/investor-relations/documents",
-      "/investor-relations/growth-strategy",
-      "/privacy",
-      "/terms",
-      "/accessibility",
+    // Every planned route is now live; the shell still names none of them by literal.
+    for (const literal of [
+      '"/partners',
+      '"/investor-relations/',
+      '"/privacy',
+      '"/terms',
+      '"/accessibility',
     ]) {
       for (const source of [layout(), pages(), primitives()]) {
-        expect(source, planned).not.toContain(planned);
+        expect(source, literal).not.toContain(literal);
       }
     }
   });
@@ -715,5 +735,96 @@ describe("Stage 4 Metabolic Health and the eight pathways", () => {
     expect(metabolicContent()).toContain(
       "No operating store publishes a sharps-container category today",
     );
+  });
+});
+
+describe("Stage 5 partners, investors, team, news, and policies", () => {
+  const stage5Content = () =>
+    ["investors", "partners", "team", "news", "policies"]
+      .map((name) => stripComments(read(`src/lib/public-site/content/${name}.ts`)))
+      .join("\n");
+  const stage5Pages = () =>
+    ["investors", "partners", "team", "news", "policies"]
+      .map((name) => stripComments(read(`${PUBLIC_DIR}/pages/${name}.tsx`)))
+      .join("\n");
+
+  it("names no financing amount, valuation, exchange, listing, structure, or counterparty (S-63, S-65)", () => {
+    const c = stage5Content();
+    for (const banned of [
+      /\$\s?4\.2/,
+      /\bmillion\b/i,
+      /\bvaluation\b/i,
+      /\bIRR\b/,
+      /\bshare (count|price)\b/i,
+      /\bTSXV?\b/,
+      /\bCSE\b/,
+      /\bCPC\b/,
+      /\bCDNX\b/,
+      /\bFendX\b/i,
+      /(shares?|company|stock|securities) (is|are|be|become|becoming|will be) listed/i,
+      /listed on (the |a |an )?(exchange|TSX|CSE|NASDAQ|NYSE)/i,
+      /public listing|go(ing)? public|IPO/i,
+      /letter of intent (has|was|is) (been )?signed/i,
+      /\bsigned (a |an )?(agreement|partnership|LOI)\b/i,
+    ]) {
+      expect(c, String(banned)).not.toMatch(banned);
+    }
+    // Only the three approved figures appear anywhere in the Stage 5 copy.
+    const dollars = c.match(/\$[\d.,]+[MK]?/g) ?? [];
+    expect(new Set(dollars)).toEqual(new Set(["$6.75M", "$2.20M", "$284K"]));
+  });
+
+  it("keeps documents at a request step: no file hosted, no download link, no confidential file in public/", () => {
+    expect(stage5Content()).not.toMatch(/\.pdf/i);
+    expect(stage5Pages()).not.toMatch(/download/i);
+    expect(existsSync(join(ROOT, "public/documents"))).toBe(false);
+    expect(existsSync(join(ROOT, "public/investors"))).toBe(false);
+  });
+
+  it("resolves team titles only through the dated legacy profiles, and no longer renders the undated deck", () => {
+    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team.tsx`));
+    expect(teamPage).toContain("legacyTitle(member.slug)");
+    expect(teamPage).not.toMatch(/member\.role/);
+    expect(stage5Pages()).not.toContain("investor-presentation-preview");
+    expect(stage5Content()).not.toContain("investor-presentation-preview");
+  });
+
+  it("publishes no company news or resource without a record, and fabricates no author or date", () => {
+    const c = stripComments(read("src/lib/public-site/content/news.ts"));
+    expect(c).toContain("current: [] as readonly NewsItem[]");
+    expect(c).toContain("resources: [] as readonly Resource[]");
+    expect(c).not.toMatch(/author: "/);
+    expect(c).not.toMatch(/reviewer: "/);
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
+    expect(page).toContain("sections.current.empty");
+    expect(page).toContain("sections.resources.empty");
+  });
+
+  it("states the policies as current behaviour: no form, no cookie, no tracker, and no consent claim", () => {
+    const c = stripComments(read("src/lib/public-site/content/policies.ts"));
+    expect(c).toContain("do not set cookies");
+    expect(c).toContain("no third-party analytics");
+    expect(c).toContain("no form, no account, no newsletter sign-up, and no inquiry intake");
+    expect(c).not.toMatch(/cookie (banner|consent)/i);
+    expect(c).not.toMatch(/we (collect|store) your/i);
+    expect(c).not.toMatch(/Google Analytics|GA4/);
+    // The public shell still loads no third-party script and sets no cookie.
+    expect(layout()).not.toMatch(/<script/i);
+    expect(layout()).not.toMatch(/document\.cookie/);
+  });
+
+  it("keeps clinic collaboration distinct from procurement and pharmacy programs non-drug", () => {
+    const c = stripComments(read("src/lib/public-site/content/partners.ts"));
+    expect(c).toContain("Collaboration is not procurement");
+    expect(c).toContain("Medication is excluded from every configuration");
+    expect(c).toContain("No transaction, letter of intent, or discussion is announced or implied");
+    expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
+  });
+
+  it("carries the forward-looking qualification beside the investor claims", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
+    expect((page.match(/<ForwardLooking /g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect(page).toContain("d.forwardLooking.text");
+    expect(page).toContain("<StatusTag status=");
   });
 });

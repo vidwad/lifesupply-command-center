@@ -50,6 +50,36 @@ export function kitRoute(slug: string): string {
   return `${METABOLIC_ROUTES.careKits}${slug}/`;
 }
 
+/** Stage 5 pages. News items and resources are dynamic routes with no approved record yet. */
+export const STAGE_5_ROUTES = {
+  partners: "/partners/",
+  partnerClinics: "/partners/clinics/",
+  partnerPharmacies: "/partners/pharmacies/",
+  partnerSuppliers: "/partners/suppliers/",
+  partnerAcquisitions: "/partners/acquisitions/",
+  growthStrategy: "/investor-relations/growth-strategy/",
+  advancedTherapeutics: "/investor-relations/advanced-therapeutics/",
+  investorDocuments: "/investor-relations/documents/",
+  shareholderServices: "/investor-relations/shareholder-services/",
+  disclosures: "/investor-relations/disclosures/",
+  privacy: "/privacy/",
+  terms: "/terms/",
+  accessibility: "/accessibility/",
+} as const;
+
+/** Retained legacy profile addresses: `/{slug}/`. */
+export function profileRoute(slug: string): string {
+  return `/${slug}/`;
+}
+
+export function newsItemRoute(slug: string): string {
+  return `${LIFE_SUPPLY_ROUTES.news}${slug}/`;
+}
+
+export function resourceRoute(slug: string): string {
+  return `/resources/${slug}/`;
+}
+
 export type NavGroupKey =
   | "businesses"
   | "clinic"
@@ -57,7 +87,8 @@ export type NavGroupKey =
   | "partners"
   | "investors"
   | "about"
-  | "utility";
+  | "utility"
+  | "legal";
 
 export interface RouteRecord {
   path: string;
@@ -174,33 +205,33 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "live",
     navGroup: "metabolic",
   },
-  { path: "/partners/", label: "Partners", stage: 5, status: "proposed", navGroup: "partners" },
+  { path: "/partners/", label: "Partners", stage: 5, status: "live", navGroup: "partners" },
   {
     path: "/partners/clinics/",
     label: "Clinics",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "partners",
   },
   {
     path: "/partners/pharmacies/",
     label: "Pharmacies",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "partners",
   },
   {
     path: "/partners/suppliers/",
     label: "Suppliers",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "partners",
   },
   {
     path: "/partners/acquisitions/",
     label: "Acquisitions",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "partners",
   },
   {
@@ -214,35 +245,35 @@ export const ROUTES: readonly RouteRecord[] = [
     path: "/investor-relations/growth-strategy/",
     label: "Growth strategy",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "investors",
   },
   {
     path: "/investor-relations/advanced-therapeutics/",
     label: "Advanced therapeutics",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "investors",
   },
   {
     path: "/investor-relations/documents/",
     label: "Documents",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "investors",
   },
   {
     path: "/investor-relations/shareholder-services/",
     label: "Shareholder services",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "investors",
   },
   {
     path: "/investor-relations/disclosures/",
     label: "Disclosures",
     stage: 5,
-    status: "proposed",
+    status: "live",
     navGroup: "investors",
   },
   { path: "/our-team/", label: "Our team", stage: 5, status: "live", navGroup: "about" },
@@ -250,9 +281,26 @@ export const ROUTES: readonly RouteRecord[] = [
   { path: "/shop/", label: "Shop & Services", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact-2/", label: "Contact (legacy)", stage: 9, status: "redirect", navGroup: null },
-  { path: "/privacy/", label: "Privacy", stage: 5, status: "proposed", navGroup: null },
-  { path: "/terms/", label: "Terms", stage: 5, status: "proposed", navGroup: null },
-  { path: "/accessibility/", label: "Accessibility", stage: 5, status: "proposed", navGroup: null },
+  { path: "/privacy/", label: "Privacy", stage: 5, status: "live", navGroup: "legal" },
+  { path: "/terms/", label: "Terms of use", stage: 5, status: "live", navGroup: "legal" },
+  { path: "/accessibility/", label: "Accessibility", stage: 5, status: "live", navGroup: "legal" },
+  // Templates exist; a record becomes a live page only when it is approved (Stage 6 model).
+  {
+    path: "/news/[slug]/",
+    label: "News item",
+    stage: 6,
+    status: "proposed",
+    navGroup: null,
+    routeFile: "src/app/news/[slug]/page.tsx",
+  },
+  {
+    path: "/resources/[slug]/",
+    label: "Resource",
+    stage: 6,
+    status: "proposed",
+    navGroup: null,
+    routeFile: "src/app/resources/[slug]/page.tsx",
+  },
 ];
 
 export const LIVE_ROUTES: readonly RouteRecord[] = ROUTES.filter(
@@ -312,6 +360,14 @@ export function buildPrimaryNavigation(): NavGroup[] {
 /** Utility links: Shop & Services and Contact. The login is rendered by CommandCenterLoginLink. */
 export function buildUtilityNavigation(): NavLink[] {
   return LIVE_ROUTES.filter((route) => route.navGroup === "utility").map((route) => ({
+    label: route.label,
+    href: route.path,
+  }));
+}
+
+/** Policy links for the footer: privacy, terms, accessibility, once each page is live. */
+export function buildLegalNavigation(): NavLink[] {
+  return LIVE_ROUTES.filter((route) => route.navGroup === "legal").map((route) => ({
     label: route.label,
     href: route.path,
   }));
