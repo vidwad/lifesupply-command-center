@@ -19,23 +19,76 @@ export const LIFE_SUPPLY_NAVIGATION = [
   { label: "Contact", href: LIFE_SUPPLY_ROUTES.contact },
 ] as const;
 
+/**
+ * Approved public content. Every sentence the public site renders comes from
+ * here (or, later, a published DTO) — components receive it as props and add
+ * only imperative UI labels of their own ("Visit brand", "Skip to content").
+ *
+ * Strings marked "moved from JSX" were rendered by the first restoration pass
+ * (PR #60) inline in components; they are relocated here verbatim so the
+ * content model is the single governed source. Their wording is unchanged.
+ */
 export const LIFE_SUPPLY_CONTENT = {
   brand: {
     name: "LifeSupply Health",
+    /**
+     * Official LifeSupply logo, supplied by the product owner on 2026-09-08:
+     * white wordmark, red angular device with grey speed lines, transparent
+     * ground. The 821×262 export was trimmed to its opaque 661×93 box (a 1:1
+     * pixel copy, no resampling) so the artwork fills the box next/image
+     * reserves. Legible only on ink/charcoal — never place it on paper
+     * (docs/40 asset policy). Replaces the earlier 169×28 export.
+     */
     image: "/lsh/lifesupply-mark.png",
+    imageWidth: 661,
+    imageHeight: 93,
+    /**
+     * Portfolio lockup — LIFESUPPLY, DEXTON, MEDdirect marks in white on a
+     * transparent ground, 389×93 px. Same rule: ink/charcoal backgrounds only.
+     */
     portfolioImage: "/lsh/lifesupply-portfolio-lockup.png",
+    portfolioImageWidth: 389,
+    portfolioImageHeight: 93,
+    portfolioImageAlt: "LifeSupply, Dexton, and MedDirect portfolio marks",
     address: [
       "Lifesupply Health Supplies Inc.",
       "6911 King George Highway",
       "Surrey, British Columbia V3W 5A1",
       "Canada",
     ],
+    // moved from JSX (footer)
+    footerTagline:
+      "Corporate information, operating context, and investor resources from LifeSupply Health Supplies Inc.",
+    // moved from JSX (footer)
+    legalNotice: "Public information is subject to update and applicable disclosure context.",
   },
   homepage: {
     eyebrow: "LifeSupply Health Supplies Inc.",
     title: "Health and medical supply infrastructure for a changing market.",
     description:
       "LifeSupply is an established ecommerce and supply-platform company serving health, safety, medical, and industrial product categories across Canada and the United States.",
+    /**
+     * moved from JSX (hero side column). A restatement of `description`
+     * above, rendered since PR #60; now the statement in the red information
+     * band. Not a new claim.
+     */
+    operatingContext: {
+      eyebrow: "Public operating context",
+      statement:
+        "Health, safety, medical, and industrial supply categories across Canada and the United States.",
+    },
+    // moved from JSX (metrics section heading)
+    glance: {
+      eyebrow: "LifeSupply at a glance",
+      title: "Publicly reported scale, with source context.",
+      description:
+        "These figures are cited in the 2025 annual-report narrative and should be read with the report’s stated qualifications.",
+    },
+    // moved from JSX (closing overview band)
+    overview: {
+      eyebrow: "Corporate overview",
+      title: "Explore the operations, people, and investor context behind LifeSupply.",
+    },
     pillars: [
       {
         index: "01",
@@ -60,6 +113,18 @@ export const LIFE_SUPPLY_CONTENT = {
     ],
   },
   about: {
+    // moved from JSX (page hero)
+    hero: {
+      eyebrow: "About LifeSupply",
+      title: "A platform approach to medical-supply access.",
+    },
+    // moved from JSX (panel labels)
+    labels: { mission: "Mission", vision: "Vision" },
+    // moved from JSX (portfolio section heading)
+    portfolio: {
+      eyebrow: "Portfolio",
+      title: "Operating brands in the public LifeSupply overview.",
+    },
     mission:
       "Through a commitment to technology, innovation, and excellence, LifeSupply aims to serve a broad customer base with premium products, competitive pricing, and direct access.",
     vision:

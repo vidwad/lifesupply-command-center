@@ -138,14 +138,41 @@
 }
 
 @layer components {
+  /*
+   * LifeSupply public-site tokens (docs/40 §"Brand system to preserve").
+   *
+   * Scoped to .lsh-shell so the authenticated Command Center keeps its own
+   * Inter/JetBrains system. Components consume these variables; they never
+   * revive raw legacy hex values.
+   *
+   * Two neutrals are tuned for WCAG AA rather than copied literally:
+   *   --lsh-surface  #F0F0F0 (legacy #EEEEEE). Brand red text at the 11 px
+   *                  eyebrow size reaches 4.52:1 on #F0F0F0 but only 4.36:1
+   *                  on #EEEEEE. The shift is imperceptible; the label passes.
+   *   --lsh-muted    #5F5F5F (was #6B6B6B). 5.4:1 on the surface and 6.4:1 on
+   *                  paper, so muted body copy passes on both. #6B6B6B sat at
+   *                  4.51:1 on the surface — technically passing, no margin.
+   * The reds and the ink/charcoal/paper values are the legacy tokens unchanged.
+   */
   .lsh-shell {
     --lsh-brand-red: #de0000;
     --lsh-red-hover: #b63737;
+    /*
+     * Brand red as small TEXT on a dark field fails AA: 4.07:1 on ink and
+     * 3.3:1 on charcoal. This is the same hue lifted until it passes — 5.9:1
+     * on ink, 4.8:1 on charcoal. It is used only for labels on dark surfaces.
+     * Rules, bands, and buttons stay on --lsh-brand-red, where they are not
+     * text or carry white text (5.15:1).
+     */
+    --lsh-red-on-ink: #ff3b3b;
     --lsh-ink: #000000;
     --lsh-charcoal: #1d1d1d;
     --lsh-paper: #ffffff;
-    --lsh-surface: #eeeeee;
-    --lsh-muted: #6b6b6b;
+    --lsh-surface: #f0f0f0;
+    --lsh-muted: #5f5f5f;
+    /* Hairlines between editorial panels and card borders. */
+    --lsh-rule: #d6d6d6;
+    --lsh-rule-strong: #bdbdbd;
     --lsh-display-font: var(--font-lsh-display), "Roboto Condensed", "Arial Narrow", sans-serif;
     --lsh-body-font: var(--font-lsh-body), Roboto, Arial, sans-serif;
     background: var(--lsh-paper);
@@ -171,9 +198,26 @@
     text-transform: uppercase;
   }
 
+  /* Keyboard focus: a red ring, visible on paper, surface, and ink. */
   .lsh-shell :is(a, button):focus-visible {
     outline: 3px solid var(--lsh-brand-red);
     outline-offset: 3px;
+  }
+
+  /*
+   * On a red surface a red ring is invisible, so anything that sits on brand
+   * red — the primary action, the skip link, controls inside an InfoBand —
+   * gets a two-tone ring: white outline, red halo. Visible on any backdrop.
+   */
+  .lsh-shell :is(.lsh-primary-action, .lsh-on-red a, .lsh-on-red button):focus-visible {
+    outline: 3px solid var(--lsh-paper);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px var(--lsh-brand-red);
+  }
+
+  /* The skip-link target is focused programmatically; no ring is wanted there. */
+  .lsh-shell [tabindex="-1"]:focus {
+    outline: none;
   }
 
   .lsh-primary-action {
@@ -185,6 +229,17 @@
     background: var(--lsh-red-hover);
   }
 
+  /*
+   * Hover elevation for editorial cards. The colour/shadow feedback is not
+   * motion, so it stays on under prefers-reduced-motion; only the lift itself
+   * (transform + its transition) is gated. Previously everything was inside
+   * the no-preference query and reduced-motion users got no hover state at all.
+   */
+  .lsh-lift:hover {
+    border-color: var(--lsh-brand-red);
+    box-shadow: 0 18px 32px rgb(0 0 0 / 12%);
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     .lsh-lift {
       transition:
@@ -194,8 +249,6 @@
     }
 
     .lsh-lift:hover {
-      border-color: var(--lsh-brand-red);
-      box-shadow: 0 18px 32px rgb(0 0 0 / 12%);
       transform: translateY(-4px);
     }
   }
