@@ -45,7 +45,7 @@ The legacy Operations page remained reachable through the expected public naviga
 
 ## First restoration-pass verification
 
-The first scoped restoration pass was inspected locally in public-site mode on the home page and the About page. The reviewed pages now render the existing original LifeSupply mark against a black header, a high-contrast black/red hero field, Roboto Condensed display hierarchy, white and light-neutral reading surfaces, red numerical and rule accents, and the external Render-hosted **Command Center login** link. The approved current content and the existing public routes were retained. This is a design-system validation only; it does not approve any new business, portfolio, investor, pharmacy, therapeutic, or regulated-health statement.
+The first scoped restoration pass was inspected locally in public-site mode and again after deployment to the Vercel preview from commit `cc712fe`. The reviewed home and About pages render the existing original LifeSupply mark against a black header, a high-contrast black/red hero field, Roboto Condensed display hierarchy, white and light-neutral reading surfaces, red numerical and rule accents, and the external Render-hosted **Command Center login** link. The approved current content and the existing public routes were retained. This is a design-system validation only; it does not approve any new business, portfolio, investor, pharmacy, therapeutic, or regulated-health statement.
 
 # Claude Code Continuation Plan: Legacy-Preserving Public Front End
 
