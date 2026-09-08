@@ -5,7 +5,6 @@ import { ArrowRight, Building2, ExternalLink, Mail, Phone, ShieldCheck } from "l
 import { HeroVideo } from "@/components/public-site/hero-video";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
-  CommandCenterLoginLink,
   Container,
   EditorialStat,
   Eyebrow,
@@ -94,7 +93,6 @@ export function LifeSupplyHome() {
             <SecondaryAction href={LIFE_SUPPLY_ROUTES.investorRelations}>
               Investor relations
             </SecondaryAction>
-            <CommandCenterLoginLink variant="hero" />
           </>
         }
       />

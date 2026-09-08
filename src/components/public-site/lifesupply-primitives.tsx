@@ -281,14 +281,11 @@ export function SecondaryAction({
  *
  *   utility  the small icon-led link in the utility strip and footer row
  *   menu     the mobile navigation panel
- *   hero     an outlined action alongside the hero's other actions
- *   header   the earlier header-row placement, kept for compatibility
+ *
+ * It is deliberately never a hero action: the Command Center is a
+ * management tool, not a public destination (product owner, 2026-09-08).
  */
-export function CommandCenterLoginLink({
-  variant = "hero",
-}: {
-  variant?: "utility" | "menu" | "hero" | "header";
-}) {
+export function CommandCenterLoginLink({ variant }: { variant: "utility" | "menu" }) {
   const href = getCommandCenterLoginUrl();
 
   if (variant === "utility") {
@@ -302,24 +299,12 @@ export function CommandCenterLoginLink({
     );
   }
 
-  if (variant === "menu") {
-    return (
-      <a
-        href={href}
-        className="lsh-display mt-2 inline-flex items-center gap-2 text-xs text-white/85 transition-colors hover:text-white"
-      >
-        <LogIn size={14} aria-hidden="true" /> Command Center login
-      </a>
-    );
-  }
-
-  const className =
-    variant === "header"
-      ? "lsh-display hidden items-center gap-2 border border-white/45 px-4 py-2 text-[10px] text-white transition-colors hover:border-white hover:bg-white hover:text-black sm:inline-flex"
-      : `${ACTION_BASE} border border-white/45 text-white hover:border-white hover:bg-white hover:text-black`;
   return (
-    <a href={href} className={className}>
-      Command Center login <ExternalLink size={variant === "header" ? 13 : 16} aria-hidden="true" />
+    <a
+      href={href}
+      className="lsh-display mt-2 inline-flex items-center gap-2 text-xs text-white/85 transition-colors hover:text-white"
+    >
+      <LogIn size={14} aria-hidden="true" /> Command Center login
     </a>
   );
 }
