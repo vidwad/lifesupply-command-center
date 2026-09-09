@@ -1,5 +1,8 @@
 # Greyscale brand image handoff
 
+## Stage progress
+Stage 1 inspection is complete. Read [BRAND_GREYSCALE_STAGE_1.md](BRAND_GREYSCALE_STAGE_1.md) for exact component mappings, image-format constraints, and the Stage 2 prompt.
+
 ## Start here
 Read the repository-root `CLAUDE.md` and `docs/website-development/CLAUDE.md` first, then this file. These assets are committed on branch `assets/brand-greyscale-banners`. If this handoff is absent from your checkout, fetch and check out that branch, or use main after its pull request is merged. Preserve local work when switching branches.
 
