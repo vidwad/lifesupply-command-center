@@ -93,15 +93,6 @@ export const pharmacy = {
         },
       ],
     },
-    boundaries: {
-      title: "Boundaries",
-      items: [
-        "This site does not dispense, diagnose, prescribe, or recommend any medication or dose.",
-        "The program's scope is limited to non-drug supplies and non-clinical operational support; medication and prescriptions are excluded.",
-        "No pharmacy acquisition, transaction, licence, or counterparty is announced or implied by this section.",
-        "Any release would require confirmation of contents, compatibility, availability, pricing, and service responsibilities with the partner.",
-      ],
-    },
     actions: ["discuss_program", "partner_pharmacies"],
   },
 } as const;

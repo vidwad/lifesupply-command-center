@@ -801,11 +801,18 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
 
   it("presents Pharmacy Solutions with its status and no pharmacy operation, transaction, or dispensing claim", () => {
     const pharmacy = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
-    expect(pharmacy).toContain("does not dispense, diagnose, prescribe, or recommend");
     expect(pharmacy).toContain('status: "Under evaluation"');
-    expect(pharmacy).toContain(
-      "No pharmacy acquisition, transaction, licence, or counterparty is announced or implied",
+    // Boundaries blocks were internal guidance and left every page on 2026-09-09 (product owner);
+    // the claims they guarded against stay banned below.
+    expect(pharmacy).not.toContain("boundaries:");
+    expect(stripComments(read("src/lib/public-site/content/partners.ts"))).not.toContain(
+      "boundaries:",
     );
+    for (const file of ["pharmacy", "partners"]) {
+      expect(stripComments(read(`${PUBLIC_DIR}/pages/${file}.tsx`)), file).not.toMatch(
+        /Boundaries/,
+      );
+    }
     expect(pharmacy).not.toMatch(/\bour pharmac(y|ies)\b/i);
     expect(pharmacy).not.toMatch(
       /licen[cs]ed pharmacy|dispens(es|ing) (medication|prescriptions)/i,
@@ -1157,7 +1164,6 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     const c = stripComments(read("src/lib/public-site/content/partners.ts"));
     expect(c).toContain("Collaboration is not procurement");
     expect(c).toContain("Medication is excluded from every configuration");
-    expect(c).toContain("No transaction, letter of intent, or discussion is announced or implied");
     expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
   });
 

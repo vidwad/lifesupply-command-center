@@ -60,25 +60,12 @@ function Steps({
   );
 }
 
-/** Boundaries plus the page's actions. */
-function BoundariesClose({
-  boundaries,
-  actions,
-}: {
-  boundaries: readonly string[];
-  actions: readonly string[];
-}) {
+/** The page's actions, closing the page. */
+function ActionsClose({ actions }: { actions: readonly string[] }) {
   return (
     <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-      <Container className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
-        <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-paper)] p-7">
-          <div className="flex items-start justify-between gap-4">
-            <Eyebrow as="h2">Boundaries</Eyebrow>
-            <IconBadge icon="shield" size={18} />
-          </div>
-          <RuleList items={boundaries} tone="ink" />
-        </Reveal>
-        <Reveal className="flex flex-wrap gap-3 lg:justify-end">
+      <Container>
+        <Reveal className="flex flex-wrap gap-3">
           {actions.map((action, index) => (
             <ActionLink
               key={action}
@@ -154,7 +141,7 @@ export function PartnerClinicsPage() {
           icon: iconForTitle(item.title),
         }))}
       />
-      <BoundariesClose boundaries={c.boundaries} actions={c.actions} />
+      <ActionsClose actions={c.actions} />
     </LifeSupplyLayout>
   );
 }
@@ -189,7 +176,7 @@ export function PartnerPharmaciesPage() {
       >
         <RuleList items={p.responsibilities.items} />
       </SplitSection>
-      <BoundariesClose boundaries={p.boundaries} actions={p.actions} />
+      <ActionsClose actions={p.actions} />
     </LifeSupplyLayout>
   );
 }
@@ -213,7 +200,7 @@ export function PartnerSuppliersPage() {
         </div>
       </SplitSection>
       <Steps eyebrow="Process" title={s.process.title} items={s.process.items} />
-      <BoundariesClose boundaries={s.boundaries} actions={s.actions} />
+      <ActionsClose actions={s.actions} />
     </LifeSupplyLayout>
   );
 }
@@ -248,7 +235,7 @@ export function PartnerAcquisitionsPage() {
         <p>{a.structures.text}</p>
       </SplitSection>
       <Steps eyebrow="Process" title={a.process.title} items={a.process.items} />
-      <BoundariesClose boundaries={a.boundaries} actions={a.actions} />
+      <ActionsClose actions={a.actions} />
     </LifeSupplyLayout>
   );
 }

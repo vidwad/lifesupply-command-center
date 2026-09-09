@@ -1,6 +1,6 @@
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
+import { PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal } from "@/components/public-site/motion";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
@@ -97,25 +97,6 @@ export function PharmacySolutionsPage() {
           ))}
         </ul>
       </SplitSection>
-
-      {/* Boundaries. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-        <Container>
-          <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-paper)] p-7">
-            <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2">{hub.boundaries.title}</Eyebrow>
-              <IconBadge icon="shield" size={18} />
-            </div>
-            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] md:grid-cols-2">
-              {hub.boundaries.items.map((item) => (
-                <li key={item} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </Container>
-      </section>
     </LifeSupplyLayout>
   );
 }
