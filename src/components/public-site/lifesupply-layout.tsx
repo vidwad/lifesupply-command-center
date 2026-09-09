@@ -54,6 +54,7 @@ function NavItem({
   variant = "inline",
   external = false,
   forceActive = false,
+  neverCurrent = false,
   attributes,
 }: {
   href: string;
@@ -65,9 +66,11 @@ function NavItem({
   /** Inert measurement data attributes (measurement.ts); never a handler. */
   attributes?: Record<string, string>;
   forceActive?: boolean;
+  /** An "Overview" row repeats the group's own destination; it never claims aria-current. */
+  neverCurrent?: boolean;
 }) {
   const pathname = usePathname();
-  const active = forceActive || (!external && isActiveRoute(pathname, href));
+  const active = !neverCurrent && (forceActive || (!external && isActiveRoute(pathname, href)));
   const classes =
     variant === "inline"
       ? `lsh-display relative inline-flex w-fit items-center gap-1 pb-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
@@ -160,6 +163,16 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
         }`}
       >
         <ul className="border border-white/15 bg-[var(--lsh-charcoal)] p-2 shadow-xl shadow-black/40">
+          {/* The group's own page, so a visitor who goes straight to the dropdown does not miss it. */}
+          <li className="mb-1 border-b border-white/10 pb-1">
+            <NavItem
+              href={group.href}
+              label="Overview"
+              variant="menu"
+              neverCurrent
+              onNavigate={() => setOpen(false)}
+            />
+          </li>
           {group.links.map((link) => (
             <li key={link.href}>
               <NavItem
@@ -190,6 +203,8 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  *   - primary navigation is grouped (Our Businesses / Investors / About
  *     today; further groups appear as their hub routes go live), with
  *     utility links for Shop & Services and Contact;
+ *   - every dropdown and every expanded mobile group opens with an
+ *     "Overview" row to the group's own page (product owner, 2026-09-09);
  *   - the mobile panel lists every group and link without a hover
  *     requirement, keeps its groups collapsed (one open at a time, the
  *     current page's group open first) so it fits a phone screen, and closes
@@ -389,6 +404,15 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                           : "hidden"
                       }
                     >
+                      <li className="mb-0.5 border-b border-white/10 pb-0.5">
+                        <NavItem
+                          href={group.href}
+                          label="Overview"
+                          variant="menu"
+                          neverCurrent
+                          onNavigate={closeMenu}
+                        />
+                      </li>
                       {group.links.map((link) => (
                         <li key={link.href}>
                           <NavItem

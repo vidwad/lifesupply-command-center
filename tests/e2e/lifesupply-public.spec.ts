@@ -208,11 +208,14 @@ test.describe("LifeSupply public site", () => {
     const menu = page.locator("#lsh-menu-businesses");
     await expect(menu).toBeVisible();
     const brandLinks = menu.locator("a");
-    await expect(brandLinks).toHaveCount(3);
+    // The group's own page leads the dropdown, then the three stores.
+    await expect(brandLinks).toHaveCount(4);
+    await expect(brandLinks.first()).toHaveText("Overview");
     const paths = await brandLinks.evaluateAll((links) =>
       links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, "")),
     );
     expect(paths).toEqual([
+      "/medical-supply-solutions",
       "/medical-supply-solutions/lifesupply",
       "/medical-supply-solutions/wellmart-medical",
       "/medical-supply-solutions/balkowitsch",
@@ -298,6 +301,11 @@ test.describe("LifeSupply public site", () => {
     await page.getByRole("button", { name: "Open navigation" }).click();
     const panel = page.locator("#lsh-mobile-menu");
     await expect(panel.getByRole("button", { name: "Collapse Metabolic Health" })).toBeVisible();
+    // The expanded group opens with its own page, then its children.
+    await expect(panel.getByRole("link", { name: "Overview", exact: true })).toHaveAttribute(
+      "href",
+      /^\/metabolic-health\/?$/,
+    );
     await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Refills", exact: true })).toHaveAttribute(
       "aria-current",
