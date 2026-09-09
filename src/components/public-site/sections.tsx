@@ -70,7 +70,7 @@ export function IconFeatureGrid({
 }: {
   eyebrow?: string;
   title?: string;
-  description?: string;
+  description?: string | readonly string[];
   items: readonly {
     title: string;
     text: string;

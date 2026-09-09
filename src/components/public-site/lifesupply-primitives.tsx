@@ -169,11 +169,13 @@ export function SectionHeading({
 }: {
   eyebrow: string;
   title: string;
-  description?: string;
+  /** One standfirst, or several paragraphs in order. */
+  description?: string | readonly string[];
   tone?: Tone;
   className?: string;
 }) {
   const dark = tone === "onDark";
+  const paragraphs = typeof description === "string" ? [description] : (description ?? []);
   return (
     <div className={`max-w-3xl ${className}`.trim()}>
       <Eyebrow tone={dark ? "onDark" : "red"}>{eyebrow}</Eyebrow>
@@ -184,13 +186,14 @@ export function SectionHeading({
       >
         {title}
       </h2>
-      {description ? (
+      {paragraphs.map((paragraph) => (
         <p
+          key={paragraph}
           className={`mt-4 text-base leading-7 ${dark ? "text-white/75" : "text-[var(--lsh-muted)]"}`}
         >
-          {description}
+          {paragraph}
         </p>
-      ) : null}
+      ))}
     </div>
   );
 }
