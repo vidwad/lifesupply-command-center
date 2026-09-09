@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ExternalLink, Mail, Phone } from "lucide-react";
 
@@ -14,6 +15,9 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { IconBadge, SplitSection } from "@/components/public-site/sections";
+import { CONCEPTUAL_CAPTION, getGraphic } from "@/lib/public-site/graphics";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
@@ -25,10 +29,13 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  *
  * Every sentence is a prop from the content model; every destination is an
  * action-registry key or a registry link. Only imperative UI labels are
- * authored here.
+ * authored here. The design pass gives each section its own rhythm: a
+ * conceptual graphic beside the clinic lifecycle and the metabolic offer,
+ * icons on the steps and paths, and one red band.
  */
 export function LifeSupplyHome() {
   const { homepage, news, contact, brand } = LIFE_SUPPLY_CONTENT;
+  const lifecycleGraphic = getGraphic("examRoom");
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -112,65 +119,82 @@ export function LifeSupplyHome() {
         </div>
       </section>
 
-      {/* Clinic lifecycle: plan, equip, supply. Each step has its own verified destination. */}
+      {/* Clinic lifecycle: plan, equip, supply, beside a conceptual exam room. */}
       <section className="bg-[var(--lsh-ink)] px-5 py-20 text-white lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <SectionHeading
-              tone="onDark"
-              eyebrow={homepage.clinicLifecycle.eyebrow}
-              title={homepage.clinicLifecycle.title}
-              description={homepage.clinicLifecycle.intro}
-            />
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <Reveal className="group">
+            <figure className="relative overflow-hidden border-t-4 border-[var(--lsh-brand-red)]">
+              <Image
+                src={lifecycleGraphic.src}
+                alt={lifecycleGraphic.alt}
+                width={lifecycleGraphic.width}
+                height={lifecycleGraphic.height}
+                sizes="(min-width: 1024px) 560px, 100vw"
+                className="h-auto w-full transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              />
+              <figcaption className="lsh-display absolute bottom-0 left-0 bg-black/70 px-4 py-2 text-[10px] text-white/80">
+                {CONCEPTUAL_CAPTION}
+              </figcaption>
+            </figure>
           </Reveal>
-          <Stagger className="mt-12 grid gap-px bg-white/15 lg:grid-cols-3">
-            {homepage.clinicLifecycle.steps.map((step) => (
-              <StaggerItem
-                key={step.index}
-                as="article"
-                className="flex h-full flex-col bg-[var(--lsh-charcoal)] p-8"
-              >
-                <p className="lsh-display text-sm text-[var(--lsh-red-on-ink)]">{step.index}</p>
-                <span className="mt-3 block h-1 w-8 bg-[var(--lsh-brand-red)]" aria-hidden="true" />
-                <h3 className="lsh-display mt-6 text-2xl">{step.title}</h3>
-                <p className="mt-3 leading-7 text-white/75">{step.text}</p>
-                <div className="mt-auto pt-6">
-                  <ActionLink action={step.action} variant="onDark">
-                    {step.actionLabel}
-                  </ActionLink>
-                </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <Reveal>
-            <p className="mt-8 max-w-3xl text-sm leading-6 text-white/60">
-              {homepage.clinicLifecycle.note}
-            </p>
-          </Reveal>
+          <div>
+            <Reveal>
+              <SectionHeading
+                tone="onDark"
+                eyebrow={homepage.clinicLifecycle.eyebrow}
+                title={homepage.clinicLifecycle.title}
+                description={homepage.clinicLifecycle.intro}
+              />
+            </Reveal>
+            <Stagger as="ul" className="mt-10 grid gap-px bg-white/15">
+              {homepage.clinicLifecycle.steps.map((step) => (
+                <StaggerItem
+                  key={step.index}
+                  as="li"
+                  className="grid gap-5 bg-[var(--lsh-ink)] py-6 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="lsh-display text-sm text-[var(--lsh-red-on-ink)]">
+                      {step.index}
+                    </span>
+                    <IconBadge icon={iconForTitle(step.title)} tone="onDark" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="lsh-display text-2xl">{step.title}</h3>
+                    <p className="mt-2 leading-7 text-white/75">{step.text}</p>
+                  </div>
+                  <div className="sm:justify-self-end">
+                    <ActionLink action={step.action} variant="onDark">
+                      {step.actionLabel}
+                    </ActionLink>
+                  </div>
+                </StaggerItem>
+              ))}
+            </Stagger>
+            <Reveal>
+              <p className="mt-6 max-w-3xl text-sm leading-6 text-white/60">
+                {homepage.clinicLifecycle.note}
+              </p>
+            </Reveal>
+          </div>
         </div>
       </section>
 
-      {/* Metabolic opportunity, with its status stated. */}
-      <section className="px-5 py-20 lg:px-8">
-        <Reveal className="mx-auto grid max-w-7xl gap-8 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[1fr_1fr] lg:pl-8">
-          <div>
-            <span className="lsh-display inline-flex border border-[var(--lsh-brand-red)] px-3 py-1 text-[10px] text-[var(--lsh-brand-red)]">
-              {homepage.metabolic.eyebrow}
-            </span>
-            <h2 className="lsh-display mt-5 text-3xl leading-[1.08] text-[var(--lsh-charcoal)] sm:text-4xl">
-              {homepage.metabolic.title}
-            </h2>
-          </div>
-          <div>
-            <p className="leading-7 text-[var(--lsh-muted)]">{homepage.metabolic.text}</p>
-            <div className="mt-6">
-              <ActionLink action={homepage.metabolic.action} variant="onLight">
-                {homepage.metabolic.actionLabel}
-              </ActionLink>
-            </div>
-          </div>
-        </Reveal>
-      </section>
+      {/* Metabolic opportunity, with its status stated, beside conceptual supplies. */}
+      <SplitSection
+        eyebrow={homepage.metabolic.eyebrow}
+        title={homepage.metabolic.title}
+        graphic="metabolicSupplies"
+        side="left"
+        caption={CONCEPTUAL_CAPTION}
+      >
+        <p>{homepage.metabolic.text}</p>
+        <div className="pt-2">
+          <ActionLink action={homepage.metabolic.action} variant="onLight">
+            {homepage.metabolic.actionLabel}
+          </ActionLink>
+        </div>
+      </SplitSection>
 
       {/* Partner and investor paths. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
@@ -181,7 +205,10 @@ export function LifeSupplyHome() {
                 as="article"
                 className="lsh-lift flex h-full flex-col border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8"
               >
-                <Eyebrow as="h3">{path.eyebrow}</Eyebrow>
+                <div className="flex items-start justify-between gap-4">
+                  <Eyebrow as="h3">{path.eyebrow}</Eyebrow>
+                  <IconBadge icon={iconForTitle(path.eyebrow)} />
+                </div>
                 <p className="lsh-display mt-4 text-2xl leading-[1.1] text-[var(--lsh-charcoal)]">
                   {path.title}
                 </p>
@@ -220,7 +247,7 @@ export function LifeSupplyHome() {
                   href={item.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="group flex h-full flex-col bg-[var(--lsh-paper)] p-7"
+                  className="group flex h-full flex-col bg-[var(--lsh-paper)] p-7 transition-colors hover:bg-[var(--lsh-surface)]"
                 >
                   <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
                     {item.date} · {item.source}
@@ -259,9 +286,12 @@ export function LifeSupplyHome() {
           <Stagger className="mt-10 grid gap-px bg-white/15 md:grid-cols-2 xl:grid-cols-3">
             {contact.channels.map((channel) => (
               <StaggerItem key={channel.label} className="bg-[var(--lsh-ink)] p-6">
-                <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
-                  {channel.label}
-                </p>
+                <div className="flex items-start justify-between gap-4">
+                  <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+                    {channel.label}
+                  </p>
+                  <IconBadge icon={iconForTitle(channel.label)} tone="onDark" size={18} />
+                </div>
                 <p className="lsh-display mt-2 text-xl">{channel.name}</p>
                 <div className="mt-4 grid gap-1.5 text-sm text-white/75">
                   <a
@@ -282,9 +312,12 @@ export function LifeSupplyHome() {
               </StaggerItem>
             ))}
             <StaggerItem className="bg-[var(--lsh-ink)] p-6">
-              <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
-                Corporate office
-              </p>
+              <div className="flex items-start justify-between gap-4">
+                <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+                  Corporate office
+                </p>
+                <IconBadge icon="pin" tone="onDark" size={18} />
+              </div>
               <address className="mt-3 text-sm not-italic leading-6 text-white/75">
                 {brand.address.map((line) => (
                   <span key={line} className="block">

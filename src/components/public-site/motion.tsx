@@ -28,9 +28,31 @@ import {
   type Transition,
   type Variants,
 } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 const EASE: Transition["ease"] = [0.23, 1, 0.32, 1];
+
+/**
+ * Reduced motion collapses every entrance to its final state instantly.
+ *
+ * The primitives always render their "hidden" variant first, on the server
+ * and on the client alike, so hydration matches; the preference then decides
+ * the transition (instant) and the trigger (mount, not scroll), so every
+ * section is fully opaque without scrolling. Dropping the variants for reduced-motion visitors
+ * instead (the first build) left the server's hidden styles on the elements
+ * after hydration, and the content never appeared for them.
+ */
+const INSTANT: Transition = { duration: 0 };
+/** Reduced motion: everything becomes visible on mount, without scrolling. */
+const IMMEDIATE = { animate: "visible" } as const;
+const IN_VIEW_REVEAL = {
+  whileInView: "visible",
+  viewport: { once: true, margin: "0px 0px -80px 0px" },
+} as const;
+const IN_VIEW_STAGGER = {
+  whileInView: "visible",
+  viewport: { once: true, margin: "0px 0px -60px 0px" },
+} as const;
 
 const rise: Variants = {
   hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
@@ -54,11 +76,10 @@ export function Reveal({
   return (
     <Tag
       className={className}
-      variants={reduce ? undefined : rise}
-      initial={reduce ? false : "hidden"}
-      whileInView="visible"
-      viewport={{ once: true, margin: "0px 0px -80px 0px" }}
-      transition={{ duration: 0.7, ease: EASE, delay }}
+      variants={rise}
+      initial="hidden"
+      {...(reduce ? IMMEDIATE : IN_VIEW_REVEAL)}
+      transition={reduce ? INSTANT : { duration: 0.7, ease: EASE, delay }}
     >
       {children}
     </Tag>
@@ -79,10 +100,10 @@ export function Enter({
   return (
     <motion.div
       className={className}
-      variants={reduce ? undefined : rise}
-      initial={reduce ? false : "hidden"}
+      variants={rise}
+      initial="hidden"
       animate="visible"
-      transition={{ duration: 0.7, ease: EASE, delay }}
+      transition={reduce ? INSTANT : { duration: 0.7, ease: EASE, delay }}
     >
       {children}
     </motion.div>
@@ -92,6 +113,10 @@ export function Enter({
 const staggerParent: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+const staggerParentInstant: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0, delayChildren: 0 } },
 };
 
 /** A list or grid whose children (StaggerItem) enter one after another. */
@@ -109,10 +134,9 @@ export function Stagger({
   return (
     <Tag
       className={className}
-      variants={reduce ? undefined : staggerParent}
-      initial={reduce ? false : "hidden"}
-      whileInView="visible"
-      viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+      variants={reduce ? staggerParentInstant : staggerParent}
+      initial="hidden"
+      {...(reduce ? IMMEDIATE : IN_VIEW_STAGGER)}
     >
       {children}
     </Tag>
@@ -133,8 +157,8 @@ export function StaggerItem({
   return (
     <Tag
       className={className}
-      variants={reduce ? undefined : rise}
-      transition={{ duration: 0.6, ease: EASE }}
+      variants={rise}
+      transition={reduce ? INSTANT : { duration: 0.6, ease: EASE }}
     >
       {children}
     </Tag>
@@ -151,30 +175,57 @@ export function HeroTitle({ text, className }: { text: string; className?: strin
   const words = text.split(" ");
   const word: Variants = {
     hidden: { opacity: 0, y: 14, filter: "blur(8px)" },
-    visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.55, ease: EASE } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: "blur(0px)",
+      transition: reduce ? INSTANT : { duration: 0.55, ease: EASE },
+    },
   };
   const parent: Variants = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.06, delayChildren: 0.15 } },
+    visible: {
+      transition: reduce
+        ? { staggerChildren: 0, delayChildren: 0 }
+        : { staggerChildren: 0.06, delayChildren: 0.15 },
+    },
   };
   return (
-    <motion.h1
-      className={className}
-      variants={reduce ? undefined : parent}
-      initial={reduce ? false : "hidden"}
-      animate="visible"
-    >
+    <motion.h1 className={className} variants={parent} initial="hidden" animate="visible">
       {words.map((item, index) => (
         // The separating space must be a text node OUTSIDE the inline-block:
         // trailing whitespace inside an inline-block collapses to nothing.
         <span key={`${item}-${index}`}>
-          <motion.span className="inline-block" variants={reduce ? undefined : word}>
+          <motion.span className="inline-block" variants={word}>
             {item}
           </motion.span>
           {index < words.length - 1 ? " " : null}
         </span>
       ))}
     </motion.h1>
+  );
+}
+
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
+/**
+ * The reduced-motion preference as a hydration-safe value. `useReducedMotion`
+ * from the motion package is null on the server and already true on a
+ * reduced-motion client's first render, so a component whose markup depends
+ * on it hydrates against different text (React #418). The server snapshot
+ * here is "reduced", so the server and the first client render agree, and
+ * React re-renders synchronously with the real preference afterwards.
+ */
+function useHydratedReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => true,
   );
 }
 
@@ -199,7 +250,7 @@ function parseFigure(raw: string) {
  * does not understand, and reduced-motion visitors, get the static text.
  */
 export function CountUp({ value, className }: { value: string; className?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useHydratedReducedMotion();
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "0px 0px -40px 0px" });
   const parsed = parseFigure(value);

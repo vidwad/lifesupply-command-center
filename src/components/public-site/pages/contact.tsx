@@ -8,8 +8,10 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { IconBadge } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS } from "@/lib/public-site/brands";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
@@ -48,9 +50,10 @@ export function ContactPage() {
               <StaggerItem
                 key={intent.label}
                 as="li"
-                className="flex flex-col bg-[var(--lsh-paper)] p-6"
+                className="flex flex-col bg-[var(--lsh-paper)] p-6 transition-colors hover:bg-[var(--lsh-surface)]"
               >
-                <h3 className="lsh-display text-lg leading-tight text-[var(--lsh-charcoal)]">
+                <IconBadge icon={iconForTitle(intent.label)} size={20} />
+                <h3 className="lsh-display mt-5 text-lg leading-tight text-[var(--lsh-charcoal)]">
                   {intent.label}
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{intent.text}</p>
@@ -60,25 +63,28 @@ export function ContactPage() {
               </StaggerItem>
             ))}
           </Stagger>
-          <Reveal className="mt-8 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-            <Eyebrow as="h3">{contact.existingOrder.title}</Eyebrow>
-            <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
-              {contact.existingOrder.text}
-            </p>
-            <ul className="mt-4 flex flex-wrap gap-2">
-              {OPERATING_BRANDS.filter((record) => record.supportUrl).map((record) => (
-                <li key={record.key}>
-                  <a
-                    href={record.supportUrl!}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="lsh-display inline-flex items-center gap-1.5 border border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] px-3 py-2 text-[10px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
-                  >
-                    {record.name} support <ExternalLink size={11} aria-hidden="true" />
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <Reveal className="mt-8 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+            <IconBadge icon={iconForTitle(contact.existingOrder.title)} />
+            <div>
+              <Eyebrow as="h3">{contact.existingOrder.title}</Eyebrow>
+              <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
+                {contact.existingOrder.text}
+              </p>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {OPERATING_BRANDS.filter((record) => record.supportUrl).map((record) => (
+                  <li key={record.key}>
+                    <a
+                      href={record.supportUrl!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="lsh-display inline-flex items-center gap-1.5 border border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] px-3 py-2 text-[10px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
+                    >
+                      {record.name} support <ExternalLink size={11} aria-hidden="true" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -96,9 +102,12 @@ export function ContactPage() {
                   as="article"
                   className="lsh-lift h-full border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7"
                 >
-                  <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                    {channel.label}
-                  </p>
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      {channel.label}
+                    </p>
+                    <IconBadge icon={iconForTitle(channel.label)} size={18} />
+                  </div>
                   <h3 className="lsh-display mt-3 text-2xl text-[var(--lsh-charcoal)]">
                     {channel.name}
                   </h3>
@@ -141,7 +150,8 @@ export function ContactPage() {
                     rel="noreferrer"
                     className="group flex h-full flex-col p-6"
                   >
-                    <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">
+                    <IconBadge icon="building" size={18} />
+                    <h3 className="lsh-display mt-5 text-xl text-[var(--lsh-charcoal)]">
                       {entity.name}
                     </h3>
                     <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">

@@ -47,6 +47,8 @@ const ACTION_LINK = `${PUBLIC_DIR}/action-link.tsx`;
 const PRIMITIVES = `${PUBLIC_DIR}/lifesupply-primitives.tsx`;
 const HERO_VIDEO = `${PUBLIC_DIR}/hero-video.tsx`;
 const MOTION = `${PUBLIC_DIR}/motion.tsx`;
+const SECTIONS = `${PUBLIC_DIR}/sections.tsx`;
+const ACCORDION = `${PUBLIC_DIR}/accordion.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
 // carries the legacy-compatible route table.
@@ -77,6 +79,8 @@ const actionLink = () => stripComments(read(ACTION_LINK));
 const primitives = () => stripComments(read(PRIMITIVES));
 const heroVideo = () => stripComments(read(HERO_VIDEO));
 const motionPrimitives = () => stripComments(read(MOTION));
+const sections = () => stripComments(read(SECTIONS));
+const accordion = () => stripComments(read(ACCORDION));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -87,6 +91,8 @@ const publicComponents = () => [
   motionPrimitives(),
   brandGrid(),
   actionLink(),
+  sections(),
+  accordion(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -272,7 +278,9 @@ describe("motion", () => {
     // Each exported primitive consults the preference. Count the components
     // and the calls: they must match, so a new primitive cannot skip it.
     const exported = code.match(/^export function \w+/gm) ?? [];
-    const consulted = code.match(/useReducedMotion\(\)/g) ?? [];
+    // CountUp reads the preference through the hydration-safe store instead
+    // (its markup depends on the value, so the server and client must agree).
+    const consulted = code.match(/(?<!function )use(Hydrated)?ReducedMotion\(\)/g) ?? [];
     expect(exported.length).toBeGreaterThanOrEqual(7);
     // SpotlightCard is pointer-only decoration with no animation of its own.
     expect(consulted.length).toBe(exported.length - 1);
@@ -537,6 +545,49 @@ describe("routes and content governance", () => {
       expect(pages(), sentence).not.toContain(sentence);
       expect(primitives(), sentence).not.toContain(sentence);
     }
+  });
+});
+
+describe("design-pass graphics and section primitives", () => {
+  it("renders conceptual graphics only through the registry, labelled conceptual, never as a raw file path", () => {
+    // The registry (graphics.ts) declares every conceptual image with its
+    // real size and provenance; a page that types a /lsh/graphics/ path by
+    // hand, or shows a graphic without the registry caption, fails here.
+    for (const code of publicComponents()) {
+      expect(code).not.toContain("/lsh/graphics/");
+    }
+    for (const code of [pages(), sections()]) {
+      expect(code).not.toMatch(/graphic=\{?"[a-z]+\.jpg/);
+    }
+    expect(sections()).toContain("getGraphic(");
+    expect(pages()).toContain("CONCEPTUAL_CAPTION");
+    const graphics = stripComments(read("src/lib/public-site/graphics.ts"));
+    expect(graphics).toContain("conceptual, not operational photography");
+    // Section primitives resolve icons through the registry, never an ad-hoc lucide import per page.
+    expect(sections()).toContain("iconFor(icon)");
+    for (const name of [
+      "home",
+      "about",
+      "operations",
+      "brands",
+      "clinic-solutions",
+      "metabolic",
+      "partners",
+      "investors",
+    ]) {
+      expect(read(`${PUBLIC_DIR}/pages/${name}.tsx`), name).toContain(
+        "@/components/public-site/sections",
+      );
+    }
+  });
+
+  it("keeps the accordion keyboard-operable and reduced-motion safe", () => {
+    const code = accordion();
+    expect(code).toContain("<button");
+    expect(code).toContain("aria-expanded={expanded}");
+    expect(code).toContain("aria-controls={panelId}");
+    expect(code).toContain("useReducedMotion()");
+    expect(sections()).toContain("motion-reduce:");
   });
 });
 

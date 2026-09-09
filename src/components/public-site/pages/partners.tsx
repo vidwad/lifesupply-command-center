@@ -1,17 +1,19 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
+import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
+import { Reveal } from "@/components/public-site/motion";
 import {
-  Container,
-  Eyebrow,
-  PublicHero,
-  SectionHeading,
-} from "@/components/public-site/lifesupply-primitives";
-import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+  BentoGrid,
+  Callout,
+  IconBadge,
+  IconFeatureGrid,
+  ProcessSteps,
+  SplitSection,
+} from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { partners } from "@/lib/public-site/content/partners";
+import { CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { STAGE_5_ROUTES } from "@/lib/public-site/routes";
 
 const RELATIONSHIP_ROUTES = {
@@ -35,7 +37,7 @@ function RuleList({ items, tone = "red" }: { items: readonly string[]; tone?: "r
   );
 }
 
-/** Numbered steps on ink. */
+/** Numbered steps on ink, with icons. */
 function Steps({
   eyebrow,
   title,
@@ -46,22 +48,16 @@ function Steps({
   items: readonly { index: string; title: string; text: string }[];
 }) {
   return (
-    <section className="bg-[var(--lsh-ink)] px-5 py-20 text-white lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <Reveal>
-          <SectionHeading tone="onDark" eyebrow={eyebrow} title={title} />
-        </Reveal>
-        <Stagger className="mt-12 grid gap-px bg-white/15 md:grid-cols-2 xl:grid-cols-4">
-          {items.map((step) => (
-            <StaggerItem key={step.index} as="article" className="bg-[var(--lsh-charcoal)] p-8">
-              <p className="lsh-display text-sm text-[var(--lsh-red-on-ink)]">{step.index}</p>
-              <h3 className="lsh-display mt-3 text-2xl">{step.title}</h3>
-              <p className="mt-3 leading-7 text-white/75">{step.text}</p>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </div>
-    </section>
+    <ProcessSteps
+      eyebrow={eyebrow}
+      title={title}
+      steps={items.map((step) => ({
+        index: step.index,
+        title: step.title,
+        text: step.text,
+        icon: iconForTitle(step.title),
+      }))}
+    />
   );
 }
 
@@ -77,7 +73,10 @@ function BoundariesClose({
     <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
       <Container className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
         <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-paper)] p-7">
-          <Eyebrow as="h2">Boundaries</Eyebrow>
+          <div className="flex items-start justify-between gap-4">
+            <Eyebrow as="h2">Boundaries</Eyebrow>
+            <IconBadge icon="shield" size={18} />
+          </div>
           <RuleList items={boundaries} tone="ink" />
         </Reveal>
         <Reveal className="flex flex-wrap gap-3 lg:justify-end">
@@ -100,51 +99,26 @@ export function PartnersPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero eyebrow={hub.eyebrow} title={hub.title} description={hub.intro} />
-      <section className="px-5 py-20 lg:px-8">
-        <Container>
-          <Stagger className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {hub.relationships.map((relationship) => (
-              <StaggerItem key={relationship.key} className="h-full">
-                <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                  <Link
-                    href={RELATIONSHIP_ROUTES[relationship.route]}
-                    className="group flex h-full flex-col p-7"
-                  >
-                    <h2 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
-                      {relationship.title}
-                    </h2>
-                    <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                      {relationship.text}
-                    </p>
-                    <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-6 text-[11px] text-[var(--lsh-brand-red)]">
-                      How it works{" "}
-                      <ArrowRight
-                        size={15}
-                        aria-hidden="true"
-                        className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
-                      />
-                    </span>
-                  </Link>
-                </SpotlightCard>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </section>
-      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-        <Container className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] pl-6">
-            <Eyebrow as="h2">{hub.procurement.eyebrow}</Eyebrow>
-            <h3 className="lsh-display mt-3 text-2xl text-[var(--lsh-charcoal)]">
-              {hub.procurement.title}
-            </h3>
-            <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{hub.procurement.text}</p>
-          </Reveal>
-          <Reveal className="flex lg:justify-end">
-            <ActionLink action={hub.procurement.action as ActionKey} variant="onLight" />
-          </Reveal>
-        </Container>
-      </section>
+      <BentoGrid
+        tiles={[
+          { eyebrow: hub.eyebrow, graphic: "boardroom", span: "tall" },
+          ...hub.relationships.map((relationship) => ({
+            title: relationship.title,
+            text: relationship.text,
+            icon: iconForTitle(relationship.title),
+            href: RELATIONSHIP_ROUTES[relationship.route],
+            linkLabel: "How it works",
+          })),
+        ]}
+      />
+      <Callout
+        icon="cart"
+        eyebrow={hub.procurement.eyebrow}
+        action={<ActionLink action={hub.procurement.action as ActionKey} variant="onLight" />}
+      >
+        <p className="lsh-display text-2xl leading-[1.1]">{hub.procurement.title}</p>
+        <p className="mt-2 text-[var(--lsh-muted)]">{hub.procurement.text}</p>
+      </Callout>
     </LifeSupplyLayout>
   );
 }
@@ -162,30 +136,25 @@ export function PartnerClinicsPage() {
       />
       <section className="px-5 py-16 lg:px-8">
         <Container>
-          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
-            <Eyebrow as="h2">{c.distinction.title}</Eyebrow>
-            <RuleList items={c.distinction.items} />
+          <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
+            <IconBadge icon="shield" />
+            <div>
+              <Eyebrow as="h2">{c.distinction.title}</Eyebrow>
+              <RuleList items={c.distinction.items} />
+            </div>
           </Reveal>
         </Container>
       </section>
-      <section className="px-5 pb-20 lg:px-8">
-        <Container>
-          <Reveal>
-            <SectionHeading eyebrow={c.collaboration.eyebrow} title={c.collaboration.title} />
-          </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
-            {c.collaboration.items.map((item) => (
-              <StaggerItem key={item.title} as="article" className="bg-[var(--lsh-paper)] p-7">
-                <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{item.status}</p>
-                <h3 className="lsh-display mt-3 text-xl text-[var(--lsh-charcoal)]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </section>
+      <IconFeatureGrid
+        eyebrow={c.collaboration.eyebrow}
+        title={c.collaboration.title}
+        items={c.collaboration.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          status: item.status,
+          icon: iconForTitle(item.title),
+        }))}
+      />
       <BoundariesClose boundaries={c.boundaries} actions={c.actions} />
     </LifeSupplyLayout>
   );
@@ -202,28 +171,26 @@ export function PartnerPharmaciesPage() {
         description={p.intro}
         actions={<ActionLink action="discuss_program" />}
       />
-      <section className="px-5 py-20 lg:px-8">
-        <Container>
-          <Reveal>
-            <SectionHeading eyebrow={p.model.eyebrow} title={p.model.title} />
-          </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
-            {p.model.items.map((item, index) => (
-              <StaggerItem key={item.title} as="article" className="bg-[var(--lsh-surface)] p-7">
-                <p className="lsh-display text-sm text-[var(--lsh-brand-red)]">0{index + 1}</p>
-                <h3 className="lsh-display mt-3 text-xl text-[var(--lsh-charcoal)]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <Reveal className="mt-10 border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
-            <Eyebrow as="h2">{p.responsibilities.title}</Eyebrow>
-            <RuleList items={p.responsibilities.items} />
-          </Reveal>
-        </Container>
-      </section>
+      <IconFeatureGrid
+        numbered
+        eyebrow={p.model.eyebrow}
+        title={p.model.title}
+        items={p.model.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          icon: iconForTitle(item.title),
+        }))}
+      />
+      <SplitSection
+        tone="onSurface"
+        eyebrow="Responsibilities"
+        title={p.responsibilities.title}
+        graphic="pharmacy"
+        side="left"
+        caption={CONCEPTUAL_CAPTION}
+      >
+        <RuleList items={p.responsibilities.items} />
+      </SplitSection>
       <BoundariesClose boundaries={p.boundaries} actions={p.actions} />
     </LifeSupplyLayout>
   );
@@ -240,17 +207,18 @@ export function PartnerSuppliersPage() {
         description={s.intro}
         actions={<ActionLink action="supplier_inquiry" />}
       />
-      <section className="px-5 py-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-2">
-          <Reveal>
-            <SectionHeading eyebrow={s.fit.eyebrow} title={s.fit.title} description={s.fit.text} />
-          </Reveal>
-          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
-            <Eyebrow as="h2">{s.requirements.title}</Eyebrow>
-            <RuleList items={s.requirements.items} />
-          </Reveal>
-        </Container>
-      </section>
+      <SplitSection
+        eyebrow={s.fit.eyebrow}
+        title={s.fit.title}
+        graphic="warehouse"
+        caption={CONCEPTUAL_CAPTION}
+      >
+        <p>{s.fit.text}</p>
+        <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+          <Eyebrow as="h3">{s.requirements.title}</Eyebrow>
+          <RuleList items={s.requirements.items} />
+        </div>
+      </SplitSection>
       <Steps eyebrow="Process" title={s.process.title} items={s.process.items} />
       <BoundariesClose boundaries={s.boundaries} actions={s.actions} />
     </LifeSupplyLayout>
@@ -268,25 +236,25 @@ export function PartnerAcquisitionsPage() {
         description={a.intro}
         actions={<ActionLink action="acquisition_inquiry" />}
       />
-      <section className="px-5 py-20 lg:px-8">
-        <Container>
-          <Reveal>
-            <SectionHeading eyebrow={a.criteria.eyebrow} title={a.criteria.title} />
-          </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
-            {a.criteria.items.map((item) => (
-              <StaggerItem key={item.title} as="article" className="bg-[var(--lsh-surface)] p-7">
-                <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">{item.title}</h3>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <Reveal className="mt-10 border-l-4 border-[var(--lsh-brand-red)] pl-6">
-            <Eyebrow as="h2">{a.structures.title}</Eyebrow>
-            <p className="mt-3 max-w-3xl leading-7 text-[var(--lsh-muted)]">{a.structures.text}</p>
-          </Reveal>
-        </Container>
-      </section>
+      <IconFeatureGrid
+        eyebrow={a.criteria.eyebrow}
+        title={a.criteria.title}
+        items={a.criteria.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          icon: iconForTitle(item.title),
+        }))}
+      />
+      <SplitSection
+        tone="onSurface"
+        eyebrow="Structures"
+        title={a.structures.title}
+        graphic="boardroom"
+        side="left"
+        caption={CONCEPTUAL_CAPTION}
+      >
+        <p>{a.structures.text}</p>
+      </SplitSection>
       <Steps eyebrow="Process" title={a.process.title} items={a.process.items} />
       <BoundariesClose boundaries={a.boundaries} actions={a.actions} />
     </LifeSupplyLayout>
