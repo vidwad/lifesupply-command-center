@@ -832,8 +832,11 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(page.trimEnd()).toMatch(
       /about\.developing\.items\.map[\s\S]*?\/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
     );
-    // Three bands, each decorative, drawn from the registry, never a path literal.
-    expect((page.match(/<ParallaxBand /g) ?? []).length).toBe(3);
+    // The hero backdrop and two bands, each decorative, drawn from the registry, never a path literal.
+    expect(page).toContain('media={<HeroBackdrop band="data" />}');
+    expect((page.match(/<ParallaxBand /g) ?? []).length).toBe(2);
+    expect(page).toContain('<ParallaxBand band="desk" tone="redLight" />');
+    expect(page).toContain('<ParallaxBand band="warehouse" tone="ink" />');
     const band = parallaxBand();
     expect(band).toContain('aria-hidden="true"');
     expect(band).toContain('alt=""');

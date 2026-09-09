@@ -3,13 +3,14 @@
  * page (product owner, 2026-09-09).
  *
  * The prior page separated its sections with full-width photographs on a
- * fixed background with a colour overlay. Three of them return here as
- * parallax divider bands: the same photographs, held locally, cropped to
- * 16:9, in greyscale, and rendered behind the site's own overlay colouring.
- * They are decorative: each band is hidden from assistive technology and
- * carries no text, so nothing is claimed by the picture. The other images
- * on that page (three small card backgrounds and the growth chart with
- * figures as pixels) were not carried over.
+ * fixed background with a colour overlay. Three of them return here: one as
+ * the About hero's backdrop and two as parallax divider bands, the same
+ * photographs held locally, cropped to 16:9, in greyscale, and rendered
+ * behind the site's own overlay colouring. They are decorative: each layer
+ * is hidden from assistive technology and carries no text, so nothing is
+ * claimed by the picture. The other images on that page (three small card
+ * backgrounds and the growth chart with figures as pixels) were not carried
+ * over.
  */
 export interface LegacyBand {
   src: string;

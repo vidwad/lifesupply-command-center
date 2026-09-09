@@ -11,7 +11,7 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, ScrollBeam, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { ParallaxBand } from "@/components/public-site/parallax-band";
+import { HeroBackdrop, ParallaxBand } from "@/components/public-site/parallax-band";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import { VideoEmbed } from "@/components/public-site/video-embed";
 import { getGraphic } from "@/lib/public-site/graphics";
@@ -23,10 +23,10 @@ import { ABOUT_VIDEO, youtubeWatchUrl } from "@/lib/public-site/video";
  * About — the Stage 2 page contract (guide §3, `/about-us/`): operating
  * philosophy beside the company video, geographic footprint, sourced
  * milestones, brands, growth direction, and the developing opportunities
- * under evaluation, which close the page. Three photographic divider bands
- * from the prior About page separate the key sections (product owner,
- * 2026-09-09); the former group statement, published-entities list, and
- * shared-capabilities grid were removed the same day.
+ * under evaluation, which close the page. Photographs from the prior About
+ * page return as the hero backdrop and two parallax divider bands (product
+ * owner, 2026-09-09); the former group statement, published-entities list,
+ * and shared-capabilities grid were removed the same day.
  */
 export function AboutPage() {
   const { about } = LIFE_SUPPLY_CONTENT;
@@ -38,6 +38,7 @@ export function AboutPage() {
         title={about.hero.title}
         description={about.growth}
         actions={<ActionLink action="explore_businesses" />}
+        media={<HeroBackdrop band="data" />}
       />
 
       {/* Operating philosophy beside the company video: Mission and Vision stacked
@@ -93,7 +94,7 @@ export function AboutPage() {
         </Stagger>
       </section>
 
-      <ParallaxBand band="desk" tone="red" />
+      <ParallaxBand band="desk" tone="redLight" />
 
       {/* Footprint and milestones. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
@@ -164,7 +165,7 @@ export function AboutPage() {
         </div>
       </section>
 
-      <ParallaxBand band="data" tone="ink" />
+      <ParallaxBand band="warehouse" tone="ink" />
 
       {/* Brands, from the registry. */}
       <section className="py-20">
@@ -192,8 +193,6 @@ export function AboutPage() {
           <ActionLink action="explore_businesses" />
         </div>
       </SplitSection>
-
-      <ParallaxBand band="warehouse" tone="red" />
 
       {/* Developing opportunities, with status, closing the page. */}
       <IconFeatureGrid
