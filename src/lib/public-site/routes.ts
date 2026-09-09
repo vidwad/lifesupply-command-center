@@ -177,6 +177,13 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "clinic",
   },
   {
+    path: PHARMACY_ROUTES.hub,
+    label: "Pharmacy Solutions",
+    stage: 5,
+    status: "live",
+    navGroup: "pharmacy",
+  },
+  {
     path: METABOLIC_ROUTES.hub,
     label: "Metabolic Health",
     stage: 4,
@@ -206,13 +213,6 @@ export const ROUTES: readonly RouteRecord[] = [
     stage: 4,
     status: "live",
     navGroup: "metabolic",
-  },
-  {
-    path: PHARMACY_ROUTES.hub,
-    label: "Pharmacy Solutions",
-    stage: 5,
-    status: "live",
-    navGroup: "pharmacy",
   },
   { path: "/partners/", label: "Partners", stage: 5, status: "live", navGroup: "partners" },
   {
@@ -362,8 +362,8 @@ const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string }[] = [
   { key: "home", label: "Home", hub: LIFE_SUPPLY_ROUTES.home },
   { key: "businesses", label: "Medical Supply Solutions", hub: LIFE_SUPPLY_ROUTES.operations },
   { key: "clinic", label: "Clinic Solutions", hub: STAGE_3_ROUTES.clinicSolutions },
-  { key: "metabolic", label: "Metabolic Health", hub: METABOLIC_ROUTES.hub },
   { key: "pharmacy", label: "Pharmacy Solutions", hub: PHARMACY_ROUTES.hub },
+  { key: "metabolic", label: "Metabolic Health", hub: METABOLIC_ROUTES.hub },
   { key: "partners", label: "Partners", hub: "/partners/" },
   { key: "investors", label: "Investors", hub: "/investor-relations/" },
   { key: "about", label: "About", hub: "/about-us/" },
