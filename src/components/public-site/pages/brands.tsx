@@ -5,6 +5,7 @@ import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge, SplitSection } from "@/components/public-site/sections";
+import { SiteScreen } from "@/components/public-site/site-screen";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { brandGeography, getBrand, type BrandRecord } from "@/lib/public-site/brands";
 import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION, type GraphicKey } from "@/lib/public-site/graphics";
@@ -169,6 +170,8 @@ export function StoreBrandPage({
           <ServiceChannels record={record} title={page.channels.title} text={page.channels.text} />
           <Reveal className="flex flex-col justify-between border border-[var(--lsh-rule)] p-7">
             <div>
+              {/* The store's actual home page, dated, on a laptop frame. */}
+              <SiteScreen site={brandKey} className="-mx-7 -mt-7 mb-6" />
               <div className="flex items-start justify-between gap-4">
                 <Eyebrow as="h2">On this site</Eyebrow>
                 <IconBadge icon="globe" size={18} />

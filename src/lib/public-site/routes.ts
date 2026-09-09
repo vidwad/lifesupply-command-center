@@ -102,6 +102,7 @@ export function resourceRoute(slug: string): string {
 }
 
 export type NavGroupKey =
+  | "home"
   | "businesses"
   | "clinic"
   | "metabolic"
@@ -357,6 +358,8 @@ export interface NavGroup {
  * Solutions section.
  */
 const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string }[] = [
+  // "Home" as a menu item (product owner, 2026-09-09); the logo still links home.
+  { key: "home", label: "Home", hub: LIFE_SUPPLY_ROUTES.home },
   { key: "businesses", label: "Medical Supply Solutions", hub: LIFE_SUPPLY_ROUTES.operations },
   { key: "clinic", label: "Clinic Solutions", hub: STAGE_3_ROUTES.clinicSolutions },
   { key: "metabolic", label: "Metabolic Health", hub: METABOLIC_ROUTES.hub },
