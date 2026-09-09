@@ -824,8 +824,11 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     // The status line left the page on 2026-09-09 (product owner); the status still shows on each card.
     expect(page).not.toContain("status.sentence");
     expect(page).toContain('status: "In development"');
-    // The value block (2026-09-09) is design intent, never a result or an operation.
+    // The value block (2026-09-09) is design intent, never a result or an operation; its hub
+    // diagram is drawn from the registry and repeats the cards' copy.
     expect(page).toContain("hub.value.items.map");
+    expect(page).toContain('getDiagram("pharmacyCarePathway")');
+    expect(page).not.toContain("/lsh/graphics/diagrams");
     expect(pharmacy).toContain("No pharmacy supply program is operating.");
     expect(pharmacy).not.toMatch(/\b(has|have) (helped|reduced|improved|delivered)\b/i);
     expect(pharmacy).not.toMatch(/subscription is available\b/i);
