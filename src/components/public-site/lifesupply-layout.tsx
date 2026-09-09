@@ -256,8 +256,16 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
 
+  // The inline NavItem reserves 6px below its text for the hover underline;
+  // in the 36px utility strip that reads as sitting high, so pull it back.
   const renderUtility = (link: NavLink, onNavigate?: () => void) => (
-    <NavItem key={link.href} href={link.href} label={link.label} onNavigate={onNavigate} />
+    <NavItem
+      key={link.href}
+      href={link.href}
+      label={link.label}
+      onNavigate={onNavigate}
+      className={onNavigate ? "" : "-mb-1.5"}
+    />
   );
 
   return (
@@ -337,12 +345,6 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link
-              href={LIFE_SUPPLY_ROUTES.investorRelations}
-              className="lsh-primary-action lsh-display hidden px-4 py-2.5 text-[10px] transition-all duration-200 hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:inline-flex"
-            >
-              Investor information
-            </Link>
             <button
               type="button"
               className="inline-grid h-10 w-10 place-items-center border border-white/30 text-white transition-colors hover:border-white xl:hidden"
@@ -430,13 +432,6 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               ))}
               <div className="mt-2 grid justify-items-start gap-2 border-t border-white/15 pt-4">
                 {UTILITY_NAV.map((link) => renderUtility(link, closeMenu))}
-                <Link
-                  href={LIFE_SUPPLY_ROUTES.investorRelations}
-                  onClick={closeMenu}
-                  className="lsh-primary-action lsh-display mt-1 inline-flex px-4 py-2.5 text-xs sm:hidden"
-                >
-                  Investor information
-                </Link>
                 <CommandCenterLoginLink variant="menu" />
               </div>
             </div>

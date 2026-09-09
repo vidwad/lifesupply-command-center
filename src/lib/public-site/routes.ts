@@ -129,7 +129,7 @@ export const ROUTES: readonly RouteRecord[] = [
   { path: "/about-us/", label: "About us", stage: 2, status: "live", navGroup: "about" },
   {
     path: LIFE_SUPPLY_ROUTES.operations,
-    label: "Medical Supply Solutions",
+    label: "Medical Supplies",
     stage: 3,
     status: "live",
     navGroup: "businesses",
@@ -360,13 +360,13 @@ export interface NavGroup {
 const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string }[] = [
   // "Home" as a menu item (product owner, 2026-09-09); the logo still links home.
   { key: "home", label: "Home", hub: LIFE_SUPPLY_ROUTES.home },
-  { key: "businesses", label: "Medical Supply Solutions", hub: LIFE_SUPPLY_ROUTES.operations },
+  { key: "about", label: "About", hub: "/about-us/" },
+  { key: "businesses", label: "Medical Supplies", hub: LIFE_SUPPLY_ROUTES.operations },
   { key: "clinic", label: "Clinic Solutions", hub: STAGE_3_ROUTES.clinicSolutions },
   { key: "pharmacy", label: "Pharmacy Solutions", hub: PHARMACY_ROUTES.hub },
   { key: "metabolic", label: "Metabolic Health", hub: METABOLIC_ROUTES.hub },
   { key: "partners", label: "Partners", hub: "/partners/" },
   { key: "investors", label: "Investors", hub: "/investor-relations/" },
-  { key: "about", label: "About", hub: "/about-us/" },
 ];
 
 function liveChildren(group: NavGroupKey, hub: string): NavLink[] {

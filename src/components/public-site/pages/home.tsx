@@ -32,7 +32,7 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  * metabolic offer carry no image (product owner, 2026-09-08).
  */
 export function LifeSupplyHome() {
-  const { homepage, contact, brand } = LIFE_SUPPLY_CONTENT;
+  const { homepage, contact } = LIFE_SUPPLY_CONTENT;
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -43,10 +43,8 @@ export function LifeSupplyHome() {
         media={<HeroVideo {...homepage.heroMedia} />}
         actions={
           <>
-            <ActionLink action="explore_businesses" />
-            <ActionLink action="investor_information" variant="onDark">
-              Investor information
-            </ActionLink>
+            <ActionLink action="investor_information">Investor information</ActionLink>
+            <ActionLink action="explore_businesses" variant="onDark" />
           </>
         }
       />
@@ -249,21 +247,6 @@ export function LifeSupplyHome() {
                 </div>
               </StaggerItem>
             ))}
-            <StaggerItem className="bg-[var(--lsh-ink)] p-6">
-              <div className="flex items-start justify-between gap-4">
-                <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
-                  Corporate office
-                </p>
-                <IconBadge icon="pin" tone="onDark" size={18} />
-              </div>
-              <address className="mt-3 text-sm not-italic leading-6 text-white/75">
-                {brand.address.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
-              </address>
-            </StaggerItem>
           </Stagger>
         </div>
       </section>

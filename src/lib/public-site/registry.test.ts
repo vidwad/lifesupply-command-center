@@ -171,13 +171,13 @@ describe("route registry", () => {
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
       "Home",
-      "Medical Supply Solutions",
+      "About",
+      "Medical Supplies",
       "Clinic Solutions",
       "Pharmacy Solutions",
       "Metabolic Health",
       "Partners",
       "Investors",
-      "About",
     ]);
     const businesses = groups.find((group) => group.key === "businesses")!;
     expect(businesses.links.map((link) => link.href)).toEqual([

@@ -424,9 +424,10 @@ describe("document structure", () => {
     expect(code).toContain('"text-white/75 after:w-0 hover:text-white"');
   });
 
-  it("keeps the primary action lift motion-safe", () => {
+  it("carries no Investor information button in the header or the panel (product owner, 2026-09-09)", () => {
     const code = layout();
-    expect(code).toMatch(/hover:-translate-y-0\.5[^"]*motion-reduce:hover:translate-y-0/);
+    expect(code).not.toContain("Investor information");
+    expect(code).not.toContain("LIFE_SUPPLY_ROUTES.investorRelations");
   });
 
   it("renders exactly one h1 per page, and only from PublicHero", () => {
@@ -770,7 +771,7 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
 
   it("names the sections as the product owner set them and leaves no trace of the old ones", () => {
     const routes = stripComments(read(ROUTES_FILE));
-    expect(routes).toContain('label: "Medical Supply Solutions"');
+    expect(routes).toContain('label: "Medical Supplies"');
     expect(routes).toContain('label: "Pharmacy Solutions"');
     expect(routes).not.toContain('label: "Our Businesses"');
     for (const source of [layout(), pages(), primitives()]) {

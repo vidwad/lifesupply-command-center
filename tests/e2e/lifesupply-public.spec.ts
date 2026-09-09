@@ -201,7 +201,7 @@ test.describe("LifeSupply public site", () => {
     test.skip(isMobile, "desktop navigation only");
     await page.goto("/");
     const trigger = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", {
-      name: "Medical Supply Solutions",
+      name: "Medical Supplies",
     });
     await trigger.focus();
     // Focus inside the group reveals the dropdown, so Tab reaches every row.
@@ -221,11 +221,12 @@ test.describe("LifeSupply public site", () => {
       "/medical-supply-solutions/balkowitsch",
     ]);
     // The chevron is a real button for touch and assistive technology.
-    const chevron = page.getByRole("button", { name: "Open Medical Supply Solutions menu" });
+    const chevron = page.getByRole("button", { name: "Open Medical Supplies menu" });
     await chevron.click();
-    await expect(
-      page.getByRole("button", { name: "Close Medical Supply Solutions menu" }),
-    ).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByRole("button", { name: "Close Medical Supplies menu" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
     await page.keyboard.press("Escape");
     await expect(chevron).toHaveAttribute("aria-expanded", "false");
   });
@@ -241,7 +242,7 @@ test.describe("LifeSupply public site", () => {
     // Groups are collapsed so the panel fits the screen; a child appears once its group is expanded.
     for (const name of [
       "Home",
-      "Medical Supply Solutions",
+      "Medical Supplies",
       "Clinic Solutions",
       "Pharmacy Solutions",
       "Metabolic Health",
@@ -251,7 +252,7 @@ test.describe("LifeSupply public site", () => {
     }
     await expect(panel.getByRole("link", { name: "Care kits", exact: true })).toBeHidden();
     for (const name of [
-      "Medical Supply Solutions",
+      "Medical Supplies",
       "Clinic Solutions",
       "Metabolic Health",
       "Care kits",
