@@ -90,7 +90,7 @@ Added on the corporate site where a verified destination already existed in the 
 | `/metabolic-health/care-kits/clinic-injectable-supplies/` (K07) | Request a supply review; Clinic Solutions | Clinic purchasing configurations are a Clinic Solutions conversation |
 | `/metabolic-health/care-kits/pharmacy-patient-support/` (K08) | Pharmacy supply programs | The pharmacy partner page states responsibilities |
 | `/our-operations/lifesupply/` | Clinic Solutions; Metabolic Health | The store serves both journeys |
-| `/our-operations/technology-fulfilment/` | Metabolic Health; Clinic Solutions | Kitting and fulfilment are described there |
+| ~~`/our-operations/technology-fulfilment/`~~ | withdrawn 2026-09-08 | Page removed; the address redirects to `/our-operations` |
 | `/our-operations/lifesupply-clinics/` | Metabolic Health; About LifeSupply.ca | Post-opening supply and the program |
 | `/clinic-solutions/ongoing-supplies/` | Metabolic Health; Clinic collaboration | Procurement customers may join a program or collaborate |
 

@@ -75,13 +75,7 @@ export const ICON_BY_TITLE: Record<string, string> = {
   Public: "globe",
   "Restricted, on request": "shield",
   Historical: "scroll",
-  // Businesses and technology
-  "Online catalogues, accounts, and checkout": "cart",
-  "Sourcing and distribution": "truck",
-  "Wholesale and institutional supply": "warehouse",
-  "Management systems": "settings",
-  "Kitting and fulfilment for metabolic-health programs": "packageCheck",
-  "Contracted workflow support": "workflow",
+  // Businesses
   "Who it serves": "users",
   Categories: "layout",
   "Service channels": "mail",

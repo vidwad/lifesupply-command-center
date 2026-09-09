@@ -9,13 +9,7 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
-import {
-  Callout,
-  IconBadge,
-  IconFeatureGrid,
-  ProcessSteps,
-  SplitSection,
-} from "@/components/public-site/sections";
+import { IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { brandGeography, getBrand, type BrandRecord } from "@/lib/public-site/brands";
 import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION, type GraphicKey } from "@/lib/public-site/graphics";
@@ -353,65 +347,6 @@ export function ClinicsBrandPage() {
         </div>
       </section>
       <RelatedActions actions={clinics.brandPage.related} />
-    </LifeSupplyLayout>
-  );
-}
-
-/** `/our-operations/technology-fulfilment/` */
-export function TechnologyFulfilmentPage() {
-  const { technology } = LIFE_SUPPLY_CONTENT.businesses;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={technology.eyebrow}
-        title={technology.title}
-        description={technology.intro}
-        actions={<ActionLink action="clinic_supply_review" />}
-      />
-
-      {/* Implemented, beside a conceptual fulfilment aisle. */}
-      <SplitSection
-        eyebrow={technology.implemented.eyebrow}
-        title={technology.implemented.title}
-        graphic="warehouse"
-        caption={CONCEPTUAL_CAPTION}
-      >
-        <ul className="grid gap-5">
-          {technology.implemented.items.map((item) => (
-            <li key={item.title} className="flex gap-4">
-              <IconBadge icon={iconForTitle(item.title)} size={18} />
-              <div>
-                <h3 className="lsh-display text-lg text-[var(--lsh-charcoal)]">{item.title}</h3>
-                <p className="mt-1 text-sm leading-6">{item.text}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </SplitSection>
-
-      {/* In development, with its status on every tile. */}
-      <IconFeatureGrid
-        tone="onDark"
-        columns={2}
-        eyebrow={technology.developing.eyebrow}
-        title={technology.developing.title}
-        items={technology.developing.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          status: technology.developing.eyebrow,
-          icon: iconForTitle(item.title),
-        }))}
-      />
-
-      <Callout
-        icon="shield"
-        eyebrow={technology.exceptions.title}
-        tone="onLight"
-        action={<ActionLink action="shop_services" variant="onLight" />}
-      >
-        <p>{technology.exceptions.text}</p>
-      </Callout>
-      <RelatedActions actions={LIFE_SUPPLY_CONTENT.businesses.technology.related} />
     </LifeSupplyLayout>
   );
 }

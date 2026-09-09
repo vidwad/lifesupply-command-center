@@ -1,6 +1,7 @@
 /**
  * Our Businesses copy for Stage 3: the portfolio map at `/our-operations/`,
- * the four brand pages, and the technology and fulfilment page (guide §3).
+ * and the four brand pages (guide §3). The technology and fulfilment page was
+ * withdrawn on 2026-09-08 (product owner: not a major business unit).
  *
  * Every factual statement traces to a SOURCE_REGISTER.md row or to approved
  * copy already published; the rest is Stage 3 draft framing, marked as
@@ -115,54 +116,5 @@ export const businesses = {
       },
       actions: ["shop_balkowitsch", "us_business_inquiry"],
     },
-  },
-
-  technology: {
-    eyebrow: "Technology & fulfilment",
-    title: "Sourcing, catalogue, orders, and fulfilment.",
-    intro:
-      "How products reach customers across the operating websites, and which capabilities are implemented today versus in development.",
-    implemented: {
-      eyebrow: "Implemented",
-      title: "In operation today.",
-      items: [
-        {
-          title: "Online catalogues, accounts, and checkout",
-          text: "Each storefront runs its own catalogue, customer accounts, and checkout. Prices and availability are published on the store, and orders stay with the store that took them.",
-        },
-        {
-          title: "Sourcing and distribution",
-          text: "A centralized fulfillment, delivery, and logistics function described as having access to distributors, manufacturers, and suppliers.",
-        },
-        {
-          title: "Wholesale and institutional supply",
-          text: "An institutional-supply focus spanning hospitals, universities, nursing homes, First Nations, and government agencies in the current public overview.",
-        },
-        {
-          title: "Management systems",
-          text: "An internal management platform used for order, customer, catalogue, and supplier reporting and workflow. It is not customer-facing and publishes nothing to this site.",
-        },
-      ],
-    },
-    developing: {
-      eyebrow: "In development",
-      title: "Described with their status, not as services you can order.",
-      items: [
-        {
-          title: "Kitting and fulfilment for metabolic-health programs",
-          text: "Configurable supply pathways, assembled and shipped for clinics, pharmacies, and program participants.",
-        },
-        {
-          title: "Contracted workflow support",
-          text: "Non-clinical fulfilment and workflow services for clinics and pharmacies, agreed per program.",
-        },
-      ],
-    },
-    exceptions: {
-      title: "Service exceptions",
-      text: "Order, delivery, return, and product questions belong to the store that took the order. Each brand page links its support channel; this corporate site does not handle orders.",
-    },
-    actions: ["clinic_supply_review"],
-    related: ["metabolic_hub", "clinic_solutions"],
   },
 } as const;

@@ -147,7 +147,7 @@ Generated from the registries on September 8, 2026 (Stage 9). Where an earlier s
 | `/our-operations/wellmart-medical/` | Wellmart Medical | 3 | live | businesses | `src/app/our-operations/wellmart-medical/page.tsx` |
 | `/our-operations/lifesupply-clinics/` | LifeSupply Clinics | 3 | live | businesses | `src/app/our-operations/lifesupply-clinics/page.tsx` |
 | `/our-operations/balkowitsch/` | Balkowitsch Worldwide | 3 | live | businesses | `src/app/our-operations/balkowitsch/page.tsx` |
-| `/our-operations/technology-fulfilment/` | Technology & fulfilment | 3 | live | businesses | `src/app/our-operations/technology-fulfilment/page.tsx` |
+| `/our-operations/technology-fulfilment/` | Technology & fulfilment (withdrawn 2026-09-08, product owner: not a major business unit) | 3 | redirect → `/our-operations` | — | `next.config.ts` |
 | `/clinic-solutions/` | Clinic Solutions | 3 | live | clinic | `src/app/clinic-solutions/page.tsx` |
 | `/clinic-solutions/design-build/` | Design & build | 3 | live | clinic | `src/app/clinic-solutions/design-build/page.tsx` |
 | `/clinic-solutions/equipment/` | Equipment | 3 | live | clinic | `src/app/clinic-solutions/equipment/page.tsx` |
@@ -224,5 +224,5 @@ Generated from the registries on September 8, 2026 (Stage 9). Where an earlier s
 | `brand_wellmart` | About Wellmart Medical | navigation | internal `/our-operations/wellmart-medical/` | — | — |
 | `brand_clinics` | About LifeSupply Clinics | navigation | internal `/our-operations/lifesupply-clinics/` | — | — |
 | `brand_balkowitsch` | About Balkowitsch Worldwide | navigation | internal `/our-operations/balkowitsch/` | — | — |
-| `technology_fulfilment` | Technology & fulfilment | navigation | internal `/our-operations/technology-fulfilment/` | — | — |
+| ~~`technology_fulfilment`~~ | Technology & fulfilment | withdrawn 2026-09-08 with the page | — | — | — |
 | `contact_directory` | Contact | navigation | internal `/contact/` | — | — |
