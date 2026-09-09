@@ -884,7 +884,7 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     );
     // The hero backdrop and two bands, each decorative, drawn from the registry, never a path literal.
     expect(page).toContain('media={<HeroBackdrop band="data" />}');
-    expect((page.match(/<ParallaxBandb/g) ?? []).length).toBe(2);
+    expect((page.match(/<ParallaxBand/g) ?? []).length).toBe(2);
     expect(page).toMatch(
       /<ParallaxBand\s+band="desk"\s+tone="redLight"\s+eyebrow=\{about\.bands\.desk\.eyebrow\}/,
     );
