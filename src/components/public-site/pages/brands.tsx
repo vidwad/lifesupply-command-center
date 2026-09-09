@@ -1,6 +1,6 @@
 import { ExternalLink, Mail, Phone } from "lucide-react";
 
-import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
+import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
@@ -186,7 +186,6 @@ export function StoreBrandPage({
           </Reveal>
         </Container>
       </section>
-      <RelatedActions actions={"related" in page ? page.related : undefined} />
     </LifeSupplyLayout>
   );
 }

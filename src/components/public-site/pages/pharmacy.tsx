@@ -1,4 +1,4 @@
-import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
+import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal } from "@/components/public-site/motion";
@@ -102,7 +102,6 @@ export function PharmacySolutionsPage() {
           </Reveal>
         </Container>
       </section>
-      <RelatedActions actions={hub.related} />
     </LifeSupplyLayout>
   );
 }

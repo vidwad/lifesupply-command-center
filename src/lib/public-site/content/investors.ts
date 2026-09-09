@@ -17,17 +17,6 @@
 
 export type BusinessStatus = "Operating" | "In development" | "Under evaluation" | "Not offered";
 
-export interface DocumentRecord {
-  title: string;
-  /** As stated on the material itself; never inferred. */
-  date: string;
-  category: "Public" | "Restricted, on request" | "Historical";
-  version: string | null;
-  /** Public documents carry a same-origin href once Stage 6 publishes them; none exists yet. */
-  href: null;
-  note: string;
-}
-
 export const investorRelations = {
   // Approved (published since PR #60/#61).
   title: "Investor information, presented with context.",
@@ -94,14 +83,9 @@ export const investorRelations = {
         text: "Four regulated options under evaluation, each with its own status and dependencies.",
       },
       {
-        route: "documents",
-        title: "Documents",
-        text: "What is public, what is available on request, and what is historical.",
-      },
-      {
-        route: "shareholderServices",
-        title: "Shareholder services",
-        text: "Administrative requests and how to make them.",
+        route: "news",
+        title: "News & resources",
+        text: "Company news, investor documents, and the historical record.",
       },
       {
         route: "disclosures",
@@ -232,87 +216,6 @@ export const investorRelations = {
     actions: ["acquisition_inquiry", "investor_materials"],
   },
 
-  documents: {
-    eyebrow: "Investor relations · Documents",
-    title: "Public, on request, and historical.",
-    intro:
-      "This index lists investor materials by access class. No document file is hosted on this site yet; public documents will be published here with their version and date, and restricted materials remain available on request through the investor-relations channel.",
-    classes: [
-      {
-        title: "Public",
-        text: "Published here once approved, with title, date, version, and effective date.",
-      },
-      {
-        title: "Restricted, on request",
-        text: "Shared with suitable recipients after a request and any confidentiality terms; never at a public address.",
-      },
-      {
-        title: "Historical",
-        text: "Earlier materials kept for the record and labelled by their original date.",
-      },
-    ],
-    records: [
-      {
-        title: "Annual-report narrative, year ended December 31, 2025",
-        date: "Year ended December 31, 2025",
-        category: "Restricted, on request",
-        version: null,
-        href: null,
-        note: "Source of the unaudited consolidated figures shown on the investor pages.",
-      },
-      {
-        title: "Financing presentation",
-        date: "August 25, 2026",
-        category: "Restricted, on request",
-        version: null,
-        href: null,
-        note: "Outlines proposed expansion themes; subject to suitability, disclosure, board approval, regulatory requirements, and final terms.",
-      },
-      {
-        title: "Investor presentation",
-        date: "May 2022",
-        category: "Historical",
-        version: null,
-        href: null,
-        note: "Earlier corporate presentation from the prior website; available on request for the record.",
-      },
-    ] satisfies readonly DocumentRecord[],
-    published: {
-      title: "Published public documents",
-      empty:
-        "No public document has been published yet. Approved public documents appear here with their date and version.",
-      unavailable:
-        "The published document list is temporarily unavailable. The records below are unaffected.",
-      download: "Download",
-    },
-    requestNote:
-      "Requests are answered by the investor-relations contact. Restricted materials are provided only to suitable recipients and are not distributed through this site.",
-    actions: ["investor_materials"],
-  },
-
-  shareholderServices: {
-    eyebrow: "Investor relations · Shareholder services",
-    title: "Administrative requests from shareholders.",
-    intro:
-      "Existing shareholders can raise the administrative matters below through the investor-relations contact. Meeting information is published here when it is available.",
-    purposes: [
-      "Contact-detail updates",
-      "Name or address changes",
-      "Certificate questions",
-      "Re-registration",
-      "Transfers",
-      "Lost certificates",
-      "Meeting information, when available",
-    ],
-    process: [
-      "State the purpose of the request and your registered name.",
-      "Do not send share certificates, identity documents, or account details by email. A secure follow-up route is arranged for anything that needs verification.",
-      "Requests are acknowledged by the investor-relations contact, and each is handled through the appropriate registrar or company process.",
-    ],
-    meetings: "No meeting is currently announced on this site.",
-    actions: ["shareholder_services"],
-  },
-
   disclosures: {
     eyebrow: "Investor relations · Disclosures",
     title: "Reported figures, with their scope.",
@@ -330,6 +233,6 @@ export const investorRelations = {
     },
     materials:
       "Figures and forward-looking themes are tied to the materials listed in the documents index. Where a material is restricted, the figure shown here is the extent of what is published.",
-    actions: ["investor_documents", "investor_materials"],
+    actions: ["news_resources", "investor_materials"],
   },
 } as const;

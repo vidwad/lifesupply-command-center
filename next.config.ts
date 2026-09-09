@@ -48,6 +48,14 @@ const nextConfig: NextConfig = {
         destination: "/clinic-solutions",
         permanent: true,
       },
+      // 2026-09-09 (product owner): the documents index merged into News &
+      // resources; Shareholder services withdrawn.
+      { source: "/investor-relations/documents", destination: "/news", permanent: true },
+      {
+        source: "/investor-relations/shareholder-services",
+        destination: "/investor-relations",
+        permanent: true,
+      },
       // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
       // involved); the addresses go to the team page. The three directors
       // restored on 2026-09-09 are live profiles again. Keep in step with

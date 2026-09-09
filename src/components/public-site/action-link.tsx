@@ -65,28 +65,3 @@ export function ActionLink({
       );
   }
 }
-
-/**
- * Contextual links between journeys (Stage 8). Keys resolve through the
- * registry like every other action; an empty or missing list renders
- * nothing, so a page never shows a heading with no links under it.
- */
-export function RelatedActions({
-  actions,
-  heading = "Related",
-}: {
-  actions?: readonly string[];
-  heading?: string;
-}) {
-  if (!actions || actions.length === 0) return null;
-  return (
-    <section className="px-5 py-12 lg:px-8" aria-label={heading}>
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 border-t border-[var(--lsh-rule)] pt-8">
-        <span className="lsh-display text-[11px] text-[var(--lsh-muted)]">{heading}</span>
-        {actions.map((action) => (
-          <ActionLink key={action} action={action as ActionKey} variant="text" />
-        ))}
-      </div>
-    </section>
-  );
-}

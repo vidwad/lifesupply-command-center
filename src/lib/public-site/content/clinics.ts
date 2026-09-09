@@ -137,8 +137,6 @@ export const clinics = {
    * the three-need router (plan it, equip it, keep it supplied).
    */
   hub: {
-    // Stage 8: contextual links from the clinic lifecycle to the program and collaboration pages.
-    related: ["metabolic_hub", "partner_clinics"],
     eyebrow: "Clinic Solutions · LifeSupply Clinics",
     title: "Plan it, equip it, or keep it supplied.",
     intro:
@@ -230,6 +228,5 @@ export const clinics = {
       text: "Approved substitutions, par-level restocking, automatic replenishment, and contracted procurement services are not offered on this site today. Where a clinic needs them, they are discussed and agreed separately.",
     },
     actions: ["clinic_supply_review", "shop_lifesupply"],
-    related: ["metabolic_hub", "partner_clinics"],
   },
 } as const;

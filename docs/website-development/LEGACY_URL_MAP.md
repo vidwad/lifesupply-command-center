@@ -13,7 +13,9 @@
 | `/our-operations/` | redirect | `/medical-supply-solutions` | Renamed on 2026-09-08 (product owner): Medical Supply Solutions, the three stores. The corporate portfolio moved to `/about-us`. Children redirect to their new addresses; `/our-operations/lifesupply-clinics/` to `/clinic-solutions`. |
 | `/our-team/` | keep | `/our-team` | Same address. |
 | `/investor-relations/` | keep | `/investor-relations` | Same address; now a hub with children. |
-| `/news/` | keep | `/news` | Same address. |
+| `/news/` | keep | `/news` | Same address. Since 2026-09-09 it sits in the Investors menu and carries the investor documents index. |
+| `/investor-relations/documents/` | **redirect 308** | `/news` | Documents index merged into News & resources on 2026-09-09 (product owner). |
+| `/investor-relations/shareholder-services/` | **redirect 308** | `/investor-relations` | Withdrawn 2026-09-09 (product owner). |
 | `/shop/` | keep | `/shop` | Same address; visible title "Shop & Services". |
 | `/contact-2/` | **redirect 308** | `/contact` | `next.config.ts` permanent redirect; the legacy `/contact/` already 301'd to `/contact-2/`, so both legacy forms land on `/contact`. |
 | `/abdul-ladha/` | keep | `/abdul-ladha` | Retained profile address, pre-rendered; portrait and the prior site's biography. |
@@ -49,7 +51,7 @@ Legacy addresses that 404 on the old site as well (`/privacy/`, `/terms/`) now e
 | `/wp-content/uploads/2021/04/standard-logo*.png` | replaced | Official mark shipped as `/lsh/lifesupply-mark.png` (PR #61). The portfolio lockup was withdrawn on 2026-09-08 (Dexton and MedDirect no longer operational; `docs/website-development/legacy-assets/`). |
 | Leadership portraits | kept | `/lsh/abdul-ladha.jpg`, and from 2026-09-09 `/lsh/keith-dolo.jpg`, `/lsh/barrett-sleeman.jpg`, `/lsh/david-vogt.jpg`, copied from the prior site (S-104, S-153 to S-155). |
 | Company video (YouTube `Jb3m3Nt3S50`) | embedded on request | About page, from 2026-09-09; local greyscale poster `/lsh/video/about-abdul-ladha-poster.jpg`, click-to-load privacy-enhanced player (S-156). |
-| `Lifesupply-Investor-Presentation.pdf` (May 2022, 21.9 MB) | archive, on request | Listed as a historical document in the investor documents index with no hosted file (S-64). |
+| `Lifesupply-Investor-Presentation.pdf` (May 2022, 21.9 MB) | archive, on request | Listed as a historical document in the investor documents index, now on the News & resources page, with no hosted file (S-64). |
 | Remaining `wp-content/uploads` images (Stage 1 counted 49 references) | archive | Elementor layout imagery and the legacy timeline graphic; not carried forward (S-133). Any that must survive can be added to `public/lsh/` with provenance. |
 
 ## After cutover

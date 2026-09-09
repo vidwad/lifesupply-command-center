@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 
-import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
+import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
@@ -255,7 +255,6 @@ export function ClinicSolutionsPage() {
         <p className="lsh-display text-2xl leading-[1.1]">{hub.supplyHeading.title}</p>
       </Callout>
       <ConditionalClose actions={hub.actions as readonly ActionKey[]} />
-      <RelatedActions actions={hub.related} />
     </LifeSupplyLayout>
   );
 }
@@ -354,7 +353,6 @@ export function OngoingSuppliesPage() {
         <p>{page.conditional.text}</p>
       </Callout>
       <ConditionalClose actions={page.actions} />
-      <RelatedActions actions={clinics.ongoingSupplies.related} />
     </LifeSupplyLayout>
   );
 }

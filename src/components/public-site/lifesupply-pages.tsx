@@ -31,9 +31,7 @@ export {
   AdvancedTherapeuticsPage,
   DisclosuresPage,
   GrowthStrategyPage,
-  InvestorDocumentsPage,
   InvestorRelationsPage,
-  ShareholderServicesPage,
 } from "@/components/public-site/pages/investors";
 export {
   NewsItemView,

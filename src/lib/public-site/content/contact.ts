@@ -82,11 +82,6 @@ export const contact = {
       action: "investor_materials",
     },
     {
-      label: "Shareholder services",
-      text: "Administrative queries about a holding.",
-      action: "shareholder_services",
-    },
-    {
       label: "Acquisition or strategic transaction",
       text: "Confidential first conversation.",
       action: "acquisition_inquiry",
