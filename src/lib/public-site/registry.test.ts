@@ -268,9 +268,9 @@ describe("route registry", () => {
     }
     expect(investorRelations.currentReport.entity).toContain("LifeSupply Health Supplies Inc.");
     expect(investorRelations.currentReport.status).toMatch(/unaudited/i);
-    for (const theme of investorRelations.advancedTherapeutics.themes) {
-      expect(theme.status, theme.title).toBe("Under evaluation");
-      expect(theme.dependencies.length, theme.title).toBeGreaterThan(0);
+    for (const option of investorRelations.advancedTherapeutics.options) {
+      expect(option.status, option.title).toBe("Under evaluation");
+      expect(option.dependencies.length, option.title).toBeGreaterThan(0);
     }
   });
 

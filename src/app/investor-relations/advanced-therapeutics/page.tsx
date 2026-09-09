@@ -7,7 +7,7 @@ import { AdvancedTherapeuticsPage } from "@/components/public-site/lifesupply-pa
 export const metadata: Metadata = publicMetadata({
   title: "Advanced therapeutics",
   description:
-    "Pharmacy, specialty and compounding, peptide synthesis and research, and manufacturing: four regulated themes, none operating, each with its dependencies.",
+    "Pharmacy, specialty and compounding, peptide synthesis and research, and manufacturing: four regulated options under evaluation, none operating, each with its dependencies.",
   path: "/investor-relations/advanced-therapeutics/",
 });
 

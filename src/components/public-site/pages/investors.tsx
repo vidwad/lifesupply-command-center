@@ -269,25 +269,25 @@ export function AdvancedTherapeuticsPage() {
       <section className="px-5 py-20 lg:px-8">
         <Container>
           <Stagger className="grid gap-5 md:grid-cols-2">
-            {t.themes.map((theme) => (
+            {t.options.map((option) => (
               <StaggerItem
-                key={theme.title}
+                key={option.title}
                 as="article"
                 className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <IconBadge icon={iconForTitle(theme.title)} />
-                  <StatusTag status={theme.status} />
+                  <IconBadge icon={iconForTitle(option.title)} />
+                  <StatusTag status={option.status} />
                 </div>
                 <h2 className="lsh-display mt-6 text-2xl text-[var(--lsh-charcoal)]">
-                  {theme.title}
+                  {option.title}
                 </h2>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{theme.text}</p>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{option.text}</p>
                 <Eyebrow as="h3" className="mt-6">
                   Depends on
                 </Eyebrow>
                 <ul className="mt-3 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                  {theme.dependencies.map((dependency) => (
+                  {option.dependencies.map((dependency) => (
                     <li key={dependency} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
                       {dependency}
                     </li>
