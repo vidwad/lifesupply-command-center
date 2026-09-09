@@ -158,6 +158,65 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
   });
 
+  test("divides About with three decorative legacy photographs that drift on scroll and hold still under reduced motion", async ({
+    page,
+  }) => {
+    await page.goto("/about-us");
+    const main = page.locator("main");
+    const bands = main.locator("[data-band]");
+    await expect(bands).toHaveCount(3);
+    for (const index of [0, 1, 2]) {
+      const band = bands.nth(index);
+      await expect(band).toHaveAttribute("aria-hidden", "true");
+      await band.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() => band.locator("img").evaluate((img) => (img as HTMLImageElement).naturalWidth))
+        .toBeGreaterThan(0);
+    }
+    // The removed sections are gone and the developing opportunities close the page.
+    await expect(main.getByText(/Shared capabilities|Published entities/)).toHaveCount(0);
+    const headings = main.getByRole("heading", { level: 2 });
+    await expect(headings.last()).toHaveText("Developing opportunities under evaluation.");
+    // The photograph moves with the scroll position.
+    const first = bands.first();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await first.scrollIntoViewIfNeeded();
+    const before = await first
+      .locator("img")
+      .evaluate(
+        (img) =>
+          img.getBoundingClientRect().top - img.closest("[data-band]")!.getBoundingClientRect().top,
+      );
+    await page.mouse.wheel(0, 240);
+    await page.waitForTimeout(300);
+    const after = await first
+      .locator("img")
+      .evaluate(
+        (img) =>
+          img.getBoundingClientRect().top - img.closest("[data-band]")!.getBoundingClientRect().top,
+      );
+    expect(Math.abs(after - before)).toBeGreaterThan(2);
+    // Reduced motion: the photograph stays put.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.reload();
+    await first.scrollIntoViewIfNeeded();
+    const stillBefore = await first
+      .locator("img")
+      .evaluate(
+        (img) =>
+          img.getBoundingClientRect().top - img.closest("[data-band]")!.getBoundingClientRect().top,
+      );
+    await page.mouse.wheel(0, 240);
+    await page.waitForTimeout(300);
+    const stillAfter = await first
+      .locator("img")
+      .evaluate(
+        (img) =>
+          img.getBoundingClientRect().top - img.closest("[data-band]")!.getBoundingClientRect().top,
+      );
+    expect(Math.abs(stillAfter - stillBefore)).toBeLessThan(0.5);
+  });
+
   test("shows the poster instead of footage for visitors who prefer reduced motion", async ({
     page,
   }) => {
