@@ -197,6 +197,10 @@ No company news later than June 2022 exists in either source. Stage 5 must not f
 | S-142 | Conceptual graphic `boardroom.jpg` (empty boardroom) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
 | S-143 | Conceptual graphic `shipping.jpg` (cartons on a pallet) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
 | S-144 | Conceptual graphic `facade.jpg` (glass office facade) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-145 | Brand photograph `lifesupply-greyscale-v1` (supplies and monitor on a counter) | A (supplied, generated) | Product owner, PR #86, 2026-09-08; PNG master retained, JPEG derivative served; neutral greyscale; conceptual, never operational photography; caption required |
+| S-146 | Brand photograph `wellmart-medical-greyscale-v1` (rollator in a home interior) | A (supplied, generated) | Product owner, PR #86, 2026-09-08; PNG master retained, JPEG derivative served; neutral greyscale; conceptual, never operational photography; caption required |
+| S-147 | Brand photograph `balkowitsch-greyscale-v1` (person packing a carton at a warehouse bench) | A (supplied, generated) | Product owner, PR #86, 2026-09-08; PNG master retained, JPEG derivative served; neutral greyscale; conceptual, never operational photography; synthetic person, never an employee or customer |
+| S-148 | Brand photograph `lifesupply-clinics-greyscale-v1` (clinic reception and corridor) | A (supplied, generated) | Product owner, PR #86, 2026-09-08; PNG master retained, JPEG derivative served; neutral greyscale; conceptual, never operational photography; not an owned clinic or a completed project |
 
 ---
 

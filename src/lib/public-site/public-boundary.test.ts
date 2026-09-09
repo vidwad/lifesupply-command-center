@@ -50,6 +50,7 @@ const MOTION = `${PUBLIC_DIR}/motion.tsx`;
 const SECTIONS = `${PUBLIC_DIR}/sections.tsx`;
 const ACCORDION = `${PUBLIC_DIR}/accordion.tsx`;
 const SCROLL_TO_TOP = `${PUBLIC_DIR}/scroll-to-top.tsx`;
+const BRAND_IMAGE = `${PUBLIC_DIR}/brand-image.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
 // carries the legacy-compatible route table.
@@ -83,6 +84,7 @@ const motionPrimitives = () => stripComments(read(MOTION));
 const sections = () => stripComments(read(SECTIONS));
 const accordion = () => stripComments(read(ACCORDION));
 const scrollToTop = () => stripComments(read(SCROLL_TO_TOP));
+const brandImage = () => stripComments(read(BRAND_IMAGE));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -96,6 +98,7 @@ const publicComponents = () => [
   sections(),
   accordion(),
   scrollToTop(),
+  brandImage(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -663,11 +666,31 @@ describe("Stage 2 registries and navigation", () => {
     expect(source).toContain('<ActionLink action="investor_information"');
   });
 
-  it("keeps brand cards text-only until an authentic mark with a usage record exists", () => {
+  it("keeps brand names as text until an authentic mark with a usage record exists, with the photograph decorative", () => {
     const code = brandGrid();
     expect(code).toContain("record.asset ?");
     expect(code).not.toMatch(/<img[\s>]/);
     expect(code).not.toContain("/lsh/");
+    // The photograph sits inside the external link, so it is decorative and
+    // the link keeps "Visit <brand>" plus the card text as its name.
+    expect(code).toMatch(/<BrandImage[\s\S]*?decorative/);
+  });
+
+  it("renders the four brand photographs only through the registry mapping, captioned conceptual", () => {
+    const code = brandImage();
+    expect(code).toContain("getGraphic(BRAND_GRAPHICS[brand])");
+    expect(code).toContain("{CONCEPTUAL_CAPTION}");
+    expect(code).toContain('alt={decorative ? "" : g.alt}');
+    const graphics = stripComments(read("src/lib/public-site/graphics.ts"));
+    for (const key of ["lifesupply", "wellmart", "clinics", "balkowitsch"]) {
+      expect(graphics).toMatch(new RegExp(`${key}: "brand[A-Za-z]+"`));
+    }
+    // The brand set keeps its own provenance; the served files are the JPEG derivatives.
+    expect(graphics).toContain("PNG master 1672×941 retained");
+    expect(graphics).not.toMatch(/brands\/[a-z-]+\.png/);
+    for (const page of ["brand-grid", "pages/shop", "pages/operations"]) {
+      expect(read(`${PUBLIC_DIR}/${page}.tsx`), page).toContain('presentation="square"');
+    }
   });
 
   it("keeps the grouped navigation keyboard-operable and the panel hover-free", () => {

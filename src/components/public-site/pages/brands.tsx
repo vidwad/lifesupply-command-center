@@ -18,7 +18,7 @@ import {
 } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { brandGeography, getBrand, type BrandRecord } from "@/lib/public-site/brands";
-import { CONCEPTUAL_CAPTION, type GraphicKey } from "@/lib/public-site/graphics";
+import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION, type GraphicKey } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -26,9 +26,9 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
 
 /** The conceptual graphic each store page carries beside its audience statement. */
 const STORE_GRAPHICS: Record<"lifesupply" | "wellmart" | "balkowitsch", GraphicKey> = {
-  lifesupply: "suppliesFlatlay",
-  wellmart: "shipping",
-  balkowitsch: "warehouse",
+  lifesupply: BRAND_GRAPHICS.lifesupply,
+  wellmart: BRAND_GRAPHICS.wellmart,
+  balkowitsch: BRAND_GRAPHICS.balkowitsch,
 };
 
 /** Verified category chips from the registry. */
@@ -242,7 +242,7 @@ export function ClinicsBrandPage() {
         tone="onSurface"
         eyebrow={page.servicesHeading.eyebrow}
         title={page.servicesHeading.title}
-        graphic="examRoom"
+        graphic={BRAND_GRAPHICS.clinics}
         side="left"
         caption={CONCEPTUAL_CAPTION}
       >

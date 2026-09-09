@@ -2,9 +2,10 @@ import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { BrandImage } from "@/components/public-site/brand-image";
 import { IconBadge } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
-import { brandGeography, getBrand, type BrandKey } from "@/lib/public-site/brands";
+import { brandGeography, getBrand, type OperatingBrandKey } from "@/lib/public-site/brands";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -21,13 +22,15 @@ export function ShopServicesPage() {
       <section className="px-5 py-20 lg:px-8">
         <Stagger className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 xl:grid-cols-4">
           {shop.choices.map((choice) => {
-            const record = getBrand(choice.brand as BrandKey);
+            const brandKey = choice.brand as OperatingBrandKey;
+            const record = getBrand(brandKey);
             return (
               <StaggerItem key={choice.brand} className="h-full">
                 <SpotlightCard
                   as="article"
-                  className="lsh-lift flex h-full flex-col border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7"
+                  className="lsh-lift group flex h-full flex-col border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7"
                 >
+                  <BrandImage brand={brandKey} presentation="square" className="-mx-7 -mt-7 mb-6" />
                   <div className="flex items-start justify-between gap-4">
                     <IconBadge icon={iconForTitle(record.name)} />
                     <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
