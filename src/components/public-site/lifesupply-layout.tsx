@@ -73,7 +73,7 @@ function NavItem({
   const active = !neverCurrent && (forceActive || (!external && isActiveRoute(pathname, href)));
   const classes =
     variant === "inline"
-      ? `lsh-display relative inline-flex w-fit items-center gap-1 pb-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
+      ? `lsh-display relative inline-flex w-fit items-center gap-1 py-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
           active ? "text-white after:w-5" : "text-white/75 after:w-0 hover:text-white"
         } ${className}`.trim()
       : `flex items-center gap-2 border-l-2 px-4 py-1.5 text-sm transition-colors hover:bg-white/10 hover:text-white ${
@@ -121,9 +121,18 @@ function NavItem({
  */
 function NavGroupMenu({ group }: { group: NavGroup }) {
   const pathname = usePathname();
-  // The last groups sit near the right edge; a left-aligned panel would
-  // extend past the viewport (invisible, but it widens the page at 1280px).
-  const alignRight = group.key === "investors" || group.key === "about";
+  // The menu ends at the page's right edge, so the last group's panel opens
+  // leftward; every other panel is left-aligned under its trigger.
+  // Investors, the last group, always opens leftward. Partners, the second
+  // last, opens leftward only at xl widths (1280-1535px), where a panel under
+  // its trigger would run past the viewport edge; from 2xl it opens under its
+  // trigger like every other group.
+  const panelAlign =
+    group.key === "investors"
+      ? "right-0"
+      : group.key === "partners"
+        ? "right-0 2xl:left-0 2xl:right-auto"
+        : "left-0";
   const [open, setOpen] = useState(false);
   const childActive = group.links.some(
     (link) => !link.external && isActiveRoute(pathname, link.href),
@@ -148,7 +157,7 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
         aria-expanded={open}
         aria-controls={`lsh-menu-${group.key}`}
         aria-label={`${open ? "Close" : "Open"} ${group.label} menu`}
-        className="-mr-1 grid h-6 w-5 place-items-center pb-1 text-white/75 transition-colors hover:text-white"
+        className="-mr-1 grid h-6 w-5 place-items-center text-white/75 transition-colors hover:text-white"
       >
         <ChevronDown
           size={13}
@@ -158,7 +167,7 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
       </button>
       <div
         id={`lsh-menu-${group.key}`}
-        className={`absolute top-full z-50 w-64 ${alignRight ? "right-0" : "left-0"} pt-4 transition-all duration-200 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 motion-reduce:transition-none ${
+        className={`absolute top-full z-50 w-64 ${panelAlign} pt-4 transition-all duration-200 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 motion-reduce:transition-none ${
           open ? "visible opacity-100" : "invisible opacity-0"
         }`}
       >
@@ -264,7 +273,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
       href={link.href}
       label={link.label}
       onNavigate={onNavigate}
-      className={onNavigate ? "" : "-mb-1.5"}
+      className=""
     />
   );
 
@@ -336,7 +345,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav
-            className="hidden items-center gap-3.5 xl:flex 2xl:gap-5"
+            className="hidden items-center justify-end gap-3.5 xl:flex xl:flex-1 2xl:gap-5"
             aria-label="Primary navigation"
           >
             {PRIMARY_NAV.map((group) => (
@@ -344,10 +353,10 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 xl:hidden">
             <button
               type="button"
-              className="inline-grid h-10 w-10 place-items-center border border-white/30 text-white transition-colors hover:border-white xl:hidden"
+              className="inline-grid h-10 w-10 place-items-center border border-white/30 text-white transition-colors hover:border-white"
               onClick={toggleMenu}
               aria-expanded={isMenuOpen}
               aria-controls="lsh-mobile-menu"
