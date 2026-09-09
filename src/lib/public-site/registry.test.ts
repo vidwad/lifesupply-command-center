@@ -170,6 +170,7 @@ describe("route registry", () => {
     }
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
+      "Home",
       "Medical Supply Solutions",
       "Clinic Solutions",
       "Metabolic Health",

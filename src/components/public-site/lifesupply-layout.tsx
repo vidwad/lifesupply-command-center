@@ -73,7 +73,7 @@ function NavItem({
       ? `lsh-display relative inline-flex w-fit items-center gap-1 pb-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
           active ? "text-white after:w-5" : "text-white/75 after:w-0 hover:text-white"
         } ${className}`.trim()
-      : `flex items-center gap-2 border-l-2 px-4 py-2.5 text-sm transition-colors hover:bg-white/10 hover:text-white ${
+      : `flex items-center gap-2 border-l-2 px-4 py-1.5 text-sm transition-colors hover:bg-white/10 hover:text-white ${
           active ? "border-[var(--lsh-brand-red)] text-white" : "border-transparent text-white/80"
         } ${className}`.trim();
   const content = (
@@ -312,7 +312,10 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             />
           </Link>
 
-          <nav className="hidden items-center gap-7 xl:flex" aria-label="Primary navigation">
+          <nav
+            className="hidden items-center gap-5 xl:flex 2xl:gap-7"
+            aria-label="Primary navigation"
+          >
             {PRIMARY_NAV.map((group) => (
               <NavGroupMenu key={group.key} group={group} />
             ))}
@@ -345,12 +348,12 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
         {isMenuOpen ? (
           <nav
             id="lsh-mobile-menu"
-            className="max-h-[calc(100vh-4.5rem)] overflow-y-auto border-t border-white/15 bg-[var(--lsh-charcoal)] px-5 py-6 xl:hidden"
+            className="max-h-[calc(100vh-4.5rem)] overflow-y-auto border-t border-white/15 bg-[var(--lsh-charcoal)] px-5 py-4 xl:hidden"
             aria-label="Mobile navigation"
           >
-            <div className="mx-auto grid max-w-7xl gap-6">
+            <div className="mx-auto grid max-w-7xl gap-1.5">
               {PRIMARY_NAV.map((group) => (
-                <div key={group.key} className="grid gap-2">
+                <div key={group.key} className="grid gap-1">
                   <div className="flex items-center justify-between gap-4">
                     <NavItem
                       href={group.href}
@@ -365,7 +368,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                         aria-expanded={expandedGroup === group.key}
                         aria-controls={`lsh-mobile-group-${group.key}`}
                         aria-label={`${expandedGroup === group.key ? "Collapse" : "Expand"} ${group.label}`}
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-white/20 text-white/80 transition-colors hover:border-white hover:text-white"
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center border border-white/20 text-white/80 transition-colors hover:border-white hover:text-white"
                       >
                         <ChevronDown
                           size={16}
@@ -401,12 +404,12 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                   ) : null}
                 </div>
               ))}
-              <div className="grid justify-items-start gap-3 border-t border-white/15 pt-5">
+              <div className="mt-2 grid justify-items-start gap-2 border-t border-white/15 pt-4">
                 {UTILITY_NAV.map((link) => renderUtility(link, closeMenu))}
                 <Link
                   href={LIFE_SUPPLY_ROUTES.investorRelations}
                   onClick={closeMenu}
-                  className="lsh-primary-action lsh-display mt-2 inline-flex px-4 py-3 text-xs sm:hidden"
+                  className="lsh-primary-action lsh-display mt-1 inline-flex px-4 py-2.5 text-xs sm:hidden"
                 >
                   Investor information
                 </Link>

@@ -172,12 +172,18 @@ test.describe("LifeSupply public site", () => {
     // style is the motion wrapper; with reduced motion there is none.
     const heading = page.getByRole("heading", { name: "Metabolic-health supply services." });
     await expect(heading).toBeVisible();
-    const opacity = await heading.evaluate((el) => {
-      let node: HTMLElement | null = el.parentElement;
-      while (node && !node.getAttribute("style")) node = node.parentElement;
-      return node ? getComputedStyle(node).opacity : "1";
-    });
-    expect(opacity).toBe("1");
+    // Hydration applies the instant reveal a frame after load, so poll briefly.
+    await expect
+      .poll(
+        () =>
+          heading.evaluate((el) => {
+            let node: HTMLElement | null = el.parentElement;
+            while (node && !node.getAttribute("style")) node = node.parentElement;
+            return node ? getComputedStyle(node).opacity : "1";
+          }),
+        { timeout: 3000 },
+      )
+      .toBe("1");
   });
 
   test("carries the external login in the utility strip on every viewport", async ({ page }) => {
@@ -231,6 +237,7 @@ test.describe("LifeSupply public site", () => {
     const panel = page.locator("#lsh-mobile-menu");
     // Groups are collapsed so the panel fits the screen; a child appears once its group is expanded.
     for (const name of [
+      "Home",
       "Medical Supply Solutions",
       "Clinic Solutions",
       "Metabolic Health",

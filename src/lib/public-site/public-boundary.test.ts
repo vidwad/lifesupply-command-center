@@ -52,6 +52,7 @@ const SECTIONS = `${PUBLIC_DIR}/sections.tsx`;
 const ACCORDION = `${PUBLIC_DIR}/accordion.tsx`;
 const SCROLL_TO_TOP = `${PUBLIC_DIR}/scroll-to-top.tsx`;
 const BRAND_IMAGE = `${PUBLIC_DIR}/brand-image.tsx`;
+const SITE_SCREEN = `${PUBLIC_DIR}/site-screen.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
 // carries the legacy-compatible route table.
@@ -87,6 +88,7 @@ const sections = () => stripComments(read(SECTIONS));
 const accordion = () => stripComments(read(ACCORDION));
 const scrollToTop = () => stripComments(read(SCROLL_TO_TOP));
 const brandImage = () => stripComments(read(BRAND_IMAGE));
+const siteScreen = () => stripComments(read(SITE_SCREEN));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -101,6 +103,7 @@ const publicComponents = () => [
   accordion(),
   scrollToTop(),
   brandImage(),
+  siteScreen(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -652,7 +655,6 @@ describe("Stage 2 registries and navigation", () => {
       "homepage.clinicLifecycle.steps.map",
       "homepage.metabolic",
       "homepage.paths.map",
-      "homepage.newsroom",
       "homepage.closing",
       "about.footprint",
       "about.milestones.items.map",
@@ -675,6 +677,17 @@ describe("Stage 2 registries and navigation", () => {
     // The photograph sits inside the external link, so it is decorative and
     // the link keeps "Visit <brand>" plus the card text as its name.
     expect(code).toMatch(/<BrandImage[\s\S]*?decorative/);
+  });
+
+  it("shows each store's real home page only through the dated screen registry, never a raw path", () => {
+    for (const code of publicComponents()) {
+      expect(code).not.toContain("/lsh/sites/");
+    }
+    const code = siteScreen();
+    expect(code).toContain("getSiteScreen(site)");
+    expect(code).toContain("captured {captureDate(screen.capturedOn)}");
+    const brands = stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
+    expect(brands).toContain("<SiteScreen site={brandKey}");
   });
 
   it("renders the four brand photographs only through the registry mapping, captioned conceptual", () => {

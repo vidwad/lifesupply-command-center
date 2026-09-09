@@ -201,6 +201,9 @@ No company news later than June 2022 exists in either source. Stage 5 must not f
 | S-146 | Brand photograph `wellmart-medical-greyscale-v1` (rollator in a home interior) | A (supplied, generated) | Product owner, PR #86, 2026-09-08; PNG master retained, JPEG derivative served; neutral greyscale; conceptual, never operational photography; caption required |
 | S-147 | Brand photograph `balkowitsch-greyscale-v1` (person packing a carton at a warehouse bench) | A (supplied, generated) | Product owner, PR #86, 2026-09-08; PNG master retained, JPEG derivative served; neutral greyscale; conceptual, never operational photography; synthetic person, never an employee or customer |
 | S-148 | Brand photograph `lifesupply-clinics-greyscale-v1` (clinic reception and corridor) | A (supplied, generated) | Product owner, PR #86, 2026-09-08; PNG master retained, JPEG derivative served; neutral greyscale; conceptual, never operational photography; not an owned clinic or a completed project |
+| S-149 | Store home-page screen `lifesupply-home-laptop.jpg` (lifesupply.ca) | O (dated screenshot) | Captured 2026-09-09 at 1440×900, promotional overlays hidden, composed on a laptop frame at 1600×1000; a real screen, dated in its caption; refresh when the storefront changes |
+| S-150 | Store home-page screen `wellmart-medical-home-laptop.jpg` (wellmartmedical.com) | O (dated screenshot) | Captured 2026-09-09 at 1440×900, promotional overlays hidden, composed on a laptop frame at 1600×1000; a real screen, dated in its caption; refresh when the storefront changes |
+| S-151 | Store home-page screen `balkowitsch-home-laptop.jpg` (balkowitsch.com) | O (dated screenshot) | Captured 2026-09-09 at 1440×900, promotional overlays hidden, composed on a laptop frame at 1600×1000; a real screen, dated in its caption; refresh when the storefront changes |
 
 ---
 

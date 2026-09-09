@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowRight, ExternalLink, Mail, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { BrandGrid } from "@/components/public-site/brand-grid";
@@ -16,14 +15,15 @@ import {
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge } from "@/components/public-site/sections";
 import { iconForTitle } from "@/lib/public-site/icon-map";
-import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
+import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
 
 /**
  * Homepage — the Stage 2 page contract (guide §3, `/`): group introduction,
  * verified proof, four brands, clinic lifecycle, metabolic opportunity,
- * partner and investor paths, current news, closing contact.
+ * partner and investor paths, closing contact. The historical news block
+ * was removed on 2026-09-09 (product owner); the newsroom carries it.
  *
  * Every sentence is a prop from the content model; every destination is an
  * action-registry key or a registry link. Only imperative UI labels are
@@ -32,7 +32,7 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  * metabolic offer carry no image (product owner, 2026-09-08).
  */
 export function LifeSupplyHome() {
-  const { homepage, news, contact, brand } = LIFE_SUPPLY_CONTENT;
+  const { homepage, contact, brand } = LIFE_SUPPLY_CONTENT;
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -206,52 +206,6 @@ export function LifeSupplyHome() {
             </StaggerItem>
           ))}
         </Stagger>
-      </section>
-
-      {/* Current news: the dated public record, labelled historical. */}
-      <section className="px-5 py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Reveal className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-            <SectionHeading
-              eyebrow={homepage.newsroom.eyebrow}
-              title={homepage.newsroom.title}
-              description={homepage.newsroom.note}
-            />
-            <Link
-              href={LIFE_SUPPLY_ROUTES.news}
-              className="lsh-display inline-flex shrink-0 items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]"
-            >
-              All news <ArrowRight size={15} aria-hidden="true" />
-            </Link>
-          </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-4">
-            {news.historical.map((item) => (
-              <StaggerItem key={item.href} className="h-full">
-                <a
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex h-full flex-col bg-[var(--lsh-paper)] p-7 transition-colors hover:bg-[var(--lsh-surface)]"
-                >
-                  <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                    {item.date} · {item.source}
-                  </p>
-                  <h3 className="lsh-display mt-3 text-xl leading-tight text-[var(--lsh-charcoal)]">
-                    {item.title}
-                  </h3>
-                  <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-5 text-[11px] text-[var(--lsh-brand-red)]">
-                    Read source{" "}
-                    <ExternalLink
-                      size={14}
-                      aria-hidden="true"
-                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
-                    />
-                  </span>
-                </a>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
       </section>
 
       {/* Closing contact: the verified directory. */}
