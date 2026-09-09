@@ -7,6 +7,7 @@ import { ChevronDown, ExternalLink, Mail, Menu, Phone, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { CommandCenterLoginLink, Eyebrow } from "@/components/public-site/lifesupply-primitives";
+import { ScrollToTop } from "@/components/public-site/scroll-to-top";
 import { OPERATING_BRANDS, brandGeography } from "@/lib/public-site/brands";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 import { measurementAttributes } from "@/lib/public-site/measurement";
@@ -187,7 +188,11 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  *     today; further groups appear as their hub routes go live), with
  *     utility links for Shop & Services and Contact;
  *   - the mobile panel lists every group and link without a hover
- *     requirement and closes on route change;
+ *     requirement, keeps its groups collapsed (one open at a time, the
+ *     current page's group open first) so it fits a phone screen, and closes
+ *     on route change;
+ *   - a back-to-top control appears bottom right once the visitor has read
+ *     down (scroll-to-top.tsx);
  *   - the footer names the four operating brands with their verified links.
  *
  * The mark is white on transparent and must stay on ink (docs/40).
@@ -200,7 +205,21 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
   const [menuOpenedOn, setMenuOpenedOn] = useState<string | null>(null);
   const isMenuOpen = menuOpenedOn !== null && menuOpenedOn === pathname;
   const closeMenu = () => setMenuOpenedOn(null);
-  const toggleMenu = () => setMenuOpenedOn((openedOn) => (openedOn === pathname ? null : pathname));
+  // The panel keeps its groups collapsed so the list fits a phone screen;
+  // one group is open at a time, and opening the panel expands the group
+  // that holds the current page.
+  const activeGroup = PRIMARY_NAV.find(
+    (group) =>
+      isActiveRoute(pathname, group.href) ||
+      group.links.some((link) => !link.external && isActiveRoute(pathname, link.href)),
+  );
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const toggleMenu = () => {
+    setExpandedGroup(activeGroup?.key ?? null);
+    setMenuOpenedOn((openedOn) => (openedOn === pathname ? null : pathname));
+  };
+  const toggleGroup = (key: string) =>
+    setExpandedGroup((current) => (current === key ? null : key));
   const [focusWithinHeader, setFocusWithinHeader] = useState(false);
   const scrollingDown = useScrollDirection();
   const headerHidden = scrollingDown && !isMenuOpen && !focusWithinHeader;
@@ -328,15 +347,42 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           >
             <div className="mx-auto grid max-w-7xl gap-6">
               {PRIMARY_NAV.map((group) => (
-                <div key={group.key} className="grid justify-items-start gap-2">
-                  <NavItem
-                    href={group.href}
-                    label={group.label}
-                    onNavigate={closeMenu}
-                    className="text-xs"
-                  />
+                <div key={group.key} className="grid gap-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <NavItem
+                      href={group.href}
+                      label={group.label}
+                      onNavigate={closeMenu}
+                      className="text-xs"
+                    />
+                    {group.links.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.key)}
+                        aria-expanded={expandedGroup === group.key}
+                        aria-controls={`lsh-mobile-group-${group.key}`}
+                        aria-label={`${expandedGroup === group.key ? "Collapse" : "Expand"} ${group.label}`}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-white/20 text-white/80 transition-colors hover:border-white hover:text-white"
+                      >
+                        <ChevronDown
+                          size={16}
+                          aria-hidden="true"
+                          className={`transition-transform duration-300 motion-reduce:transition-none ${
+                            expandedGroup === group.key ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                    ) : null}
+                  </div>
                   {group.links.length > 0 ? (
-                    <ul className="grid w-full gap-0.5 border-l border-white/15">
+                    <ul
+                      id={`lsh-mobile-group-${group.key}`}
+                      className={
+                        expandedGroup === group.key
+                          ? "grid w-full gap-0.5 border-l border-white/15"
+                          : "hidden"
+                      }
+                    >
                       {group.links.map((link) => (
                         <li key={link.href}>
                           <NavItem
@@ -371,6 +417,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
       <main id="lsh-main" tabIndex={-1}>
         {children}
       </main>
+      <ScrollToTop />
 
       <footer className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_0.8fr_1fr] lg:px-8">

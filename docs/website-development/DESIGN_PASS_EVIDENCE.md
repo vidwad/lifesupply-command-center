@@ -67,3 +67,15 @@ None by the pass. Merging deploys the Vercel alias (pages, graphics, primitives)
 - Review the nine conceptual graphics; any can be replaced in `graphics.ts` and `public/lsh/graphics/` without touching a page.
 - Content fine-tuning can now proceed page by page; the section primitives accept the same content shapes.
 - SEO and indexing remain to be raised later, as instructed.
+
+## 7. Follow-up: collapsible mobile groups and back-to-top (2026-09-08)
+
+Requested by the product owner after the pass merged: the mobile panel listed every child of every group and ran well past a phone screen, and the site lacked the LLD-style back-to-top control.
+
+| Area | Files | Change |
+| --- | --- | --- |
+| Mobile panel | `lifesupply-layout.tsx` | Each group keeps its hub link and gains a real expand button (`aria-expanded`, `aria-controls`, labelled "Expand/Collapse <group>"). One group is open at a time; opening the panel expands the group that holds the current page. Children collapse through the display class, because a `grid` utility outranks the preflight `[hidden]` rule. No hover dependency. |
+| Back to top | `scroll-to-top.tsx` (new), `globals.css` | A brand-red square bottom right, rendered only after 480 px of scrolling so it is never in the tab order invisibly; one press scrolls to the top (smooth, or instant under reduced motion) and moves focus to the main landmark. Entrance animation gated by `prefers-reduced-motion: no-preference`. Passive, frame-coalesced scroll listener like the header hook. |
+| Tests | canaries, `lifesupply-public.spec.ts` | Canaries: expand button state and controlled list, class-based collapse, control present once needed with focus return and reduced-motion branch. Browser: every child reachable by expanding its group and only one group open; the current page's group opens first; the control appears after scrolling, returns to the top, disappears, and leaves focus on `main`. |
+
+Verification: format, typecheck, lint pass; `pnpm test` 122 public-site tests pass; public build passes; Playwright 69 passed, 5 skipped on the full run with the header-hide test failing once under load and passing alone (as before). Captures: `menu-390-collapsed.jpg`, `menu-390-metabolic-expanded.jpg`, `menu-390-current-page-group-open.jpg`, `back-to-top-390.jpg`, `back-to-top-1440.jpg`.
