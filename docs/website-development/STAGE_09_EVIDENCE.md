@@ -69,6 +69,6 @@ Environment: Windows 10, Node 24.14.0, pnpm 10.0.0, no local database used by th
 
 None by the stage. Merging deploys the Render web service (proxy change, health branch) and the Vercel alias (metadata, sitemap, robots, not-found, redirects). No migration, no message, no operating-site change.
 
-## 7. Post-merge verification owed
+## 7. Post-merge verification (recorded 2026-09-09 after PR #80 merged as `05c34be`)
 
-Alias: `/contact-2` 308 to `/contact`; `/sitemap.xml` 200 with 54 canonical URLs; `/robots.txt` `Disallow: /`; `/no-such-page` 404 with the recovery page; canonical and `noindex` meta on a page; `/api/health` 200 `surface: public-web` (D-02 closed on the alias). Render: `/api/health` still reports the full checks; `/api/public/v1/news` 200.
+All items below were verified; the record is `evidence/stage-09/post-merge-verification.txt`. Alias: `/contact-2` 308 to `/contact`; `/sitemap.xml` 200 with 54 canonical URLs; `/robots.txt` `Disallow: /`; `/no-such-page` 404 with the recovery page; canonical and `noindex` meta on a page; `/api/health` 200 `surface: public-web` (D-02 closed on the alias). Render: `/api/health` still reports the full checks; `/api/public/v1/news` 200.

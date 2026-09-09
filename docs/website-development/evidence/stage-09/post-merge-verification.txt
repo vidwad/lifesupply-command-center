@@ -1,0 +1,12 @@
+# Post-merge verification on the production alias and Render (2026-09-09T01:05:47Z, merge 05c34be)
+alias /api/health -> 200 {"status":"ok","surface":"public-web","environment":"unknown","timesta
+alias /contact-2 -> 308 https://lifesupply-command-center-vidwads-projects.vercel.app/contact
+alias /sitemap.xml -> 200, 54 urls
+alias /robots.txt -> User-Agent: * Disallow: /  
+alias /no-such-page -> 404
+alias /customers -> 307 -> https://lifesupply-command-center-vidwads-projects.vercel.app/
+alias set-cookie on /about-us -> 0
+alias canonical/robots meta -> <meta name="robots" content="noindex, nofollow, nocache"/> <link rel="canonical" href="https://lifesupplyhealth.com/about-us"/> 
+render /api/health -> 200 "status":"ok" "name":"database","status":"ok" "status":"ok" "status":"ok" 
+render /api/public/v1/news -> 200
+render /dashboard without session -> 302 -> https://lifesupply-cc-web.onrender.com/login?redirectTo=%2Fdashboard
