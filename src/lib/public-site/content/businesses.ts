@@ -1,7 +1,10 @@
 /**
- * Our Businesses copy for Stage 3: the portfolio map at `/our-operations/`,
- * and the four brand pages (guide §3). The technology and fulfilment page was
- * withdrawn on 2026-09-08 (product owner: not a major business unit).
+ * Medical Supply Solutions copy: the store hub at `/medical-supply-solutions/`
+ * and the three store pages. Restructured on 2026-09-08 at the product
+ * owner's direction from the Stage 3 "Our Businesses" portfolio map: the
+ * corporate material moved to About, the LifeSupply Clinics brand page
+ * became the Clinic Solutions section, and the technology and fulfilment
+ * page was withdrawn (not a major business unit).
  *
  * Every factual statement traces to a SOURCE_REGISTER.md row or to approved
  * copy already published; the rest is Stage 3 draft framing, marked as
@@ -11,47 +14,32 @@
  * registry, never from this file.
  */
 export const businesses = {
+  /**
+   * Medical Supply Solutions hub (`/medical-supply-solutions/`, renamed from
+   * Our Businesses on 2026-09-08 at the product owner's direction): the
+   * three online stores. Corporate material (entities, capabilities,
+   * developing programs) moved to About.
+   */
   hub: {
-    // Approved hero copy (published since PR #60), unchanged.
-    eyebrow: "Our operations",
-    title: "Connected channels designed around medical-product access.",
+    eyebrow: "Medical Supply Solutions",
+    title: "Three online stores for medical, health, and home-care supply.",
     description:
-      "The public operating narrative describes online commerce, fulfillment, retail, wholesale, and regulated-care infrastructure as complementary functions.",
-    // Stage 3 draft: how the map is organised.
-    map: {
-      eyebrow: "Portfolio map",
-      title: "Brands, entities, capabilities, and programs, kept distinct.",
-      text: "Four operating websites carry the group's commerce and clinic services. The legal entities behind them are listed as published. Shared capabilities and developing programs are described with their status, so a brand is never confused with a company, or a plan with an operation.",
+      "LifeSupply, Wellmart Medical, and Balkowitsch Worldwide each keep their own catalogue, accounts, currency, prices, and support. This section introduces each store and where its emphasis lies; buying happens on the store.",
+    stores: {
+      eyebrow: "The stores",
+      title: "Each store keeps its own site, accounts, currency, and support.",
     },
-    brands: {
-      eyebrow: "Operating brands",
-      title: "Each brand keeps its own site, accounts, currency, and support.",
+    clinics: {
+      eyebrow: "Clinic projects and clinic supply",
+      title: "Clinic planning, equipment, and ongoing supply have their own section.",
+      text: "Clinic Solutions covers LifeSupply Clinics: planning, design, construction and fit-out, equipment quotes, and keeping an open clinic supplied through the stores.",
+      action: "clinic_solutions",
     },
-    entities: {
-      eyebrow: "Published entities",
-      title: "Names on the public record.",
-      note: "Listed as they appear in the published corporate directory. The brand each entity operates is stated only where the owner has confirmed it.",
-    },
-    capabilities: {
-      eyebrow: "Shared capabilities",
-      title: "What the public overview describes.",
-      note: "Descriptions are the approved public operating narrative, unchanged.",
-    },
-    developing: {
-      eyebrow: "Developing programs",
-      title: "Presented with their status.",
-      items: [
-        {
-          title: "Metabolic-health supply services",
-          status: "In development",
-          text: "Non-drug supplies, clinic procurement, kitting and fulfilment, and contracted workflow support for metabolic-health programs. Availability will be published when it is confirmed.",
-        },
-        {
-          title: "Pharmaceutical",
-          status: "Development focus",
-          text: "A stated development focus around pharmacy-related operations and regulated care infrastructure, subject to current regulatory, operational, and partner confirmation.",
-        },
-      ],
+    services: {
+      eyebrow: "Choosing a store",
+      title: "Geography, currency, and support at a glance.",
+      text: "Shop & Services lists the four destinations with their geography and currency, and where an existing order is handled.",
+      action: "shop_services",
     },
   },
 

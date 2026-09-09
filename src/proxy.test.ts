@@ -55,7 +55,7 @@ describe("public host (D-03, D-12)", () => {
     for (const path of [
       "/",
       "/about-us",
-      "/our-operations/lifesupply",
+      "/medical-supply-solutions/lifesupply",
       "/clinic-solutions/equipment",
       "/metabolic-health/care-kits/glp-1-support",
       "/partners/pharmacies",

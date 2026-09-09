@@ -37,6 +37,7 @@ const PAGE_FAMILIES = [
   "contact",
   "metabolic",
   "partners",
+  "pharmacy",
   "investors",
   "team",
   "news",
@@ -66,6 +67,7 @@ const CONTENT_MODULES = [
   "team",
   "investors",
   "partners",
+  "pharmacy",
   "news",
   "policies",
   "contact",
@@ -458,19 +460,18 @@ describe("routes and content governance", () => {
     for (const route of [
       "src/app/page.tsx",
       "src/app/about-us/page.tsx",
-      "src/app/our-operations/page.tsx",
+      "src/app/medical-supply-solutions/page.tsx",
+      "src/app/pharmacy-solutions/page.tsx",
       "src/app/our-team/page.tsx",
       "src/app/investor-relations/page.tsx",
       "src/app/news/page.tsx",
       "src/app/contact/page.tsx",
       "src/app/shop/page.tsx",
       "src/app/[slug]/page.tsx",
-      "src/app/our-operations/lifesupply/page.tsx",
-      "src/app/our-operations/wellmart-medical/page.tsx",
-      "src/app/our-operations/lifesupply-clinics/page.tsx",
-      "src/app/our-operations/balkowitsch/page.tsx",
+      "src/app/medical-supply-solutions/lifesupply/page.tsx",
+      "src/app/medical-supply-solutions/wellmart-medical/page.tsx",
+      "src/app/medical-supply-solutions/balkowitsch/page.tsx",
       "src/app/clinic-solutions/page.tsx",
-      "src/app/clinic-solutions/design-build/page.tsx",
       "src/app/clinic-solutions/equipment/page.tsx",
       "src/app/clinic-solutions/ongoing-supplies/page.tsx",
       "src/app/metabolic-health/page.tsx",
@@ -661,7 +662,8 @@ describe("Stage 2 registries and navigation", () => {
     }
     // Primary actions are registry keys rendered through ActionLink.
     expect(source).toContain('<ActionLink action="explore_businesses"');
-    expect(source).toContain('<ActionLink action="plan_clinic"');
+    // The consultation action reaches the homepage lifecycle through the content model.
+    expect(content()).toContain('action: "plan_clinic"');
     expect(source).toContain('<ActionLink action="investor_information"');
   });
 
@@ -712,6 +714,99 @@ describe("Stage 2 registries and navigation", () => {
   });
 });
 
+describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharmacy Solutions", () => {
+  const nextConfig = () => stripComments(read("next.config.ts"));
+
+  it("redirects every withdrawn address permanently and keeps it on the public-host allowlist", () => {
+    const config = nextConfig();
+    for (const source of [
+      "/our-operations",
+      "/our-operations/lifesupply",
+      "/our-operations/wellmart-medical",
+      "/our-operations/balkowitsch",
+      "/our-operations/lifesupply-clinics",
+      "/our-operations/technology-fulfilment",
+      "/clinic-solutions/design-build",
+    ]) {
+      expect(config, source).toContain(`source: "${source}"`);
+    }
+    for (const slug of [
+      "ben-hastibakhsh",
+      "gary-li",
+      "craig-loverock",
+      "mike-gill",
+      "christopher-ishola",
+      "ross-jelveh-2",
+      "keith-dolo-2",
+      "dr-margaret-clarke-2",
+      "john-anderson-2",
+    ]) {
+      expect(config, slug).toContain(`"${slug}"`);
+    }
+    expect(config).toContain('destination: "/our-team"');
+    expect(config).not.toContain('destination: "/ross-jelveh-2"');
+  });
+
+  it("names the sections as the product owner set them and leaves no trace of the old ones", () => {
+    const routes = stripComments(read(ROUTES_FILE));
+    expect(routes).toContain('label: "Medical Supply Solutions"');
+    expect(routes).toContain('label: "Pharmacy Solutions"');
+    expect(routes).not.toContain('label: "Our Businesses"');
+    for (const source of [layout(), pages(), primitives()]) {
+      expect(source).not.toContain("Our Businesses");
+      expect(source).not.toContain("Design & build");
+      expect(source).not.toMatch(/ClinicsBrandPage|DesignBuildPage|OperationsPage\b/);
+    }
+  });
+
+  it("presents Pharmacy Solutions with its status and no pharmacy operation, transaction, or dispensing claim", () => {
+    const pharmacy = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
+    expect(pharmacy).toContain("does not dispense, diagnose, prescribe, or recommend");
+    expect(pharmacy).toContain('status: "Under evaluation"');
+    expect(pharmacy).toContain(
+      "No pharmacy acquisition, transaction, licence, or counterparty is announced or implied",
+    );
+    expect(pharmacy).not.toMatch(/\bour pharmac(y|ies)\b/i);
+    expect(pharmacy).not.toMatch(
+      /licen[cs]ed pharmacy|dispens(es|ing) (medication|prescriptions)/i,
+    );
+    expect(pharmacy).not.toMatch(
+      /(acquire|acquisition of|closing|signed|announce[sd]?) (a |the )?pharmacy/i,
+    );
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
+    expect(page).toContain("{pharmacy.status.sentence}");
+  });
+
+  it("lists only the confirmed leader, with one portrait and no board", () => {
+    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team.tsx`));
+    expect(teamPage).not.toMatch(/board/i);
+    const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
+    expect((teamContent.match(/slug: "/g) ?? []).length).toBe(2);
+    expect(teamContent).toContain('"abdul-ladha"');
+    for (const name of [
+      "Hastibakhsh",
+      "Gary Li",
+      "Loverock",
+      "Mike Gill",
+      "Ishola",
+      "Jelveh",
+      "Dolo",
+      "Sleeman",
+      "Vogt",
+      "Holowenko",
+      "Anderson",
+    ]) {
+      for (const source of [teamContent, ...publicComponents()]) {
+        expect(source, name).not.toContain(name);
+      }
+    }
+    // The dated 2022 record of a board appointment is history, not a roster.
+    expect(stripComments(read("src/lib/public-site/content/about.ts"))).toContain(
+      "Dr. Margaret Clarke appointed",
+    );
+  });
+});
+
 describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   const clinicPages = () => stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
   const brandPages = () => stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
@@ -724,8 +819,8 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     // the Clinics brand page render it. Nothing anywhere describes owned
     // clinics or patient care as a company service.
     expect(clinicsContent()).toContain("does not operate patient-care clinics");
-    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(4);
-    expect(brandPages()).toContain("{clinics.distinction}");
+    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(3);
+    expect(clinicPages()).toContain("{clinics.distinction}");
     for (const source of [content(), ...publicComponents()]) {
       expect(source).not.toMatch(/\bour (patient-care )?clinics\b/i);
       expect(source).not.toMatch(/\bpatient care (is|we) (provided|provide)/i);
@@ -735,14 +830,13 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   it("attributes delivery roles only as the Clinics site states them", () => {
     expect(clinicsContent()).toContain("core partners");
     expect(clinicsContent()).toContain("attributes no construction work to LifeSupply beyond");
-    expect(brandPages()).toContain("{clinics.attribution}");
     expect(clinicPages()).toContain("{clinics.attribution}");
   });
 
   it("treats post-opening supply as conditional on every clinic page", () => {
     expect(clinicsContent()).toContain("creates no supply commitment");
-    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(4);
-    expect(brandPages()).toContain("{clinics.postOpening}");
+    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(3);
+    expect(clinicPages()).toContain("{clinics.postOpening}");
   });
 
   it("never restates store terms: thresholds, delivery times, or prices", () => {
@@ -757,7 +851,7 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   it("reads categories, support channels, and project links from the registries and content", () => {
     expect(brandPages()).toContain("record.categories.map");
     expect(brandPages()).toContain("record.storeLinks.map");
-    expect(brandPages()).toContain("clinics.projects.items.map");
+    expect(clinicPages()).toContain("clinics.projects.items.map");
     expect(contactPage()).toContain("contact.intents.map");
     expect(contactPage()).toContain("contact.existingOrder");
     expect(shopPage()).toContain("shop.choices.map");

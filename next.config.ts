@@ -13,13 +13,59 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/contact-2", destination: "/contact", permanent: true },
-      { source: "/ross-jelveh", destination: "/ross-jelveh-2", permanent: true },
-      // Page withdrawn 2026-09-08; the Our Businesses hub carries the brands.
+      // Restructure of 2026-09-08 (product owner): Our Businesses became
+      // Medical Supply Solutions; the LifeSupply Clinics brand page is the
+      // Clinic Solutions section; Design & build merged into its hub;
+      // Technology & fulfilment was withdrawn.
+      { source: "/our-operations", destination: "/medical-supply-solutions", permanent: true },
       {
-        source: "/our-operations/technology-fulfilment",
-        destination: "/our-operations",
+        source: "/our-operations/lifesupply",
+        destination: "/medical-supply-solutions/lifesupply",
         permanent: true,
       },
+      {
+        source: "/our-operations/wellmart-medical",
+        destination: "/medical-supply-solutions/wellmart-medical",
+        permanent: true,
+      },
+      {
+        source: "/our-operations/balkowitsch",
+        destination: "/medical-supply-solutions/balkowitsch",
+        permanent: true,
+      },
+      {
+        source: "/our-operations/lifesupply-clinics",
+        destination: "/clinic-solutions",
+        permanent: true,
+      },
+      {
+        source: "/our-operations/technology-fulfilment",
+        destination: "/medical-supply-solutions",
+        permanent: true,
+      },
+      {
+        source: "/clinic-solutions/design-build",
+        destination: "/clinic-solutions",
+        permanent: true,
+      },
+      // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
+      // involved); the addresses go to the team page. Keep in step with
+      // `team.withdrawnProfileSlugs` (content/team.ts).
+      ...[
+        "ross-jelveh",
+        "ross-jelveh-2",
+        "ben-hastibakhsh",
+        "gary-li",
+        "craig-loverock",
+        "mike-gill",
+        "christopher-ishola",
+        "keith-dolo-2",
+        "barrett-e-g-sleeman",
+        "david-vogt",
+        "dr-margaret-clarke-2",
+        "dr-dedeshya-holowenko",
+        "john-anderson-2",
+      ].map((slug) => ({ source: `/${slug}`, destination: "/our-team", permanent: true })),
     ];
   },
   experimental: {

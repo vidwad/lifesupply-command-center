@@ -1,7 +1,7 @@
 /**
- * LifeSupply Clinics and Clinic Solutions copy for Stage 3 (guide §3:
- * `/our-operations/lifesupply-clinics/`, `/clinic-solutions/` and its three
- * children).
+ * LifeSupply Clinics and Clinic Solutions copy (guide §3). Since the
+ * restructure of 2026-09-08, `/clinic-solutions/` is the LifeSupply Clinics
+ * section, with Equipment and Ongoing supplies as its two children.
  *
  * Rules applied throughout:
  *   - LifeSupply Clinics is clinic development, construction and fit-out,
@@ -129,63 +129,46 @@ export const clinics = {
     ],
   },
 
-  /** Brand page (`/our-operations/lifesupply-clinics/`). */
-  brandPage: {
-    // Stage 8: contextual links to the program and the supply store.
-    related: ["metabolic_hub", "brand_lifesupply"],
-    eyebrow: "Operating brand · British Columbia",
-    title: "LifeSupply Clinics: clinic planning, design, build, and equipment.",
+  /**
+   * Clinic Solutions hub (`/clinic-solutions/`). Since 2026-09-08 this is
+   * the LifeSupply Clinics section itself: the former brand page and the
+   * former Design & build child merged into it, so one page carries the
+   * brand, the services, the process, the projects, the consultation, and
+   * the three-need router (plan it, equip it, keep it supplied).
+   */
+  hub: {
+    // Stage 8: contextual links from the clinic lifecycle to the program and collaboration pages.
+    related: ["metabolic_hub", "partner_clinics"],
+    eyebrow: "Clinic Solutions · LifeSupply Clinics",
+    title: "Plan it, equip it, or keep it supplied.",
     intro:
-      "LifeSupply Clinics plans, designs, builds, and fits out medical, dental, and wellness clinics, and handles equipment inquiries for them, within verified delivery arrangements.",
+      "LifeSupply Clinics plans, designs, builds, and fits out medical, dental, and wellness clinics in British Columbia, and handles equipment inquiries for them, within verified delivery arrangements. An existing clinic can start at supply without a construction project.",
+    needs: [
+      {
+        index: "01",
+        title: "Plan or renovate a clinic",
+        text: "Feasibility, design, construction and fit-out, and project coordination, delivered within verified arrangements. The consultation happens on the Clinics site.",
+        action: "plan_clinic",
+      },
+      {
+        index: "02",
+        title: "Equip a clinic",
+        text: "Room-by-room equipment planning, quotes, and opening supplies for a new or expanding practice.",
+        action: "clinic_equipment",
+      },
+      {
+        index: "03",
+        title: "Supply an existing clinic",
+        text: "Routine procurement and repeat ordering through the stores, with a supply review to match categories to the practice.",
+        action: "clinic_ongoing_supplies",
+      },
+    ],
     servicesHeading: { eyebrow: "Services", title: "From feasibility to hand-over." },
     specialtiesHeading: { eyebrow: "Specialties", title: "Clinic types the site names." },
     processHeading: {
       eyebrow: "Process",
       title: "Four stages, as the Clinics site describes them.",
     },
-    supplyHeading: { eyebrow: "After opening", title: "A conditional supply opportunity." },
-    actions: ["plan_clinic", "equipment_quote"],
-  },
-
-  /** Clinic Solutions hub (`/clinic-solutions/`). */
-  hub: {
-    // Stage 8: contextual links from the clinic lifecycle to the program and collaboration pages.
-    related: ["metabolic_hub", "partner_clinics"],
-    eyebrow: "Clinic Solutions",
-    title: "Plan it, equip it, or keep it supplied.",
-    intro:
-      "Three ways to work with the group, depending on where your clinic is. An existing clinic can start at supply without a construction project.",
-    needs: [
-      {
-        index: "01",
-        title: "Plan or renovate a clinic",
-        text: "Feasibility, design, construction and fit-out, and project coordination, delivered within verified arrangements.",
-        route: "designBuild",
-        linkLabel: "Design and build",
-      },
-      {
-        index: "02",
-        title: "Equip a clinic",
-        text: "Room-by-room equipment planning, quotes, and opening supplies for a new or expanding practice.",
-        route: "equipment",
-        linkLabel: "Equipment",
-      },
-      {
-        index: "03",
-        title: "Supply an existing clinic",
-        text: "Routine procurement and repeat ordering through the stores, with a supply review to match categories to the practice.",
-        route: "ongoingSupplies",
-        linkLabel: "Ongoing supplies",
-      },
-    ],
-  },
-
-  /** `/clinic-solutions/design-build/` */
-  designBuild: {
-    eyebrow: "Design & build",
-    title: "Clinic design and construction, with delivery roles stated.",
-    intro:
-      "LifeSupply Clinics plans, designs, and builds clinics in British Columbia together with its core partners. This page introduces the service; the consultation happens on the Clinics site.",
     consultation: {
       title: "What a consultation covers",
       text: "A first conversation is easier with a few facts to hand. None of them is a commitment.",
@@ -197,7 +180,12 @@ export const clinics = {
         "Equipment and supply interests",
       ],
     },
-    actions: ["plan_clinic", "view_clinic_projects"],
+    channelsHeading: {
+      title: "Service channels",
+      text: "Consultations and equipment quotes are handled on the Clinics site; its published contact channels are below.",
+    },
+    supplyHeading: { eyebrow: "After opening", title: "A conditional supply opportunity." },
+    actions: ["plan_clinic", "equipment_quote", "clinic_supply_review"],
   },
 
   /** `/clinic-solutions/equipment/` */

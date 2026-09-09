@@ -15,20 +15,22 @@
  * route groups; a test asserts the list matches `src/app/(dashboard)`.
  */
 import { team } from "@/lib/public-site/content/team";
-import { LIVE_ROUTES } from "@/lib/public-site/routes";
+import { ROUTES } from "@/lib/public-site/routes";
 
 /** Top-level segments of every public route, live or redirect, from the registry. */
 export const PUBLIC_TOP_LEVEL_SEGMENTS: readonly string[] = Array.from(
   new Set(
-    LIVE_ROUTES.map((route) => route.path.split("/").filter(Boolean)[0]).filter(
-      (segment): segment is string => Boolean(segment),
-    ),
+    ROUTES.filter((route) => route.status !== "proposed")
+      .map((route) => route.path.split("/").filter(Boolean)[0])
+      .filter((segment): segment is string => Boolean(segment)),
   ),
-).concat(["contact-2"]);
-
-export const PUBLIC_PROFILE_SLUGS: readonly string[] = team.legacyProfiles.map(
-  (profile) => profile.slug,
 );
+
+/** The retained profile address, plus the withdrawn ones that redirect to the team page. */
+export const PUBLIC_PROFILE_SLUGS: readonly string[] = [
+  ...team.legacyProfiles.map((profile) => profile.slug),
+  ...team.withdrawnProfileSlugs,
+];
 
 /** Dashboard and auth route families; must match `src/app/(dashboard)` and `(auth)`. */
 export const INTERNAL_TOP_LEVEL_SEGMENTS: readonly string[] = [

@@ -7,7 +7,9 @@
  *
  * MedDirect Distribution Corporation and Dexton Medical Corporation are no
  * longer operational (product owner, 2026-09-08) and are not listed; the
- * showroom channel that used a Dexton address went with them.
+ * showroom channel that used a Dexton address went with them, and the
+ * online-sales channel was withdrawn with the leadership change the same
+ * day (supply reviews now go to the corporate office).
  *
  * The action registry may only use email addresses that appear in
  * `channels` (checked by registry.test.ts).
@@ -19,12 +21,6 @@ export const contact = {
       name: "Investor Relations",
       email: "invest@lifesupply.com",
       phone: "604-677-4146",
-    },
-    {
-      label: "Online sales & product lines",
-      name: "Ben Hastibakhsh",
-      email: "ben@lifesupply.com",
-      phone: "604-551-9538",
     },
     {
       label: "Mergers & acquisitions",

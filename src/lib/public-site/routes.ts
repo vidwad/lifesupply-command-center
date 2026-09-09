@@ -14,7 +14,10 @@ import { KIT_SLUGS } from "@/lib/public-site/content/metabolic";
 export const LIFE_SUPPLY_ROUTES = {
   home: "/",
   about: "/about-us/",
-  operations: "/our-operations/",
+  /** Medical Supply Solutions: the three online stores (renamed from Our Businesses, 2026-09-08). */
+  operations: "/medical-supply-solutions/",
+  /** The former hub address; a permanent redirect to `operations`. */
+  legacyOperations: "/our-operations/",
   team: "/our-team/",
   investorRelations: "/investor-relations/",
   news: "/news/",
@@ -23,19 +26,33 @@ export const LIFE_SUPPLY_ROUTES = {
   shop: "/shop/",
 } as const;
 
-/** Stage 3 pages. */
+/**
+ * Brand pages. The three stores live under Medical Supply Solutions; the
+ * LifeSupply Clinics brand is the Clinic Solutions section itself
+ * (restructure of 2026-09-08, product owner).
+ */
 export const BRAND_ROUTES: Record<OperatingBrandKey, string> = {
-  lifesupply: "/our-operations/lifesupply/",
-  wellmart: "/our-operations/wellmart-medical/",
-  clinics: "/our-operations/lifesupply-clinics/",
-  balkowitsch: "/our-operations/balkowitsch/",
+  lifesupply: "/medical-supply-solutions/lifesupply/",
+  wellmart: "/medical-supply-solutions/wellmart-medical/",
+  clinics: "/clinic-solutions/",
+  balkowitsch: "/medical-supply-solutions/balkowitsch/",
 };
 
 export const STAGE_3_ROUTES = {
   clinicSolutions: "/clinic-solutions/",
-  designBuild: "/clinic-solutions/design-build/",
   equipment: "/clinic-solutions/equipment/",
   ongoingSupplies: "/clinic-solutions/ongoing-supplies/",
+} as const;
+
+/** Addresses withdrawn on 2026-09-08; each one permanently redirects (next.config.ts). */
+export const WITHDRAWN_ROUTES = {
+  operationsHub: "/our-operations/",
+  operationsLifeSupply: "/our-operations/lifesupply/",
+  operationsWellmart: "/our-operations/wellmart-medical/",
+  operationsClinics: "/our-operations/lifesupply-clinics/",
+  operationsBalkowitsch: "/our-operations/balkowitsch/",
+  technology: "/our-operations/technology-fulfilment/",
+  designBuild: "/clinic-solutions/design-build/",
 } as const;
 
 /** Stage 4 pages. Kit pages are a dynamic route; `kitRoute()` builds their paths. */
@@ -43,6 +60,11 @@ export const METABOLIC_ROUTES = {
   hub: "/metabolic-health/",
   careKits: "/metabolic-health/care-kits/",
   refills: "/metabolic-health/refills/",
+} as const;
+
+/** Pharmacy Solutions (2026-09-08): an information section with its status stated. */
+export const PHARMACY_ROUTES = {
+  hub: "/pharmacy-solutions/",
 } as const;
 
 export function kitRoute(slug: string): string {
@@ -83,6 +105,7 @@ export type NavGroupKey =
   | "businesses"
   | "clinic"
   | "metabolic"
+  | "pharmacy"
   | "partners"
   | "investors"
   | "about"
@@ -104,8 +127,8 @@ export const ROUTES: readonly RouteRecord[] = [
   { path: "/", label: "Home", stage: 2, status: "live", navGroup: null },
   { path: "/about-us/", label: "About us", stage: 2, status: "live", navGroup: "about" },
   {
-    path: "/our-operations/",
-    label: "Our operations",
+    path: LIFE_SUPPLY_ROUTES.operations,
+    label: "Medical Supply Solutions",
     stage: 3,
     status: "live",
     navGroup: "businesses",
@@ -125,13 +148,6 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "businesses",
   },
   {
-    path: BRAND_ROUTES.clinics,
-    label: "LifeSupply Clinics",
-    stage: 3,
-    status: "live",
-    navGroup: "businesses",
-  },
-  {
     path: BRAND_ROUTES.balkowitsch,
     label: "Balkowitsch Worldwide",
     stage: 3,
@@ -141,13 +157,6 @@ export const ROUTES: readonly RouteRecord[] = [
   {
     path: STAGE_3_ROUTES.clinicSolutions,
     label: "Clinic Solutions",
-    stage: 3,
-    status: "live",
-    navGroup: "clinic",
-  },
-  {
-    path: STAGE_3_ROUTES.designBuild,
-    label: "Design & build",
     stage: 3,
     status: "live",
     navGroup: "clinic",
@@ -196,6 +205,13 @@ export const ROUTES: readonly RouteRecord[] = [
     stage: 4,
     status: "live",
     navGroup: "metabolic",
+  },
+  {
+    path: PHARMACY_ROUTES.hub,
+    label: "Pharmacy Solutions",
+    stage: 5,
+    status: "live",
+    navGroup: "pharmacy",
   },
   { path: "/partners/", label: "Partners", stage: 5, status: "live", navGroup: "partners" },
   {
@@ -273,14 +289,19 @@ export const ROUTES: readonly RouteRecord[] = [
   { path: "/shop/", label: "Shop & Services", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact-2/", label: "Contact (legacy)", stage: 9, status: "redirect", navGroup: null },
-  // Withdrawn 2026-09-08 (product owner): not a major business unit. Redirects to the hub.
-  {
-    path: "/our-operations/technology-fulfilment/",
-    label: "Technology & fulfilment (withdrawn)",
-    stage: 3,
-    status: "redirect",
-    navGroup: null,
-  },
+  // Restructure of 2026-09-08 (product owner): Our Businesses became Medical
+  // Supply Solutions, the Clinics brand page merged into Clinic Solutions,
+  // Design & build merged into the Clinic Solutions hub, and Technology &
+  // fulfilment was withdrawn. Every old address redirects (next.config.ts).
+  ...Object.values(WITHDRAWN_ROUTES).map(
+    (path): RouteRecord => ({
+      path,
+      label: "Withdrawn address (redirect)",
+      stage: 3,
+      status: "redirect",
+      navGroup: null,
+    }),
+  ),
   { path: "/privacy/", label: "Privacy", stage: 5, status: "live", navGroup: "legal" },
   { path: "/terms/", label: "Terms of use", stage: 5, status: "live", navGroup: "legal" },
   { path: "/accessibility/", label: "Accessibility", stage: 5, status: "live", navGroup: "legal" },
@@ -327,16 +348,19 @@ export interface NavGroup {
 }
 
 /**
- * Primary navigation contract (guide §3): Our Businesses / Clinic Solutions /
- * Metabolic Health / Partners / Investors / About. A group appears only when
- * its hub route is live; a child appears only when it is a live route. Since
- * Stage 3, the operating brands have their own pages under Our Businesses,
- * so the store links themselves live on those pages and in the footer.
+ * Primary navigation contract (guide §3, restructured 2026-09-08): Medical
+ * Supply Solutions / Clinic Solutions / Metabolic Health / Partners /
+ * Investors / About. A group appears only when its hub route is live; a
+ * child appears only when it is a live route. The three stores have their
+ * own pages under Medical Supply Solutions, so the store links themselves
+ * live on those pages and in the footer; LifeSupply Clinics is the Clinic
+ * Solutions section.
  */
 const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string }[] = [
-  { key: "businesses", label: "Our Businesses", hub: "/our-operations/" },
+  { key: "businesses", label: "Medical Supply Solutions", hub: LIFE_SUPPLY_ROUTES.operations },
   { key: "clinic", label: "Clinic Solutions", hub: STAGE_3_ROUTES.clinicSolutions },
   { key: "metabolic", label: "Metabolic Health", hub: METABOLIC_ROUTES.hub },
+  { key: "pharmacy", label: "Pharmacy Solutions", hub: PHARMACY_ROUTES.hub },
   { key: "partners", label: "Partners", hub: "/partners/" },
   { key: "investors", label: "Investors", hub: "/investor-relations/" },
   { key: "about", label: "About", hub: "/about-us/" },

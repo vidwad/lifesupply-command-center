@@ -2,14 +2,9 @@ import { ExternalLink, Mail, Phone } from "lucide-react";
 
 import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import {
-  Container,
-  Eyebrow,
-  PublicHero,
-  SectionHeading,
-} from "@/components/public-site/lifesupply-primitives";
+import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
+import { IconBadge, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { brandGeography, getBrand, type BrandRecord } from "@/lib/public-site/brands";
 import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION, type GraphicKey } from "@/lib/public-site/graphics";
@@ -18,7 +13,7 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
 
-/** The conceptual graphic each store page carries beside its audience statement. */
+/** The photograph each store page carries beside its audience statement. */
 const STORE_GRAPHICS: Record<"lifesupply" | "wellmart" | "balkowitsch", GraphicKey> = {
   lifesupply: BRAND_GRAPHICS.lifesupply,
   wellmart: BRAND_GRAPHICS.wellmart,
@@ -45,8 +40,8 @@ function CategoryLinks({ record }: { record: BrandRecord }) {
   );
 }
 
-/** The brand's own support channel and policy pages, as published. */
-function ServiceChannels({
+/** A brand's own support channel and policy pages, as published. Shared with Clinic Solutions. */
+export function ServiceChannels({
   record,
   title,
   text,
@@ -116,7 +111,7 @@ function ServiceChannels({
 }
 
 /**
- * Store brand page template (Stage 3, guide §3): LifeSupply, Wellmart
+ * Store page template under Medical Supply Solutions: LifeSupply, Wellmart
  * Medical, and Balkowitsch Worldwide. Copy comes from the content model;
  * geography, categories, and service channels come from the brand registry;
  * actions from the action registry. Store terms are never restated.
@@ -143,7 +138,7 @@ export function StoreBrandPage({
         }
       />
 
-      {/* Audience, beside a conceptual graphic. */}
+      {/* Audience, beside the store's photograph. */}
       <SplitSection
         eyebrow={brandGeography(record)}
         title={page.audience.title}
@@ -190,163 +185,6 @@ export function StoreBrandPage({
         </Container>
       </section>
       <RelatedActions actions={"related" in page ? page.related : undefined} />
-    </LifeSupplyLayout>
-  );
-}
-
-/** `/our-operations/lifesupply-clinics/` — the Clinics brand page. */
-export function ClinicsBrandPage() {
-  const record = getBrand("clinics");
-  const { clinics } = LIFE_SUPPLY_CONTENT;
-  const page = clinics.brandPage;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={page.eyebrow}
-        title={page.title}
-        description={page.intro}
-        actions={
-          <>
-            <ActionLink action="plan_clinic" />
-            <ActionLink action="equipment_quote" variant="onDark" />
-          </>
-        }
-      />
-
-      {/* The distinction, the attribution, and the geography, stated before anything else. */}
-      <section className="px-5 py-16 lg:px-8">
-        <Stagger className="mx-auto grid max-w-7xl gap-px bg-[var(--lsh-rule)] lg:grid-cols-3">
-          <StaggerItem className="flex gap-5 bg-[var(--lsh-paper)] p-7">
-            <IconBadge icon="shield" size={20} />
-            <p className="leading-7 text-[var(--lsh-charcoal)]">{clinics.distinction}</p>
-          </StaggerItem>
-          <StaggerItem className="flex gap-5 bg-[var(--lsh-paper)] p-7">
-            <IconBadge icon="handshake" size={20} />
-            <p className="leading-7 text-[var(--lsh-muted)]">{clinics.attribution}</p>
-          </StaggerItem>
-          <StaggerItem className="flex gap-5 bg-[var(--lsh-paper)] p-7">
-            <IconBadge icon="pin" size={20} />
-            <p className="leading-7 text-[var(--lsh-muted)]">{clinics.geography}</p>
-          </StaggerItem>
-        </Stagger>
-      </section>
-
-      {/* Services, beside a conceptual exam room. */}
-      <SplitSection
-        tone="onSurface"
-        eyebrow={page.servicesHeading.eyebrow}
-        title={page.servicesHeading.title}
-        graphic={BRAND_GRAPHICS.clinics}
-        side="left"
-        caption={CONCEPTUAL_CAPTION}
-      >
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {clinics.services.map((service) => (
-            <li key={service.title} className="flex gap-4">
-              <IconBadge icon={iconForTitle(service.title)} size={18} />
-              <div>
-                <h3 className="lsh-display text-lg text-[var(--lsh-charcoal)]">{service.title}</h3>
-                <ul className="mt-2 grid gap-1 text-sm leading-6">
-                  {service.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <div className="pt-2">
-          <Eyebrow as="h3">{page.specialtiesHeading.title}</Eyebrow>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {clinics.specialties.map((item) => (
-              <li
-                key={item}
-                className="lsh-display border border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] px-3 py-2 text-[10px] text-[var(--lsh-charcoal)]"
-              >
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </SplitSection>
-
-      {/* Process. */}
-      <ProcessSteps
-        eyebrow={page.processHeading.eyebrow}
-        title={page.processHeading.title}
-        steps={clinics.process.map((step) => ({
-          index: step.index,
-          title: step.title,
-          text: step.text,
-          icon: iconForTitle(step.title),
-        }))}
-      />
-
-      {/* Published projects, as the Clinics site presents them. */}
-      <section className="px-5 py-20 lg:px-8">
-        <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow={clinics.projects.eyebrow}
-              title={clinics.projects.title}
-              description={clinics.attribution}
-            />
-          </Reveal>
-          <Stagger
-            as="ul"
-            className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-3"
-          >
-            {clinics.projects.items.map((project) => (
-              <StaggerItem key={project.href} as="li" className="bg-[var(--lsh-paper)]">
-                <a
-                  href={project.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex h-full items-center gap-4 p-6 transition-colors hover:bg-[var(--lsh-surface)]"
-                >
-                  <IconBadge icon="building" size={18} />
-                  <span className="lsh-display flex-1 text-lg leading-tight text-[var(--lsh-charcoal)]">
-                    {project.title}
-                  </span>
-                  <ExternalLink
-                    size={16}
-                    aria-hidden="true"
-                    className="shrink-0 text-[var(--lsh-brand-red)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
-                  />
-                </a>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <div className="mt-8">
-            <ActionLink action="view_clinic_projects" variant="text" />
-          </div>
-        </Container>
-      </section>
-
-      {/* After opening: conditional. Then service channels. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
-          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7">
-            <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2">{page.supplyHeading.eyebrow}</Eyebrow>
-              <IconBadge icon="truck" size={18} />
-            </div>
-            <p className="lsh-display mt-4 text-2xl leading-[1.1] text-[var(--lsh-charcoal)]">
-              {page.supplyHeading.title}
-            </p>
-            <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{clinics.postOpening}</p>
-            <div className="mt-6">
-              <ActionLink action="clinic_supply_review" variant="onLight" />
-            </div>
-          </Reveal>
-          <ServiceChannels
-            record={record}
-            title="Service channels"
-            text="Consultations and equipment quotes are handled on the Clinics site; its published contact channels are below."
-          />
-        </div>
-      </section>
-      <RelatedActions actions={clinics.brandPage.related} />
     </LifeSupplyLayout>
   );
 }

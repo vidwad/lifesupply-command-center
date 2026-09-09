@@ -132,7 +132,9 @@ From the legacy page sitemap (21 URLs) and observed redirects, 2026-09-08:
 
 ---
 
-## Registry-derived tables (Stage 9 refresh)
+## Registry-derived tables (Stage 9 refresh; restructure rows updated 2026-09-08)
+
+**Restructure of 2026-09-08 (product owner):** primary navigation is Medical Supply Solutions / Clinic Solutions / Metabolic Health / Pharmacy Solutions / Partners / Investors / About. Our Businesses became Medical Supply Solutions (three stores; corporate portfolio moved to About); the LifeSupply Clinics brand page and Design & build merged into Clinic Solutions; Technology & fulfilment was withdrawn; the leadership profiles other than Abdul Ladha were withdrawn; Pharmacy Solutions was added as an information section with its status. Actions added: `clinic_equipment`, `clinic_ongoing_supplies`, `pharmacy_hub`; `explore_businesses` relabelled; `clinic_supply_review` now reaches the corporate office. Every withdrawn address is a permanent redirect (`next.config.ts`).
 
 Generated from the registries on September 8, 2026 (Stage 9). Where an earlier section of this document disagrees with these tables, the tables are authoritative: they are the code the site runs. Every `proposed` row from Stages 1 to 5 is now `live` except the redirect and the two publication-model templates, which are live but served from the read model.
 
@@ -142,14 +144,15 @@ Generated from the registries on September 8, 2026 (Stage 9). Where an earlier s
 | --- | --- | --- | --- | --- | --- |
 | `/` | Home | 2 | live | — | `src/app/page.tsx` |
 | `/about-us/` | About us | 2 | live | about | `src/app/about-us/page.tsx` |
-| `/our-operations/` | Our operations | 3 | live | businesses | `src/app/our-operations/page.tsx` |
-| `/our-operations/lifesupply/` | LifeSupply | 3 | live | businesses | `src/app/our-operations/lifesupply/page.tsx` |
-| `/our-operations/wellmart-medical/` | Wellmart Medical | 3 | live | businesses | `src/app/our-operations/wellmart-medical/page.tsx` |
-| `/our-operations/lifesupply-clinics/` | LifeSupply Clinics | 3 | live | businesses | `src/app/our-operations/lifesupply-clinics/page.tsx` |
-| `/our-operations/balkowitsch/` | Balkowitsch Worldwide | 3 | live | businesses | `src/app/our-operations/balkowitsch/page.tsx` |
+| `/medical-supply-solutions/` | Medical Supply Solutions | 3 | live | businesses | `src/app/medical-supply-solutions/page.tsx` |
+| `/our-operations/` | Withdrawn address (redirect) | 3 | redirect → `/medical-supply-solutions` | — | `next.config.ts` |
+| `/medical-supply-solutions/lifesupply/` | LifeSupply | 3 | live | businesses | `src/app/medical-supply-solutions/lifesupply/page.tsx` |
+| `/medical-supply-solutions/wellmart-medical/` | Wellmart Medical | 3 | live | businesses | `src/app/medical-supply-solutions/wellmart-medical/page.tsx` |
+| `/our-operations/lifesupply-clinics/` | Withdrawn address (redirect) | 3 | redirect → `/clinic-solutions` | — | `next.config.ts` |
+| `/medical-supply-solutions/balkowitsch/` | Balkowitsch Worldwide | 3 | live | businesses | `src/app/medical-supply-solutions/balkowitsch/page.tsx` |
 | `/our-operations/technology-fulfilment/` | Technology & fulfilment (withdrawn 2026-09-08, product owner: not a major business unit) | 3 | redirect → `/our-operations` | — | `next.config.ts` |
-| `/clinic-solutions/` | Clinic Solutions | 3 | live | clinic | `src/app/clinic-solutions/page.tsx` |
-| `/clinic-solutions/design-build/` | Design & build | 3 | live | clinic | `src/app/clinic-solutions/design-build/page.tsx` |
+| `/clinic-solutions/` | Clinic Solutions (the LifeSupply Clinics section since 2026-09-08) | 3 | live | clinic | `src/app/clinic-solutions/page.tsx` |
+| `/clinic-solutions/design-build/` | Withdrawn address (redirect) | 3 | redirect → `/clinic-solutions` | — | `next.config.ts` |
 | `/clinic-solutions/equipment/` | Equipment | 3 | live | clinic | `src/app/clinic-solutions/equipment/page.tsx` |
 | `/clinic-solutions/ongoing-supplies/` | Ongoing supplies | 3 | live | clinic | `src/app/clinic-solutions/ongoing-supplies/page.tsx` |
 | `/metabolic-health/` | Metabolic Health | 4 | live | metabolic | `src/app/metabolic-health/page.tsx` |
@@ -174,7 +177,8 @@ Generated from the registries on September 8, 2026 (Stage 9). Where an earlier s
 | `/investor-relations/documents/` | Documents | 5 | live | investors | `src/app/investor-relations/documents/page.tsx` |
 | `/investor-relations/shareholder-services/` | Shareholder services | 5 | live | investors | `src/app/investor-relations/shareholder-services/page.tsx` |
 | `/investor-relations/disclosures/` | Disclosures | 5 | live | investors | `src/app/investor-relations/disclosures/page.tsx` |
-| `/our-team/` | Our team | 5 | live | about | `src/app/our-team/page.tsx` |
+| `/our-team/` | Our team (one leader since 2026-09-08) | 5 | live | about | `src/app/our-team/page.tsx` |
+| `/pharmacy-solutions/` | Pharmacy Solutions | 5 | live | pharmacy | `src/app/pharmacy-solutions/page.tsx` |
 | `/news/` | News & resources | 5 | live | about | `src/app/news/page.tsx` |
 | `/shop/` | Shop & Services | 3 | live | utility | `src/app/shop/page.tsx` |
 | `/contact/` | Contact | 3 | live | utility | `src/app/contact/page.tsx` |

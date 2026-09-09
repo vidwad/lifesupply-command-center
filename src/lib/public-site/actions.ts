@@ -18,6 +18,7 @@ import {
   BRAND_ROUTES,
   LIFE_SUPPLY_ROUTES,
   METABOLIC_ROUTES,
+  PHARMACY_ROUTES,
   STAGE_3_ROUTES,
   STAGE_5_ROUTES,
 } from "@/lib/public-site/routes";
@@ -28,7 +29,10 @@ export type ActionKey =
   | "plan_clinic"
   | "equipment_quote"
   | "clinic_supply_review"
+  | "clinic_equipment"
+  | "clinic_ongoing_supplies"
   | "clinic_solutions"
+  | "pharmacy_hub"
   | "view_clinic_projects"
   | "discuss_program"
   | "metabolic_hub"
@@ -99,7 +103,7 @@ const mail = (value: string): ActionDestination => ({ kind: "mailto", value });
 export const ACTIONS: Record<ActionKey, ActionRecord> = {
   explore_businesses: {
     key: "explore_businesses",
-    label: "Explore our businesses",
+    label: "Explore medical supply solutions",
     intent: "navigation",
     destination: internal(LIFE_SUPPLY_ROUTES.operations),
     ownerChannel: null,
@@ -135,8 +139,33 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "clinic_supply_review",
     label: "Request a supply review",
     intent: "ongoing_procurement",
-    destination: mail("ben@lifesupply.com"),
-    ownerChannel: "Online sales & product lines",
+    // Routed to the corporate office since 2026-09-08 (the prior named channel was withdrawn).
+    destination: mail("info@lifesupply.com"),
+    ownerChannel: "Corporate office",
+    verifiedAt: null,
+  },
+  clinic_equipment: {
+    key: "clinic_equipment",
+    label: "Equipment planning and quotes",
+    intent: "navigation",
+    destination: internal(STAGE_3_ROUTES.equipment),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  clinic_ongoing_supplies: {
+    key: "clinic_ongoing_supplies",
+    label: "Ongoing supplies",
+    intent: "navigation",
+    destination: internal(STAGE_3_ROUTES.ongoingSupplies),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  pharmacy_hub: {
+    key: "pharmacy_hub",
+    label: "Pharmacy Solutions",
+    intent: "navigation",
+    destination: internal(PHARMACY_ROUTES.hub),
+    ownerChannel: null,
     verifiedAt: null,
   },
   clinic_solutions: {
