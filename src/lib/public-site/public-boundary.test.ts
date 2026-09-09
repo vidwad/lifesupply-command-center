@@ -821,7 +821,9 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       /(acquire|acquisition of|closing|signed|announce[sd]?) (a |the )?pharmacy/i,
     );
     const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
-    expect(page).toContain("{pharmacy.status.sentence}");
+    // The status line left the page on 2026-09-09 (product owner); the status still shows on each card.
+    expect(page).not.toContain("status.sentence");
+    expect(page).toContain('status: "In development"');
     // The value block (2026-09-09) is design intent, never a result or an operation.
     expect(page).toContain("hub.value.items.map");
     expect(pharmacy).toContain("No pharmacy supply program is operating.");

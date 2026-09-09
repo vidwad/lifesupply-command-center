@@ -1,7 +1,6 @@
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { PublicHero } from "@/components/public-site/lifesupply-primitives";
-import { Reveal } from "@/components/public-site/motion";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { iconForTitle } from "@/lib/public-site/icon-map";
@@ -15,8 +14,7 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
  * prescribes, and no transaction is named or implied.
  */
 export function PharmacySolutionsPage() {
-  const { pharmacy } = LIFE_SUPPLY_CONTENT;
-  const { hub } = pharmacy;
+  const { hub } = LIFE_SUPPLY_CONTENT.pharmacy;
   const [primary, secondary] = hub.actions as readonly ActionKey[];
   return (
     <LifeSupplyLayout>
@@ -31,19 +29,6 @@ export function PharmacySolutionsPage() {
           </>
         }
       />
-
-      {/* The status, stated before anything else. */}
-      <section className="px-5 py-12 lg:px-8">
-        <Reveal className="mx-auto flex max-w-7xl gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:pl-8">
-          <IconBadge icon="pill" />
-          <p className="max-w-3xl leading-7 text-[var(--lsh-charcoal)]">
-            <span className="lsh-display mr-2 inline-flex border border-[var(--lsh-brand-red)] px-2 py-0.5 text-[10px] text-[var(--lsh-brand-red)]">
-              {pharmacy.status.label}
-            </span>
-            {pharmacy.status.sentence}
-          </p>
-        </Reveal>
-      </section>
 
       {/* Why it matters: the value to the ecosystem, as design intent. */}
       <IconFeatureGrid
@@ -68,7 +53,7 @@ export function PharmacySolutionsPage() {
           title: item.title,
           text: item.text,
           icon: iconForTitle(item.title),
-          status: pharmacy.status.label === "Development focus" ? "In development" : undefined,
+          status: "In development",
         }))}
       />
 
