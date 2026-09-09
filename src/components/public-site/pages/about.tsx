@@ -12,7 +12,7 @@ import {
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, ScrollBeam, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
-import { CONCEPTUAL_CAPTION, getGraphic } from "@/lib/public-site/graphics";
+import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -80,9 +80,6 @@ export function AboutPage() {
                   sizes="(min-width: 1024px) 420px, 100vw"
                   className="h-auto w-full transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                 />
-                <figcaption className="lsh-display absolute bottom-0 left-0 bg-black/70 px-4 py-2 text-[10px] text-white/80">
-                  {CONCEPTUAL_CAPTION}
-                </figcaption>
               </figure>
             </Reveal>
           </div>
@@ -227,7 +224,6 @@ export function AboutPage() {
         title={about.direction.title}
         graphic="boardroom"
         side="left"
-        caption={CONCEPTUAL_CAPTION}
       >
         <p className="text-white/85">{about.growth}</p>
         <p>{about.direction.text}</p>

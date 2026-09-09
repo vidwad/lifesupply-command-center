@@ -10,10 +10,11 @@ import {
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { ServiceChannels } from "@/components/public-site/pages/brands";
+import { SiteScreen } from "@/components/public-site/site-screen";
 import { Callout, IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand } from "@/lib/public-site/brands";
-import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
+import { BRAND_GRAPHICS } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -142,7 +143,6 @@ export function ClinicSolutionsPage() {
         title={hub.servicesHeading.title}
         graphic={BRAND_GRAPHICS.clinics}
         side="left"
-        caption={CONCEPTUAL_CAPTION}
       >
         <ul className="grid gap-4 sm:grid-cols-2">
           {clinics.services.map((service) => (
@@ -186,19 +186,25 @@ export function ClinicSolutionsPage() {
         }))}
       />
 
-      {/* Published projects, as the Clinics site presents them. */}
+      {/* Published projects, as the Clinics site presents them, beside its actual home page. */}
       <section className="px-5 py-20 lg:px-8">
         <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow={clinics.projects.eyebrow}
-              title={clinics.projects.title}
-              description={clinics.geography}
-            />
-          </Reveal>
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+            <Reveal>
+              <SectionHeading
+                eyebrow={clinics.projects.eyebrow}
+                title={clinics.projects.title}
+                description={clinics.geography}
+              />
+              <p className="mt-6 leading-7 text-[var(--lsh-muted)]">{clinics.attribution}</p>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <SiteScreen site="clinics" className="border border-[var(--lsh-rule)]" />
+            </Reveal>
+          </div>
           <Stagger
             as="ul"
-            className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-3"
+            className="mt-12 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-3"
           >
             {clinics.projects.items.map((project) => (
               <StaggerItem key={project.href} as="li" className="bg-[var(--lsh-paper)]">
@@ -275,7 +281,6 @@ export function EquipmentPage() {
         title={page.quote.title}
         graphic="equipment"
         side="left"
-        caption={CONCEPTUAL_CAPTION}
       >
         <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
           {page.quote.items.map((item) => (
@@ -336,7 +341,6 @@ export function OngoingSuppliesPage() {
         eyebrow="Supply categories"
         title={page.available.title}
         graphic="shipping"
-        caption={CONCEPTUAL_CAPTION}
       >
         <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] sm:grid-cols-2">
           {page.available.items.map((item) => (

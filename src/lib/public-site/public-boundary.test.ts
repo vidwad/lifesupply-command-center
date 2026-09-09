@@ -545,7 +545,7 @@ describe("design-pass graphics and section primitives", () => {
   it("renders conceptual graphics only through the registry, labelled conceptual, never as a raw file path", () => {
     // The registry (graphics.ts) declares every conceptual image with its
     // real size and provenance; a page that types a /lsh/graphics/ path by
-    // hand, or shows a graphic without the registry caption, fails here.
+    // hand fails here. No visible caption is rendered (product owner, 2026-09-09).
     for (const code of publicComponents()) {
       expect(code).not.toContain("/lsh/graphics/");
     }
@@ -553,7 +553,11 @@ describe("design-pass graphics and section primitives", () => {
       expect(code).not.toMatch(/graphic=\{?"[a-z]+\.jpg/);
     }
     expect(sections()).toContain("getGraphic(");
-    expect(pages()).toContain("CONCEPTUAL_CAPTION");
+    for (const code of publicComponents()) {
+      expect(code).not.toContain("CONCEPTUAL_CAPTION");
+      expect(code).not.toMatch(/<figcaption/);
+      expect(code).not.toContain("Conceptual image");
+    }
     const graphics = stripComments(read("src/lib/public-site/graphics.ts"));
     expect(graphics).toContain("conceptual, not operational photography");
     // Section primitives resolve icons through the registry, never an ad-hoc lucide import per page.
@@ -685,15 +689,16 @@ describe("Stage 2 registries and navigation", () => {
     }
     const code = siteScreen();
     expect(code).toContain("getSiteScreen(site)");
-    expect(code).toContain("captured {captureDate(screen.capturedOn)}");
     const brands = stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
     expect(brands).toContain("<SiteScreen site={brandKey}");
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`))).toContain(
+      '<SiteScreen site="clinics"',
+    );
   });
 
-  it("renders the four brand photographs only through the registry mapping, captioned conceptual", () => {
+  it("renders the four brand photographs only through the registry mapping", () => {
     const code = brandImage();
     expect(code).toContain("getGraphic(BRAND_GRAPHICS[brand])");
-    expect(code).toContain("{CONCEPTUAL_CAPTION}");
     expect(code).toContain('alt={decorative ? "" : g.alt}');
     const graphics = stripComments(read("src/lib/public-site/graphics.ts"));
     for (const key of ["lifesupply", "wellmart", "clinics", "balkowitsch"]) {

@@ -19,8 +19,9 @@
  *   be presented as an employee or customer; the clinic reception is not an
  *   owned clinic or a completed project.
  *
- * Captions and alt text call every image conceptual, and none may be
- * presented as operational photography (guide §4). Original leadership
+ * Alt text and provenance call every image conceptual, and none may be
+ * presented as operational photography (guide §4). No visible caption is
+ * rendered: the product owner removed image notices on 2026-09-09. Original leadership
  * portraits and the hero footage remain the only operational imagery.
  */
 import type { OperatingBrandKey } from "@/lib/public-site/brands";
@@ -153,6 +154,3 @@ export const BRAND_GRAPHICS: Record<OperatingBrandKey, GraphicKey> = {
 export function getGraphic(key: GraphicKey): Graphic {
   return GRAPHICS[key];
 }
-
-/** Shown beside every conceptual graphic that could be mistaken for a real place. */
-export const CONCEPTUAL_CAPTION = "Conceptual image";

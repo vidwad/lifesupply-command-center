@@ -1,5 +1,6 @@
 /**
- * Store home-page screens for the Medical Supply Solutions pages.
+ * Store home-page screens for the Medical Supply Solutions pages and the
+ * Clinics site's home page for Clinic Solutions.
  *
  * Unlike the conceptual graphics (graphics.ts), these are real: a screenshot
  * of each store's live home page, captured at 1440×900 and composed onto a
@@ -17,13 +18,13 @@ export interface SiteScreen {
   height: number;
   /** ISO date of the capture. */
   capturedOn: string;
-  /** The store host the screen shows, for the caption. */
+  /** The store host the screen shows. */
   host: string;
   provenance: string;
 }
 
 const PROVENANCE =
-  "Screenshot of the store's live home page at 1440×900 (Chromium, promotional overlays hidden), composed onto a laptop frame at 1600×1000; captured 2026-09-09 for the Medical Supply Solutions pages. A real screen, not a conceptual image.";
+  "Screenshot of the store's live home page at 1440×900 (Chromium, promotional overlays hidden), composed onto a laptop frame at 1600×1000; captured 2026-09-09 for the Medical Supply Solutions and Clinic Solutions pages. A real screen, not a conceptual image.";
 
 export const SITE_SCREENS = {
   lifesupply: {
@@ -53,7 +54,16 @@ export const SITE_SCREENS = {
     host: "balkowitsch.com",
     provenance: PROVENANCE,
   },
-} as const satisfies Partial<Record<OperatingBrandKey, SiteScreen>>;
+  clinics: {
+    src: "/lsh/sites/lifesupply-clinics-home-laptop.jpg",
+    alt: "The lifesupplyclinics.com home page shown on a laptop screen.",
+    width: 1600,
+    height: 1000,
+    capturedOn: "2026-09-09",
+    host: "lifesupplyclinics.com",
+    provenance: PROVENANCE,
+  },
+} as const satisfies Record<OperatingBrandKey, SiteScreen>;
 
 export type SiteScreenKey = keyof typeof SITE_SCREENS;
 
