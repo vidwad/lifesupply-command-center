@@ -61,7 +61,8 @@ function NavItem({
   label: string;
   onNavigate?: () => void;
   className?: string;
-  variant?: "inline" | "menu";
+  /** inline: primary menu item with the red rule; utility: strip link, colour change only; menu: dropdown row. */
+  variant?: "inline" | "utility" | "menu";
   external?: boolean;
   /** Inert measurement data attributes (measurement.ts); never a handler. */
   attributes?: Record<string, string>;
@@ -76,9 +77,13 @@ function NavItem({
       ? `lsh-display relative inline-flex w-fit items-center gap-1 py-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
           active ? "text-white after:w-5" : "text-white/75 after:w-0 hover:text-white"
         } ${className}`.trim()
-      : `flex items-center gap-2 border-l-2 px-4 py-1.5 text-sm transition-colors hover:bg-white/10 hover:text-white ${
-          active ? "border-[var(--lsh-brand-red)] text-white" : "border-transparent text-white/80"
-        } ${className}`.trim();
+      : variant === "utility"
+        ? `lsh-display inline-flex w-fit items-center gap-1 py-1.5 text-[11px] transition-colors ${
+            active ? "text-white" : "text-white/75 hover:text-white"
+          } ${className}`.trim()
+        : `flex items-center gap-2 border-l-2 px-4 py-1.5 text-sm transition-colors hover:bg-white/10 hover:text-white ${
+            active ? "border-[var(--lsh-brand-red)] text-white" : "border-transparent text-white/80"
+          } ${className}`.trim();
   const content = (
     <>
       {label}
@@ -272,6 +277,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
       key={link.href}
       href={link.href}
       label={link.label}
+      variant="utility"
       onNavigate={onNavigate}
       className=""
     />
@@ -318,7 +324,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
 
       {/* Hides as the visitor reads down, returns the moment they scroll up. */}
       <header
-        className={`sticky top-0 z-50 border-b border-t-4 border-white/15 border-t-[var(--lsh-brand-red)] bg-black/95 text-white shadow-lg shadow-black/25 backdrop-blur-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
+        className={`sticky top-0 z-50 border-b border-t-2 border-white/15 border-t-[var(--lsh-brand-red)] bg-black/95 text-white shadow-lg shadow-black/25 backdrop-blur-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
           headerHidden ? "-translate-y-full" : "translate-y-0"
         }`}
         onFocusCapture={() => setFocusWithinHeader(true)}

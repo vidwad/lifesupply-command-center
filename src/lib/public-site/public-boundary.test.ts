@@ -829,6 +829,12 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     ]) {
       expect(home, line).toContain(line);
     }
+    // Trimmed on the product owner's instruction, later on 2026-09-09.
+    expect(home).not.toContain("as cited in the 2025 annual-report narrative, and a founding");
+    expect(home).not.toContain("standfirst");
+    // The utility strip carries no hover rule; the primary menu keeps it.
+    expect(layout()).toContain('variant="utility"');
+    expect(layout()).toContain("border-t-2 border-white/15 border-t-[var(--lsh-brand-red)]");
     for (const banned of [
       /a decade/i,
       /we are growing/i,

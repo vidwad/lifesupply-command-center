@@ -151,7 +151,7 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/");
     const main = page.locator("main");
     const first = main.getByRole("heading", { level: 2 }).first();
-    await expect(first).toHaveText("Who we are, where we are going, and where we want to be.");
+    await expect(first).toHaveText("Who we are and where we are going.");
     await expect(main.getByRole("heading", { level: 3, name: "Experienced" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
