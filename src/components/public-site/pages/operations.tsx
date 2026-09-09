@@ -1,8 +1,12 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
 import { ActionLink } from "@/components/public-site/action-link";
+import { BrandImage } from "@/components/public-site/brand-image";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { PublicHero, SectionHeading } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { BentoGrid, Callout, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
+import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { Callout, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
 import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
@@ -37,25 +41,47 @@ export function OperationsPage() {
         </Reveal>
       </section>
 
-      {/* Brands: a bento of the four internal brand pages around one conceptual graphic. */}
-      <BentoGrid
-        tiles={[
-          {
-            title: hub.brands.title,
-            eyebrow: hub.brands.eyebrow,
-            graphic: "warehouse",
-            span: "tall",
-          },
-          ...OPERATING_BRANDS.map((record) => ({
-            title: record.name,
-            text: record.purpose,
-            eyebrow: brandGeography(record),
-            icon: iconForTitle(record.name),
-            href: BRAND_ROUTES[record.key as OperatingBrandKey],
-            linkLabel: `About ${record.name}`,
-          })),
-        ]}
-      />
+      {/* Brands: the four internal brand pages, each with its conceptual photograph. */}
+      <section className="px-5 py-20 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <Reveal>
+            <SectionHeading eyebrow={hub.brands.eyebrow} title={hub.brands.title} />
+          </Reveal>
+          <Stagger className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {OPERATING_BRANDS.map((record) => (
+              <StaggerItem key={record.key} className="h-full">
+                <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
+                  <article className="group relative flex h-full flex-col p-7">
+                    <BrandImage
+                      brand={record.key as OperatingBrandKey}
+                      presentation="square"
+                      className="-mx-7 -mt-7 mb-6"
+                    />
+                    <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      {brandGeography(record)}
+                    </p>
+                    <h3 className="lsh-display mt-4 text-2xl text-[var(--lsh-charcoal)]">
+                      {record.name}
+                    </h3>
+                    <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{record.purpose}</p>
+                    <Link
+                      href={BRAND_ROUTES[record.key as OperatingBrandKey]}
+                      className="lsh-display mt-auto inline-flex items-center gap-2 pt-6 text-[11px] text-[var(--lsh-brand-red)] after:absolute after:inset-0 after:content-['']"
+                    >
+                      About {record.name}{" "}
+                      <ArrowRight
+                        size={15}
+                        aria-hidden="true"
+                        className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
+                      />
+                    </Link>
+                  </article>
+                </SpotlightCard>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
 
       {/* Technology and fulfilment across the brands. */}
       <Callout

@@ -2,15 +2,17 @@ import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 
+import { BrandImage } from "@/components/public-site/brand-image";
 import { SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { OPERATING_BRANDS, brandGeography } from "@/lib/public-site/brands";
+import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
 
 /**
- * The four operating brands, from the brand registry. Text-only until an
- * authentic mark with a usage record exists for a brand (WB-207): the card
- * sets the name in the display face instead of drawing a mark from memory.
- * Every link is the brand's verified canonical URL, opened in a new tab
- * because it is a separate site with its own accounts and checkout.
+ * The four operating brands, from the brand registry. Each card opens with
+ * the brand's conceptual photograph (BrandImage, decorative inside the link)
+ * and sets the name in the display face: no mark is drawn until an
+ * authentic one with a usage record exists for the brand (WB-207). Every
+ * link is the brand's verified canonical URL, opened in a new tab because
+ * it is a separate site with its own accounts and checkout.
  */
 export function BrandGrid() {
   return (
@@ -25,6 +27,12 @@ export function BrandGrid() {
               rel="noreferrer"
               className="group flex h-full flex-col p-7"
             >
+              <BrandImage
+                brand={record.key as OperatingBrandKey}
+                presentation="square"
+                decorative
+                className="-mx-7 -mt-7 mb-6"
+              />
               <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
                 {brandGeography(record)}
               </p>
