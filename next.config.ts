@@ -49,7 +49,8 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
-      // involved); the addresses go to the team page. Keep in step with
+      // involved); the addresses go to the team page. The three directors
+      // restored on 2026-09-09 are live profiles again. Keep in step with
       // `team.withdrawnProfileSlugs` (content/team.ts).
       ...[
         "ross-jelveh",
@@ -59,9 +60,6 @@ const nextConfig: NextConfig = {
         "craig-loverock",
         "mike-gill",
         "christopher-ishola",
-        "keith-dolo-2",
-        "barrett-e-g-sleeman",
-        "david-vogt",
         "dr-margaret-clarke-2",
         "dr-dedeshya-holowenko",
         "john-anderson-2",

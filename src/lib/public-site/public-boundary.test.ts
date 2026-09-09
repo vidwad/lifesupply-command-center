@@ -53,6 +53,7 @@ const ACCORDION = `${PUBLIC_DIR}/accordion.tsx`;
 const SCROLL_TO_TOP = `${PUBLIC_DIR}/scroll-to-top.tsx`;
 const BRAND_IMAGE = `${PUBLIC_DIR}/brand-image.tsx`;
 const SITE_SCREEN = `${PUBLIC_DIR}/site-screen.tsx`;
+const VIDEO_EMBED = `${PUBLIC_DIR}/video-embed.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
 // carries the legacy-compatible route table.
@@ -89,6 +90,7 @@ const accordion = () => stripComments(read(ACCORDION));
 const scrollToTop = () => stripComments(read(SCROLL_TO_TOP));
 const brandImage = () => stripComments(read(BRAND_IMAGE));
 const siteScreen = () => stripComments(read(SITE_SCREEN));
+const videoEmbed = () => stripComments(read(VIDEO_EMBED));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -104,6 +106,7 @@ const publicComponents = () => [
   scrollToTop(),
   brandImage(),
   siteScreen(),
+  videoEmbed(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -759,7 +762,6 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       "mike-gill",
       "christopher-ishola",
       "ross-jelveh-2",
-      "keith-dolo-2",
       "dr-margaret-clarke-2",
       "john-anderson-2",
     ]) {
@@ -767,6 +769,10 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     }
     expect(config).toContain('destination: "/our-team"');
     expect(config).not.toContain('destination: "/ross-jelveh-2"');
+    // The directors restored on 2026-09-09 are live profiles, not redirects.
+    for (const slug of ["keith-dolo-2", "barrett-e-g-sleeman", "david-vogt", "abdul-ladha"]) {
+      expect(config, slug).not.toContain(`"${slug}"`);
+    }
   });
 
   it("names the sections as the product owner set them and leaves no trace of the old ones", () => {
@@ -799,12 +805,16 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(page).toContain("{pharmacy.status.sentence}");
   });
 
-  it("lists only the confirmed leader, with one portrait and no board", () => {
+  it("lists the confirmed leader and the four directors of the prior site, and none of the withdrawn people", () => {
     const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team.tsx`));
-    expect(teamPage).not.toMatch(/board/i);
+    expect(teamPage).toContain("labels.board");
+    expect(teamPage).toContain("board.map(");
     const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
-    expect((teamContent.match(/slug: "/g) ?? []).length).toBe(2);
-    expect(teamContent).toContain('"abdul-ladha"');
+    // Four profiles, four board cards, one leadership card.
+    expect((teamContent.match(/slug: "/g) ?? []).length).toBe(9);
+    for (const slug of ["abdul-ladha", "keith-dolo-2", "barrett-e-g-sleeman", "david-vogt"]) {
+      expect(teamContent).toContain(`"${slug}"`);
+    }
     for (const name of [
       "Hastibakhsh",
       "Gary Li",
@@ -812,9 +822,6 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       "Mike Gill",
       "Ishola",
       "Jelveh",
-      "Dolo",
-      "Sleeman",
-      "Vogt",
       "Holowenko",
       "Anderson",
     ]) {
@@ -976,9 +983,16 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     ]) {
       expect(c, String(banned)).not.toMatch(banned);
     }
-    // Only the three approved figures appear anywhere in the Stage 5 copy.
-    const dollars = c.match(/\$[\d.,]+[MK]?/g) ?? [];
-    expect(new Set(dollars)).toEqual(new Set(["$6.75M", "$2.20M", "$284K"]));
+    // Only the three approved figures appear anywhere in the Stage 5 copy,
+    // apart from the two figures inside the directors' preserved biographies,
+    // which describe other organisations (a listed employer's size and a
+    // bank loan portfolio), never LifeSupply.
+    const dollars = c.match(/\$[\d.,]+( billion|[MK])?/g) ?? [];
+    expect(new Set(dollars)).toEqual(
+      new Set(["$6.75M", "$2.20M", "$284K", "$6.1 billion", "$5 billion"]),
+    );
+    const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
+    expect(teamContent.match(/\$[\d.,]+( billion|[MK])?/g)).toEqual(["$6.1 billion", "$5 billion"]);
   });
 
   it("keeps static documents at a request step and downloads only through the published read model", () => {
@@ -1016,6 +1030,9 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     const c = stripComments(read("src/lib/public-site/content/policies.ts"));
     expect(c).toContain("do not set cookies");
     expect(c).toContain("no third-party analytics");
+    // The one embedded video is stated as click-to-load, on the privacy-enhanced host.
+    expect(c).toContain("until you press play");
+    expect(c).toContain("privacy-enhanced");
     expect(c).toContain("no form, no account, no newsletter sign-up, and no inquiry intake");
     expect(c).not.toMatch(/cookie (banner|consent)/i);
     expect(c).not.toMatch(/we (collect|store) your/i);

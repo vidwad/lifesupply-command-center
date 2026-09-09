@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!profile) return {};
   return publicMetadata({
     title: profile.name,
-    description: `${profile.role}. ${profile.bio.slice(0, 140)}…`,
+    description: `${profile.role}. ${profile.bio[0].slice(0, 140)}…`,
     path: profileRoute(slug),
     type: "article",
   });

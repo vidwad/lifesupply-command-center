@@ -16,16 +16,16 @@
 | `/news/` | keep | `/news` | Same address. |
 | `/shop/` | keep | `/shop` | Same address; visible title "Shop & Services". |
 | `/contact-2/` | **redirect 308** | `/contact` | `next.config.ts` permanent redirect; the legacy `/contact/` already 301'd to `/contact-2/`, so both legacy forms land on `/contact`. |
-| `/abdul-ladha/` | keep | `/abdul-ladha` | Retained profile address, pre-rendered. The only profile since 2026-09-08. |
+| `/abdul-ladha/` | keep | `/abdul-ladha` | Retained profile address, pre-rendered; portrait and the prior site's biography. |
 | `/ben-hastibakhsh/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
 | `/gary-li/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
 | `/craig-loverock/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
 | `/mike-gill/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
 | `/christopher-ishola/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
 | `/ross-jelveh-2/` | redirect | `/our-team` | Withdrawn 2026-09-08; `/ross-jelveh/` now redirects to `/our-team` as well. |
-| `/keith-dolo-2/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
-| `/barrett-e-g-sleeman/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
-| `/david-vogt/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/keith-dolo-2/` | keep | `/keith-dolo-2` | Withdrawn 2026-09-08; **restored 2026-09-09** as a director profile with the prior site's portrait and biography (S-153). |
+| `/barrett-e-g-sleeman/` | keep | `/barrett-e-g-sleeman` | Withdrawn 2026-09-08; **restored 2026-09-09** as a director profile with the prior site's portrait and biography (S-154). |
+| `/david-vogt/` | keep | `/david-vogt` | Withdrawn 2026-09-08; **restored 2026-09-09** as a director profile with the prior site's portrait and biography (S-155). |
 | `/dr-margaret-clarke-2/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
 | `/dr-dedeshya-holowenko/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
 | `/john-anderson-2/` | redirect | `/our-team` | Withdrawn 2026-09-08. |
@@ -47,7 +47,8 @@ Legacy addresses that 404 on the old site as well (`/privacy/`, `/terms/`) now e
 | --- | --- | --- |
 | `/wp-content/uploads/2021/10/LSHomeVid.mp4` | replaced | Re-cut, caption-free, grayscale loop shipped as `/lsh/hero/hero-loop.{webm,mp4}` with a poster (PR #63). The legacy file is not linked. |
 | `/wp-content/uploads/2021/04/standard-logo*.png` | replaced | Official mark shipped as `/lsh/lifesupply-mark.png` (PR #61). The portfolio lockup was withdrawn on 2026-09-08 (Dexton and MedDirect no longer operational; `docs/website-development/legacy-assets/`). |
-| Leadership portrait (Abdul Ladha) | kept | `/lsh/abdul-ladha.jpg`. Other portraits were never bundled (S-104). |
+| Leadership portraits | kept | `/lsh/abdul-ladha.jpg`, and from 2026-09-09 `/lsh/keith-dolo.jpg`, `/lsh/barrett-sleeman.jpg`, `/lsh/david-vogt.jpg`, copied from the prior site (S-104, S-153 to S-155). |
+| Company video (YouTube `Jb3m3Nt3S50`) | embedded on request | About page, from 2026-09-09; local greyscale poster `/lsh/video/about-abdul-ladha-poster.jpg`, click-to-load privacy-enhanced player (S-156). |
 | `Lifesupply-Investor-Presentation.pdf` (May 2022, 21.9 MB) | archive, on request | Listed as a historical document in the investor documents index with no hosted file (S-64). |
 | Remaining `wp-content/uploads` images (Stage 1 counted 49 references) | archive | Elementor layout imagery and the legacy timeline graphic; not carried forward (S-133). Any that must survive can be added to `public/lsh/` with provenance. |
 

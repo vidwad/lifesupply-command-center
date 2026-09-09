@@ -246,17 +246,37 @@ describe("route registry", () => {
     expect(news.historical).toHaveLength(4);
   });
 
-  it("lists only the confirmed leader, resolves the title through the dated profile, and redirects the withdrawn profiles", () => {
+  it("lists the confirmed leader and the prior site's board with portraits, and redirects the withdrawn profiles", () => {
     expect(team.management.map((member) => member.name)).toEqual(["Abdul Ladha"]);
-    for (const member of team.management)
-      expect(legacyTitle(member.slug), member.slug).toBeTruthy();
-    expect(team.legacyProfiles.map((p) => p.slug)).toEqual(["abdul-ladha"]);
+    expect(team.board.map((director) => director.name)).toEqual([
+      "Abdul Ladha",
+      "Keith Dolo",
+      "Barrett Sleeman",
+      "Dr. David Vogt",
+    ]);
+    expect(team.legacyProfiles.map((p) => p.slug)).toEqual([
+      "abdul-ladha",
+      "keith-dolo-2",
+      "barrett-e-g-sleeman",
+      "david-vogt",
+    ]);
+    expect(legacyTitle("abdul-ladha")).toBe("Chairman & CEO");
+    for (const person of [...team.management, ...team.board]) {
+      expect(legacyTitle(person.slug), person.slug).toBeTruthy();
+      expect(existsSync(join(ROOT, `public${person.image}`)), person.image).toBe(true);
+    }
+    for (const profile of team.legacyProfiles) {
+      expect(profile.bio.length, profile.slug).toBeGreaterThan(0);
+      expect(existsSync(join(ROOT, `public${profile.image}`)), profile.image).toBe(true);
+    }
     expect(profileRoute("abdul-ladha")).toBe("/abdul-ladha/");
-    expect("board" in team).toBe(false);
-    // The withdrawn addresses stay reachable on the public host and redirect (next.config.ts).
+    // The withdrawn addresses stay reachable on the public host and redirect (next.config.ts);
+    // a restored director is never also withdrawn.
     expect(team.withdrawnProfileSlugs).toContain("john-anderson-2");
     expect(team.withdrawnProfileSlugs).toContain("ben-hastibakhsh");
-    expect(team.withdrawnProfileSlugs).not.toContain("abdul-ladha");
+    for (const profile of team.legacyProfiles) {
+      expect(team.withdrawnProfileSlugs).not.toContain(profile.slug);
+    }
     expect(() => legacyTitle("nobody")).toThrow();
   });
 

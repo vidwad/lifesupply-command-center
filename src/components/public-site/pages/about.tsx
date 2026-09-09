@@ -12,9 +12,11 @@ import {
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, ScrollBeam, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
+import { VideoEmbed } from "@/components/public-site/video-embed";
 import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
+import { ABOUT_VIDEO, youtubeWatchUrl } from "@/lib/public-site/video";
 
 /**
  * About — the Stage 2 page contract (guide §3, `/about-us/`): current group
@@ -35,26 +37,55 @@ export function AboutPage() {
         actions={<ActionLink action="explore_businesses" />}
       />
 
-      {/* Operating philosophy: the label is the heading; the statement is the content. */}
+      {/* Operating philosophy beside the company video: Mission and Vision stacked
+          in one column, the video in the other (product owner, 2026-09-09). */}
       <section className="px-5 py-20 lg:px-8">
-        <Stagger className="mx-auto grid max-w-7xl gap-px bg-[var(--lsh-rule)] lg:grid-cols-2">
-          <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-8 lg:p-10">
+        <Stagger className="mx-auto grid max-w-7xl gap-px bg-[var(--lsh-rule)] lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-px">
+            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-8 lg:p-10">
+              <div className="flex items-start justify-between gap-4">
+                <Eyebrow as="h2">{about.labels.mission}</Eyebrow>
+                <IconBadge icon={iconForTitle(about.labels.mission)} />
+              </div>
+              <p className="lsh-display mt-5 text-2xl leading-[1.15] text-[var(--lsh-charcoal)] lg:text-3xl lg:leading-[1.1]">
+                {about.mission}
+              </p>
+            </StaggerItem>
+            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white lg:p-10">
+              <div className="flex items-start justify-between gap-4">
+                <Eyebrow as="h2" tone="onDark">
+                  {about.labels.vision}
+                </Eyebrow>
+                <IconBadge icon={iconForTitle(about.labels.vision)} tone="onDark" />
+              </div>
+              <p className="lsh-display mt-5 text-2xl leading-[1.15] text-white lg:text-3xl lg:leading-[1.1]">
+                {about.vision}
+              </p>
+            </StaggerItem>
+          </div>
+          <StaggerItem className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8 lg:p-10">
             <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2">{about.labels.mission}</Eyebrow>
-              <IconBadge icon={iconForTitle(about.labels.mission)} />
+              <Eyebrow as="h2">{about.video.eyebrow}</Eyebrow>
+              <IconBadge icon="play" />
             </div>
-            <p className="lsh-display mt-5 text-3xl leading-[1.1] text-[var(--lsh-charcoal)]">
-              {about.mission}
+            <p className="lsh-display mt-5 text-2xl leading-[1.15] text-[var(--lsh-charcoal)] lg:text-3xl lg:leading-[1.1]">
+              {about.video.title}
             </p>
-          </StaggerItem>
-          <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white lg:p-10">
-            <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2" tone="onDark">
-                {about.labels.vision}
-              </Eyebrow>
-              <IconBadge icon={iconForTitle(about.labels.vision)} tone="onDark" />
+            <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+              {about.video.description}
+            </p>
+            <VideoEmbed video={ABOUT_VIDEO} playLabel={about.video.playLabel} className="mt-6" />
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
+              <p className="text-xs leading-5 text-[var(--lsh-muted)]">{about.video.note}</p>
+              <a
+                href={youtubeWatchUrl(ABOUT_VIDEO)}
+                target="_blank"
+                rel="noreferrer"
+                className="lsh-display inline-flex items-center gap-1 text-[11px] text-[var(--lsh-brand-red)] underline decoration-[var(--lsh-rule-strong)] underline-offset-4 transition-colors hover:decoration-[var(--lsh-brand-red)]"
+              >
+                {about.video.watchLabel} <ExternalLink size={12} aria-hidden="true" />
+              </a>
             </div>
-            <p className="lsh-display mt-5 text-3xl leading-[1.1] text-white">{about.vision}</p>
           </StaggerItem>
         </Stagger>
       </section>

@@ -33,7 +33,7 @@ export interface Policy {
   action: string;
 }
 
-const EFFECTIVE = "September 8, 2026";
+const EFFECTIVE = "September 9, 2026";
 
 export const policies = {
   privacy: {
@@ -47,7 +47,8 @@ export const policies = {
         title: "Information this site collects",
         paragraphs: [
           "The public pages do not ask for, store, or process personal information. There is no form, no account, no newsletter sign-up, and no inquiry intake on this site.",
-          "The site's public pages do not set cookies, and no third-party analytics or advertising script is loaded. Fonts and media are served from the site's own address.",
+          "The site's public pages do not set cookies, and no third-party analytics or advertising script is loaded. Fonts, images, and the site's own media are served from the site's own address.",
+          "The About page carries one company video. The page shows only a locally held still until you press play; the player is then loaded from YouTube's privacy-enhanced address, and YouTube's own privacy practices apply from that point.",
           "Your browser may hold a display-theme preference in its local storage from other uses of the same address; the public pages read it if present and offer no control that writes it.",
         ],
       },

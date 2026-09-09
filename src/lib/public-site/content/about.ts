@@ -15,6 +15,20 @@ export const about = {
     title: "A platform approach to medical-supply access.",
   },
   labels: { mission: "Mission", vision: "Vision" },
+  /**
+   * The company video beside Mission and Vision (product owner, 2026-09-09).
+   * The video itself is registered in `video.ts`; nothing loads from YouTube
+   * until the visitor presses play.
+   */
+  video: {
+    eyebrow: "Watch",
+    title: "Who we are and what we do.",
+    description:
+      "Abdul Ladha, Chairman & CEO, introduces LifeSupply Health in the company's published video.",
+    playLabel: "Play the video",
+    note: "Plays from YouTube's privacy-enhanced player when you press play; nothing is loaded from YouTube before that.",
+    watchLabel: "Open on YouTube",
+  },
   mission:
     "Through a commitment to technology, innovation, and excellence, LifeSupply aims to serve a broad customer base with premium products, competitive pricing, and direct access.",
   vision:

@@ -318,6 +318,29 @@ test.describe("LifeSupply public site", () => {
     await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeHidden();
   });
 
+  test("loads nothing from YouTube until the About video is played, then embeds the privacy-enhanced player", async ({
+    page,
+  }) => {
+    const thirdParty: string[] = [];
+    page.on("request", (request) => {
+      const host = new URL(request.url()).host;
+      if (/youtube|ytimg|googlevideo/.test(host)) thirdParty.push(request.url());
+    });
+    await page.goto("/about-us");
+    const play = page.getByRole("button", { name: /Play the video/ });
+    await expect(play).toBeVisible();
+    await expect(page.locator("iframe")).toHaveCount(0);
+    expect(thirdParty).toEqual([]);
+    await play.click();
+    const frame = page.locator("iframe");
+    await expect(frame).toHaveCount(1);
+    await expect(frame).toHaveAttribute(
+      "src",
+      /^https:\/\/www\.youtube-nocookie\.com\/embed\/Jb3m3Nt3S50\?start=12&autoplay=1/,
+    );
+    await expect(frame).toHaveAttribute("title", /Who we are/);
+  });
+
   test("shows a back-to-top control after reading down and returns to the top", async ({
     page,
   }) => {
@@ -609,23 +632,32 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
   });
 
-  test("shows the confirmed leader only, keeps the retained profile, and redirects the withdrawn ones", async ({
+  test("shows the confirmed leader and the board with portraits, keeps their profiles, and redirects the withdrawn ones", async ({
     page,
   }) => {
     await page.goto("/our-team");
     const main = page.locator("main");
     await expect(
-      main.getByText("Title as published on the prior LifeSupply website."),
+      main.getByText("Titles as published on the prior LifeSupply website."),
     ).toBeVisible();
-    await expect(main.getByText("Chairman & CEO", { exact: true })).toBeVisible();
-    await expect(main.getByRole("link", { name: /Abdul Ladha/ })).toHaveAttribute(
-      "href",
-      /^\/abdul-ladha\/?$/,
-    );
-    await expect(main.getByText(/Keith Dolo|Ben Hastibakhsh|Board of directors/)).toHaveCount(0);
-    const profile = await page.goto("/abdul-ladha");
+    await expect(main.getByText("Chairman & CEO", { exact: true }).first()).toBeVisible();
+    await expect(main.getByRole("heading", { name: "Our Board of Directors" })).toBeVisible();
+    for (const [name, href] of [
+      ["Abdul Ladha", /^\/abdul-ladha\/?$/],
+      ["Keith Dolo", /^\/keith-dolo-2\/?$/],
+      ["Barrett Sleeman", /^\/barrett-e-g-sleeman\/?$/],
+      ["Dr. David Vogt", /^\/david-vogt\/?$/],
+    ] as const) {
+      const card = main.getByRole("link", { name: new RegExp(name) }).last();
+      await expect(card, name).toHaveAttribute("href", href);
+      await expect(card.getByRole("img", { name }), name).toBeVisible();
+    }
+    await expect(main.getByText(/Ben Hastibakhsh|Margaret Clarke|John Anderson/)).toHaveCount(0);
+    const profile = await page.goto("/keith-dolo-2");
     expect(profile?.status()).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Abdul Ladha");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Keith Dolo");
+    await expect(page.locator("main").getByText(/Robert Half International/)).toBeVisible();
+    await expect(page.locator("main").getByRole("img", { name: "Keith Dolo" })).toBeVisible();
     for (const slug of ["/john-anderson-2", "/ben-hastibakhsh", "/ross-jelveh"]) {
       const withdrawn = await page.request.get(slug, { maxRedirects: 0 });
       expect(withdrawn.status(), slug).toBe(308);
