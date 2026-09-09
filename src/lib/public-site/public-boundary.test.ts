@@ -668,6 +668,7 @@ describe("Stage 2 registries and navigation", () => {
       "about.footprint",
       "about.milestones.items.map",
       "about.direction",
+      "about.developing.lead",
       "about.developing.items.map",
     ]) {
       expect(source, block).toContain(block);
@@ -830,7 +831,8 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(aboutContent).toContain("Developing opportunities under evaluation.");
     // The growth paragraph (after the prior site's "Our growth strategy") is strategy and
     // objective, never a transaction under way or an available service.
-    expect(page).toContain("description={about.developing.paragraphs}");
+    expect(page).toContain("{about.developing.lead}");
+    expect(page).toContain("{item.detail}");
     expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
     expect(aboutContent).toContain("nothing here is offered as available until it is");
     for (const banned of [
@@ -843,7 +845,7 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     }
     // The developing grid is the last block before the layout closes.
     expect(page.trimEnd()).toMatch(
-      /about\.developing\.items\.map[\s\S]*?\/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
+      /about\.developing\.items\.map[\s\S]*?<\/section>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
     );
     // The hero backdrop and two bands, each decorative, drawn from the registry, never a path literal.
     expect(page).toContain('media={<HeroBackdrop band="data" />}');

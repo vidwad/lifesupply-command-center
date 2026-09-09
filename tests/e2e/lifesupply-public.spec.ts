@@ -181,8 +181,12 @@ test.describe("LifeSupply public site", () => {
     await expect(
       main.getByText(/The growth strategy is to acquire profitable operations/),
     ).toBeVisible();
-    await expect(main.getByText(/Pharmacy Solutions is a stated development focus/)).toBeVisible();
-    await expect(main.getByText(/Metabolic-health supply services apply/)).toBeVisible();
+    await expect(
+      main.getByText(/Non-drug supply programs that a pharmacist selects and the store fulfils/),
+    ).toBeVisible();
+    await expect(
+      main.getByText(/It applies the existing supply model to a recurring patient-support need/),
+    ).toBeVisible();
     // The photograph moves with the scroll position.
     const first = bands.first();
     await page.evaluate(() => window.scrollTo(0, 0));
