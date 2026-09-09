@@ -49,6 +49,7 @@ const HERO_VIDEO = `${PUBLIC_DIR}/hero-video.tsx`;
 const MOTION = `${PUBLIC_DIR}/motion.tsx`;
 const SECTIONS = `${PUBLIC_DIR}/sections.tsx`;
 const ACCORDION = `${PUBLIC_DIR}/accordion.tsx`;
+const SCROLL_TO_TOP = `${PUBLIC_DIR}/scroll-to-top.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
 // carries the legacy-compatible route table.
@@ -81,6 +82,7 @@ const heroVideo = () => stripComments(read(HERO_VIDEO));
 const motionPrimitives = () => stripComments(read(MOTION));
 const sections = () => stripComments(read(SECTIONS));
 const accordion = () => stripComments(read(ACCORDION));
+const scrollToTop = () => stripComments(read(SCROLL_TO_TOP));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -93,6 +95,7 @@ const publicComponents = () => [
   actionLink(),
   sections(),
   accordion(),
+  scrollToTop(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -581,6 +584,19 @@ describe("design-pass graphics and section primitives", () => {
     }
   });
 
+  it("renders the back-to-top control only once needed, returns focus to main, and honours reduced motion", () => {
+    const code = scrollToTop();
+    expect(code).toContain('aria-label="Back to top"');
+    expect(code).toContain("if (!shown) return null;");
+    expect(code).toContain('document.getElementById("lsh-main")');
+    expect(code).toContain('behavior: reduce ? "auto" : "smooth"');
+    expect(code).toContain("{ passive: true }");
+    expect(layout()).toContain("<ScrollToTop />");
+    expect(read(CSS)).toMatch(
+      /@media \(prefers-reduced-motion: no-preference\)\s*\{\s*\.lsh-scroll-top/,
+    );
+  });
+
   it("keeps the accordion keyboard-operable and reduced-motion safe", () => {
     const code = accordion();
     expect(code).toContain("<button");
@@ -678,6 +694,15 @@ describe("Stage 2 registries and navigation", () => {
     expect(code).toContain('if (event.key === "Escape") setOpen(false);');
     // The mobile panel lists group children as plain rows; nothing depends on hover there.
     expect(code).toMatch(/id="lsh-mobile-menu"[\s\S]*?PRIMARY_NAV\.map[\s\S]*?group\.links\.map/);
+    // Groups collapse behind a real button with state and a controlled list,
+    // one open at a time, the current page's group first; never hover.
+    expect(code).toContain("aria-expanded={expandedGroup === group.key}");
+    expect(code).toContain("aria-controls={`lsh-mobile-group-${group.key}`}");
+    // Collapsed through the display class, not the attribute: a `grid` utility
+    // outranks the preflight [hidden] rule and would keep the list visible.
+    expect(code).toMatch(/expandedGroup === group\.key\s*\?\s*"grid[^"]*"\s*:\s*"hidden"/);
+    expect(code).not.toContain("hidden={expandedGroup");
+    expect(code).toContain("setExpandedGroup(activeGroup?.key ?? null)");
   });
 });
 

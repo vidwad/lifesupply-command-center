@@ -234,6 +234,11 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Open navigation" }).click();
     const panel = page.locator("#lsh-mobile-menu");
+    // Groups are collapsed so the panel fits the screen; a child appears once its group is expanded.
+    for (const name of ["Our Businesses", "Clinic Solutions", "Metabolic Health", "Partners"]) {
+      await expect(panel.getByRole("link", { name, exact: true })).toBeVisible();
+    }
+    await expect(panel.getByRole("link", { name: "Care kits", exact: true })).toBeHidden();
     for (const name of [
       "Our Businesses",
       "Clinic Solutions",
@@ -265,8 +270,52 @@ test.describe("LifeSupply public site", () => {
       "Balkowitsch Worldwide",
       "Technology & fulfilment",
     ]) {
-      await expect(panel.getByRole("link", { name, exact: true }).first(), name).toBeVisible();
+      // Collapsed rows are display:none, so the role query must include hidden nodes.
+      const link = panel.getByRole("link", { name, exact: true, includeHidden: true }).first();
+      if (await link.isHidden()) {
+        // Expand the group that owns it through the button that controls its list.
+        const id = await link.evaluate((el) => el.closest("ul")?.id ?? "");
+        await panel.locator(`button[aria-controls="${id}"]`).click();
+      }
+      await expect(link, name).toBeVisible();
     }
+    // One group open at a time.
+    await expect(panel.getByRole("button", { name: /^Collapse / })).toHaveCount(1);
+  });
+
+  test("opens the current page's group in the mobile panel and collapses the rest", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, "mobile navigation only");
+    await page.goto("/metabolic-health/refills");
+    await page.getByRole("button", { name: "Open navigation" }).click();
+    const panel = page.locator("#lsh-mobile-menu");
+    await expect(panel.getByRole("button", { name: "Collapse Metabolic Health" })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Refills", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    await expect(panel.getByRole("link", { name: "Design & build", exact: true })).toBeHidden();
+    await panel.getByRole("button", { name: "Expand Clinic Solutions" }).click();
+    await expect(panel.getByRole("link", { name: "Design & build", exact: true })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeHidden();
+  });
+
+  test("shows a back-to-top control after reading down and returns to the top", async ({
+    page,
+  }) => {
+    await page.goto("/about-us");
+    const control = page.getByRole("button", { name: "Back to top" });
+    await expect(control).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 1600));
+    await expect(control).toBeVisible();
+    await control.click();
+    await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 4000 }).toBe(0);
+    await expect(control).toHaveCount(0);
+    // Focus moved to the main landmark, so the next Tab lands in the page.
+    expect(await page.evaluate(() => document.activeElement?.id)).toBe("lsh-main");
   });
 
   test("names the four operating brands in the footer with verified external links", async ({
