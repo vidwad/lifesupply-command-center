@@ -15,3 +15,6 @@ CLAUDE.md
 README.md
 MANIFEST.md
 00_START_HERE_FOR_CLAUDE_CODE.md
+
+# Python virtual environment for the enrichment tool (untracked, gitignored)
+bc-customer-enrichment/.venv

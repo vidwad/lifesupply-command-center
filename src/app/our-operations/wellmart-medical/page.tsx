@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 
+import { publicMetadata } from "@/lib/public-site/seo";
+
 import { StoreBrandPage } from "@/components/public-site/lifesupply-pages";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = publicMetadata({
   title: "Wellmart Medical",
   description: "Wellmart Medical, the Canadian home medical equipment and supply store.",
-};
+  path: "/our-operations/wellmart-medical/",
+});
 
 export default function Page() {
   return <StoreBrandPage brandKey="wellmart" />;

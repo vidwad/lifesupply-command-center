@@ -88,7 +88,38 @@ async function checkFeatureFlags(): Promise<Check> {
   };
 }
 
+/**
+ * The public surface (Vercel, `PUBLIC_SITE_MODE=true`, no `DATABASE_URL`) has no
+ * database by design (D-02). Its probe reports that surface as ok without
+ * touching Prisma; the Command Center surface keeps the full checks.
+ */
+function isPublicSurface() {
+  return process.env.PUBLIC_SITE_MODE === "true" || !process.env.DATABASE_URL;
+}
+
 export async function GET() {
+  if (isPublicSurface()) {
+    return new Response(
+      JSON.stringify(
+        {
+          status: "ok",
+          surface: "public-web",
+          environment: process.env.DEPLOY_ENV ?? "unknown",
+          timestamp: new Date().toISOString(),
+          uptimeSeconds: Math.floor((Date.now() - STARTED_AT) / 1000),
+          checks: [
+            { name: "database", status: "skipped", detail: "public surface has no database" },
+          ],
+        },
+        null,
+        2,
+      ),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
+      },
+    );
+  }
   const checks = await Promise.all([checkDatabase(), checkAnthropic(), checkFeatureFlags()]);
   const failing = checks.some((c) => c.status === "failing");
   const degraded = checks.some((c) => c.status === "degraded");
