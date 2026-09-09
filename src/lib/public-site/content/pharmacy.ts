@@ -70,6 +70,5 @@ export const pharmacy = {
       ],
     },
     actions: ["discuss_program", "partner_pharmacies"],
-    related: ["metabolic_hub", "partner_pharmacies", "advanced_therapeutics"],
   },
 } as const;

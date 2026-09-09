@@ -25,6 +25,7 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import {
   BRAND_ROUTES,
   LIFE_SUPPLY_NAVIGATION,
+  LIFE_SUPPLY_ROUTES,
   LIVE_ROUTES,
   METABOLIC_ROUTES,
   ROUTES,
@@ -229,10 +230,18 @@ describe("route registry", () => {
     expect(groups.find((g) => g.key === "investors")!.links.map((l) => l.href)).toEqual([
       STAGE_5_ROUTES.growthStrategy,
       STAGE_5_ROUTES.advancedTherapeutics,
-      STAGE_5_ROUTES.investorDocuments,
-      STAGE_5_ROUTES.shareholderServices,
+      LIFE_SUPPLY_ROUTES.news,
       STAGE_5_ROUTES.disclosures,
     ]);
+    // 2026-09-09: News & resources moved from the About group into Investors, replacing the
+    // documents index; Shareholder services withdrawn. Both old addresses are redirect rows.
+    expect(groups.find((g) => g.key === "about")!.links.map((l) => l.href)).toEqual(["/our-team/"]);
+    for (const path of [WITHDRAWN_ROUTES.investorDocuments, WITHDRAWN_ROUTES.shareholderServices]) {
+      expect(isLiveRoute(path), path).toBe(false);
+    }
+    expect(LIFE_SUPPLY_NAVIGATION.map((l) => l.href)).toContain(LIFE_SUPPLY_ROUTES.news);
+    expect(actionHref("news_resources")).toBe(LIFE_SUPPLY_ROUTES.news);
+    expect(Object.keys(ACTIONS)).not.toContain("shareholder_services");
     expect(buildLegalNavigation().map((l) => l.href)).toEqual([
       STAGE_5_ROUTES.privacy,
       STAGE_5_ROUTES.terms,
@@ -281,7 +290,7 @@ describe("route registry", () => {
   });
 
   it("keeps investor documents at a request step with no hosted file, and every figure scoped", () => {
-    for (const record of investorRelations.documents.records) {
+    for (const record of news.documents.records) {
       expect(record.href, record.title).toBeNull();
       expect(record.date, record.title).toBeTruthy();
       expect(["Public", "Restricted, on request", "Historical"]).toContain(record.category);
@@ -384,8 +393,7 @@ describe("action registry", () => {
       ...investorRelations.hub.actions,
       ...investorRelations.growthStrategy.actions,
       ...investorRelations.advancedTherapeutics.actions,
-      ...investorRelations.documents.actions,
-      ...investorRelations.shareholderServices.actions,
+      ...news.documents.actions,
       ...investorRelations.disclosures.actions,
       ...Object.values(policies).map((p) => p.action),
     ];

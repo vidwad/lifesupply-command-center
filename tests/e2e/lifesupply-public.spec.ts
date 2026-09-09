@@ -54,8 +54,6 @@ test.describe("LifeSupply public site", () => {
       "/partners/acquisitions",
       "/investor-relations/growth-strategy",
       "/investor-relations/advanced-therapeutics",
-      "/investor-relations/documents",
-      "/investor-relations/shareholder-services",
       "/investor-relations/disclosures",
       "/privacy",
       "/terms",
@@ -264,8 +262,6 @@ test.describe("LifeSupply public site", () => {
       "Acquisitions",
       "Growth strategy",
       "Advanced therapeutics",
-      "Documents",
-      "Shareholder services",
       "Disclosures",
       "Equipment",
       "Ongoing supplies",
@@ -516,10 +512,7 @@ test.describe("LifeSupply public site", () => {
     await expect(
       main.getByRole("link", { name: "Acquisition or strategic inquiry" }),
     ).toHaveAttribute("href", "mailto:abdul@lifesupply.com");
-    await expect(main.getByRole("link", { name: "Shareholder services" })).toHaveAttribute(
-      "href",
-      "mailto:invest@lifesupply.com",
-    );
+    await expect(main.getByText(/Shareholder services/)).toHaveCount(0);
     // Existing orders go to the store that took them.
     await expect(main.getByRole("link", { name: "LifeSupply support" })).toHaveAttribute(
       "href",
@@ -612,8 +605,11 @@ test.describe("LifeSupply public site", () => {
   test("keeps investor documents at a request step with no file link, and shows the figures scoped", async ({
     page,
   }) => {
-    await page.goto("/investor-relations/documents");
+    await page.goto("/news");
     const main = page.locator("main");
+    await expect(
+      main.getByRole("heading", { name: "Investor documents", exact: true }),
+    ).toBeVisible();
     await expect(main.locator("table tbody tr")).toHaveCount(3);
     await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
     await expect(main.getByRole("link", { name: "Request investor materials" })).toHaveAttribute(
@@ -708,9 +704,11 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/news");
     const main = page.locator("main");
-    // Three section headings, in order: company news, historical, resources.
+    // Four section headings, in order: company news, investor documents (since 2026-09-09),
+    // historical, resources.
     await expect(main.getByRole("heading", { level: 2 })).toHaveText([
       "Company news",
+      "Investor documents",
       "Historical releases",
       "Resources",
     ]);
@@ -727,8 +725,8 @@ test.describe("LifeSupply public site", () => {
     expect([307, 302, 404]).toContain(preview.status());
   });
 
-  test("keeps the published document list fail-closed on the documents page", async ({ page }) => {
-    await page.goto("/investor-relations/documents");
+  test("keeps the published document list fail-closed on the news page", async ({ page }) => {
+    await page.goto("/news");
     const main = page.locator("main");
     await expect(main.getByRole("heading", { name: "Published public documents" })).toBeVisible();
     await expect(
@@ -765,27 +763,23 @@ test.describe("LifeSupply public site", () => {
     ).toHaveAttribute("href", "https://www.lifesupplyclinics.com/contact-us/");
   });
 
-  test("offers contextual related links that resolve, between the program, clinic, and store pages", async ({
+  test("shows no Related link row above the footer on the program, clinic, store, and pharmacy pages", async ({
     page,
   }) => {
-    for (const [route, expected] of [
-      ["/metabolic-health", /^\/clinic-solutions\/?$/],
-      ["/medical-supply-solutions/lifesupply", /^\/metabolic-health\/?$/],
-      ["/clinic-solutions/ongoing-supplies", /^\/partners\/clinics\/?$/],
-    ] as const) {
+    // Product owner, 2026-09-09: the "Related" rows are gone from every page.
+    for (const route of [
+      "/metabolic-health",
+      "/metabolic-health/care-kits/glp-1-support",
+      "/medical-supply-solutions/lifesupply",
+      "/clinic-solutions",
+      "/clinic-solutions/ongoing-supplies",
+      "/pharmacy-solutions",
+    ]) {
       await page.goto(route);
-      const related = page.getByRole("region", { name: "Related" });
-      await expect(related).toBeVisible();
-      const hrefs = await related
-        .locator("a")
-        .evaluateAll((links) => links.map((link) => link.getAttribute("href")!));
-      expect(
-        hrefs.some((href) => expected.test(href)),
-        `${route} -> ${expected}`,
-      ).toBe(true);
-      for (const href of hrefs) {
-        if (href.startsWith("/")) expect((await page.request.get(href)).ok(), href).toBe(true);
-      }
+      await expect(page.getByRole("region", { name: "Related" }), route).toHaveCount(0);
+      await expect(page.locator("main").getByText("Related", { exact: true }), route).toHaveCount(
+        0,
+      );
     }
   });
 
@@ -811,6 +805,8 @@ test.describe("LifeSupply public site", () => {
       ["/our-operations/lifesupply-clinics", /\/clinic-solutions$/],
       ["/our-operations/technology-fulfilment", /\/medical-supply-solutions$/],
       ["/clinic-solutions/design-build", /\/clinic-solutions$/],
+      ["/investor-relations/documents", /\/news$/],
+      ["/investor-relations/shareholder-services", /\/investor-relations$/],
     ] as const) {
       const withdrawn = await page.request.get(source, { maxRedirects: 0 });
       expect(withdrawn.status(), source).toBe(308);

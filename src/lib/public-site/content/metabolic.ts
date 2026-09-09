@@ -55,8 +55,6 @@ export interface KitPathway {
   /** Why browse is empty, when it is. */
   browseNote: string | null;
   faqs: { q: string; a: string }[];
-  /** Stage 8: contextual internal links, action-registry keys. */
-  related?: readonly string[];
 }
 
 const ROLE_TEXT = {
@@ -231,8 +229,6 @@ export const metabolic = {
       ],
     },
     actions: ["explore_kits", "discuss_program"],
-    // Stage 8: contextual links to the clinic and pharmacy journeys this program depends on.
-    related: ["clinic_solutions", "partner_clinics", "partner_pharmacies"],
   },
 
   kitsHub: {
@@ -544,7 +540,6 @@ export const metabolic = {
         { brand: "lifesupply", category: "Needles and syringes" },
       ],
       browseNote: null,
-      related: ["clinic_supply_review", "clinic_solutions"],
       faqs: [
         {
           q: "Is there a standard clinic pack?",
@@ -580,7 +575,6 @@ export const metabolic = {
       browse: [],
       browseNote:
         "There is no store collection for pharmacy programs. A program is configured by conversation with the pharmacy, and nothing is listed until it is.",
-      related: ["partner_pharmacies"],
       faqs: [
         {
           q: "Who is responsible for complaints and recalls?",

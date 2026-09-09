@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ExternalLink } from "lucide-react";
 
 import { Accordion } from "@/components/public-site/accordion";
-import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
+import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
@@ -210,7 +210,6 @@ export function MetabolicHealthPage() {
           </Reveal>
         </Container>
       </section>
-      <RelatedActions actions={hub.related} />
     </LifeSupplyLayout>
   );
 }
@@ -399,7 +398,6 @@ export function CareKitPage({ slug }: { slug: string }) {
           </div>
         </Reveal>
       </section>
-      <RelatedActions actions={kit.related} />
     </LifeSupplyLayout>
   );
 }

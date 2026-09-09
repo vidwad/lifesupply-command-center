@@ -45,14 +45,13 @@ export type ActionKey =
   | "clinic_collaboration"
   | "growth_strategy"
   | "advanced_therapeutics"
-  | "investor_documents"
+  | "news_resources"
   | "supplier_inquiry"
   | "us_business_inquiry"
   | "acquisition_inquiry"
   | "general_inquiry"
   | "investor_information"
   | "investor_materials"
-  | "shareholder_services"
   | "shop_lifesupply"
   | "shop_wellmart"
   | "shop_clinics"
@@ -78,7 +77,6 @@ export type InquiryIntent =
   | "pharmacy"
   | "supplier"
   | "investor"
-  | "shareholder"
   | "acquisition"
   | "general"
   | "existing_order_support";
@@ -264,11 +262,11 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     ownerChannel: null,
     verifiedAt: null,
   },
-  investor_documents: {
-    key: "investor_documents",
-    label: "Documents index",
+  news_resources: {
+    key: "news_resources",
+    label: "News & resources",
     intent: "navigation",
-    destination: internal(STAGE_5_ROUTES.investorDocuments),
+    destination: internal(LIFE_SUPPLY_ROUTES.news),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -324,14 +322,6 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "investor_materials",
     label: "Request investor materials",
     intent: "investor",
-    destination: mail("invest@lifesupply.com"),
-    ownerChannel: "Investor relations",
-    verifiedAt: null,
-  },
-  shareholder_services: {
-    key: "shareholder_services",
-    label: "Shareholder services",
-    intent: "shareholder",
     destination: mail("invest@lifesupply.com"),
     ownerChannel: "Investor relations",
     verifiedAt: null,

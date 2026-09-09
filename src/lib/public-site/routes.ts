@@ -53,6 +53,10 @@ export const WITHDRAWN_ROUTES = {
   operationsBalkowitsch: "/our-operations/balkowitsch/",
   technology: "/our-operations/technology-fulfilment/",
   designBuild: "/clinic-solutions/design-build/",
+  // 2026-09-09 (product owner): the investor documents index merged into
+  // News & resources, and Shareholder services withdrawn.
+  investorDocuments: "/investor-relations/documents/",
+  shareholderServices: "/investor-relations/shareholder-services/",
 } as const;
 
 /** Stage 4 pages. Kit pages are a dynamic route; `kitRoute()` builds their paths. */
@@ -80,8 +84,6 @@ export const STAGE_5_ROUTES = {
   partnerAcquisitions: "/partners/acquisitions/",
   growthStrategy: "/investor-relations/growth-strategy/",
   advancedTherapeutics: "/investor-relations/advanced-therapeutics/",
-  investorDocuments: "/investor-relations/documents/",
-  shareholderServices: "/investor-relations/shareholder-services/",
   disclosures: "/investor-relations/disclosures/",
   privacy: "/privacy/",
   terms: "/terms/",
@@ -264,20 +266,9 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "live",
     navGroup: "investors",
   },
-  {
-    path: "/investor-relations/documents/",
-    label: "Documents",
-    stage: 5,
-    status: "live",
-    navGroup: "investors",
-  },
-  {
-    path: "/investor-relations/shareholder-services/",
-    label: "Shareholder services",
-    stage: 5,
-    status: "live",
-    navGroup: "investors",
-  },
+  // News & resources sits in the Investors group since 2026-09-09, where the
+  // documents index used to be; it keeps its legacy address.
+  { path: "/news/", label: "News & resources", stage: 5, status: "live", navGroup: "investors" },
   {
     path: "/investor-relations/disclosures/",
     label: "Disclosures",
@@ -286,7 +277,6 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "investors",
   },
   { path: "/our-team/", label: "Our team", stage: 5, status: "live", navGroup: "about" },
-  { path: "/news/", label: "News & resources", stage: 5, status: "live", navGroup: "about" },
   { path: "/shop/", label: "Shop & Services", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact-2/", label: "Contact (legacy)", stage: 9, status: "redirect", navGroup: null },
@@ -408,5 +398,8 @@ export const LIFE_SUPPLY_NAVIGATION: readonly NavLink[] = LIVE_ROUTES.filter(
   (route) =>
     route.navGroup !== null &&
     route.navGroup !== "utility" &&
-    (PRIMARY_GROUPS.some((group) => group.hub === route.path) || route.navGroup === "about"),
+    (PRIMARY_GROUPS.some((group) => group.hub === route.path) ||
+      route.navGroup === "about" ||
+      // A top-level legacy address; it stays in the footer after moving to the Investors group.
+      route.path === LIFE_SUPPLY_ROUTES.news),
 ).map((route) => ({ label: route.label, href: route.path }));

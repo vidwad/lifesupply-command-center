@@ -492,8 +492,6 @@ describe("routes and content governance", () => {
       "src/app/partners/acquisitions/page.tsx",
       "src/app/investor-relations/growth-strategy/page.tsx",
       "src/app/investor-relations/advanced-therapeutics/page.tsx",
-      "src/app/investor-relations/documents/page.tsx",
-      "src/app/investor-relations/shareholder-services/page.tsx",
       "src/app/investor-relations/disclosures/page.tsx",
       "src/app/privacy/page.tsx",
       "src/app/terms/page.tsx",
@@ -752,8 +750,16 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       "/our-operations/lifesupply-clinics",
       "/our-operations/technology-fulfilment",
       "/clinic-solutions/design-build",
+      "/investor-relations/documents",
+      "/investor-relations/shareholder-services",
     ]) {
       expect(config, source).toContain(`source: "${source}"`);
+    }
+    // 2026-09-09: the documents index merged into News & resources; Shareholder services withdrawn.
+    expect(config).toContain('destination: "/news"');
+    for (const code of publicComponents()) {
+      expect(code).not.toMatch(/shareholder/i);
+      expect(code).not.toContain("RelatedActions");
     }
     for (const slug of [
       "ben-hastibakhsh",
@@ -997,11 +1003,16 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
 
   it("keeps static documents at a request step and downloads only through the published read model", () => {
     expect(stage5Content()).not.toMatch(/\.pdf/i);
+    // The documents index lives on the News & resources page since 2026-09-09.
+    const newsPage = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
     const investors = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
     // The only download link is built from a published record's same-origin path; never a literal file.
-    expect(investors).toContain("publishedDocumentUrl(doc.downloadPath)");
+    expect(newsPage).toContain("publishedDocumentUrl(doc.downloadPath)");
+    expect(investors).not.toContain("publishedDocumentUrl");
+    for (const code of [newsPage, investors]) {
+      expect(code).not.toMatch(/\bdownload=/);
+    }
     expect(investors).not.toMatch(/href="https?:\/\//);
-    expect(investors).not.toMatch(/\bdownload=/);
     expect(existsSync(join(ROOT, "public/documents"))).toBe(false);
     expect(existsSync(join(ROOT, "public/investors"))).toBe(false);
   });
@@ -1074,7 +1085,6 @@ describe("Stage 6 governed publishing on the public site", () => {
       "src/app/news/page.tsx",
       "src/app/news/[slug]/page.tsx",
       "src/app/resources/[slug]/page.tsx",
-      "src/app/investor-relations/documents/page.tsx",
     ]) {
       const source = read(route);
       expect(source, route).toContain("@/lib/public-site/published");
@@ -1089,8 +1099,8 @@ describe("Stage 6 governed publishing on the public site", () => {
     expect(page).toContain("sections.current.unavailable");
     expect(page).toContain("sections.resources.unavailable");
     expect(page).toContain("export function PublishedUnavailablePage");
-    const investors = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
-    expect(investors).toContain("copy.unavailable");
+    // The published document list, merged into the news page on 2026-09-09.
+    expect(page).toContain("copy.unavailable");
     for (const route of ["src/app/news/[slug]/page.tsx", "src/app/resources/[slug]/page.tsx"]) {
       expect(read(route), route).toContain("if (!result.ok) return <PublishedUnavailablePage />;");
       expect(read(route), route).toContain("robots: { index: false }");

@@ -13,9 +13,15 @@ import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public
 import { IconBadge } from "@/components/public-site/sections";
 import { ACTIONS, type ActionKey } from "@/lib/public-site/actions";
 import { news } from "@/lib/public-site/content/news";
-import type { Published } from "@/lib/public-site/published";
+import { iconForTitle } from "@/lib/public-site/icon-map";
+import { measurementAttributes } from "@/lib/public-site/measurement";
+import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
 import { LIFE_SUPPLY_ROUTES, newsItemRoute, resourceRoute } from "@/lib/public-site/routes";
-import type { PublicNewsItemDto, PublicResourceDto } from "@/server/public-web/contracts";
+import type {
+  PublicNewsItemDto,
+  PublicResourceDto,
+  PublishedDocumentDto,
+} from "@/server/public-web/contracts";
 
 /** A section that says plainly when it is empty or unreachable rather than filling itself. */
 function Note({ text, tone = "empty" }: { text: string; tone?: "empty" | "unavailable" }) {
@@ -45,12 +51,165 @@ export function displayDate(iso: string) {
   });
 }
 
-/** `/news/` — governed current news and resources, plus the static historical releases. */
+/** Governed public documents from the published read model; fails closed when unreachable. */
+function PublishedDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
+  const copy = news.documents.published;
+  return (
+    <Reveal className="mt-12">
+      <Eyebrow as="h3">{copy.title}</Eyebrow>
+      {!published.ok ? (
+        <Note text={copy.unavailable} tone="unavailable" />
+      ) : published.data.length === 0 ? (
+        <Note text={copy.empty} />
+      ) : (
+        <ul className="mt-6 grid gap-4 md:grid-cols-2">
+          {published.data.map((doc) => (
+            <li
+              key={doc.id}
+              className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6"
+            >
+              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                {doc.documentType.replace("_", " ")}
+                {doc.periodLabel ? ` · ${doc.periodLabel}` : ""}
+              </p>
+              <h4 className="lsh-display mt-2 text-xl text-[var(--lsh-charcoal)]">{doc.title}</h4>
+              {doc.disclosureText ? (
+                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
+                  {doc.disclosureText}
+                </p>
+              ) : null}
+              <p className="mt-4">
+                {doc.downloadPath ? (
+                  <a
+                    {...measurementAttributes("public_document_download", {
+                      documentType: doc.documentType,
+                    })}
+                    href={publishedDocumentUrl(doc.downloadPath)}
+                    className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-4 py-2 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
+                  >
+                    {copy.download} <ArrowRight size={14} aria-hidden="true" />
+                  </a>
+                ) : (
+                  <span className="text-xs text-[var(--lsh-muted)]">On request</span>
+                )}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Reveal>
+  );
+}
+
+/**
+ * The investor documents index, merged into this page on 2026-09-09: access
+ * classes, the dated records at a request step, the governed published list,
+ * and the request note. No file is ever linked by literal.
+ */
+function InvestorDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
+  const d = news.documents;
+  return (
+    <div>
+      <Reveal>
+        <div className="flex items-center gap-4">
+          <IconBadge icon="landmark" size={18} />
+          <Eyebrow as="h2">{d.eyebrow}</Eyebrow>
+        </div>
+        <p className="lsh-display mt-4 max-w-3xl text-2xl leading-tight text-[var(--lsh-charcoal)]">
+          {d.title}
+        </p>
+        <p className="mt-3 max-w-3xl leading-7 text-[var(--lsh-muted)]">{d.intro}</p>
+      </Reveal>
+      <Stagger className="mt-8 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
+        {d.classes.map((entry) => (
+          <StaggerItem key={entry.title} className="flex gap-4 bg-[var(--lsh-surface)] p-6">
+            <IconBadge icon={iconForTitle(entry.title)} size={18} />
+            <div>
+              <Eyebrow as="h3">{entry.title}</Eyebrow>
+              <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{entry.text}</p>
+            </div>
+          </StaggerItem>
+        ))}
+      </Stagger>
+      <Reveal className="mt-10 overflow-x-auto">
+        <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+          <thead>
+            <tr className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
+                Title
+              </th>
+              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
+                Date
+              </th>
+              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
+                Access
+              </th>
+              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
+                Version
+              </th>
+              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {d.records.map((record) => (
+              <tr key={record.title} className="align-top">
+                <th
+                  scope="row"
+                  className="border-b border-[var(--lsh-rule)] py-4 pr-4 font-medium text-[var(--lsh-charcoal)]"
+                >
+                  {record.title}
+                  <span className="mt-1 block text-xs font-normal leading-5 text-[var(--lsh-muted)]">
+                    {record.note}
+                  </span>
+                </th>
+                <td className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]">
+                  {record.date}
+                </td>
+                <td className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]">
+                  {record.category}
+                </td>
+                <td className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]">
+                  {record.version ?? "Not stated"}
+                </td>
+                <td className="border-b border-[var(--lsh-rule)] py-4 text-[var(--lsh-muted)]">
+                  {record.href ? "Available" : "On request"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Reveal>
+      <PublishedDocuments published={published} />
+      <Reveal className="mt-10 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+        <IconBadge icon="mail" />
+        <p className="leading-7 text-[var(--lsh-muted)]">{d.requestNote}</p>
+      </Reveal>
+      <Reveal className="mt-8 flex flex-wrap gap-3">
+        {d.actions.map((action, index) => (
+          <ActionLink
+            key={action}
+            action={action as ActionKey}
+            variant={index === 0 ? "primary" : "onLight"}
+          />
+        ))}
+      </Reveal>
+    </div>
+  );
+}
+
+/**
+ * `/news/` — governed current news, the investor documents index, the static
+ * historical releases, and governed resources.
+ */
 export function NewsPage({
   current,
+  documents,
   resources,
 }: {
   current: Published<PublicNewsItemDto[]>;
+  documents: Published<PublishedDocumentDto[]>;
   resources: Published<PublicResourceDto[]>;
 }) {
   const { hero, sections, historical } = news;
@@ -91,6 +250,8 @@ export function NewsPage({
               </ul>
             )}
           </Reveal>
+
+          <InvestorDocuments published={documents} />
 
           <div>
             <Reveal className="flex flex-wrap items-end justify-between gap-3">
