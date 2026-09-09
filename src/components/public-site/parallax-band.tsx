@@ -23,32 +23,40 @@ const OVERLAYS = {
  * across its time on screen, so the movement is plainly visible), behind
  * the site's overlay colouring and under a red rule.
  *
- * Decorative only. The band is hidden from assistive technology, carries no
- * text, and the photograph's alt is empty, so the picture never makes a
- * claim. Visitors who prefer reduced motion get the same band without the
- * drift.
+ * The photograph is decorative: its layer is hidden from assistive
+ * technology and its alt is empty, so the picture never makes a claim.
+ * With `eyebrow` and `statement` the band carries one short line of
+ * approved copy over the overlay, which is read like any other text;
+ * without them the whole band is presentational. Visitors who prefer
+ * reduced motion get the same band without the drift.
  */
 export function ParallaxBand({
   band,
   tone = "red",
+  eyebrow,
+  statement,
 }: {
   band: LegacyBandKey;
   tone?: keyof typeof OVERLAYS;
+  eyebrow?: string;
+  statement?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["-25%", "25%"]);
   const image = getLegacyBand(band);
+  const hasText = Boolean(statement);
   return (
     <div
       ref={ref}
-      role="presentation"
-      aria-hidden="true"
+      role={hasText ? undefined : "presentation"}
+      aria-hidden={hasText ? undefined : "true"}
       data-band={band}
-      className="relative h-64 overflow-hidden bg-[var(--lsh-ink)] sm:h-80 lg:h-[24rem]"
+      className="relative flex min-h-64 items-center overflow-hidden bg-[var(--lsh-ink)] px-5 py-16 text-white sm:min-h-80 lg:min-h-[24rem] lg:px-8 lg:py-20"
     >
       <motion.div
+        aria-hidden="true"
         style={reduce ? undefined : { y }}
         className="absolute inset-x-0 top-[-30%] h-[160%] will-change-transform"
       >
@@ -66,6 +74,16 @@ export function ParallaxBand({
         className={`absolute inset-0 mix-blend-multiply ${OVERLAYS[tone]}`}
       />
       <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[var(--lsh-brand-red)]" />
+      {hasText ? (
+        <div className="relative mx-auto w-full max-w-7xl">
+          <div className="max-w-3xl border-l-4 border-white pl-6 sm:pl-7">
+            {eyebrow ? <p className="lsh-display text-[11px] text-white/85">{eyebrow}</p> : null}
+            <p className="lsh-display mt-4 text-2xl leading-[1.08] sm:text-3xl lg:text-4xl">
+              {statement}
+            </p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

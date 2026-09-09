@@ -185,12 +185,15 @@ test.describe("LifeSupply public site", () => {
     await expect(bands).toHaveCount(2);
     for (const index of [0, 1]) {
       const band = bands.nth(index);
-      await expect(band).toHaveAttribute("aria-hidden", "true");
+      // The photograph's layer is decorative; the band's one line is real text.
+      await expect(band.locator('[aria-hidden="true"] img')).toHaveCount(1);
       await band.scrollIntoViewIfNeeded();
       await expect
         .poll(() => band.locator("img").evaluate((img) => (img as HTMLImageElement).naturalWidth))
         .toBeGreaterThan(0);
     }
+    await expect(bands.nth(0)).toContainText("More than 25 years of operations");
+    await expect(bands.nth(1)).toContainText("Four operating websites");
     // The removed sections are gone and the developing opportunities close the page.
     await expect(main.getByText(/Shared capabilities|Published entities/)).toHaveCount(0);
     const headings = main.getByRole("heading", { level: 2 });

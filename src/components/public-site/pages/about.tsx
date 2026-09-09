@@ -100,7 +100,12 @@ export function AboutPage() {
         </Stagger>
       </section>
 
-      <ParallaxBand band="desk" tone="redLight" />
+      <ParallaxBand
+        band="desk"
+        tone="redLight"
+        eyebrow={about.bands.desk.eyebrow}
+        statement={about.bands.desk.statement}
+      />
 
       {/* Footprint and milestones. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
@@ -171,7 +176,12 @@ export function AboutPage() {
         </div>
       </section>
 
-      <ParallaxBand band="warehouse" tone="ink" />
+      <ParallaxBand
+        band="warehouse"
+        tone="ink"
+        eyebrow={about.bands.warehouse.eyebrow}
+        statement={about.bands.warehouse.statement}
+      />
 
       {/* Brands, from the registry. */}
       <section className="py-20">
