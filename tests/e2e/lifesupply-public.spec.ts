@@ -178,6 +178,11 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByText(/Shared capabilities|Published entities/)).toHaveCount(0);
     const headings = main.getByRole("heading", { level: 2 });
     await expect(headings.last()).toHaveText("Developing opportunities under evaluation.");
+    await expect(
+      main.getByText(/The growth strategy is to acquire profitable operations/),
+    ).toBeVisible();
+    await expect(main.getByText(/Pharmacy Solutions is a stated development focus/)).toBeVisible();
+    await expect(main.getByText(/Metabolic-health supply services apply/)).toBeVisible();
     // The photograph moves with the scroll position.
     const first = bands.first();
     await page.evaluate(() => window.scrollTo(0, 0));

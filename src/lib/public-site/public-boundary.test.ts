@@ -828,6 +828,19 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       expect(aboutContent, gone).not.toContain(gone);
     }
     expect(aboutContent).toContain("Developing opportunities under evaluation.");
+    // The growth paragraph (after the prior site's "Our growth strategy") is strategy and
+    // objective, never a transaction under way or an available service.
+    expect(page).toContain("description={about.developing.paragraphs}");
+    expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
+    expect(aboutContent).toContain("nothing here is offered as available until it is");
+    for (const banned of [
+      /we are acquiring/i,
+      /has acquired|have acquired/i,
+      /(acquire|acquisition of|closing|signed|announce[sd]?) (a |the )?pharmacy/i,
+      /now available|available now/i,
+    ]) {
+      expect(aboutContent, String(banned)).not.toMatch(banned);
+    }
     // The developing grid is the last block before the layout closes.
     expect(page.trimEnd()).toMatch(
       /about\.developing\.items\.map[\s\S]*?\/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,

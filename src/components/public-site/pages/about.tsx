@@ -199,6 +199,7 @@ export function AboutPage() {
         columns={2}
         eyebrow={about.developing.eyebrow}
         title={about.developing.title}
+        description={about.developing.paragraphs}
         items={about.developing.items.map((item) => ({
           title: item.title,
           text: item.text,
