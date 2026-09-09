@@ -10,9 +10,15 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, ScrollBeam, Stagger, StaggerItem } from "@/components/public-site/motion";
+import {
+  Reveal,
+  ScrollBeam,
+  SpotlightCard,
+  Stagger,
+  StaggerItem,
+} from "@/components/public-site/motion";
 import { HeroBackdrop, ParallaxBand } from "@/components/public-site/parallax-band";
-import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
+import { IconBadge, SplitSection } from "@/components/public-site/sections";
 import { VideoEmbed } from "@/components/public-site/video-embed";
 import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
@@ -194,19 +200,61 @@ export function AboutPage() {
         </div>
       </SplitSection>
 
-      {/* Developing opportunities, with status, closing the page. */}
-      <IconFeatureGrid
-        columns={2}
-        eyebrow={about.developing.eyebrow}
-        title={about.developing.title}
-        description={about.developing.paragraphs}
-        items={about.developing.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          status: item.status,
-          icon: iconForTitle(item.title),
-        }))}
-      />
+      {/*
+       * Developing opportunities, closing the page. Two columns: the heading,
+       * the strategy statement, and the status note hold the left; each
+       * opportunity carries its own discussion in a card on the right.
+       */}
+      <section className="px-5 py-20 lg:px-8">
+        <Container className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <Reveal>
+              <SectionHeading eyebrow={about.developing.eyebrow} title={about.developing.title} />
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="mt-7 border-l-4 border-[var(--lsh-brand-red)] pl-6 text-lg leading-8 text-[var(--lsh-charcoal)]">
+                {about.developing.lead}
+              </p>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <p className="mt-7 text-sm leading-6 text-[var(--lsh-muted)]">
+                {about.developing.note}
+              </p>
+            </Reveal>
+          </div>
+          <div>
+            <Reveal>
+              <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+                {about.developing.intro}
+              </p>
+            </Reveal>
+            <Stagger as="ul" className="mt-6 grid gap-5">
+              {about.developing.items.map((item) => (
+                <StaggerItem key={item.title} as="li">
+                  <SpotlightCard
+                    as="article"
+                    className="lsh-lift border-t-2 border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] p-7 transition-colors hover:border-[var(--lsh-brand-red)] lg:p-8"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <IconBadge icon={iconForTitle(item.title)} />
+                      <span className="lsh-display border border-[var(--lsh-brand-red)] px-2 py-0.5 text-[10px] text-[var(--lsh-brand-red)]">
+                        {item.status}
+                      </span>
+                    </div>
+                    <h3 className="lsh-display mt-6 text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
+                    <p className="mt-3 border-t border-[var(--lsh-rule)] pt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+                      {item.detail}
+                    </p>
+                  </SpotlightCard>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+        </Container>
+      </section>
     </LifeSupplyLayout>
   );
 }

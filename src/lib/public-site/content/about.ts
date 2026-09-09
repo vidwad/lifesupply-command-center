@@ -103,29 +103,32 @@ export const about = {
     eyebrow: "Looking ahead",
     title: "Developing opportunities under evaluation.",
     /**
-     * The strategy paragraph, after the prior About page's "Our growth
+     * The strategy statement, after the prior About page's "Our growth
      * strategy" (product owner, 2026-09-09), stated as strategy and objective
-     * rather than as transactions under way, and extended with the two
-     * developing opportunities in the terms their own pages use. Nothing
-     * here is offered as available.
+     * rather than as transactions under way. Each opportunity then carries
+     * its own discussion inside its card (laid out in two columns on
+     * 2026-09-09 at the product owner's request). Nothing here is offered as
+     * available.
      */
-    paragraphs: [
-      "The growth strategy is to acquire profitable operations that complement the existing business model. The objective is to integrate strategically located bricks-and-mortar medical supply stores, pharmacies, clinics, and distributors into current operations, broadening the range of inventory available to LifeSupply and enabling a wider range of products and services to be offered online in Canada and the United States.",
-      "Two opportunities are being developed alongside that strategy. Pharmacy Solutions is a stated development focus: non-drug supply programs that a pharmacist selects and the store fulfils are in development today, while pharmacy-related operations and regulated care infrastructure remain under evaluation, subject to regulatory, operational, and partner confirmation. Metabolic-health supply services apply the same supply model to clinics, pharmacies, and programs supporting people on metabolic-health pathways: starter equipment, usage-driven consumables, clinic procurement, kitting and fulfilment, and contracted workflow support, with availability published as each pathway is confirmed.",
-      "Each initiative is presented on this site with its own status. Forward-looking activities remain subject to approval and disclosure context, and nothing here is offered as available until it is.",
-    ],
+    lead: "The growth strategy is to acquire profitable operations that complement the existing business model. The objective is to integrate strategically located bricks-and-mortar medical supply stores, pharmacies, clinics, and distributors into current operations, broadening the range of inventory available to LifeSupply and enabling a wider range of products and services to be offered online in Canada and the United States.",
+    intro: "Two opportunities are being developed alongside that strategy.",
     items: [
       {
         title: "Metabolic-health supply services",
         status: "In development",
-        text: "Non-drug supplies, clinic procurement, kitting and fulfilment, and contracted workflow support for metabolic-health programs. Availability will be published when it is confirmed.",
+        text: "Starter equipment, usage-driven consumables, clinic procurement, kitting and fulfilment, and contracted workflow support for clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
+        detail:
+          "It applies the existing supply model to a recurring patient-support need. Availability is published as each pathway is confirmed.",
       },
       {
         title: "Pharmacy solutions",
         status: "Development focus",
-        text: "A stated development focus around pharmacy-related operations and regulated care infrastructure, subject to current regulatory, operational, and partner confirmation. Non-drug supply programs for pharmacies are the part in development today.",
+        text: "A stated development focus around pharmacy-related operations and regulated care infrastructure, subject to regulatory, operational, and partner confirmation.",
+        detail:
+          "Non-drug supply programs that a pharmacist selects and the store fulfils are the part in development today. Pharmacy-related operations remain under evaluation and are not offered on this site.",
       },
     ],
+    note: "Each initiative is presented on this site with its own status. Forward-looking activities remain subject to approval and disclosure context, and nothing here is offered as available until it is.",
   },
 
   // Stage 2 draft heading; the cards come from the brand registry.
