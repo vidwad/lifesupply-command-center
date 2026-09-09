@@ -815,6 +815,11 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     );
     const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
     expect(page).toContain("{pharmacy.status.sentence}");
+    // The value block (2026-09-09) is design intent, never a result or an operation.
+    expect(page).toContain("hub.value.items.map");
+    expect(pharmacy).toContain("No pharmacy supply program is operating.");
+    expect(pharmacy).not.toMatch(/\b(has|have) (helped|reduced|improved|delivered)\b/i);
+    expect(pharmacy).not.toMatch(/subscription is available\b/i);
   });
 
   it("opens the homepage after the hero with the three-panel statement, stated as record, strategy, and ambition", () => {

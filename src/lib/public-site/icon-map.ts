@@ -33,6 +33,11 @@ export const ICON_BY_TITLE: Record<string, string> = {
   "Understand the practice": "search",
   "Assess and plan": "compass",
   "Build and hand over": "badge",
+  // Pharmacy Solutions
+  "For the pharmacy": "pill",
+  "For the patient": "heart",
+  "For clinic pathways": "stethoscope",
+  "For the group": "layout",
   // Partners
   "Suppliers and manufacturers": "boxes",
   "Acquisitions and strategic transactions": "handshake",

@@ -8,7 +8,8 @@ import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 /**
- * `/pharmacy-solutions/` (2026-09-08): the pharmacy supply program that is in
+ * `/pharmacy-solutions/` (2026-09-08, expanded 2026-09-09): why the program
+ * matters to the ecosystem, the pharmacy supply program that is in
  * development today, and the stated direction for pharmacy-related
  * operations, each with its status. Nothing here dispenses, diagnoses, or
  * prescribes, and no transaction is named or implied.
@@ -43,6 +44,19 @@ export function PharmacySolutionsPage() {
           </p>
         </Reveal>
       </section>
+
+      {/* Why it matters: the value to the ecosystem, as design intent. */}
+      <IconFeatureGrid
+        columns={4}
+        eyebrow={hub.value.eyebrow}
+        title={hub.value.title}
+        description={hub.value.intro}
+        items={hub.value.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          icon: iconForTitle(item.title),
+        }))}
+      />
 
       {/* In development today: the pharmacy supply program. */}
       <IconFeatureGrid
