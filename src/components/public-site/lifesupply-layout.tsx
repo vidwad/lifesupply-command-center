@@ -465,7 +465,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             <Eyebrow as="h2" tone="onDark">
               Operating brands
             </Eyebrow>
-            <ul className="mt-5 grid justify-items-start gap-3">
+            <ul className="mt-4 grid justify-items-start gap-1.5">
               {OPERATING_BRANDS.map((record) => (
                 <li key={record.key} className="grid">
                   <NavItem
@@ -476,7 +476,9 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                       brand: record.key,
                     })}
                   />
-                  <span className="mt-1 text-[11px] text-white/50">{brandGeography(record)}</span>
+                  <span className="-mt-0.5 text-[11px] leading-4 text-white/50">
+                    {brandGeography(record)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -485,7 +487,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             <Eyebrow as="h2" tone="onDark">
               Explore
             </Eyebrow>
-            <ul className="mt-5 grid justify-items-start gap-3">
+            <ul className="mt-4 grid justify-items-start gap-1">
               {[...LIFE_SUPPLY_NAVIGATION, ...UTILITY_NAV].map((item) => (
                 <li key={item.href}>
                   <NavItem href={item.href} label={item.label} />
