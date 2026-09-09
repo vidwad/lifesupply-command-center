@@ -332,6 +332,7 @@ export function EditorialStat({
         className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(222,0,0,0.16),transparent_68%)]"
       />
       <p
+        data-stat="figure"
         className={`lsh-display relative leading-none tracking-tight text-[var(--lsh-charcoal)] ${
           hero ? "text-6xl sm:text-7xl lg:text-8xl" : "text-4xl sm:text-5xl"
         }`}
