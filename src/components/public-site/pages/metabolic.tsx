@@ -1,25 +1,31 @@
 import Link from "next/link";
 import { ArrowRight, ExternalLink } from "lucide-react";
 
+import { Accordion } from "@/components/public-site/accordion";
 import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import {
-  Container,
-  Eyebrow,
-  PublicHero,
-  SectionHeading,
-} from "@/components/public-site/lifesupply-primitives";
+import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import {
+  Callout,
+  IconBadge,
+  IconFeatureGrid,
+  ProcessSteps,
+  SplitSection,
+} from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand, getBrandCategory } from "@/lib/public-site/brands";
 import { getKit, metabolic, type KitPathway } from "@/lib/public-site/content/metabolic";
+import { CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { METABOLIC_ROUTES, kitRoute } from "@/lib/public-site/routes";
 
 /** The status line and the disclaimer every metabolic page carries. */
 function StatusBand() {
   return (
     <section className="px-5 py-12 lg:px-8">
-      <Reveal className="mx-auto grid max-w-7xl gap-4 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-2 lg:pl-8">
+      <Reveal className="mx-auto grid max-w-7xl gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[auto_1fr_1fr] lg:pl-8">
+        <IconBadge icon="activity" />
         <p className="leading-7 text-[var(--lsh-charcoal)]">
           <span className="lsh-display mr-2 inline-flex border border-[var(--lsh-brand-red)] px-2 py-0.5 text-[10px] text-[var(--lsh-brand-red)]">
             {metabolic.status.label}
@@ -78,65 +84,57 @@ export function MetabolicHealthPage() {
       />
       <StatusBand />
 
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <SectionHeading eyebrow={hub.streams.eyebrow} title={hub.streams.title} />
-          </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-4">
-            {hub.streams.items.map((item, index) => (
-              <StaggerItem key={item.title} as="article" className="bg-[var(--lsh-paper)] p-7">
-                <p className="lsh-display text-sm text-[var(--lsh-brand-red)]">0{index + 1}</p>
-                <h3 className="lsh-display mt-3 text-2xl text-[var(--lsh-charcoal)]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
+      {/* Four streams, each on its own terms. */}
+      <IconFeatureGrid
+        tone="onSurface"
+        numbered
+        columns={4}
+        eyebrow={hub.streams.eyebrow}
+        title={hub.streams.title}
+        items={hub.streams.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          icon: iconForTitle(item.title),
+        }))}
+      />
 
-      <section className="px-5 py-20 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-          <Reveal>
-            <SectionHeading eyebrow={hub.audiences.eyebrow} title={hub.audiences.title} />
-          </Reveal>
-          <Stagger className="grid gap-5">
-            {hub.audiences.items.map((item) => (
-              <StaggerItem
-                key={item.title}
-                as="article"
-                className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6"
-              >
-                <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">{item.title}</h3>
-                <p className="mt-2 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
+      {/* Who it serves, beside conceptual monitoring supplies. */}
+      <SplitSection
+        eyebrow={hub.audiences.eyebrow}
+        title={hub.audiences.title}
+        graphic="metabolicSupplies"
+        caption={CONCEPTUAL_CAPTION}
+      >
+        <ul className="grid gap-5">
+          {hub.audiences.items.map((item) => (
+            <li key={item.title} className="flex gap-4">
+              <IconBadge icon={iconForTitle(item.title)} size={18} />
+              <div>
+                <h3 className="lsh-display text-lg text-[var(--lsh-charcoal)]">{item.title}</h3>
+                <p className="mt-1 text-sm leading-6">{item.text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </SplitSection>
 
-      <section className="bg-[var(--lsh-ink)] px-5 py-20 text-white lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <SectionHeading tone="onDark" eyebrow={hub.process.eyebrow} title={hub.process.title} />
-          </Reveal>
-          <Stagger className="mt-12 grid gap-px bg-white/15 md:grid-cols-3">
-            {hub.process.items.map((step) => (
-              <StaggerItem key={step.index} as="article" className="bg-[var(--lsh-charcoal)] p-8">
-                <p className="lsh-display text-sm text-[var(--lsh-red-on-ink)]">{step.index}</p>
-                <h3 className="lsh-display mt-3 text-2xl">{step.title}</h3>
-                <p className="mt-3 leading-7 text-white/75">{step.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <Reveal className="mt-10 flex flex-wrap gap-3">
+      {/* Discuss, configure, confirm. */}
+      <ProcessSteps
+        eyebrow={hub.process.eyebrow}
+        title={hub.process.title}
+        steps={hub.process.items.map((step) => ({
+          index: step.index,
+          title: step.title,
+          text: step.text,
+          icon: iconForTitle(step.title),
+        }))}
+        action={
+          <>
             <ActionLink action="explore_kits" variant="onDark" />
             <ActionLink action="refills_information" variant="onDark" />
-          </Reveal>
-        </div>
-      </section>
+          </>
+        }
+      />
       <RelatedActions actions={hub.related} />
     </LifeSupplyLayout>
   );
@@ -157,23 +155,32 @@ export function CareKitsPage() {
 
       <section className="px-5 pb-20 lg:px-8">
         <Container>
-          <Reveal className="grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
+          {/* The three item roles every pathway is described with. */}
+          <Stagger className="grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
             {kitsHub.legend.items.map((item) => (
-              <div key={item.role} className="bg-[var(--lsh-surface)] p-6">
-                <Eyebrow as="h2">{item.title}</Eyebrow>
-                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{item.text}</p>
-              </div>
+              <StaggerItem key={item.role} className="flex gap-4 bg-[var(--lsh-surface)] p-6">
+                <IconBadge icon={iconForTitle(item.role)} size={18} />
+                <div>
+                  <Eyebrow as="h2">{item.title}</Eyebrow>
+                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{item.text}</p>
+                </div>
+              </StaggerItem>
             ))}
-          </Reveal>
+          </Stagger>
+
+          {/* The eight pathways. */}
           <Stagger className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {metabolic.kits.map((kit) => (
               <StaggerItem key={kit.slug} className="h-full">
-                <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
+                <SpotlightCard className="lsh-lift h-full border border-t-2 border-[var(--lsh-rule)] border-t-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] transition-colors hover:border-t-[var(--lsh-brand-red)]">
                   <Link href={kitRoute(kit.slug)} className="group flex h-full flex-col p-7">
-                    <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                      {kit.id} · {metabolic.status.label}
-                    </p>
-                    <h3 className="lsh-display mt-4 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <IconBadge icon={iconForTitle(kit.id)} />
+                      <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                        {kit.id} · {metabolic.status.label}
+                      </p>
+                    </div>
+                    <h3 className="lsh-display mt-6 text-xl leading-tight text-[var(--lsh-charcoal)]">
                       {kit.label}
                     </h3>
                     <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{kit.audience}</p>
@@ -222,68 +229,75 @@ export function CareKitPage({ slug }: { slug: string }) {
       {/* Audience and the critical distinction. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
-          <Reveal>
-            <Eyebrow as="h2">Who it is for</Eyebrow>
-            <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{kit.audience}</p>
+          <Reveal className="flex gap-5">
+            <IconBadge icon="users" />
+            <div>
+              <Eyebrow as="h2">Who it is for</Eyebrow>
+              <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{kit.audience}</p>
+            </div>
           </Reveal>
-          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] pl-6">
-            <Eyebrow as="h2">The distinction that matters</Eyebrow>
-            <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{kit.distinction}</p>
+          <Reveal className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] pl-6">
+            <IconBadge icon="shield" />
+            <div>
+              <Eyebrow as="h2">The distinction that matters</Eyebrow>
+              <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{kit.distinction}</p>
+            </div>
           </Reveal>
         </div>
       </section>
 
       {/* Item roles; no contents, quantities, or SKUs exist yet. */}
-      <section className="px-5 py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <SectionHeading
-              eyebrow="Configuration"
-              title="What a configuration would cover."
-              description="Roles only. Approved contents, quantities, and a store configuration do not exist yet; when they do, they will be published here with their revision."
-            />
-          </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
-            {kit.roles.map((item) => (
-              <StaggerItem key={item.role} as="article" className="bg-[var(--lsh-paper)] p-7">
-                <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{item.role}</p>
-                <h3 className="lsh-display mt-3 text-xl text-[var(--lsh-charcoal)]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <div className="mt-10 grid gap-8 lg:grid-cols-2">
-            <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
+      <IconFeatureGrid
+        eyebrow="Configuration"
+        title="What a configuration would cover."
+        description="Roles only. Approved contents, quantities, and a store configuration do not exist yet; when they do, they will be published here with their revision."
+        items={kit.roles.map((item) => ({
+          title: item.title,
+          text: item.text,
+          status: item.role,
+          icon: iconForTitle(item.role),
+        }))}
+      />
+
+      <section className="px-5 pb-20 lg:px-8">
+        <Container className="grid gap-8 lg:grid-cols-2">
+          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
+            <div className="flex items-start justify-between gap-4">
               <Eyebrow as="h3">Compatibility</Eyebrow>
-              <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                {kit.compatibility.map((rule) => (
-                  <li key={rule} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
-                    {rule}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-            <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
+              <IconBadge icon="clipboardCheck" size={18} />
+            </div>
+            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+              {kit.compatibility.map((rule) => (
+                <li key={rule} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
+            <div className="flex items-start justify-between gap-4">
               <Eyebrow as="h3">Excluded</Eyebrow>
-              <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                {kit.exclusions.map((rule) => (
-                  <li key={rule} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
-                    {rule}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
-        </div>
+              <IconBadge icon="shield" size={18} />
+            </div>
+            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+              {kit.exclusions.map((rule) => (
+                <li key={rule} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        </Container>
       </section>
 
-      {/* Browse, availability, FAQs, next step. */}
+      {/* Browse, questions, next step. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2">
+        <Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
-            <Eyebrow as="h2">Browse related store categories</Eyebrow>
+            <div className="flex items-start justify-between gap-4">
+              <Eyebrow as="h2">Browse related store categories</Eyebrow>
+              <IconBadge icon="cart" size={18} />
+            </div>
             <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
               Browsing a store category is not ordering a configuration. Prices and availability are
               published on the store.
@@ -292,16 +306,11 @@ export function CareKitPage({ slug }: { slug: string }) {
           </Reveal>
           <Reveal>
             <Eyebrow as="h2">Questions</Eyebrow>
-            <dl className="mt-4 grid gap-4">
-              {kit.faqs.map((faq) => (
-                <div key={faq.q} className="border-l-2 border-[var(--lsh-brand-red)] pl-4">
-                  <dt className="lsh-display text-sm text-[var(--lsh-charcoal)]">{faq.q}</dt>
-                  <dd className="mt-1 text-sm leading-6 text-[var(--lsh-muted)]">{faq.a}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="mt-4">
+              <Accordion items={kit.faqs} />
+            </div>
           </Reveal>
-        </div>
+        </Container>
         <Reveal className="mx-auto mt-12 flex max-w-7xl flex-wrap items-center justify-between gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6">
           <p className="max-w-2xl leading-7 text-[var(--lsh-muted)]">{metabolic.status.sentence}</p>
           <div className="flex flex-wrap gap-3">
@@ -332,25 +341,28 @@ export function RefillsPage() {
         actions={<ActionLink action="discuss_program" />}
       />
       <StatusBand />
+      <SplitSection
+        tone="onSurface"
+        eyebrow={refills.eyebrow}
+        title={refills.today.title}
+        graphic="pharmacy"
+        side="left"
+        caption={CONCEPTUAL_CAPTION}
+      >
+        <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+          {refills.today.items.map((item) => (
+            <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+              {item}
+            </li>
+          ))}
+        </ul>
+      </SplitSection>
+      <Callout icon="repeat" eyebrow={refills.later.title} tone="onLight">
+        <p>{refills.later.text}</p>
+        <p className="mt-3 text-[var(--lsh-muted)]">{refills.substitutions}</p>
+      </Callout>
       <section className="px-5 pb-20 lg:px-8">
-        <Container className="grid gap-8 lg:grid-cols-2">
-          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
-            <Eyebrow as="h2">{refills.today.title}</Eyebrow>
-            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-              {refills.today.items.map((item) => (
-                <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-          <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
-            <Eyebrow as="h2">{refills.later.title}</Eyebrow>
-            <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{refills.later.text}</p>
-            <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{refills.substitutions}</p>
-          </Reveal>
-        </Container>
-        <Reveal className="mx-auto mt-10 flex max-w-7xl flex-wrap gap-3">
+        <Reveal className="mx-auto flex max-w-7xl flex-wrap gap-3">
           {refills.actions.map((action, index) => (
             <ActionLink
               key={action}

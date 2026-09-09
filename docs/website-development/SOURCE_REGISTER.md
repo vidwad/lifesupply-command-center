@@ -188,6 +188,15 @@ No company news later than June 2022 exists in either source. Stage 5 must not f
 | S-133 | Operations timeline graphic (2018–2023 milestones incl. revenue and financing text as pixels) | H | text must be transcribed only from an approved source; the image is not a source for Stage 5 metrics |
 | S-134 | Investor deck capture | U (date) | see S-64 |
 | S-135 | Wellmart, Balkowitsch, Clinics, MedDirect, Dexton marks | not held | obtain authentic files and usage records before Stage 3 (WEB-08 owners) |
+| S-136 | Conceptual graphic `supplies-flatlay.jpg` (unbranded supplies still life) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-137 | Conceptual graphic `exam-room.jpg` (empty examination room) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-138 | Conceptual graphic `equipment.jpg` (instrument trolley and crate) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-139 | Conceptual graphic `warehouse.jpg` (fulfilment aisle) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-140 | Conceptual graphic `metabolic-supplies.jpg` (monitoring and injection supplies) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-141 | Conceptual graphic `pharmacy.jpg` (pharmacy back-shelf) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-142 | Conceptual graphic `boardroom.jpg` (empty boardroom) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-143 | Conceptual graphic `shipping.jpg` (cartons on a pallet) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
+| S-144 | Conceptual graphic `facade.jpg` (glass office facade) | A (generated) | Gamma photo mode, 2026-09-08, monochrome brief, ffmpeg grayscale-plus-red at 1600×900; conceptual, never presented as operational photography; caption required (`DESIGN_PASS_EVIDENCE.md` §4) |
 
 ---
 

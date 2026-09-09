@@ -10,6 +10,7 @@ import {
   PublicHero,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { IconBadge } from "@/components/public-site/sections";
 import { ACTIONS, type ActionKey } from "@/lib/public-site/actions";
 import { news } from "@/lib/public-site/content/news";
 import type { Published } from "@/lib/public-site/published";
@@ -59,7 +60,10 @@ export function NewsPage({
       <section className="px-5 py-20 lg:px-8">
         <Container className="grid gap-16">
           <Reveal>
-            <Eyebrow as="h2">{sections.current.title}</Eyebrow>
+            <div className="flex items-center gap-4">
+              <IconBadge icon="file" size={18} />
+              <Eyebrow as="h2">{sections.current.title}</Eyebrow>
+            </div>
             {!current.ok ? (
               <Note text={sections.current.unavailable} tone="unavailable" />
             ) : current.data.length === 0 ? (
@@ -90,7 +94,10 @@ export function NewsPage({
 
           <div>
             <Reveal className="flex flex-wrap items-end justify-between gap-3">
-              <Eyebrow as="h2">{sections.historical.title}</Eyebrow>
+              <div className="flex items-center gap-4">
+                <IconBadge icon="scroll" size={18} />
+                <Eyebrow as="h2">{sections.historical.title}</Eyebrow>
+              </div>
               <p className="text-xs text-[var(--lsh-muted)]">{sections.historical.note}</p>
             </Reveal>
             <Stagger className="mt-6 grid gap-4">
@@ -127,7 +134,10 @@ export function NewsPage({
           </div>
 
           <Reveal>
-            <Eyebrow as="h2">{sections.resources.title}</Eyebrow>
+            <div className="flex items-center gap-4">
+              <IconBadge icon="clipboardList" size={18} />
+              <Eyebrow as="h2">{sections.resources.title}</Eyebrow>
+            </div>
             {!resources.ok ? (
               <Note text={sections.resources.unavailable} tone="unavailable" />
             ) : resources.data.length === 0 ? (

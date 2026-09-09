@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight, Mail, Phone, ShieldCheck } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
@@ -10,9 +9,11 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { BentoGrid, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { investorRelations, type BusinessStatus } from "@/lib/public-site/content/investors";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
 import type { PublishedDocumentDto } from "@/server/public-web/contracts";
@@ -55,11 +56,14 @@ function StatusTag({ status }: { status: BusinessStatus }) {
 /** The forward-looking qualification, beside the claims it qualifies. */
 function ForwardLooking({ text }: { text: string }) {
   return (
-    <Reveal className="mx-auto mt-10 max-w-7xl border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-      <div className="lsh-display flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-        <ShieldCheck size={18} aria-hidden="true" /> Forward-looking statements
+    <Reveal className="mx-auto mt-10 flex max-w-7xl gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+      <IconBadge icon="shield" />
+      <div>
+        <div className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+          Forward-looking statements
+        </div>
+        <p className="mt-2 leading-7 text-[var(--lsh-muted)]">{text}</p>
       </div>
-      <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{text}</p>
     </Reveal>
   );
 }
@@ -129,22 +133,20 @@ export function InvestorRelationsPage() {
     <LifeSupplyLayout>
       <PublicHero eyebrow={hub.eyebrow} title={investor.title} description={investor.description} />
 
-      <section className="px-5 py-20 lg:px-8">
+      {/* The business today, each strand with its status. */}
+      <IconFeatureGrid
+        columns={4}
+        eyebrow={hub.rationale.eyebrow}
+        title={hub.rationale.title}
+        items={hub.rationale.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          status: item.status,
+          icon: iconForTitle(item.title),
+        }))}
+      />
+      <section className="px-5 pb-20 lg:px-8">
         <Container>
-          <Reveal>
-            <SectionHeading eyebrow={hub.rationale.eyebrow} title={hub.rationale.title} />
-          </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-4">
-            {hub.rationale.items.map((item) => (
-              <StaggerItem key={item.title} as="article" className="bg-[var(--lsh-surface)] p-7">
-                <StatusTag status={item.status} />
-                <h3 className="lsh-display mt-4 text-xl text-[var(--lsh-charcoal)]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
           <ForwardLooking text={hub.forwardLooking} />
         </Container>
       </section>
@@ -154,54 +156,39 @@ export function InvestorRelationsPage() {
           <div>
             <ReportedFigures />
           </div>
-          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-6 lg:self-start">
-            <div className="lsh-display flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-              <ShieldCheck size={18} aria-hidden="true" /> {investor.expansionContext.title}
+          <Reveal className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-6 lg:self-start">
+            <IconBadge icon="file" />
+            <div>
+              <div className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+                {investor.expansionContext.title}
+              </div>
+              <p className="lsh-display mt-2 text-[10px] text-[var(--lsh-muted)]">
+                {investor.expansionContext.date}
+              </p>
+              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">
+                {investor.expansionContext.description}
+              </p>
             </div>
-            <p className="lsh-display mt-2 text-[10px] text-[var(--lsh-muted)]">
-              {investor.expansionContext.date}
-            </p>
-            <p className="mt-3 leading-7 text-[var(--lsh-muted)]">
-              {investor.expansionContext.description}
-            </p>
           </Reveal>
         </Container>
       </section>
 
-      <section className="px-5 py-20 lg:px-8">
+      {/* The five sections, around one conceptual graphic. */}
+      <BentoGrid
+        tiles={[
+          { title: hub.eyebrow, eyebrow: "In this section", graphic: "boardroom" },
+          ...hub.sections.map((section) => ({
+            title: section.title,
+            text: section.text,
+            icon: iconForTitle(section.title),
+            href: SECTION_ROUTES[section.route],
+            linkLabel: "Open",
+          })),
+        ]}
+      />
+      <section className="px-5 pb-20 lg:px-8">
         <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow="In this section"
-              title="Strategy, therapeutics, documents, shareholders, disclosures."
-            />
-          </Reveal>
-          <Stagger className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-            {hub.sections.map((section) => (
-              <StaggerItem key={section.route} className="h-full">
-                <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                  <Link
-                    href={SECTION_ROUTES[section.route]}
-                    className="group flex h-full flex-col p-6"
-                  >
-                    <h3 className="lsh-display text-lg leading-tight text-[var(--lsh-charcoal)]">
-                      {section.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{section.text}</p>
-                    <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-5 text-[11px] text-[var(--lsh-brand-red)]">
-                      Open{" "}
-                      <ArrowRight
-                        size={15}
-                        aria-hidden="true"
-                        className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
-                      />
-                    </span>
-                  </Link>
-                </SpotlightCard>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <Reveal className="mt-12 flex flex-wrap items-center gap-4">
+          <Reveal className="flex flex-wrap items-center gap-4">
             <InvestorContact />
             <ActionLink action="growth_strategy" variant="text" />
           </Reveal>
@@ -217,32 +204,18 @@ export function GrowthStrategyPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero eyebrow={g.eyebrow} title={g.title} description={g.intro} />
-      <section className="px-5 py-20 lg:px-8">
+      <IconFeatureGrid
+        items={g.strands.map((strand) => ({
+          title: strand.title,
+          text: strand.text,
+          status: strand.status,
+          icon: iconForTitle(strand.title),
+          href: STRAND_ROUTES[strand.route],
+          linkLabel: "Read more",
+        }))}
+      />
+      <section className="px-5 pb-20 lg:px-8">
         <Container>
-          <Stagger className="grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-5">
-            {g.strands.map((strand, index) => (
-              <StaggerItem
-                key={strand.title}
-                as="article"
-                className="flex flex-col bg-[var(--lsh-paper)] p-7"
-              >
-                <p className="lsh-display text-sm text-[var(--lsh-brand-red)]">0{index + 1}</p>
-                <h2 className="lsh-display mt-3 text-xl text-[var(--lsh-charcoal)]">
-                  {strand.title}
-                </h2>
-                <div className="mt-3">
-                  <StatusTag status={strand.status} />
-                </div>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{strand.text}</p>
-                <Link
-                  href={STRAND_ROUTES[strand.route]}
-                  className="lsh-display mt-auto inline-flex items-center gap-2 pt-6 text-[11px] text-[var(--lsh-brand-red)]"
-                >
-                  Read more <ArrowRight size={15} aria-hidden="true" />
-                </Link>
-              </StaggerItem>
-            ))}
-          </Stagger>
           <ForwardLooking text={investorRelations.hub.forwardLooking} />
         </Container>
       </section>
@@ -261,10 +234,15 @@ export function GrowthStrategyPage() {
               <StaggerItem
                 key={`${item.date}-${item.text}`}
                 as="li"
-                className="bg-[var(--lsh-charcoal)] p-6"
+                className="flex gap-4 bg-[var(--lsh-charcoal)] p-6"
               >
-                <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">{item.date}</p>
-                <p className="mt-2 leading-7 text-white/80">{item.text}</p>
+                <IconBadge icon="scroll" tone="onDark" size={18} />
+                <div>
+                  <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+                    {item.date}
+                  </p>
+                  <p className="mt-2 leading-7 text-white/80">{item.text}</p>
+                </div>
               </StaggerItem>
             ))}
           </Stagger>
@@ -292,8 +270,11 @@ export function AdvancedTherapeuticsPage() {
                 as="article"
                 className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7"
               >
-                <StatusTag status={theme.status} />
-                <h2 className="lsh-display mt-4 text-2xl text-[var(--lsh-charcoal)]">
+                <div className="flex items-start justify-between gap-4">
+                  <IconBadge icon={iconForTitle(theme.title)} />
+                  <StatusTag status={theme.status} />
+                </div>
+                <h2 className="lsh-display mt-6 text-2xl text-[var(--lsh-charcoal)]">
                   {theme.title}
                 </h2>
                 <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{theme.text}</p>
@@ -387,14 +368,17 @@ export function InvestorDocumentsPage({
       <PublicHero eyebrow={d.eyebrow} title={d.title} description={d.intro} />
       <section className="px-5 py-20 lg:px-8">
         <Container>
-          <Reveal className="grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
+          <Stagger className="grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
             {d.classes.map((entry) => (
-              <div key={entry.title} className="bg-[var(--lsh-surface)] p-6">
-                <Eyebrow as="h2">{entry.title}</Eyebrow>
-                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{entry.text}</p>
-              </div>
+              <StaggerItem key={entry.title} className="flex gap-4 bg-[var(--lsh-surface)] p-6">
+                <IconBadge icon={iconForTitle(entry.title)} size={18} />
+                <div>
+                  <Eyebrow as="h2">{entry.title}</Eyebrow>
+                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{entry.text}</p>
+                </div>
+              </StaggerItem>
             ))}
-          </Reveal>
+          </Stagger>
           <Reveal className="mt-10 overflow-x-auto">
             <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
               <thead>
@@ -446,7 +430,8 @@ export function InvestorDocumentsPage({
             </table>
           </Reveal>
           <PublishedDocuments published={published} />
-          <Reveal className="mt-10 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+          <Reveal className="mt-10 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+            <IconBadge icon="mail" />
             <p className="leading-7 text-[var(--lsh-muted)]">{d.requestNote}</p>
           </Reveal>
           <ActionRow actions={d.actions} />
@@ -465,7 +450,10 @@ export function ShareholderServicesPage() {
       <section className="px-5 py-20 lg:px-8">
         <Container className="grid gap-8 lg:grid-cols-2">
           <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
-            <Eyebrow as="h2">Administrative purposes</Eyebrow>
+            <div className="flex items-start justify-between gap-4">
+              <Eyebrow as="h2">Administrative purposes</Eyebrow>
+              <IconBadge icon="landmark" size={18} />
+            </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
               {s.purposes.map((purpose) => (
                 <li key={purpose} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
@@ -475,7 +463,10 @@ export function ShareholderServicesPage() {
             </ul>
           </Reveal>
           <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
-            <Eyebrow as="h2">How to make a request</Eyebrow>
+            <div className="flex items-start justify-between gap-4">
+              <Eyebrow as="h2">How to make a request</Eyebrow>
+              <IconBadge icon="clipboardList" size={18} />
+            </div>
             <ol className="mt-4 grid gap-3 text-sm leading-6 text-[var(--lsh-charcoal)]">
               {s.process.map((step, index) => (
                 <li key={step} className="flex gap-3">
@@ -507,7 +498,10 @@ export function DisclosuresPage() {
             <ReportedFigures />
           </div>
           <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7 lg:self-start">
-            <Eyebrow as="h2">Basis of the figures</Eyebrow>
+            <div className="flex items-start justify-between gap-4">
+              <Eyebrow as="h2">Basis of the figures</Eyebrow>
+              <IconBadge icon="chart" size={18} />
+            </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
               {d.basis.map((line) => (
                 <li key={line} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
@@ -518,12 +512,15 @@ export function DisclosuresPage() {
           </Reveal>
         </Container>
         <Container>
-          <Reveal className="mt-10 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-            <div className="lsh-display flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-              <ShieldCheck size={18} aria-hidden="true" /> {d.forwardLooking.title}
+          <Reveal className="mt-10 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+            <IconBadge icon="shield" />
+            <div>
+              <div className="lsh-display flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
+                <ShieldCheck size={16} aria-hidden="true" /> {d.forwardLooking.title}
+              </div>
+              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.forwardLooking.text}</p>
+              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.materials}</p>
             </div>
-            <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.forwardLooking.text}</p>
-            <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.materials}</p>
           </Reveal>
         </Container>
         <ActionRow actions={d.actions} />

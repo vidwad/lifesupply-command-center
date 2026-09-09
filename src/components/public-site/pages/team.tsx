@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Eyebrow, PrimaryAction, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { IconBadge } from "@/components/public-site/sections";
 import { legacyTitle, team } from "@/lib/public-site/content/team";
 import { LIFE_SUPPLY_ROUTES, profileRoute } from "@/lib/public-site/routes";
 
@@ -16,7 +17,10 @@ export function TeamPage() {
       <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
       <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-3">
-          <Eyebrow as="h2">{labels.management}</Eyebrow>
+          <div className="flex items-center gap-4">
+            <IconBadge icon="users" size={18} />
+            <Eyebrow as="h2">{labels.management}</Eyebrow>
+          </div>
           <p className="text-xs text-[var(--lsh-muted)]">{labels.titlesNote}</p>
         </Reveal>
         <Stagger className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -68,9 +72,12 @@ export function TeamPage() {
           ))}
         </Stagger>
         <Reveal className="mt-16 border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white">
-          <Eyebrow as="h2" tone="onDark">
-            {labels.board}
-          </Eyebrow>
+          <div className="flex items-center gap-4">
+            <IconBadge icon="landmark" tone="onDark" size={18} />
+            <Eyebrow as="h2" tone="onDark">
+              {labels.board}
+            </Eyebrow>
+          </div>
           <Stagger as="ul" className="mt-6 flex flex-wrap gap-3">
             {board.map((director) => (
               <StaggerItem key={director.slug} as="li">

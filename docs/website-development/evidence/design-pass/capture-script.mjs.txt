@@ -1,0 +1,41 @@
+import { chromium } from "playwright";
+import { mkdirSync } from "node:fs";
+const out = process.argv[2];
+mkdirSync(out, { recursive: true });
+const base = "http://127.0.0.1:3100";
+const routes = {
+  home: "/", about: "/about-us/", operations: "/our-operations/", lifesupply: "/our-operations/lifesupply/",
+  clinics: "/our-operations/lifesupply-clinics/", technology: "/our-operations/technology-fulfilment/",
+  "clinic-solutions": "/clinic-solutions/", "design-build": "/clinic-solutions/design-build/",
+  equipment: "/clinic-solutions/equipment/", "ongoing-supplies": "/clinic-solutions/ongoing-supplies/",
+  metabolic: "/metabolic-health/", "care-kits": "/metabolic-health/care-kits/", kit: "/metabolic-health/care-kits/glp-1-support/",
+  refills: "/metabolic-health/refills/", partners: "/partners/", "partner-clinics": "/partners/clinics/",
+  "partner-pharmacies": "/partners/pharmacies/", "partner-suppliers": "/partners/suppliers/", "partner-acquisitions": "/partners/acquisitions/",
+  investors: "/investor-relations/", growth: "/investor-relations/growth-strategy/", therapeutics: "/investor-relations/advanced-therapeutics/",
+  documents: "/investor-relations/documents/", shareholders: "/investor-relations/shareholder-services/", disclosures: "/investor-relations/disclosures/",
+  team: "/our-team/", news: "/news/", shop: "/shop/", contact: "/contact/", privacy: "/privacy/",
+};
+const widths = (process.argv[3] ?? "390,768,1440").split(",").map(Number);
+const browser = await chromium.launch();
+const errors = [];
+for (const width of widths) {
+  const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+  const page = await context.newPage();
+  page.on("console", (m) => { if (m.type() === "error") errors.push(`${width} ${page.url()} ${m.text()}`); });
+  page.on("pageerror", (e) => errors.push(`${width} ${page.url()} ${e.message}`));
+  for (const [name, route] of Object.entries(routes)) {
+    await page.goto(base + route, { waitUntil: "networkidle" });
+    await page.waitForFunction(() => { const h = document.querySelector("h1"); return h && getComputedStyle(h).opacity === "1"; }, null, { timeout: 15000 });
+    // Scroll through so in-view reveals fire, then back to top.
+    await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); } window.scrollTo(0, 0); });
+    await page.waitForTimeout(250);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    if (overflow) errors.push(`${width} ${route} horizontal overflow`);
+    const hidden = await page.evaluate(() => [...document.querySelectorAll("main [style]")].filter((el) => getComputedStyle(el).opacity === "0").length);
+    if (hidden) errors.push(`${width} ${route} ${hidden} elements still at opacity 0`);
+    await page.screenshot({ path: `${out}/${name}-${width}.jpg`, fullPage: true, type: "jpeg", quality: 60 });
+  }
+  await context.close();
+}
+await browser.close();
+console.log(errors.length ? errors.join("\n") : "no console errors, no horizontal overflow");
