@@ -17,7 +17,12 @@ import { iconForTitle } from "@/lib/public-site/icon-map";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
 import type { PublishedDocumentDto } from "@/server/public-web/contracts";
-import { METABOLIC_ROUTES, STAGE_3_ROUTES, STAGE_5_ROUTES } from "@/lib/public-site/routes";
+import {
+  LIFE_SUPPLY_ROUTES,
+  METABOLIC_ROUTES,
+  STAGE_3_ROUTES,
+  STAGE_5_ROUTES,
+} from "@/lib/public-site/routes";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
 
@@ -30,7 +35,7 @@ const SECTION_ROUTES = {
 } as const;
 
 const STRAND_ROUTES = {
-  technology: STAGE_3_ROUTES.technology,
+  operations: LIFE_SUPPLY_ROUTES.operations,
   clinicSolutions: STAGE_3_ROUTES.clinicSolutions,
   metabolic: METABOLIC_ROUTES.hub,
   advancedTherapeutics: STAGE_5_ROUTES.advancedTherapeutics,

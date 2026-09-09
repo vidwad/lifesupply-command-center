@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
     return [
       { source: "/contact-2", destination: "/contact", permanent: true },
       { source: "/ross-jelveh", destination: "/ross-jelveh-2", permanent: true },
+      // Page withdrawn 2026-09-08; the Our Businesses hub carries the brands.
+      {
+        source: "/our-operations/technology-fulfilment",
+        destination: "/our-operations",
+        permanent: true,
+      },
     ];
   },
   experimental: {

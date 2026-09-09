@@ -180,7 +180,6 @@ describe("route registry", () => {
       BRAND_ROUTES.wellmart,
       BRAND_ROUTES.clinics,
       BRAND_ROUTES.balkowitsch,
-      STAGE_3_ROUTES.technology,
     ]);
     expect(businesses.links.every((link) => !link.external)).toBe(true);
     const clinic = groups.find((group) => group.key === "clinic")!;
@@ -333,7 +332,6 @@ describe("action registry", () => {
       homepage.metabolic.action,
       ...homepage.paths.map((path) => path.action),
       ...Object.values(businesses.pages).flatMap((page) => [...page.actions]),
-      ...businesses.technology.actions,
       ...clinics.brandPage.actions,
       ...clinics.designBuild.actions,
       ...clinics.equipment.actions,

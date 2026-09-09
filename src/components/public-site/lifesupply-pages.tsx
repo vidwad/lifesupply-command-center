@@ -6,17 +6,13 @@
  *
  * Page families live in `./pages/` and are re-exported here so the route
  * files keep one import: Home and About (Stage 2); Our Businesses, the four
- * brand pages, Technology & fulfilment, Clinic Solutions, Shop & Services,
+ * brand pages, Clinic Solutions, Shop & Services,
  * and Contact (Stage 3); Metabolic Health, the care-kit hub, the kit pages,
  * and Refills (Stage 4); Partners, the investor pages, Team and profiles,
  * News and resources, and the policy pages (Stage 5).
  */
 export { AboutPage } from "@/components/public-site/pages/about";
-export {
-  ClinicsBrandPage,
-  StoreBrandPage,
-  TechnologyFulfilmentPage,
-} from "@/components/public-site/pages/brands";
+export { ClinicsBrandPage, StoreBrandPage } from "@/components/public-site/pages/brands";
 export {
   ClinicSolutionsPage,
   DesignBuildPage,

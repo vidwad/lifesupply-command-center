@@ -58,7 +58,6 @@ export type ActionKey =
   | "brand_wellmart"
   | "brand_clinics"
   | "brand_balkowitsch"
-  | "technology_fulfilment"
   | "contact_directory";
 
 export type ActionDestination =
@@ -377,14 +376,6 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "About Balkowitsch Worldwide",
     intent: "navigation",
     destination: internal(BRAND_ROUTES.balkowitsch),
-    ownerChannel: null,
-    verifiedAt: null,
-  },
-  technology_fulfilment: {
-    key: "technology_fulfilment",
-    label: "Technology & fulfilment",
-    intent: "navigation",
-    destination: internal(STAGE_3_ROUTES.technology),
     ownerChannel: null,
     verifiedAt: null,
   },

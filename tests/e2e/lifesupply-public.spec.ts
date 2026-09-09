@@ -39,7 +39,6 @@ test.describe("LifeSupply public site", () => {
       "/our-operations/wellmart-medical",
       "/our-operations/lifesupply-clinics",
       "/our-operations/balkowitsch",
-      "/our-operations/technology-fulfilment",
       "/clinic-solutions",
       "/clinic-solutions/design-build",
       "/clinic-solutions/equipment",
@@ -204,7 +203,7 @@ test.describe("LifeSupply public site", () => {
     const menu = page.locator("#lsh-menu-businesses");
     await expect(menu).toBeVisible();
     const brandLinks = menu.locator("a");
-    await expect(brandLinks).toHaveCount(5);
+    await expect(brandLinks).toHaveCount(4);
     const paths = await brandLinks.evaluateAll((links) =>
       links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, "")),
     );
@@ -213,7 +212,6 @@ test.describe("LifeSupply public site", () => {
       "/our-operations/wellmart-medical",
       "/our-operations/lifesupply-clinics",
       "/our-operations/balkowitsch",
-      "/our-operations/technology-fulfilment",
     ]);
     // The chevron is a real button for touch and assistive technology.
     const chevron = page.getByRole("button", { name: "Open Our Businesses menu" });
@@ -268,7 +266,6 @@ test.describe("LifeSupply public site", () => {
       "Wellmart Medical",
       "LifeSupply Clinics",
       "Balkowitsch Worldwide",
-      "Technology & fulfilment",
     ]) {
       // Collapsed rows are display:none, so the role query must include hidden nodes.
       const link = panel.getByRole("link", { name, exact: true, includeHidden: true }).first();
@@ -740,6 +737,12 @@ test.describe("LifeSupply public site", () => {
     const slashed = await page.request.get("/about-us/", { maxRedirects: 0 });
     expect(slashed.status()).toBe(308);
     expect(slashed.headers()["location"]).toMatch(/\/about-us$/);
+    // The withdrawn Technology & fulfilment page sends its old address to the hub.
+    const withdrawn = await page.request.get("/our-operations/technology-fulfilment", {
+      maxRedirects: 0,
+    });
+    expect(withdrawn.status()).toBe(308);
+    expect(withdrawn.headers()["location"]).toMatch(/\/our-operations$/);
   });
 
   test("publishes a canonical sitemap and a robots file that disallows crawling until switched on", async ({

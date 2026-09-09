@@ -6,7 +6,7 @@ import { BrandImage } from "@/components/public-site/brand-image";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { PublicHero, SectionHeading } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { Callout, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
+import { IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
 import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
@@ -21,7 +21,7 @@ import { BRAND_ROUTES } from "@/lib/public-site/routes";
  */
 export function OperationsPage() {
   const { businesses, operations, contact, brand } = LIFE_SUPPLY_CONTENT;
-  const { hub, technology } = businesses;
+  const { hub } = businesses;
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -82,16 +82,6 @@ export function OperationsPage() {
           </Stagger>
         </div>
       </section>
-
-      {/* Technology and fulfilment across the brands. */}
-      <Callout
-        icon="workflow"
-        eyebrow={technology.eyebrow}
-        action={<ActionLink action="technology_fulfilment" variant="onLight" />}
-      >
-        <p className="lsh-display text-2xl leading-[1.1]">{technology.title}</p>
-        <p className="mt-2 text-[var(--lsh-muted)]">{technology.intro}</p>
-      </Callout>
 
       {/* Entities, as published. */}
       <section className="px-5 py-20 lg:px-8">

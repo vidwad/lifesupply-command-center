@@ -32,7 +32,6 @@ export const BRAND_ROUTES: Record<OperatingBrandKey, string> = {
 };
 
 export const STAGE_3_ROUTES = {
-  technology: "/our-operations/technology-fulfilment/",
   clinicSolutions: "/clinic-solutions/",
   designBuild: "/clinic-solutions/design-build/",
   equipment: "/clinic-solutions/equipment/",
@@ -135,13 +134,6 @@ export const ROUTES: readonly RouteRecord[] = [
   {
     path: BRAND_ROUTES.balkowitsch,
     label: "Balkowitsch Worldwide",
-    stage: 3,
-    status: "live",
-    navGroup: "businesses",
-  },
-  {
-    path: STAGE_3_ROUTES.technology,
-    label: "Technology & fulfilment",
     stage: 3,
     status: "live",
     navGroup: "businesses",
@@ -281,6 +273,14 @@ export const ROUTES: readonly RouteRecord[] = [
   { path: "/shop/", label: "Shop & Services", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact-2/", label: "Contact (legacy)", stage: 9, status: "redirect", navGroup: null },
+  // Withdrawn 2026-09-08 (product owner): not a major business unit. Redirects to the hub.
+  {
+    path: "/our-operations/technology-fulfilment/",
+    label: "Technology & fulfilment (withdrawn)",
+    stage: 3,
+    status: "redirect",
+    navGroup: null,
+  },
   { path: "/privacy/", label: "Privacy", stage: 5, status: "live", navGroup: "legal" },
   { path: "/terms/", label: "Terms of use", stage: 5, status: "live", navGroup: "legal" },
   { path: "/accessibility/", label: "Accessibility", stage: 5, status: "live", navGroup: "legal" },

@@ -469,7 +469,6 @@ describe("routes and content governance", () => {
       "src/app/our-operations/wellmart-medical/page.tsx",
       "src/app/our-operations/lifesupply-clinics/page.tsx",
       "src/app/our-operations/balkowitsch/page.tsx",
-      "src/app/our-operations/technology-fulfilment/page.tsx",
       "src/app/clinic-solutions/page.tsx",
       "src/app/clinic-solutions/design-build/page.tsx",
       "src/app/clinic-solutions/equipment/page.tsx",

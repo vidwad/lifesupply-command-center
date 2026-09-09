@@ -122,7 +122,7 @@ export const investorRelations = {
         title: "Existing business improvement",
         text: "Catalogue quality, sourcing, fulfilment, and management systems across the operating stores.",
         status: "Operating",
-        route: "technology",
+        route: "operations",
       },
       {
         title: "Clinic accounts",
