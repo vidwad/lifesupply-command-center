@@ -158,14 +158,15 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
   });
 
-  test("divides About with three decorative legacy photographs that drift on scroll and hold still under reduced motion", async ({
+  test("divides About with two decorative legacy photographs that drift on scroll and hold still under reduced motion, behind a photographic hero", async ({
     page,
   }) => {
     await page.goto("/about-us");
     const main = page.locator("main");
+    await expect(main.locator('[data-hero-band="data"] img')).toHaveCount(1);
     const bands = main.locator("[data-band]");
-    await expect(bands).toHaveCount(3);
-    for (const index of [0, 1, 2]) {
+    await expect(bands).toHaveCount(2);
+    for (const index of [0, 1]) {
       const band = bands.nth(index);
       await expect(band).toHaveAttribute("aria-hidden", "true");
       await band.scrollIntoViewIfNeeded();
