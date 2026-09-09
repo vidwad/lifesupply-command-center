@@ -1,0 +1,14 @@
+# Rollback reference and baselines (2026-09-09T01:16:34Z)
+legacy https://lifesupplyhealth.com/ -> 200 (server: Server: nginx)
+legacy /contact-2/ -> 200
+DNS (current, legacy host):
+Name: lifesupplyhealth.com
+Address: 165.232.130.127
+
+Address: 2001:569:7f49:b000:a2b5:3cff:fe79:ce0a
+Name: lifesupplyhealth.com
+Address: 165.232.130.127
+alias current deployment: dpl_HwuhXFf32PYdxDgAdxDhLK9xcCQM
+alias /api/health -> {"status":"ok","surface":"public-web","environment":"unknown
+render /api/health -> "status":"ok"
+render /api/public/v1/site -> 200
