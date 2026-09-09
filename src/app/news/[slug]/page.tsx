@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 import { NewsItemView, PublishedUnavailablePage } from "@/components/public-site/lifesupply-pages";
 import { fetchPublishedNewsItem } from "@/lib/public-site/published";
+import { newsItemRoute } from "@/lib/public-site/routes";
+import { publicMetadata } from "@/lib/public-site/seo";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -14,7 +16,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const result = await fetchPublishedNewsItem(slug);
   if (!result.ok) return { title: "Temporarily unavailable", robots: { index: false } };
-  return result.data ? { title: result.data.title, description: result.data.summary } : {};
+  return result.data
+    ? publicMetadata({
+        title: result.data.title,
+        description: result.data.summary,
+        path: newsItemRoute(slug),
+        type: "article",
+      })
+    : {};
 }
 
 export default async function Page({ params }: PageProps) {

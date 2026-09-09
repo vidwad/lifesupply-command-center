@@ -1,0 +1,3 @@
+<meta name="robots" content="noindex, nofollow, nocache"/>
+<link rel="canonical" href="https://lifesupplyhealth.com/about-us"/>
+<meta property="og:image" content="https://lifesupplyhealth.com/lsh/og-default.jpg"/>

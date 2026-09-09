@@ -1,0 +1,16 @@
+# Local probes on the public build (Stage 9, 2026-09-09T00:45:21Z, PUBLIC_SITE_MODE=true, DATABASE_URL present in .env)
+D-02 /api/health -> 200 {"status":"ok","surface":"public-web","environment":"unknown","timestamp":"2026-09-09T00:45:21.232Z","uptimeSeconds":1,"
+D-03 /customers               -> 307 -> http://127.0.0.1:3100/
+D-03 /orders                  -> 307 -> http://127.0.0.1:3100/
+D-03 /public-web              -> 307 -> http://127.0.0.1:3100/
+D-03 /public-web-preview/x    -> 307 -> http://127.0.0.1:3100/
+D-03 /api/exports/customers   -> 307 -> http://127.0.0.1:3100/
+D-03 /login                   -> 307 -> http://127.0.0.1:3100/
+D-03 /dashboard               -> 307 -> http://127.0.0.1:3100/
+D-03 /no-such-page -> 404 (no redirect: )
+D-12 set-cookie headers on / -> 0
+D-12 set-cookie headers on /about-us -> 0
+redirect /contact-2 -> 308 http://127.0.0.1:3100/contact
+redirect /ross-jelveh -> 308 http://127.0.0.1:3100/ross-jelveh-2
+trailing slash /about-us/ -> 308 http://127.0.0.1:3100/about-us
+profile /abdul-ladha -> 200 (static)

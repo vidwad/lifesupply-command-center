@@ -129,3 +129,100 @@ From the legacy page sitemap (21 URLs) and observed redirects, 2026-09-08:
 | `/privacy/`, `/terms/` | 404 on both | create in Stage 5/7 |
 | `/wp-content/uploads/2022/05/Lifesupply-Investor-Presentation.pdf` | not served | decide: archive or republish as a dated historical document in Stage 6 |
 | 49 other `wp-content/uploads` assets | not served | inventory in Stage 9; none is a page |
+
+---
+
+## Registry-derived tables (Stage 9 refresh)
+
+Generated from the registries on September 8, 2026 (Stage 9). Where an earlier section of this document disagrees with these tables, the tables are authoritative: they are the code the site runs. Every `proposed` row from Stages 1 to 5 is now `live` except the redirect and the two publication-model templates, which are live but served from the read model.
+
+### 3a. Route registry (generated from `src/lib/public-site/routes.ts`, Stage 9)
+
+| Path | Label | Stage | Status | Menu group | Route file |
+| --- | --- | --- | --- | --- | --- |
+| `/` | Home | 2 | live | — | `src/app/page.tsx` |
+| `/about-us/` | About us | 2 | live | about | `src/app/about-us/page.tsx` |
+| `/our-operations/` | Our operations | 3 | live | businesses | `src/app/our-operations/page.tsx` |
+| `/our-operations/lifesupply/` | LifeSupply | 3 | live | businesses | `src/app/our-operations/lifesupply/page.tsx` |
+| `/our-operations/wellmart-medical/` | Wellmart Medical | 3 | live | businesses | `src/app/our-operations/wellmart-medical/page.tsx` |
+| `/our-operations/lifesupply-clinics/` | LifeSupply Clinics | 3 | live | businesses | `src/app/our-operations/lifesupply-clinics/page.tsx` |
+| `/our-operations/balkowitsch/` | Balkowitsch Worldwide | 3 | live | businesses | `src/app/our-operations/balkowitsch/page.tsx` |
+| `/our-operations/technology-fulfilment/` | Technology & fulfilment | 3 | live | businesses | `src/app/our-operations/technology-fulfilment/page.tsx` |
+| `/clinic-solutions/` | Clinic Solutions | 3 | live | clinic | `src/app/clinic-solutions/page.tsx` |
+| `/clinic-solutions/design-build/` | Design & build | 3 | live | clinic | `src/app/clinic-solutions/design-build/page.tsx` |
+| `/clinic-solutions/equipment/` | Equipment | 3 | live | clinic | `src/app/clinic-solutions/equipment/page.tsx` |
+| `/clinic-solutions/ongoing-supplies/` | Ongoing supplies | 3 | live | clinic | `src/app/clinic-solutions/ongoing-supplies/page.tsx` |
+| `/metabolic-health/` | Metabolic Health | 4 | live | metabolic | `src/app/metabolic-health/page.tsx` |
+| `/metabolic-health/care-kits/` | Care kits | 4 | live | metabolic | `src/app/metabolic-health/care-kits/page.tsx` |
+| `/metabolic-health/care-kits/glp-1-support/` | glp-1-support | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/care-kits/injection-safety/` | injection-safety | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/care-kits/sharps-supplies/` | sharps-supplies | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/care-kits/travel-support/` | travel-support | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/care-kits/home-monitoring/` | home-monitoring | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/care-kits/diabetes-supplies/` | diabetes-supplies | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/care-kits/clinic-injectable-supplies/` | clinic-injectable-supplies | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/care-kits/pharmacy-patient-support/` | pharmacy-patient-support | 4 | live | — | `src/app/metabolic-health/care-kits/[kit]/page.tsx` |
+| `/metabolic-health/refills/` | Refills | 4 | live | metabolic | `src/app/metabolic-health/refills/page.tsx` |
+| `/partners/` | Partners | 5 | live | partners | `src/app/partners/page.tsx` |
+| `/partners/clinics/` | Clinics | 5 | live | partners | `src/app/partners/clinics/page.tsx` |
+| `/partners/pharmacies/` | Pharmacies | 5 | live | partners | `src/app/partners/pharmacies/page.tsx` |
+| `/partners/suppliers/` | Suppliers | 5 | live | partners | `src/app/partners/suppliers/page.tsx` |
+| `/partners/acquisitions/` | Acquisitions | 5 | live | partners | `src/app/partners/acquisitions/page.tsx` |
+| `/investor-relations/` | Investor relations | 5 | live | investors | `src/app/investor-relations/page.tsx` |
+| `/investor-relations/growth-strategy/` | Growth strategy | 5 | live | investors | `src/app/investor-relations/growth-strategy/page.tsx` |
+| `/investor-relations/advanced-therapeutics/` | Advanced therapeutics | 5 | live | investors | `src/app/investor-relations/advanced-therapeutics/page.tsx` |
+| `/investor-relations/documents/` | Documents | 5 | live | investors | `src/app/investor-relations/documents/page.tsx` |
+| `/investor-relations/shareholder-services/` | Shareholder services | 5 | live | investors | `src/app/investor-relations/shareholder-services/page.tsx` |
+| `/investor-relations/disclosures/` | Disclosures | 5 | live | investors | `src/app/investor-relations/disclosures/page.tsx` |
+| `/our-team/` | Our team | 5 | live | about | `src/app/our-team/page.tsx` |
+| `/news/` | News & resources | 5 | live | about | `src/app/news/page.tsx` |
+| `/shop/` | Shop & Services | 3 | live | utility | `src/app/shop/page.tsx` |
+| `/contact/` | Contact | 3 | live | utility | `src/app/contact/page.tsx` |
+| `/contact-2/` | Contact (legacy) | 9 | redirect | — | ``next.config.ts` redirect` |
+| `/privacy/` | Privacy | 5 | live | legal | `src/app/privacy/page.tsx` |
+| `/terms/` | Terms of use | 5 | live | legal | `src/app/terms/page.tsx` |
+| `/accessibility/` | Accessibility | 5 | live | legal | `src/app/accessibility/page.tsx` |
+| `/news/[slug]/` | News item | 6 | live | — | `src/app/news/[slug]/page.tsx` |
+| `/resources/[slug]/` | Resource | 6 | live | — | `src/app/resources/[slug]/page.tsx` |
+
+### 5a. Action registry (generated from `src/lib/public-site/actions.ts`, Stage 9)
+
+| Key | Label | Intent | Destination | Owner channel | Verified |
+| --- | --- | --- | --- | --- | --- |
+| `explore_businesses` | Explore our businesses | navigation | internal `/our-operations/` | — | — |
+| `about_group` | About LifeSupply | navigation | internal `/about-us/` | — | — |
+| `plan_clinic` | Book a consultation | clinic_development | external `https://www.lifesupplyclinics.com/contact-us/` | info@lifesupplyclinics.com | 2026-09-08 |
+| `equipment_quote` | Request an equipment quote | equipment_quote | external `https://www.lifesupplyclinics.com/buy-clinic-equipment/` | info@lifesupplyclinics.com | 2026-09-08 |
+| `clinic_supply_review` | Request a supply review | ongoing_procurement | mailto `undefined` | Online sales & product lines | — |
+| `clinic_solutions` | Clinic Solutions | navigation | internal `/clinic-solutions/` | — | — |
+| `view_clinic_projects` | See published projects | clinic_development | external `https://www.lifesupplyclinics.com/our-projects/` | — | 2026-09-08 |
+| `metabolic_hub` | Metabolic Health | navigation | internal `/metabolic-health/` | — | — |
+| `explore_kits` | Explore the pathways | navigation | internal `/metabolic-health/care-kits/` | — | — |
+| `refills_information` | How refills work | navigation | internal `/metabolic-health/refills/` | — | — |
+| `discuss_program` | Discuss a supply program | metabolic_program | mailto `undefined` | — | — |
+| `partners_hub` | Explore partner relationships | navigation | internal `/partners/` | — | — |
+| `partner_clinics` | Clinic collaboration | navigation | internal `/partners/clinics/` | — | — |
+| `partner_pharmacies` | Pharmacy supply programs | navigation | internal `/partners/pharmacies/` | — | — |
+| `clinic_collaboration` | Discuss clinic collaboration | partner | mailto `undefined` | info@lifesupply.com | — |
+| `growth_strategy` | Growth strategy | navigation | internal `/investor-relations/growth-strategy/` | — | — |
+| `advanced_therapeutics` | Advanced therapeutics | navigation | internal `/investor-relations/advanced-therapeutics/` | — | — |
+| `investor_documents` | Documents index | navigation | internal `/investor-relations/documents/` | — | — |
+| `partner_inquiry` | Start a partner conversation | partner | mailto `undefined` | — | — |
+| `supplier_inquiry` | Submit a supplier inquiry | supplier | mailto `undefined` | — | — |
+| `us_business_inquiry` | U.S. business inquiry | general | mailto `undefined` | — | — |
+| `acquisition_inquiry` | Acquisition or strategic inquiry | acquisition | mailto `undefined` | Mergers & acquisitions | — |
+| `general_inquiry` | General inquiry | general | mailto `undefined` | Corporate office | — |
+| `investor_information` | Investor relations | investor | internal `/investor-relations/` | Investor relations | — |
+| `investor_materials` | Request investor materials | investor | mailto `undefined` | Investor relations | — |
+| `shareholder_services` | Shareholder services | shareholder | mailto `undefined` | Investor relations | — |
+| `shop_lifesupply` | Shop LifeSupply | commerce | external `https://lifesupply.ca/` | — | 2026-09-08 |
+| `shop_wellmart` | Shop Wellmart Medical | commerce | external `https://wellmartmedical.com/` | — | 2026-09-08 |
+| `shop_clinics` | Visit LifeSupply Clinics | clinic_development | external `https://www.lifesupplyclinics.com/` | — | 2026-09-08 |
+| `shop_balkowitsch` | Shop Balkowitsch Worldwide | commerce | external `https://balkowitsch.com/` | — | 2026-09-08 |
+| `shop_services` | Shop & Services | navigation | internal `/shop/` | — | — |
+| `brand_lifesupply` | About LifeSupply.ca | navigation | internal `/our-operations/lifesupply/` | — | — |
+| `brand_wellmart` | About Wellmart Medical | navigation | internal `/our-operations/wellmart-medical/` | — | — |
+| `brand_clinics` | About LifeSupply Clinics | navigation | internal `/our-operations/lifesupply-clinics/` | — | — |
+| `brand_balkowitsch` | About Balkowitsch Worldwide | navigation | internal `/our-operations/balkowitsch/` | — | — |
+| `technology_fulfilment` | Technology & fulfilment | navigation | internal `/our-operations/technology-fulfilment/` | — | — |
+| `contact_directory` | Contact | navigation | internal `/contact/` | — | — |

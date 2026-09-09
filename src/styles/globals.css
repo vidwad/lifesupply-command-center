@@ -168,7 +168,7 @@
     --lsh-ink: #000000;
     --lsh-charcoal: #1d1d1d;
     --lsh-paper: #ffffff;
-    --lsh-surface: #f0f0f0;
+    --lsh-surface: #f1f1f1; /* one step lighter than the legacy #f0f0f0 so brand-red eyebrows clear 4.5:1 (Stage 9) */
     --lsh-muted: #5f5f5f;
     /* Hairlines between editorial panels and card borders. */
     --lsh-rule: #d6d6d6;

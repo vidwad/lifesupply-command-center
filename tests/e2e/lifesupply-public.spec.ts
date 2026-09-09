@@ -644,15 +644,8 @@ test.describe("LifeSupply public site", () => {
         .filter((src) => src && !src.startsWith(location.origin)),
     );
     expect(scriptHosts).toEqual([]);
-    // The Vercel public site sets no cookie. A local or Render-hosted run passes through the
-    // Auth.js proxy wrapper, which sets two technical cookies (D-12); never a tracking cookie.
-    const cookieNames = (await context.cookies()).map((cookie) => cookie.name).sort();
-    expect(
-      cookieNames.every((name) =>
-        /^(__Secure-|__Host-)?authjs\.(csrf-token|callback-url)$/.test(name),
-      ),
-      cookieNames.join(","),
-    ).toBe(true);
+    // No cookie at all: the public host bypasses the Auth.js wrapper (D-12, Stage 9).
+    expect(await context.cookies()).toEqual([]);
     await page.goto("/clinic-solutions");
     await expect(
       page.locator('a[data-measure="clinic_consultation_click"]').first(),
@@ -680,6 +673,96 @@ test.describe("LifeSupply public site", () => {
       for (const href of hrefs) {
         if (href.startsWith("/")) expect((await page.request.get(href)).ok(), href).toBe(true);
       }
+    }
+  });
+
+  test("answers a real 404 with the public recovery page, and redirects the legacy contact address", async ({
+    page,
+  }) => {
+    const missing = await page.goto("/no-such-page");
+    expect(missing?.status()).toBe(404);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/does not exist on this site/);
+    await expect(
+      page.locator("main").getByRole("link", { name: "Contact", exact: true }),
+    ).toBeVisible();
+    const legacy = await page.request.get("/contact-2", { maxRedirects: 0 });
+    expect(legacy.status()).toBe(308);
+    expect(legacy.headers()["location"]).toMatch(/\/contact$/);
+    const slashed = await page.request.get("/about-us/", { maxRedirects: 0 });
+    expect(slashed.status()).toBe(308);
+    expect(slashed.headers()["location"]).toMatch(/\/about-us$/);
+  });
+
+  test("publishes a canonical sitemap and a robots file that disallows crawling until switched on", async ({
+    page,
+  }) => {
+    const sitemap = await page.request.get("/sitemap.xml");
+    expect(sitemap.ok()).toBe(true);
+    const xml = await sitemap.text();
+    const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
+    expect(locs.length).toBeGreaterThan(40);
+    for (const loc of locs) {
+      // The origin itself is `https://lifesupplyhealth.com/`; every other entry is unslashed.
+      expect(loc, loc).toMatch(/^https:\/\/lifesupplyhealth\.com(\/|\/[a-z0-9\-/]*[a-z0-9])$/);
+      expect(loc, loc).not.toMatch(/\[|contact-2|public-web/);
+    }
+    const robots = await page.request.get("/robots.txt");
+    expect(robots.ok()).toBe(true);
+    expect((await robots.text()).replace(/\s+/g, " ")).toMatch(/User-Agent: \* Disallow: \//i);
+  });
+
+  test("carries a canonical link, social preview tags, noindex until switched on, and valid structured data", async ({
+    page,
+  }) => {
+    await page.goto("/about-us");
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://lifesupplyhealth.com/about-us",
+    );
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      "content",
+      /og-default\.jpg$/,
+    );
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await page.goto("/");
+    const jsonLd = await page.locator('script[type="application/ld+json"]').first().textContent();
+    const parsed = JSON.parse(jsonLd ?? "[]") as { "@type": string; name: string; url: string }[];
+    expect(parsed.map((entry) => entry["@type"]).sort()).toEqual(["Organization", "WebSite"]);
+    expect(parsed[0]!.url).toBe("https://lifesupplyhealth.com/");
+  });
+
+  test("never scrolls sideways at 320, 375, or 200% zoom on the principal pages", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "viewport is fixed on the mobile project");
+    const routes = [
+      "/",
+      "/about-us",
+      "/clinic-solutions",
+      "/metabolic-health/care-kits",
+      "/investor-relations",
+      "/contact",
+      "/no-such-page",
+    ];
+    for (const width of [320, 375]) {
+      await page.setViewportSize({ width, height: 800 });
+      for (const route of routes) {
+        await page.goto(route);
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+        expect(overflow, `${route} at ${width}`).toBeLessThanOrEqual(1);
+      }
+    }
+    // Browser zoom at 200% on a 1280 px window is a 640 px CSS viewport: text must reflow, not scroll.
+    await page.setViewportSize({ width: 640, height: 400 });
+    for (const route of routes) {
+      await page.goto(route);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${route} at 200% zoom`).toBeLessThanOrEqual(1);
     }
   });
 

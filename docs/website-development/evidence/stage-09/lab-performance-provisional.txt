@@ -1,0 +1,6 @@
+# Lab performance (provisional; local next start, no CDN, no field data). 2026-09-09T00:46:55.347Z
+/: TTFB 126 ms, DCL 867 ms, load 879 ms, LCP 1348 ms, CLS 0, resources 773 KB
+/about-us: TTFB 15 ms, DCL 69 ms, load 179 ms, LCP 168 ms, CLS 0, resources 477 KB
+/metabolic-health/care-kits: TTFB 17 ms, DCL 79 ms, load 215 ms, LCP 1424 ms, CLS 0, resources 480 KB
+/investor-relations/documents: TTFB 17 ms, DCL 89 ms, load 231 ms, LCP 1488 ms, CLS 0, resources 473 KB
+INP: not measurable in a scripted lab run; requires field data after cutover.

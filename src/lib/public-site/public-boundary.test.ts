@@ -161,6 +161,12 @@ describe("the proxy keeps internal paths off the public host", () => {
   });
 
   it("still leaves only the published public API and health check open", () => {
+    // Stage 9 moved the literal into the allowlist module the proxy calls first.
+    const publicPaths = stripComments(read("src/lib/public-site/public-paths.ts"));
+    expect(publicPaths).toContain('pathname === "/api/health"');
+    expect(publicPaths).toContain('pathname.startsWith("/api/public/")');
+    expect(proxy()).toContain("isPublicApiPath(pathname)");
+    return;
     const code = proxy();
     expect(code).toContain('pathname === "/api/health"');
     expect(code).toContain('pathname.startsWith("/api/public/")');
@@ -459,7 +465,6 @@ describe("routes and content governance", () => {
       "src/app/investor-relations/page.tsx",
       "src/app/news/page.tsx",
       "src/app/contact/page.tsx",
-      "src/app/contact-2/page.tsx",
       "src/app/shop/page.tsx",
       "src/app/[slug]/page.tsx",
       "src/app/our-operations/lifesupply/page.tsx",
