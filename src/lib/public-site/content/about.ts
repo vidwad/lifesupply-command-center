@@ -6,7 +6,7 @@
  * Mission, vision, and growth are approved (published since PR #60/#61).
  * Footprint and milestone copy are Stage 2 drafts built only from verified
  * register rows (SOURCE_REGISTER.md); each milestone carries its date and
- * source. The operations-timeline graphic is not used as a source (S-133).
+ * source. The withdrawn operations-timeline graphic was never a source (S-133).
  */
 export const about = {
   // Approved (moved from JSX).

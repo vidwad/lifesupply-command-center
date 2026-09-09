@@ -21,7 +21,7 @@ import { homepage } from "@/lib/public-site/content/home";
 import { investorRelations } from "@/lib/public-site/content/investors";
 import { metabolic } from "@/lib/public-site/content/metabolic";
 import { news } from "@/lib/public-site/content/news";
-import { operations, operationsTimeline } from "@/lib/public-site/content/operations";
+import { operations } from "@/lib/public-site/content/operations";
 import { partners } from "@/lib/public-site/content/partners";
 import { policies } from "@/lib/public-site/content/policies";
 import { shop } from "@/lib/public-site/content/shop";
@@ -44,5 +44,4 @@ export const LIFE_SUPPLY_CONTENT = {
   news,
   policies,
   contact,
-  operationsTimeline,
 } as const;

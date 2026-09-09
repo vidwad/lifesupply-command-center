@@ -189,7 +189,7 @@ describe("original assets", () => {
     }
   });
 
-  it("declare the mark and lockup at their real pixel dimensions", () => {
+  it("declares the mark at its real pixel dimensions", () => {
     // A wrong intrinsic size makes next/image reserve the wrong box and
     // shifts the layout on load. The content model is checked against the
     // PNG headers so swapping an asset without updating its size fails here.
@@ -198,24 +198,25 @@ describe("original assets", () => {
     expect({ width: declared("imageWidth"), height: declared("imageHeight") }).toEqual(
       pngSize("public/lsh/lifesupply-mark.png"),
     );
-    expect({
-      width: declared("portfolioImageWidth"),
-      height: declared("portfolioImageHeight"),
-    }).toEqual(pngSize("public/lsh/lifesupply-portfolio-lockup.png"));
   });
 
   it("read those dimensions from the content model rather than hard-coding them", () => {
     expect(layout()).toContain("width={brand.imageWidth}");
     expect(layout()).toContain("height={brand.imageHeight}");
-    expect(pages()).toContain("width={brand.portfolioImageWidth}");
-    expect(pages()).toContain("height={brand.portfolioImageHeight}");
   });
 
-  it("place the white-on-transparent lockup on an ink field, not on paper", () => {
-    // It shipped on a white section at 75% opacity, where it was invisible.
-    expect(pages()).toContain("<ImageBand");
-    expect(pages()).not.toMatch(/portfolioImage[\s\S]{0,300}opacity-75/);
-    expect(primitives()).toMatch(/function ImageBand[\s\S]*?bg-\[var\(--lsh-charcoal\)\]/);
+  it("carries no MedDirect or Dexton material: entities, lockup, timeline, and channel withdrawn", () => {
+    // Both entities are no longer operational (product owner, 2026-09-08).
+    // Nothing public may name them, link to them, or render an asset that
+    // shows them (the portfolio lockup and the legacy timeline graphic).
+    for (const source of [content(), ...publicComponents()]) {
+      expect(source).not.toMatch(/dexton|meddirect|med ?direct/i);
+      expect(source).not.toMatch(
+        /portfolio-lockup|operations-timeline|portfolioImage|operationsTimeline/,
+      );
+    }
+    expect(existsSync(join(ROOT, "public/lsh/lifesupply-portfolio-lockup.png"))).toBe(false);
+    expect(existsSync(join(ROOT, "public/lsh/operations-timeline.jpg"))).toBe(false);
   });
 });
 
@@ -302,23 +303,6 @@ describe("motion", () => {
     // accessible name is the full sentence and the one-h1 rule holds.
     const code = motionPrimitives();
     expect(code).toMatch(/<motion\.h1[\s\S]*?words\.map[\s\S]*?<\/motion\.h1>/);
-  });
-
-  it("declares the portrait graphics at their real pixel sizes", () => {
-    const c = content();
-    // A block may be a property (`key: {`) or, since the Stage 2 module
-    // split, an exported constant (`const key = {`).
-    const start = (key: string) => {
-      const asProperty = c.indexOf(`${key}: {`);
-      return asProperty >= 0 ? asProperty : c.indexOf(`const ${key} = {`);
-    };
-    const block = (key: string) => c.slice(start(key), c.indexOf("}", start(key)));
-    const dims = (key: string) => ({
-      width: Number(block(key).match(/width:\s*(\d+)/)?.[1]),
-      height: Number(block(key).match(/height:\s*(\d+)/)?.[1]),
-    });
-    expect(dims("operationsTimeline")).toEqual(jpegSize("public/lsh/operations-timeline.jpg"));
-    expect(pages()).toContain("width={operationsTimeline.width}");
   });
 });
 

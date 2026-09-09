@@ -52,10 +52,6 @@ export const businesses = {
         },
       ],
     },
-    timeline: {
-      eyebrow: "Historical timeline",
-      note: "A graphic from the previous corporate website, with the 2018 to 2023 milestones as it published them. Its figures are not restated as current; dated milestones with sources are on the About page.",
-    },
   },
 
   /** Brand pages. `actions` are registry keys; categories and store links come from the registry. */

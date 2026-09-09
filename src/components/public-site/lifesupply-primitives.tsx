@@ -13,14 +13,9 @@
  *   what keeps a public Vercel visitor pointed at the protected Render login
  *   and never at a same-host /dashboard. public-boundary.test.ts enforces it.
  *
- *   ImageBand exists because both bundled marks are white on a transparent
- *   ground. Rendered on paper they vanish — which is exactly how the portfolio
- *   lockup shipped on /about-us/. The band gives them the ink field they need.
- *
  * Every visible sentence arrives as a prop from lifesupply-content.ts. The
  * only strings authored here are imperative UI labels.
  */
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ExternalLink, LogIn } from "lucide-react";
 
@@ -347,51 +342,5 @@ export function InfoBand({
         {action ? <div className="shrink-0">{action}</div> : null}
       </Container>
     </section>
-  );
-}
-
-/**
- * An ink field for original artwork that only reads on a dark ground.
- *
- * Both bundled marks are white on transparent. This gives them charcoal and a
- * red top rule, keeps their intrinsic ratio through next/image, and never
- * upscales beyond a modest factor via `maxWidth`.
- */
-export function ImageBand({
-  src,
-  alt,
-  width,
-  height,
-  eyebrow,
-  caption,
-  maxWidth = "max-w-md",
-}: {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-  eyebrow?: string;
-  caption?: string;
-  maxWidth?: string;
-}) {
-  return (
-    <figure className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white sm:p-10">
-      {eyebrow ? (
-        <Eyebrow tone="onDark" className="mb-6">
-          {eyebrow}
-        </Eyebrow>
-      ) : null}
-      <Image
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        sizes="(min-width: 1024px) 448px, 100vw"
-        className={`h-auto w-full ${maxWidth}`}
-      />
-      {caption ? (
-        <figcaption className="mt-5 max-w-xl text-sm leading-6 text-white/70">{caption}</figcaption>
-      ) : null}
-    </figure>
   );
 }

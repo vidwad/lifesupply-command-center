@@ -47,9 +47,6 @@ export function LifeSupplyHome() {
         actions={
           <>
             <ActionLink action="explore_businesses" />
-            <ActionLink action="plan_clinic" variant="onDark">
-              Plan a clinic
-            </ActionLink>
             <ActionLink action="investor_information" variant="onDark">
               Investor information
             </ActionLink>

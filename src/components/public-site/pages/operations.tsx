@@ -1,13 +1,6 @@
-import Image from "next/image";
-
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import {
-  Container,
-  Eyebrow,
-  PublicHero,
-  SectionHeading,
-} from "@/components/public-site/lifesupply-primitives";
+import { PublicHero, SectionHeading } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { BentoGrid, Callout, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
 import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
@@ -23,7 +16,7 @@ import { BRAND_ROUTES } from "@/lib/public-site/routes";
  * live on those pages and in the footer.
  */
 export function OperationsPage() {
-  const { businesses, operations, operationsTimeline, contact, brand } = LIFE_SUPPLY_CONTENT;
+  const { businesses, operations, contact, brand } = LIFE_SUPPLY_CONTENT;
   const { hub, technology } = businesses;
   return (
     <LifeSupplyLayout>
@@ -142,28 +135,6 @@ export function OperationsPage() {
           icon: iconForTitle(item.title),
         }))}
       />
-
-      {/* The historical timeline graphic, labelled as such. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-          <Reveal>
-            <Eyebrow as="h2">{hub.timeline.eyebrow}</Eyebrow>
-            <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{hub.timeline.note}</p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div className="overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-4 shadow-sm">
-              <Image
-                src={operationsTimeline.src}
-                alt={operationsTimeline.alt}
-                width={operationsTimeline.width}
-                height={operationsTimeline.height}
-                sizes="(min-width: 1024px) 720px, 100vw"
-                className="h-auto w-full"
-              />
-            </div>
-          </Reveal>
-        </Container>
-      </section>
     </LifeSupplyLayout>
   );
 }

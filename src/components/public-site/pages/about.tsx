@@ -7,7 +7,6 @@ import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
   Eyebrow,
-  ImageBand,
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
@@ -23,7 +22,7 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
  * philosophy, brands, growth direction. Primary action: explore operations.
  */
 export function AboutPage() {
-  const { about, brand } = LIFE_SUPPLY_CONTENT;
+  const { about } = LIFE_SUPPLY_CONTENT;
   const footprintGraphic = getGraphic("facade");
   return (
     <LifeSupplyLayout>
@@ -130,7 +129,7 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* Brands, from the registry, and the historical portfolio lockup on the ink field it needs. */}
+      {/* Brands, from the registry. */}
       <section className="bg-[var(--lsh-paper)] py-20">
         <Container>
           <Reveal>
@@ -139,15 +138,6 @@ export function AboutPage() {
           <div className="mt-10">
             <BrandGrid />
           </div>
-          <Reveal className="mt-14">
-            <ImageBand
-              src={brand.portfolioImage}
-              alt={brand.portfolioImageAlt}
-              width={brand.portfolioImageWidth}
-              height={brand.portfolioImageHeight}
-              eyebrow="Portfolio marks"
-            />
-          </Reveal>
         </Container>
       </section>
 
