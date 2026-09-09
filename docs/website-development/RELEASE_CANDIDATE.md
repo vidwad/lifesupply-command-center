@@ -6,7 +6,7 @@
 
 | Item | Value |
 | --- | --- |
-| Candidate commit | The squash-merge of the Stage 9 pull request on `main`; recorded in `STATUS.md` (session log, Stage 9) once merged. Every check below was run on the branch commit that became it. |
+| Candidate commit | **`05c34be`** (squash-merge of PR #80 on `main`, September 9, 2026). Every check below was run on the branch commit `d55459c` that became it, and the post-merge verification in `evidence/stage-09/post-merge-verification.txt` was run against the deployments built from `05c34be`. |
 | Predecessors on `main` | Stages 1–8: `fac59a4`, `19ca3d5`, `fab88e7`, `622c7a8`, `2cd81c3`, `de906d7`/`c065d3d`, `0743a56`/`ed15745`, `68d6af5`/`1e04402` |
 | Public surface | Vercel project `prj_sjyLvOa5X7VhSKodEoGSPTElo58D`, Production from `main`, build `pnpm public-web:build`, database-free; alias `lifesupply-command-center-vidwads-projects.vercel.app` (`noindex` by Vercel and by `robots.ts`) |
 | Internal surface | Render `lifesupply-cc-web` (web, worker, cron, database); applies `prisma/migrations/` on deploy; serves `/api/public/v1/*` for the public site |
