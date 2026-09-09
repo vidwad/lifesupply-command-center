@@ -16,6 +16,24 @@ export const about = {
   },
   labels: { mission: "Mission", vision: "Vision" },
   /**
+   * The lines carried by the two photographic divider bands (product owner,
+   * 2026-09-09). Each is drawn from copy already on the site: the three
+   * figures cited in the 2025 annual-report narrative, and the count of
+   * operating websites in the brand registry. The photographs stay
+   * decorative; only these lines are read.
+   */
+  bands: {
+    desk: {
+      eyebrow: "Since inception",
+      statement:
+        "More than 25 years of operations, more than 50,000 products, more than 1 million customers served.",
+    },
+    warehouse: {
+      eyebrow: "The operating base",
+      statement: "Four operating websites in Canada and the United States, behind one group.",
+    },
+  },
+  /**
    * The company video beside Mission and Vision (product owner, 2026-09-09).
    * The video itself is registered in `video.ts`; nothing loads from YouTube
    * until the visitor presses play.

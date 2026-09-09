@@ -884,9 +884,20 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     );
     // The hero backdrop and two bands, each decorative, drawn from the registry, never a path literal.
     expect(page).toContain('media={<HeroBackdrop band="data" />}');
-    expect((page.match(/<ParallaxBand /g) ?? []).length).toBe(2);
-    expect(page).toContain('<ParallaxBand band="desk" tone="redLight" />');
-    expect(page).toContain('<ParallaxBand band="warehouse" tone="ink" />');
+    expect((page.match(/<ParallaxBand\b/g) ?? []).length).toBe(2);
+    expect(page).toMatch(
+      /<ParallaxBand\s+band="desk"\s+tone="redLight"\s+eyebrow=\{about\.bands\.desk\.eyebrow\}/,
+    );
+    expect(page).toMatch(
+      /<ParallaxBand\s+band="warehouse"\s+tone="ink"\s+eyebrow=\{about\.bands\.warehouse\.eyebrow\}/,
+    );
+    // The band lines repeat approved copy only: the three cited figures and the brand count.
+    expect(aboutContent).toContain(
+      "More than 25 years of operations, more than 50,000 products, more than 1 million customers served.",
+    );
+    expect(aboutContent).toContain(
+      "Four operating websites in Canada and the United States, behind one group.",
+    );
     const band = parallaxBand();
     expect(band).toContain('aria-hidden="true"');
     expect(band).toContain('alt=""');
