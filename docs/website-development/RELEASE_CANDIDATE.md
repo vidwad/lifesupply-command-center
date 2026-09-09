@@ -63,7 +63,9 @@ None in this candidate. Two additive migrations are prepared and un-applied: `mi
 | Product projection feed | No defined need or channel approval | Contract recorded |
 | External accessibility audit | Not commissioned | Internal checks only (see Stage 9 evidence); the accessibility page states this |
 
-## 8. Cutover and rollback record (to be completed in Stage 10)
+## 8. Cutover and rollback record
+
+**Stage 10 (September 9, 2026): launch package assembled (`STAGE_10_EVIDENCE.md` §2); cutover BLOCKED on §6 row 1 (domain and DNS ownership and executor). No switch was performed.** Pre-switch state recorded: the alias serves `dpl_HwuhXFf32PYdxDgAdxDhLK9xcCQM` (`5862957`, code identical to the candidate); the previous production deployment `dpl_7tEt2E79Dic3LDmuduJWSwWpEH5G` (`1e04402`) is the alias rollback target; the legacy host answers 200 at `165.232.130.127` and is the custom-domain rollback target; deployment protection is off for all deployment types (see D-13 in the Stage 10 evidence). The browser suite passed against the alias (68 passed, 4 skipped).
 
 Procedure: docs/37 §Cutover. Pre-switch: candidate deployed to Production, `NEXT_PUBLIC_SITE_URL` set, legacy TTL lowered, smoke suite green against the alias. Switch: add the domains, update DNS, verify HTTPS, verify `https://lifesupplyhealth.com/` serves the candidate, run the legacy URL map (`LEGACY_URL_MAP.md`) against the domain, then set `PUBLIC_SITE_INDEXABLE=true` and confirm `robots.txt` and the `robots` meta flip. Post-switch monitoring: Vercel runtime errors and 404 rate; Render `/api/public/v1/*` availability; the two-week stabilisation window per `docs/20` before any broader scope. Rollback: point DNS back at the legacy host (kept warm) or, if only the application is at fault, redeploy the previous Vercel production deployment; no database change is involved in the public cutover. Evidence of each step is recorded in `STAGE_10_EVIDENCE.md`.
 
