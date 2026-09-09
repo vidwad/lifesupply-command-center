@@ -19,16 +19,6 @@ export const brand = {
   image: "/lsh/lifesupply-mark.png",
   imageWidth: 661,
   imageHeight: 93,
-  /**
-   * Portfolio lockup — LIFESUPPLY, DEXTON, MEDdirect marks in white on a
-   * transparent ground, 389×93 px. Same rule: ink/charcoal backgrounds only.
-   * A historical portfolio visual (docs/40); the active status of the Dexton
-   * and MedDirect marks is unconfirmed (S-18, S-131).
-   */
-  portfolioImage: "/lsh/lifesupply-portfolio-lockup.png",
-  portfolioImageWidth: 389,
-  portfolioImageHeight: 93,
-  portfolioImageAlt: "LifeSupply, Dexton, and MedDirect portfolio marks",
   address: [
     "Lifesupply Health Supplies Inc.",
     "6911 King George Highway",

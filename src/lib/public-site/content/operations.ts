@@ -26,11 +26,3 @@ export const operations = [
       "A stated development focus around pharmacy-related operations and regulated care infrastructure, subject to current regulatory, operational, and partner confirmation.",
   },
 ] as const;
-
-/** A portrait graphic; declared at its real pixel size (checked by the canaries). */
-export const operationsTimeline = {
-  src: "/lsh/operations-timeline.jpg",
-  alt: "LifeSupply operations timeline",
-  width: 1099,
-  height: 2560,
-} as const;

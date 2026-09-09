@@ -5,6 +5,10 @@
  * There is no form; Stage 7 replaces these destinations with the intake.
  * Existing-order support goes to the originating store (guide §5).
  *
+ * MedDirect Distribution Corporation and Dexton Medical Corporation are no
+ * longer operational (product owner, 2026-09-08) and are not listed; the
+ * showroom channel that used a Dexton address went with them.
+ *
  * The action registry may only use email addresses that appear in
  * `channels` (checked by registry.test.ts).
  */
@@ -23,12 +27,6 @@ export const contact = {
       phone: "604-551-9538",
     },
     {
-      label: "Product showroom & distribution centre",
-      name: "Mike Gill",
-      email: "mike@dexton.com",
-      phone: "604-503-9389",
-    },
-    {
       label: "Mergers & acquisitions",
       name: "Abdul Ladha",
       email: "abdul@lifesupply.com",
@@ -42,18 +40,6 @@ export const contact = {
       detail: "6911 King George Highway, Surrey, British Columbia V3W 5A1",
       phone: "1-855-755-5433",
       url: "https://lifesupply.ca",
-    },
-    {
-      name: "MedDirect Distribution Corporation",
-      detail: "6911 King George Highway, Surrey, British Columbia V3W 5A1",
-      phone: "604-551-9538",
-      url: "https://meddirect.ca",
-    },
-    {
-      name: "Dexton Medical Corporation",
-      detail: "6911 King George Highway, Surrey, British Columbia V3W 5A1",
-      phone: "604-503-9389",
-      url: "https://dexton.com",
     },
   ],
 

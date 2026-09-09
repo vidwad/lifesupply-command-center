@@ -46,7 +46,7 @@ Legacy addresses that 404 on the old site as well (`/privacy/`, `/terms/`) now e
 | Legacy asset | Decision | Notes |
 | --- | --- | --- |
 | `/wp-content/uploads/2021/10/LSHomeVid.mp4` | replaced | Re-cut, caption-free, grayscale loop shipped as `/lsh/hero/hero-loop.{webm,mp4}` with a poster (PR #63). The legacy file is not linked. |
-| `/wp-content/uploads/2021/04/standard-logo*.png` | replaced | Official mark and lockup shipped as `/lsh/lifesupply-mark.png` and `/lsh/lifesupply-portfolio-lockup.png` (PR #61). |
+| `/wp-content/uploads/2021/04/standard-logo*.png` | replaced | Official mark shipped as `/lsh/lifesupply-mark.png` (PR #61). The portfolio lockup was withdrawn on 2026-09-08 (Dexton and MedDirect no longer operational; `docs/website-development/legacy-assets/`). |
 | Leadership portrait (Abdul Ladha) | kept | `/lsh/abdul-ladha.jpg`. Other portraits were never bundled (S-104). |
 | `Lifesupply-Investor-Presentation.pdf` (May 2022, 21.9 MB) | archive, on request | Listed as a historical document in the investor documents index with no hosted file (S-64). |
 | Remaining `wp-content/uploads` images (Stage 1 counted 49 references) | archive | Elementor layout imagery and the legacy timeline graphic; not carried forward (S-133). Any that must survive can be added to `public/lsh/` with provenance. |

@@ -120,7 +120,6 @@ export const ICON_BY_TITLE: Record<string, string> = {
   "Corporate office": "building",
   "Investor relations": "chart",
   "Online sales & product lines": "cart",
-  "Product showroom & distribution centre": "warehouse",
   "Mergers & acquisitions": "handshake",
   // Kit pathways, by id
   K01: "syringe",
