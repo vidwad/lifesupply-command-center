@@ -89,11 +89,6 @@ export const partners = {
         },
       ],
     },
-    boundaries: [
-      "LifeSupply does not operate patient-care clinics and does not take part in clinical decisions.",
-      "No referral, prescription-linked, or volume incentive is offered to a clinic or a clinician.",
-      "A collaboration never changes the clinic's ordinary purchasing terms with a store.",
-    ],
     actions: ["clinic_collaboration", "clinic_solutions"],
   },
 
@@ -128,11 +123,6 @@ export const partners = {
         "Nothing is assumed by default. If a responsibility is not written into the program, it has not been agreed.",
       ],
     },
-    boundaries: [
-      "No patient records, prescriptions, or identity documents are collected by this site.",
-      "No referral or prescription-linked incentive is offered to a pharmacy or a pharmacist.",
-      "Regulatory questions specific to a jurisdiction are answered from current primary sources during program design, not on this page.",
-    ],
     actions: ["discuss_program", "metabolic_hub"],
   },
 
@@ -180,10 +170,6 @@ export const partners = {
         },
       ],
     },
-    boundaries: [
-      "A supplier inquiry is not a listing commitment.",
-      "LifeSupply does not publish supplier pricing or stock on this site; the stores do.",
-    ],
     actions: ["supplier_inquiry", "explore_businesses"],
   },
 
@@ -239,10 +225,6 @@ export const partners = {
         },
       ],
     },
-    boundaries: [
-      "No transaction, letter of intent, or discussion is announced or implied on this site.",
-      "Historical acquisitions are recorded in the newsroom with their original dates.",
-    ],
     actions: ["acquisition_inquiry", "investor_information"],
   },
 } as const;

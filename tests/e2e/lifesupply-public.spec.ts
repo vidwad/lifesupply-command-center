@@ -681,11 +681,8 @@ test.describe("LifeSupply public site", () => {
       /^\/clinic-solutions\/?$/,
     );
     await page.goto("/partners/acquisitions");
-    await expect(
-      page
-        .locator("main")
-        .getByText(/No transaction, letter of intent, or discussion is announced/),
-    ).toBeVisible();
+    // Boundaries blocks were internal guidance and left every page on 2026-09-09.
+    await expect(page.locator("main").getByRole("heading", { name: "Boundaries" })).toHaveCount(0);
     await expect(
       page.locator("main").getByRole("link", { name: "Acquisition or strategic inquiry" }).first(),
     ).toHaveAttribute("href", "mailto:abdul@lifesupply.com");
