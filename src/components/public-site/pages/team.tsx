@@ -4,14 +4,18 @@ import { ArrowRight } from "lucide-react";
 
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Eyebrow, PrimaryAction, PublicHero } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { Reveal, SpotlightCard } from "@/components/public-site/motion";
 import { IconBadge } from "@/components/public-site/sections";
 import { legacyTitle, team } from "@/lib/public-site/content/team";
 import { LIFE_SUPPLY_ROUTES, profileRoute } from "@/lib/public-site/routes";
 
-/** `/our-team/` — titles resolve through the dated legacy profiles (S-101). */
+/**
+ * `/our-team/` — current leadership as confirmed by the company (2026-09-08).
+ * Titles resolve through the dated legacy profiles (S-101); the profile page
+ * stays at its original address.
+ */
 export function TeamPage() {
-  const { management, board, hero, labels } = team;
+  const { management, hero, labels } = team;
   return (
     <LifeSupplyLayout>
       <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
@@ -23,80 +27,51 @@ export function TeamPage() {
           </div>
           <p className="text-xs text-[var(--lsh-muted)]">{labels.titlesNote}</p>
         </Reveal>
-        <Stagger className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           {management.map((member) => (
-            <StaggerItem key={member.slug} className="h-full">
+            <Reveal key={member.slug} className="h-full lg:col-span-2">
               <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                <Link href={profileRoute(member.slug)} className="group flex h-full flex-col p-7">
-                  <div className="flex items-start gap-5">
-                    {"image" in member ? (
-                      <Image
-                        src={member.image}
-                        alt={member.name}
-                        width={92}
-                        height={92}
-                        className="h-20 w-20 rounded-full object-cover ring-0 ring-[var(--lsh-brand-red)] transition-[box-shadow] duration-300 group-hover:ring-4 motion-reduce:transition-none"
-                      />
-                    ) : (
-                      <div
-                        className="lsh-display flex h-20 w-20 items-center justify-center rounded-full bg-[var(--lsh-surface)] text-2xl text-[var(--lsh-brand-red)] ring-0 ring-[var(--lsh-brand-red)] transition-[box-shadow] duration-300 group-hover:ring-4 motion-reduce:transition-none"
+                <Link
+                  href={profileRoute(member.slug)}
+                  className="group grid h-full gap-8 p-8 md:grid-cols-[auto_1fr] md:items-center lg:p-10"
+                >
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    width={200}
+                    height={200}
+                    className="h-40 w-40 rounded-full object-cover ring-0 ring-[var(--lsh-brand-red)] transition-[box-shadow] duration-300 group-hover:ring-4 motion-reduce:transition-none lg:h-48 lg:w-48"
+                  />
+                  <div>
+                    <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      {legacyTitle(member.slug)}
+                    </p>
+                    <h3 className="lsh-display mt-2 text-3xl text-[var(--lsh-charcoal)] sm:text-4xl">
+                      {member.name}
+                    </h3>
+                    <p className="mt-4 max-w-2xl leading-7 text-[var(--lsh-muted)]">
+                      {member.summary}
+                    </p>
+                    <span className="lsh-display mt-6 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
+                      View profile{" "}
+                      <ArrowRight
+                        size={15}
                         aria-hidden="true"
-                      >
-                        {member.name
-                          .split(" ")
-                          .map((part) => part[0])
-                          .join("")}
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="lsh-display text-2xl text-[var(--lsh-charcoal)]">
-                        {member.name}
-                      </h3>
-                      <p className="lsh-display mt-1 text-[10px] text-[var(--lsh-brand-red)]">
-                        {legacyTitle(member.slug)}
-                      </p>
-                    </div>
+                        className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
+                      />
+                    </span>
                   </div>
-                  <p className="mt-6 leading-7 text-[var(--lsh-muted)]">{member.summary}</p>
-                  <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-6 text-[11px] text-[var(--lsh-brand-red)]">
-                    View profile{" "}
-                    <ArrowRight
-                      size={15}
-                      aria-hidden="true"
-                      className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
-                    />
-                  </span>
                 </Link>
               </SpotlightCard>
-            </StaggerItem>
+            </Reveal>
           ))}
-        </Stagger>
-        <Reveal className="mt-16 border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white">
-          <div className="flex items-center gap-4">
-            <IconBadge icon="landmark" tone="onDark" size={18} />
-            <Eyebrow as="h2" tone="onDark">
-              {labels.board}
-            </Eyebrow>
-          </div>
-          <Stagger as="ul" className="mt-6 flex flex-wrap gap-3">
-            {board.map((director) => (
-              <StaggerItem key={director.slug} as="li">
-                <Link
-                  href={profileRoute(director.slug)}
-                  className="block border border-white/20 px-4 py-2 text-sm text-white/80 transition-colors hover:border-[var(--lsh-red-on-ink)] hover:text-white"
-                >
-                  {director.name}
-                </Link>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Reveal>
+        </div>
       </section>
     </LifeSupplyLayout>
   );
 }
 
-/** `/[slug]/` — retained legacy profile addresses. */
+/** `/[slug]/` — the retained profile address. */
 export function LegacyProfilePage({ slug }: { slug: string }) {
   const profile = team.legacyProfiles.find((entry) => entry.slug === slug);
   if (!profile) return null;

@@ -11,7 +11,7 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, ScrollBeam, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { IconBadge, SplitSection } from "@/components/public-site/sections";
+import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import { CONCEPTUAL_CAPTION, getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
@@ -19,10 +19,12 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 /**
  * About — the Stage 2 page contract (guide §3, `/about-us/`): current group
  * introduction, geographic footprint, sourced milestones, operating
- * philosophy, brands, growth direction. Primary action: explore operations.
+ * philosophy, brands, growth direction. Since 2026-09-08 it also carries the
+ * corporate portfolio that used to open Our Businesses: the published
+ * entities, the shared capabilities narrative, and the developing programs.
  */
 export function AboutPage() {
-  const { about } = LIFE_SUPPLY_CONTENT;
+  const { about, brand, contact, operations } = LIFE_SUPPLY_CONTENT;
   const footprintGraphic = getGraphic("facade");
   return (
     <LifeSupplyLayout>
@@ -129,8 +131,85 @@ export function AboutPage() {
         </div>
       </section>
 
+      {/* The group: the approved operating statement and the published entities. */}
+      <section className="px-5 py-20 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <Reveal>
+            <SectionHeading eyebrow={about.corporate.eyebrow} title={about.corporate.title} />
+            <p className="mt-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 leading-8 text-[var(--lsh-muted)]">
+              {about.corporate.text}
+            </p>
+          </Reveal>
+          <div>
+            <Reveal>
+              <SectionHeading
+                eyebrow={about.corporate.entities.eyebrow}
+                title={about.corporate.entities.title}
+                description={about.corporate.entities.note}
+              />
+            </Reveal>
+            <Stagger as="ul" className="mt-8 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2">
+              <StaggerItem as="li" className="flex items-start gap-4 bg-[var(--lsh-paper)] p-6">
+                <IconBadge icon="landmark" size={20} />
+                <div>
+                  <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">Corporate</p>
+                  <p className="lsh-display mt-2 text-lg text-[var(--lsh-charcoal)]">
+                    {brand.address[0]}
+                  </p>
+                </div>
+              </StaggerItem>
+              {contact.subsidiaries.map((entity) => (
+                <StaggerItem
+                  key={entity.name}
+                  as="li"
+                  className="flex items-start gap-4 bg-[var(--lsh-paper)] p-6"
+                >
+                  <IconBadge icon="building" size={20} />
+                  <div>
+                    <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      Published entity
+                    </p>
+                    <p className="lsh-display mt-2 text-lg text-[var(--lsh-charcoal)]">
+                      {entity.name}
+                    </p>
+                  </div>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+        </div>
+      </section>
+
+      {/* Shared capabilities: the approved narrative, unchanged. */}
+      <IconFeatureGrid
+        tone="onDark"
+        numbered
+        columns={2}
+        eyebrow={about.corporate.capabilities.eyebrow}
+        title={about.corporate.capabilities.title}
+        description={about.corporate.capabilities.note}
+        items={operations.slice(0, 4).map((operation) => ({
+          title: operation.title,
+          text: operation.description,
+          icon: iconForTitle(operation.title),
+        }))}
+      />
+
+      {/* Developing programs, with status. */}
+      <IconFeatureGrid
+        columns={2}
+        eyebrow={about.corporate.developing.eyebrow}
+        title={about.corporate.developing.title}
+        items={about.corporate.developing.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          status: item.status,
+          icon: iconForTitle(item.title),
+        }))}
+      />
+
       {/* Brands, from the registry. */}
-      <section className="bg-[var(--lsh-paper)] py-20">
+      <section className="bg-[var(--lsh-surface)] py-20">
         <Container>
           <Reveal>
             <SectionHeading eyebrow={about.portfolio.eyebrow} title={about.portfolio.title} />
@@ -141,7 +220,7 @@ export function AboutPage() {
         </Container>
       </section>
 
-      {/* Growth direction, stated conditionally, closing on the operations page. */}
+      {/* Growth direction, stated conditionally, closing on the stores. */}
       <SplitSection
         tone="onDark"
         eyebrow={about.direction.eyebrow}

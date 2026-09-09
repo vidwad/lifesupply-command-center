@@ -29,6 +29,7 @@ import {
   METABOLIC_ROUTES,
   ROUTES,
   STAGE_3_ROUTES,
+  WITHDRAWN_ROUTES,
   STAGE_5_ROUTES,
   buildLegalNavigation,
   kitRoute,
@@ -146,11 +147,13 @@ describe("route registry", () => {
     }
   });
 
-  it("keeps the legacy-compatible routes live", () => {
+  it("keeps the legacy-compatible routes live, and the renamed hub as a redirect", () => {
+    expect(isLiveRoute("/our-operations/")).toBe(false);
+    expect(ROUTES.find((route) => route.path === "/our-operations/")?.status).toBe("redirect");
     for (const path of [
       "/",
       "/about-us/",
-      "/our-operations/",
+      "/medical-supply-solutions/",
       "/our-team/",
       "/investor-relations/",
       "/news/",
@@ -167,9 +170,10 @@ describe("route registry", () => {
     }
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
-      "Our Businesses",
+      "Medical Supply Solutions",
       "Clinic Solutions",
       "Metabolic Health",
+      "Pharmacy Solutions",
       "Partners",
       "Investors",
       "About",
@@ -178,17 +182,21 @@ describe("route registry", () => {
     expect(businesses.links.map((link) => link.href)).toEqual([
       BRAND_ROUTES.lifesupply,
       BRAND_ROUTES.wellmart,
-      BRAND_ROUTES.clinics,
       BRAND_ROUTES.balkowitsch,
     ]);
     expect(businesses.links.every((link) => !link.external)).toBe(true);
+    // The LifeSupply Clinics brand is the Clinic Solutions section itself.
+    expect(BRAND_ROUTES.clinics).toBe(STAGE_3_ROUTES.clinicSolutions);
     const clinic = groups.find((group) => group.key === "clinic")!;
     expect(clinic.href).toBe(STAGE_3_ROUTES.clinicSolutions);
     expect(clinic.links.map((link) => link.href)).toEqual([
-      STAGE_3_ROUTES.designBuild,
       STAGE_3_ROUTES.equipment,
       STAGE_3_ROUTES.ongoingSupplies,
     ]);
+    // Every withdrawn address is a redirect row, so the allowlist and sitemap stay derived.
+    for (const path of Object.values(WITHDRAWN_ROUTES)) {
+      expect(ROUTES.find((route) => route.path === path)?.status, path).toBe("redirect");
+    }
     // A child never repeats the trigger's own destination.
     for (const group of groups) {
       expect(group.links.map((link) => link.href)).not.toContain(group.href);
@@ -237,18 +245,17 @@ describe("route registry", () => {
     expect(news.historical).toHaveLength(4);
   });
 
-  it("resolves every team title through a dated legacy profile and keeps the board to the approved six", () => {
+  it("lists only the confirmed leader, resolves the title through the dated profile, and redirects the withdrawn profiles", () => {
+    expect(team.management.map((member) => member.name)).toEqual(["Abdul Ladha"]);
     for (const member of team.management)
       expect(legacyTitle(member.slug), member.slug).toBeTruthy();
-    for (const director of team.board) {
-      expect(
-        team.legacyProfiles.some((p) => p.slug === director.slug),
-        director.name,
-      ).toBe(true);
-      expect(profileRoute(director.slug)).toBe(`/${director.slug}/`);
-    }
-    expect(team.board.map((d) => d.name)).not.toContain("John Anderson");
-    expect(team.legacyProfiles.some((p) => p.slug === "john-anderson-2")).toBe(true);
+    expect(team.legacyProfiles.map((p) => p.slug)).toEqual(["abdul-ladha"]);
+    expect(profileRoute("abdul-ladha")).toBe("/abdul-ladha/");
+    expect("board" in team).toBe(false);
+    // The withdrawn addresses stay reachable on the public host and redirect (next.config.ts).
+    expect(team.withdrawnProfileSlugs).toContain("john-anderson-2");
+    expect(team.withdrawnProfileSlugs).toContain("ben-hastibakhsh");
+    expect(team.withdrawnProfileSlugs).not.toContain("abdul-ladha");
     expect(() => legacyTitle("nobody")).toThrow();
   });
 
@@ -318,7 +325,9 @@ describe("action registry", () => {
 
   it("renders hrefs by destination kind", () => {
     expect(actionHref("investor_information")).toBe("/investor-relations/");
-    expect(actionHref("clinic_supply_review")).toBe("mailto:ben@lifesupply.com");
+    expect(actionHref("clinic_supply_review")).toBe("mailto:info@lifesupply.com");
+    expect(actionHref("explore_businesses")).toBe("/medical-supply-solutions/");
+    expect(actionHref("pharmacy_hub")).toBe("/pharmacy-solutions/");
     expect(actionHref("plan_clinic")).toBe("https://www.lifesupplyclinics.com/contact-us/");
     expect(actionHref("brand_clinics")).toBe(BRAND_ROUTES.clinics);
     expect(isExternalAction("plan_clinic")).toBe(true);
@@ -332,8 +341,12 @@ describe("action registry", () => {
       homepage.metabolic.action,
       ...homepage.paths.map((path) => path.action),
       ...Object.values(businesses.pages).flatMap((page) => [...page.actions]),
-      ...clinics.brandPage.actions,
-      ...clinics.designBuild.actions,
+      ...clinics.hub.actions,
+      ...clinics.hub.needs.map((need) => need.action),
+      LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[0],
+      LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[1],
+      LIFE_SUPPLY_CONTENT.businesses.hub.clinics.action,
+      LIFE_SUPPLY_CONTENT.businesses.hub.services.action,
       ...clinics.equipment.actions,
       ...clinics.ongoingSupplies.actions,
       ...shop.choices.map((choice) => choice.action),

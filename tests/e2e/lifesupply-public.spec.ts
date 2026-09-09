@@ -29,18 +29,17 @@ test.describe("LifeSupply public site", () => {
   test("keeps principal public corporate routes reachable", async ({ page }) => {
     for (const route of [
       "/about-us",
-      "/our-operations",
+      "/medical-supply-solutions",
+      "/pharmacy-solutions",
       "/our-team",
       "/investor-relations",
       "/news",
       "/contact",
       "/shop",
-      "/our-operations/lifesupply",
-      "/our-operations/wellmart-medical",
-      "/our-operations/lifesupply-clinics",
-      "/our-operations/balkowitsch",
+      "/medical-supply-solutions/lifesupply",
+      "/medical-supply-solutions/wellmart-medical",
+      "/medical-supply-solutions/balkowitsch",
       "/clinic-solutions",
-      "/clinic-solutions/design-build",
       "/clinic-solutions/equipment",
       "/clinic-solutions/ongoing-supplies",
       "/metabolic-health",
@@ -61,7 +60,7 @@ test.describe("LifeSupply public site", () => {
       "/privacy",
       "/terms",
       "/accessibility",
-      "/john-anderson-2",
+      "/abdul-ladha",
     ]) {
       const response = await page.goto(route);
       expect(response?.ok(), `${route} should return a successful response`).toBe(true);
@@ -189,37 +188,35 @@ test.describe("LifeSupply public site", () => {
     expect(new URL((await strip.getAttribute("href"))!).origin).toBe(RENDER_ORIGIN);
   });
 
-  test("opens the grouped desktop navigation from the keyboard and lists the four brands", async ({
+  test("opens the grouped desktop navigation from the keyboard and lists the three stores", async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, "desktop navigation only");
     await page.goto("/");
     const trigger = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", {
-      name: "Our Businesses",
+      name: "Medical Supply Solutions",
     });
     await trigger.focus();
     // Focus inside the group reveals the dropdown, so Tab reaches every row.
     const menu = page.locator("#lsh-menu-businesses");
     await expect(menu).toBeVisible();
     const brandLinks = menu.locator("a");
-    await expect(brandLinks).toHaveCount(4);
+    await expect(brandLinks).toHaveCount(3);
     const paths = await brandLinks.evaluateAll((links) =>
       links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, "")),
     );
     expect(paths).toEqual([
-      "/our-operations/lifesupply",
-      "/our-operations/wellmart-medical",
-      "/our-operations/lifesupply-clinics",
-      "/our-operations/balkowitsch",
+      "/medical-supply-solutions/lifesupply",
+      "/medical-supply-solutions/wellmart-medical",
+      "/medical-supply-solutions/balkowitsch",
     ]);
     // The chevron is a real button for touch and assistive technology.
-    const chevron = page.getByRole("button", { name: "Open Our Businesses menu" });
+    const chevron = page.getByRole("button", { name: "Open Medical Supply Solutions menu" });
     await chevron.click();
-    await expect(page.getByRole("button", { name: "Close Our Businesses menu" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
+    await expect(
+      page.getByRole("button", { name: "Close Medical Supply Solutions menu" }),
+    ).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.press("Escape");
     await expect(chevron).toHaveAttribute("aria-expanded", "false");
   });
@@ -233,12 +230,18 @@ test.describe("LifeSupply public site", () => {
     await page.getByRole("button", { name: "Open navigation" }).click();
     const panel = page.locator("#lsh-mobile-menu");
     // Groups are collapsed so the panel fits the screen; a child appears once its group is expanded.
-    for (const name of ["Our Businesses", "Clinic Solutions", "Metabolic Health", "Partners"]) {
+    for (const name of [
+      "Medical Supply Solutions",
+      "Clinic Solutions",
+      "Metabolic Health",
+      "Pharmacy Solutions",
+      "Partners",
+    ]) {
       await expect(panel.getByRole("link", { name, exact: true })).toBeVisible();
     }
     await expect(panel.getByRole("link", { name: "Care kits", exact: true })).toBeHidden();
     for (const name of [
-      "Our Businesses",
+      "Medical Supply Solutions",
       "Clinic Solutions",
       "Metabolic Health",
       "Care kits",
@@ -253,7 +256,6 @@ test.describe("LifeSupply public site", () => {
       "Documents",
       "Shareholder services",
       "Disclosures",
-      "Design & build",
       "Equipment",
       "Ongoing supplies",
       "Investors",
@@ -264,8 +266,8 @@ test.describe("LifeSupply public site", () => {
       "Contact",
       "LifeSupply",
       "Wellmart Medical",
-      "LifeSupply Clinics",
       "Balkowitsch Worldwide",
+      "Pharmacy Solutions",
     ]) {
       // Collapsed rows are display:none, so the role query must include hidden nodes.
       const link = panel.getByRole("link", { name, exact: true, includeHidden: true }).first();
@@ -294,9 +296,9 @@ test.describe("LifeSupply public site", () => {
       "aria-current",
       "page",
     );
-    await expect(panel.getByRole("link", { name: "Design & build", exact: true })).toBeHidden();
+    await expect(panel.getByRole("link", { name: "Equipment", exact: true })).toBeHidden();
     await panel.getByRole("button", { name: "Expand Clinic Solutions" }).click();
-    await expect(panel.getByRole("link", { name: "Design & build", exact: true })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Equipment", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeHidden();
   });
 
@@ -365,7 +367,7 @@ test.describe("LifeSupply public site", () => {
     );
     await expect(main.getByRole("link", { name: "Request a supply review" })).toHaveAttribute(
       "href",
-      "mailto:ben@lifesupply.com",
+      "mailto:info@lifesupply.com",
     );
     await expect(main.getByRole("link", { name: "Metabolic Health", exact: true })).toHaveAttribute(
       "href",
@@ -387,10 +389,14 @@ test.describe("LifeSupply public site", () => {
     page,
   }) => {
     for (const [route, host, action] of [
-      ["/our-operations/lifesupply", "lifesupply.ca", "Shop LifeSupply"],
-      ["/our-operations/wellmart-medical", "wellmartmedical.com", "Shop Wellmart Medical"],
-      ["/our-operations/balkowitsch", "balkowitsch.com", "Shop Balkowitsch Worldwide"],
-      ["/our-operations/lifesupply-clinics", "www.lifesupplyclinics.com", "Book a consultation"],
+      ["/medical-supply-solutions/lifesupply", "lifesupply.ca", "Shop LifeSupply"],
+      [
+        "/medical-supply-solutions/wellmart-medical",
+        "wellmartmedical.com",
+        "Shop Wellmart Medical",
+      ],
+      ["/medical-supply-solutions/balkowitsch", "balkowitsch.com", "Shop Balkowitsch Worldwide"],
+      ["/clinic-solutions", "www.lifesupplyclinics.com", "Book a consultation"],
     ] as const) {
       await page.goto(route);
       await expect(page.locator("h1")).toHaveCount(1);
@@ -412,22 +418,28 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/clinic-solutions");
     const main = page.locator("main");
+    // Plan it: the consultation on the Clinics site. Equip it and keep it supplied: the two children.
+    await expect(main.getByRole("link", { name: "Book a consultation" }).first()).toHaveAttribute(
+      "href",
+      "https://www.lifesupplyclinics.com/contact-us/",
+    );
     for (const [name, path] of [
-      ["Design and build", "/clinic-solutions/design-build"],
-      ["Equipment", "/clinic-solutions/equipment"],
+      ["Equipment planning and quotes", "/clinic-solutions/equipment"],
       ["Ongoing supplies", "/clinic-solutions/ongoing-supplies"],
     ] as const) {
-      const link = main.getByRole("link", { name, exact: true });
+      const link = main.getByRole("link", { name, exact: true }).first();
       await expect(link).toHaveAttribute("href", new RegExp(`^${path}/?$`));
       const response = await page.request.get(path);
       expect(response.ok(), path).toBe(true);
     }
     await expect(main.getByText("does not operate patient-care clinics")).toBeVisible();
+    // The brand content lives on the same page now.
+    await expect(main.getByText("From feasibility to hand-over.")).toBeVisible();
     await page.goto("/clinic-solutions/ongoing-supplies");
-    // The action appears in the hero and again in the closing band.
+    // The action appears in the hero and again in the closing band; it reaches the corporate office.
     await expect(
       page.locator("main").getByRole("link", { name: "Request a supply review" }).first(),
-    ).toHaveAttribute("href", "mailto:ben@lifesupply.com");
+    ).toHaveAttribute("href", "mailto:info@lifesupply.com");
   });
 
   test("names geography and currency for the four choices on Shop & Services, and sells nothing", async ({
@@ -581,21 +593,28 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
   });
 
-  test("shows dated legacy titles on the team page, links six directors, and keeps the retained profile addresses", async ({
+  test("shows the confirmed leader only, keeps the retained profile, and redirects the withdrawn ones", async ({
     page,
   }) => {
     await page.goto("/our-team");
     const main = page.locator("main");
     await expect(
-      main.getByText("Titles as published on the prior LifeSupply website."),
+      main.getByText("Title as published on the prior LifeSupply website."),
     ).toBeVisible();
-    await expect(main.getByText("Chief Financial Officer", { exact: true })).toBeVisible();
-    const board = main.locator("ul").filter({ hasText: "Keith Dolo" }).locator("a");
-    await expect(board).toHaveCount(6);
-    await expect(main.getByText("John Anderson")).toHaveCount(0);
-    const response = await page.goto("/john-anderson-2");
-    expect(response?.status()).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("John Anderson");
+    await expect(main.getByText("Chairman & CEO", { exact: true })).toBeVisible();
+    await expect(main.getByRole("link", { name: /Abdul Ladha/ })).toHaveAttribute(
+      "href",
+      /^\/abdul-ladha\/?$/,
+    );
+    await expect(main.getByText(/Keith Dolo|Ben Hastibakhsh|Board of directors/)).toHaveCount(0);
+    const profile = await page.goto("/abdul-ladha");
+    expect(profile?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Abdul Ladha");
+    for (const slug of ["/john-anderson-2", "/ben-hastibakhsh", "/ross-jelveh"]) {
+      const withdrawn = await page.request.get(slug, { maxRedirects: 0 });
+      expect(withdrawn.status(), slug).toBe(308);
+      expect(withdrawn.headers()["location"], slug).toMatch(/\/our-team$/);
+    }
   });
 
   test("keeps the newsroom honest and the policy pages linked from the footer", async ({
@@ -703,7 +722,7 @@ test.describe("LifeSupply public site", () => {
   }) => {
     for (const [route, expected] of [
       ["/metabolic-health", /^\/clinic-solutions\/?$/],
-      ["/our-operations/lifesupply", /^\/metabolic-health\/?$/],
+      ["/medical-supply-solutions/lifesupply", /^\/metabolic-health\/?$/],
       ["/clinic-solutions/ongoing-supplies", /^\/partners\/clinics\/?$/],
     ] as const) {
       await page.goto(route);
@@ -737,12 +756,18 @@ test.describe("LifeSupply public site", () => {
     const slashed = await page.request.get("/about-us/", { maxRedirects: 0 });
     expect(slashed.status()).toBe(308);
     expect(slashed.headers()["location"]).toMatch(/\/about-us$/);
-    // The withdrawn Technology & fulfilment page sends its old address to the hub.
-    const withdrawn = await page.request.get("/our-operations/technology-fulfilment", {
-      maxRedirects: 0,
-    });
-    expect(withdrawn.status()).toBe(308);
-    expect(withdrawn.headers()["location"]).toMatch(/\/our-operations$/);
+    // Withdrawn addresses send their visitors to the replacement section.
+    for (const [source, target] of [
+      ["/our-operations", /\/medical-supply-solutions$/],
+      ["/our-operations/lifesupply", /\/medical-supply-solutions\/lifesupply$/],
+      ["/our-operations/lifesupply-clinics", /\/clinic-solutions$/],
+      ["/our-operations/technology-fulfilment", /\/medical-supply-solutions$/],
+      ["/clinic-solutions/design-build", /\/clinic-solutions$/],
+    ] as const) {
+      const withdrawn = await page.request.get(source, { maxRedirects: 0 });
+      expect(withdrawn.status(), source).toBe(308);
+      expect(withdrawn.headers()["location"], source).toMatch(target);
+    }
   });
 
   test("publishes a canonical sitemap and a robots file that disallows crawling until switched on", async ({
@@ -752,7 +777,8 @@ test.describe("LifeSupply public site", () => {
     expect(sitemap.ok()).toBe(true);
     const xml = await sitemap.text();
     const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
-    expect(locs.length).toBeGreaterThan(40);
+    // 40 canonical URLs since the 2026-09-08 restructure (withdrawn pages and profiles redirect).
+    expect(locs.length).toBeGreaterThanOrEqual(40);
     for (const loc of locs) {
       // The origin itself is `https://lifesupplyhealth.com/`; every other entry is unslashed.
       expect(loc, loc).toMatch(/^https:\/\/lifesupplyhealth\.com(\/|\/[a-z0-9\-/]*[a-z0-9])$/);

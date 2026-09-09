@@ -65,7 +65,7 @@ function BrowseLinks({ kit }: { kit: KitPathway }) {
   );
 }
 
-/** `/metabolic-health/` */
+/** `/metabolic-health/` — the partner overview's model, with the status beside every claim. */
 export function MetabolicHealthPage() {
   const { hub } = metabolic;
   const [primary, secondary] = hub.actions as readonly ActionKey[];
@@ -84,27 +84,48 @@ export function MetabolicHealthPage() {
       />
       <StatusBand />
 
-      {/* Four streams, each on its own terms. */}
+      {/* A connected supply experience: start, continue, support. */}
+      <ProcessSteps
+        eyebrow={hub.experience.eyebrow}
+        title={hub.experience.title}
+        description={hub.experience.intro}
+        steps={hub.experience.steps.map((step) => ({
+          index: step.index,
+          title: step.title,
+          text: step.text,
+          icon: iconForTitle(step.title),
+        }))}
+      />
+      <Callout icon="activity" eyebrow="The result" tone="onLight">
+        <p className="lsh-display text-2xl leading-[1.1]">{hub.experience.result}</p>
+      </Callout>
+
+      {/* Four ways the relationship creates value. */}
       <IconFeatureGrid
         tone="onSurface"
         numbered
         columns={4}
         eyebrow={hub.streams.eyebrow}
         title={hub.streams.title}
+        description={hub.streams.intro}
         items={hub.streams.items.map((item) => ({
           title: item.title,
           text: item.text,
           icon: iconForTitle(item.title),
         }))}
       />
+      <Callout icon="shield" tone="onSurface">
+        <p>{hub.streams.note}</p>
+      </Callout>
 
-      {/* Who it serves, beside conceptual monitoring supplies. */}
+      {/* For care partners, beside conceptual monitoring supplies. */}
       <SplitSection
         eyebrow={hub.audiences.eyebrow}
         title={hub.audiences.title}
         graphic="metabolicSupplies"
         caption={CONCEPTUAL_CAPTION}
       >
+        <p>{hub.audiences.intro}</p>
         <ul className="grid gap-5">
           {hub.audiences.items.map((item) => (
             <li key={item.title} className="flex gap-4">
@@ -116,12 +137,48 @@ export function MetabolicHealthPage() {
             </li>
           ))}
         </ul>
+        <div className="grid gap-6 border-t border-[var(--lsh-rule)] pt-6 sm:grid-cols-2">
+          <div>
+            <Eyebrow as="h3">{hub.audiences.support.title}</Eyebrow>
+            <ul className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--lsh-charcoal)]">
+              {hub.audiences.support.items.map((item) => (
+                <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <Eyebrow as="h3">{hub.audiences.principle.title}</Eyebrow>
+            <p className="mt-3 text-sm leading-6 text-[var(--lsh-charcoal)]">
+              {hub.audiences.principle.text}
+            </p>
+          </div>
+        </div>
       </SplitSection>
 
-      {/* Discuss, configure, confirm. */}
+      {/* Flexible by design: the six configuration dimensions. */}
+      <IconFeatureGrid
+        tone="onSurface"
+        columns={3}
+        eyebrow={hub.configure.eyebrow}
+        title={hub.configure.title}
+        description={hub.configure.intro}
+        items={hub.configure.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          icon: iconForTitle(item.title),
+        }))}
+      />
+      <Callout icon="clipboardCheck" tone="onSurface">
+        <p>{hub.configure.note}</p>
+      </Callout>
+
+      {/* Next step: discuss, configure, confirm. */}
       <ProcessSteps
         eyebrow={hub.process.eyebrow}
         title={hub.process.title}
+        description={hub.process.intro}
         steps={hub.process.items.map((step) => ({
           index: step.index,
           title: step.title,
@@ -130,11 +187,31 @@ export function MetabolicHealthPage() {
         }))}
         action={
           <>
+            <ActionLink action="discuss_program" />
             <ActionLink action="explore_kits" variant="onDark" />
             <ActionLink action="refills_information" variant="onDark" />
           </>
         }
       />
+
+      {/* Important information, as the overview states it. */}
+      <section className="px-5 py-16 lg:px-8">
+        <Container>
+          <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
+            <div className="flex items-start justify-between gap-4">
+              <Eyebrow as="h2">{hub.important.title}</Eyebrow>
+              <IconBadge icon="shield" size={18} />
+            </div>
+            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] md:grid-cols-2">
+              {hub.important.items.map((item) => (
+                <li key={item} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        </Container>
+      </section>
       <RelatedActions actions={hub.related} />
     </LifeSupplyLayout>
   );

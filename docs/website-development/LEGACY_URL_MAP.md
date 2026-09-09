@@ -10,25 +10,25 @@
 | --- | --- | --- | --- |
 | `/` | keep | `/` | Same address. |
 | `/about-us/` | keep | `/about-us` | Same address. |
-| `/our-operations/` | keep | `/our-operations` | Same address; now a portfolio map with children. |
+| `/our-operations/` | redirect | `/medical-supply-solutions` | Renamed on 2026-09-08 (product owner): Medical Supply Solutions, the three stores. The corporate portfolio moved to `/about-us`. Children redirect to their new addresses; `/our-operations/lifesupply-clinics/` to `/clinic-solutions`. |
 | `/our-team/` | keep | `/our-team` | Same address. |
 | `/investor-relations/` | keep | `/investor-relations` | Same address; now a hub with children. |
 | `/news/` | keep | `/news` | Same address. |
 | `/shop/` | keep | `/shop` | Same address; visible title "Shop & Services". |
 | `/contact-2/` | **redirect 308** | `/contact` | `next.config.ts` permanent redirect; the legacy `/contact/` already 301'd to `/contact-2/`, so both legacy forms land on `/contact`. |
-| `/abdul-ladha/` | keep | `/abdul-ladha` | Retained profile address, pre-rendered. |
-| `/ben-hastibakhsh/` | keep | `/ben-hastibakhsh` | |
-| `/gary-li/` | keep | `/gary-li` | |
-| `/craig-loverock/` | keep | `/craig-loverock` | |
-| `/mike-gill/` | keep | `/mike-gill` | |
-| `/christopher-ishola/` | keep | `/christopher-ishola` | |
-| `/ross-jelveh-2/` | keep | `/ross-jelveh-2` | The legacy `/ross-jelveh/` 301'd here; `next.config.ts` preserves that redirect. |
-| `/keith-dolo-2/` | keep | `/keith-dolo-2` | |
-| `/barrett-e-g-sleeman/` | keep | `/barrett-e-g-sleeman` | |
-| `/david-vogt/` | keep | `/david-vogt` | |
-| `/dr-margaret-clarke-2/` | keep | `/dr-margaret-clarke-2` | |
-| `/dr-dedeshya-holowenko/` | keep | `/dr-dedeshya-holowenko` | |
-| `/john-anderson-2/` | keep | `/john-anderson-2` | Profile retained; not listed on the board (S-102). |
+| `/abdul-ladha/` | keep | `/abdul-ladha` | Retained profile address, pre-rendered. The only profile since 2026-09-08. |
+| `/ben-hastibakhsh/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/gary-li/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/craig-loverock/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/mike-gill/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/christopher-ishola/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/ross-jelveh-2/` | redirect | `/our-team` | Withdrawn 2026-09-08; `/ross-jelveh/` now redirects to `/our-team` as well. |
+| `/keith-dolo-2/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/barrett-e-g-sleeman/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/david-vogt/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/dr-margaret-clarke-2/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/dr-dedeshya-holowenko/` | redirect | `/our-team` | Withdrawn 2026-09-08 (product owner: no longer involved). |
+| `/john-anderson-2/` | redirect | `/our-team` | Withdrawn 2026-09-08. |
 
 Legacy addresses that 404 on the old site as well (`/privacy/`, `/terms/`) now exist on the unified site; no redirect is needed.
 

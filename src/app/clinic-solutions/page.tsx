@@ -6,7 +6,8 @@ import { ClinicSolutionsPage } from "@/components/public-site/lifesupply-pages";
 
 export const metadata: Metadata = publicMetadata({
   title: "Clinic Solutions",
-  description: "Plan or renovate a clinic, equip it, or keep an existing clinic supplied.",
+  description:
+    "LifeSupply Clinics: plan or renovate a clinic, equip it, or keep an existing clinic supplied.",
   path: "/clinic-solutions/",
 });
 

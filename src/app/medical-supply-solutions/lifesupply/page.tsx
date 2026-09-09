@@ -8,7 +8,7 @@ export const metadata: Metadata = publicMetadata({
   title: "LifeSupply",
   description:
     "LifeSupply.ca, the Canadian medical and home-care supply store, in the LifeSupply Health group.",
-  path: "/our-operations/lifesupply/",
+  path: "/medical-supply-solutions/lifesupply/",
 });
 
 export default function Page() {

@@ -118,6 +118,9 @@ function NavItem({
  */
 function NavGroupMenu({ group }: { group: NavGroup }) {
   const pathname = usePathname();
+  // The last groups sit near the right edge; a left-aligned panel would
+  // extend past the viewport (invisible, but it widens the page at 1280px).
+  const alignRight = group.key === "investors" || group.key === "about";
   const [open, setOpen] = useState(false);
   const childActive = group.links.some(
     (link) => !link.external && isActiveRoute(pathname, link.href),
@@ -152,7 +155,7 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
       </button>
       <div
         id={`lsh-menu-${group.key}`}
-        className={`absolute left-0 top-full z-50 w-64 pt-4 transition-all duration-200 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 motion-reduce:transition-none ${
+        className={`absolute top-full z-50 w-64 ${alignRight ? "right-0" : "left-0"} pt-4 transition-all duration-200 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 motion-reduce:transition-none ${
           open ? "visible opacity-100" : "invisible opacity-0"
         }`}
       >

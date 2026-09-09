@@ -1,23 +1,21 @@
-import Link from "next/link";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 import { ActionLink, RelatedActions } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import {
-  Callout,
-  GraphicBand,
-  IconBadge,
-  IconFeatureGrid,
-  SplitSection,
-} from "@/components/public-site/sections";
+  Container,
+  Eyebrow,
+  PublicHero,
+  SectionHeading,
+} from "@/components/public-site/lifesupply-primitives";
+import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { ServiceChannels } from "@/components/public-site/pages/brands";
+import { Callout, IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand } from "@/lib/public-site/brands";
-import { CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
+import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
-import { BRAND_ROUTES, STAGE_3_ROUTES } from "@/lib/public-site/routes";
 
 /** The two sentences every Clinic Solutions page leads with. */
 function ClinicDistinction() {
@@ -33,7 +31,7 @@ function ClinicDistinction() {
   );
 }
 
-/** A checklist block used by the three children. */
+/** A checklist block. */
 function Checklist({
   title,
   text,
@@ -83,10 +81,17 @@ function ConditionalClose({ actions }: { actions: readonly ActionKey[] }) {
   );
 }
 
-/** `/clinic-solutions/` — three needs, routed. */
+/**
+ * `/clinic-solutions/` — the LifeSupply Clinics section (since 2026-09-08):
+ * the three-need router, the brand's services, specialties, process, and
+ * published projects, the consultation checklist, and the post-opening
+ * supply opportunity.
+ */
 export function ClinicSolutionsPage() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
   const { hub } = clinics;
+  const record = getBrand("clinics");
+  const [primary, secondary] = hub.actions as readonly ActionKey[];
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -95,86 +100,156 @@ export function ClinicSolutionsPage() {
         description={hub.intro}
         actions={
           <>
-            <ActionLink action="plan_clinic" />
-            <ActionLink action="clinic_supply_review" variant="onDark" />
+            {primary ? <ActionLink action={primary} /> : null}
+            {secondary ? <ActionLink action={secondary} variant="onDark" /> : null}
           </>
         }
       />
       <ClinicDistinction />
-      <IconFeatureGrid
-        numbered
-        items={hub.needs.map((need) => ({
-          title: need.title,
-          text: need.text,
-          icon: iconForTitle(need.title),
-          href: STAGE_3_ROUTES[need.route],
-          linkLabel: need.linkLabel,
-        }))}
-      />
-      <GraphicBand
-        graphic="examRoom"
-        eyebrow={clinics.projects.eyebrow}
-        statement={clinics.projects.title}
-        action={<ActionLink action="view_clinic_projects" variant="onDark" />}
-      />
-      <ConditionalClose actions={["plan_clinic", "equipment_quote", "clinic_supply_review"]} />
-      <RelatedActions actions={clinics.hub.related} />
-    </LifeSupplyLayout>
-  );
-}
 
-/** `/clinic-solutions/design-build/` */
-export function DesignBuildPage() {
-  const { clinics } = LIFE_SUPPLY_CONTENT;
-  const page = clinics.designBuild;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={page.eyebrow}
-        title={page.title}
-        description={page.intro}
-        actions={<ActionLink action="plan_clinic" />}
-      />
-      <ClinicDistinction />
-      <IconFeatureGrid
+      {/* The three needs, each with its verified destination. */}
+      <section className="px-5 pb-20 lg:px-8">
+        <Stagger className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
+          {hub.needs.map((need) => (
+            <StaggerItem key={need.index} className="h-full">
+              <SpotlightCard
+                as="article"
+                className="lsh-lift flex h-full flex-col border-t-2 border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] p-7 transition-colors hover:border-[var(--lsh-brand-red)]"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <IconBadge icon={iconForTitle(need.title)} />
+                  <span className="lsh-display text-sm text-[var(--lsh-brand-red)]">
+                    {need.index}
+                  </span>
+                </div>
+                <h2 className="lsh-display mt-6 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                  {need.title}
+                </h2>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{need.text}</p>
+                <div className="mt-auto pt-6">
+                  <ActionLink action={need.action as ActionKey} variant="text" />
+                </div>
+              </SpotlightCard>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </section>
+
+      {/* Services and specialties, beside the clinic photograph. */}
+      <SplitSection
         tone="onSurface"
-        columns={4}
-        eyebrow="Services"
-        title={clinics.brandPage.servicesHeading.title}
-        description={clinics.geography}
-        items={clinics.services.map((service) => ({
-          title: service.title,
-          text: service.items.join(". ") + ".",
-          icon: iconForTitle(service.title),
+        eyebrow={hub.servicesHeading.eyebrow}
+        title={hub.servicesHeading.title}
+        graphic={BRAND_GRAPHICS.clinics}
+        side="left"
+        caption={CONCEPTUAL_CAPTION}
+      >
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {clinics.services.map((service) => (
+            <li key={service.title} className="flex gap-4">
+              <IconBadge icon={iconForTitle(service.title)} size={18} />
+              <div>
+                <h3 className="lsh-display text-lg text-[var(--lsh-charcoal)]">{service.title}</h3>
+                <ul className="mt-2 grid gap-1 text-sm leading-6">
+                  {service.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="pt-2">
+          <Eyebrow as="h3">{hub.specialtiesHeading.title}</Eyebrow>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {clinics.specialties.map((item) => (
+              <li
+                key={item}
+                className="lsh-display border border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] px-3 py-2 text-[10px] text-[var(--lsh-charcoal)]"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </SplitSection>
+
+      {/* Process. */}
+      <ProcessSteps
+        eyebrow={hub.processHeading.eyebrow}
+        title={hub.processHeading.title}
+        steps={clinics.process.map((step) => ({
+          index: step.index,
+          title: step.title,
+          text: step.text,
+          icon: iconForTitle(step.title),
         }))}
       />
+
+      {/* Published projects, as the Clinics site presents them. */}
       <section className="px-5 py-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-          <Checklist
-            title={page.consultation.title}
-            text={page.consultation.text}
-            items={page.consultation.items}
-            icon="clipboardList"
-          />
-          <Reveal className="border border-[var(--lsh-rule)] p-7">
-            <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2">{clinics.projects.eyebrow}</Eyebrow>
-              <IconBadge icon="building" size={18} />
-            </div>
-            <p className="lsh-display mt-4 text-2xl leading-[1.1] text-[var(--lsh-charcoal)]">
-              {clinics.projects.title}
-            </p>
-            <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{clinics.attribution}</p>
-            <Link
-              href={BRAND_ROUTES.clinics}
-              className="lsh-display mt-6 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]"
-            >
-              The Clinics process and published projects <ArrowRight size={15} aria-hidden="true" />
-            </Link>
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={clinics.projects.eyebrow}
+              title={clinics.projects.title}
+              description={clinics.geography}
+            />
           </Reveal>
+          <Stagger
+            as="ul"
+            className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-3"
+          >
+            {clinics.projects.items.map((project) => (
+              <StaggerItem key={project.href} as="li" className="bg-[var(--lsh-paper)]">
+                <a
+                  href={project.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex h-full items-center gap-4 p-6 transition-colors hover:bg-[var(--lsh-surface)]"
+                >
+                  <IconBadge icon="building" size={18} />
+                  <span className="lsh-display flex-1 text-lg leading-tight text-[var(--lsh-charcoal)]">
+                    {project.title}
+                  </span>
+                  <ExternalLink
+                    size={16}
+                    aria-hidden="true"
+                    className="shrink-0 text-[var(--lsh-brand-red)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                  />
+                </a>
+              </StaggerItem>
+            ))}
+          </Stagger>
+          <div className="mt-8">
+            <ActionLink action="view_clinic_projects" variant="text" />
+          </div>
         </Container>
       </section>
-      <ConditionalClose actions={page.actions} />
+
+      {/* The consultation, and the Clinics site's own channels. */}
+      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
+        <Container className="grid gap-8 lg:grid-cols-2 lg:items-start">
+          <Checklist
+            title={hub.consultation.title}
+            text={hub.consultation.text}
+            items={hub.consultation.items}
+            icon="clipboardList"
+          />
+          <ServiceChannels
+            record={record}
+            title={hub.channelsHeading.title}
+            text={hub.channelsHeading.text}
+          />
+        </Container>
+      </section>
+
+      {/* After opening: conditional. */}
+      <Callout icon="truck" eyebrow={hub.supplyHeading.eyebrow} tone="onLight">
+        <p className="lsh-display text-2xl leading-[1.1]">{hub.supplyHeading.title}</p>
+      </Callout>
+      <ConditionalClose actions={hub.actions as readonly ActionKey[]} />
+      <RelatedActions actions={hub.related} />
     </LifeSupplyLayout>
   );
 }

@@ -9,6 +9,12 @@
  * contents, quantities, prices, discounts, insurance, or storage claims are
  * stated, and the only next step is the approved program-inquiry channel.
  *
+ * The hub copy follows the product owner's Metabolic Care Supply & Services
+ * partner overview (volume 1 of 2, management review draft, September 2,
+ * 2026): the connected supply experience, the four value streams, the care
+ * partners, the configuration dimensions, the next step, and its important
+ * information, with the development status kept beside every claim.
+ *
  * Model (IMPLEMENTATION_BACKLOG.md §13): each pathway records its audience,
  * purpose, the critical distinction from the guide's kit table, the three
  * item roles (starter equipment, usage-driven consumables, occasional
@@ -71,53 +77,132 @@ export const metabolic = {
     "This site does not diagnose, prescribe, or recommend any medication or dose, and supply fulfilment is not drug dispensing. Product questions belong with your clinician, pharmacist, or the store that supplies you.",
 
   hub: {
-    eyebrow: "Metabolic Health",
-    title: "Non-drug supplies for metabolic-health programs.",
+    eyebrow: "Metabolic Care Supply & Services",
+    title: "Support that stays with the patient.",
     intro:
-      "LifeSupply is developing a supply-services offer for metabolic-health programs: non-drug supplies, clinic procurement, kitting and fulfilment, and contracted workflow support. This page explains the model and its status; the pathways describe what a configuration would cover.",
-    streams: {
-      eyebrow: "The model",
-      title: "Four distinct streams, each agreed on its own terms.",
-      items: [
+      "Patient supplies, clinic procurement, partner-ready fulfilment, and workflow support for modern care pathways. LifeSupply is developing this as one commercial relationship, configured around the care pathway; this page explains the model and its status.",
+    experience: {
+      eyebrow: "A connected supply experience",
+      title: "Start well. Stay supplied. Keep care moving.",
+      intro:
+        "LifeSupply connects non-drug patient supplies with clinic procurement, coordinated fulfilment, and practical workflow support: one commercial relationship, configured around the care pathway.",
+      steps: [
         {
-          title: "Starter supplies",
-          text: "Durable items chosen once for a person or a clinic. They are not repeated on a schedule and are never a subscription.",
+          index: "01",
+          title: "Start",
+          text: "A practical starter configuration brings together the selected equipment, accessories, and initial consumables.",
         },
         {
-          title: "Usage-driven consumables",
-          text: "Items used up in care and replaced on the usage cycle. Recurring value, if any, comes from these, not from repeating starter items.",
+          index: "02",
+          title: "Continue",
+          text: "Consumables can be replenished around the approved care pathway without resending durable products.",
+        },
+        {
+          index: "03",
+          title: "Support",
+          text: "Clear ordering, partner materials, and a defined service route help keep the experience consistent.",
+        },
+      ],
+      result:
+        "A better patient supply experience, and a broader procurement and fulfilment relationship for partners.",
+    },
+    streams: {
+      eyebrow: "Integrated offer",
+      title: "Four ways the relationship creates value.",
+      intro:
+        "The eight supply configurations open the conversation. Recurring patient supplies, clinic purchasing, and contracted operational services build the durable account.",
+      items: [
+        {
+          title: "Patient supply pathways",
+          text: "Configurable starter products, usage-driven consumables, monitoring accessories, sharps, and travel support.",
         },
         {
           title: "Clinic procurement",
-          text: "Ordinary purchasing through the operating stores' accounts, as the stores provide it today.",
+          text: "Routine injection, monitoring, exam-room, infection-control, and minor wound-care supplies.",
         },
         {
-          title: "Contracted workflow services",
-          text: "Non-clinical fulfilment and workflow support for clinics and pharmacies, proposed and agreed per program. Not offered on this site today.",
+          title: "Fulfilment & administration",
+          text: "Kitting, direct shipment, replenishment administration, inventory support, and exception handling.",
+        },
+        {
+          title: "Workflow & reporting",
+          text: "Ordering visibility, status reporting, and non-clinical workflow support under an agreed service scope.",
         },
       ],
+      note: "One portfolio, multiple starting points. Starter items are chosen once and are never a subscription; recurring value comes from usage-driven consumables, ordinary clinic purchasing, and contracted services.",
     },
     audiences: {
-      eyebrow: "Who it is for",
-      title: "Clinics, pharmacies, and the programs they run.",
+      eyebrow: "For care partners",
+      title: "A program designed around your pathway.",
+      intro:
+        "LifeSupply can support pharmacies, clinics, and coordinated care programs with a supply experience that reflects their patients, workflow, and service model.",
       items: [
         {
-          title: "Clinics",
-          text: "Program supplies and par-level restocking configured for clinic purchasing. A clinic customer is not a program participant.",
-        },
-        {
           title: "Pharmacies",
-          text: "Pharmacist-selected non-drug supplies with fulfilment responsibilities stated explicitly.",
+          text: "Extend onboarding and refill support with an approved, pharmacy-supported supply pathway.",
         },
         {
-          title: "Program participants",
-          text: "Supplies configured to a prescribed device or program by the clinician or pharmacist, never chosen by this site.",
+          title: "Clinics",
+          text: "Organize recurring supplies around patient volumes, defined procedures, and clinic operations.",
+        },
+        {
+          title: "Care programs",
+          text: "Connect selected products, patient materials, and fulfilment into a consistent program experience.",
         },
       ],
+      support: {
+        title: "Program support",
+        items: [
+          "Selected starter contents",
+          "Usage-driven replenishment",
+          "Clinic supply account",
+          "Coordinated fulfilment",
+          "Workflow and status reporting",
+        ],
+      },
+      principle: {
+        title: "Partner principle",
+        text: "The final program is shaped with the partner before launch, so products, materials, responsibilities, and fulfilment work together.",
+      },
+    },
+    configure: {
+      eyebrow: "Flexible by design",
+      title: "Configure the experience, not just the box.",
+      intro:
+        "The strongest partner relationships align the physical kit with clinic purchasing, patient replenishment, fulfilment responsibilities, and service reporting.",
+      items: [
+        {
+          title: "Contents",
+          text: "Starter, refill, and durable-product options selected for the pathway.",
+        },
+        {
+          title: "Cadence",
+          text: "Replenishment shaped around expected use and the approved program.",
+        },
+        {
+          title: "Materials",
+          text: "Partner-ready information and ordering guidance for the intended audience.",
+        },
+        {
+          title: "Presentation",
+          text: "LifeSupply, co-branded, or partner-specific presentation where approved.",
+        },
+        {
+          title: "Fulfilment",
+          text: "A defined route from configuration through direct-to-patient and clinic replenishment.",
+        },
+        {
+          title: "Support",
+          text: "Ordering status, exception handling, reporting, and a defined escalation pathway.",
+        },
+      ],
+      note: "Final contents, pricing, branding, and service scope are confirmed with the partner before release.",
     },
     process: {
-      eyebrow: "How a program is set up",
-      title: "Discuss, configure, confirm.",
+      eyebrow: "Next step",
+      title: "Build a supply and service program that fits.",
+      intro:
+        "Start with patient needs, clinic purchasing, and the partner workflow. LifeSupply can then shape the supply configuration, replenishment, fulfilment, and reporting approach.",
       items: [
         {
           index: "01",
@@ -134,6 +219,15 @@ export const metabolic = {
           title: "Confirm availability",
           text: "A configuration becomes orderable only when its contents, store, and fulfilment are confirmed and published. Until then it is information.",
         },
+      ],
+    },
+    important: {
+      title: "Important information",
+      items: [
+        "Programs provide non-drug supplies and non-clinical operational support; medication and prescriptions are not included.",
+        "Final contents, device compatibility, sizes, refill quantities, and patient materials are confirmed for the approved pathway.",
+        "Product availability, pricing, taxes, freight, and service scope are subject to confirmation.",
+        "Programs do not replace product instructions, healthcare-provider guidance, or individualized clinical advice.",
       ],
     },
     actions: ["explore_kits", "discuss_program"],
