@@ -1,0 +1,42 @@
+{
+  "description": "User-requested greyscale brand banner and CTA imagery.",
+  "provenance": "AI-generated conceptual imagery, edited from the earlier colour concepts using image generation. These images do not document actual brand facilities, employees, inventory, or patients.",
+  "assets": [
+    {
+      "key": "lifesupply",
+      "brand": "LifeSupply",
+      "src": "/lsh/graphics/brands/lifesupply-greyscale-v1.png",
+      "width": 1672,
+      "height": 941,
+      "alt": "Medical supplies and monitoring equipment arranged on a counter.",
+      "objectPosition": "50% 50%"
+    },
+    {
+      "key": "wellmart-medical",
+      "brand": "Wellmart Medical",
+      "src": "/lsh/graphics/brands/wellmart-medical-greyscale-v1.png",
+      "width": 1672,
+      "height": 941,
+      "alt": "A rollator positioned in a bright home interior.",
+      "objectPosition": "50% 50%"
+    },
+    {
+      "key": "balkowitsch",
+      "brand": "Balkowitsch",
+      "src": "/lsh/graphics/brands/balkowitsch-greyscale-v1.png",
+      "width": 1672,
+      "height": 941,
+      "alt": "A person packing medical supplies at a warehouse workstation.",
+      "objectPosition": "50% 50%"
+    },
+    {
+      "key": "lifesupply-clinics",
+      "brand": "LifeSupply Clinics",
+      "src": "/lsh/graphics/brands/lifesupply-clinics-greyscale-v1.png",
+      "width": 1672,
+      "height": 941,
+      "alt": "A contemporary clinic reception area and corridor.",
+      "objectPosition": "55% 50%"
+    }
+  ]
+}
