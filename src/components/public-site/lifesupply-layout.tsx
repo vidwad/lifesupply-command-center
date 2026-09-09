@@ -135,7 +135,7 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
 
   return (
     <div
-      className="group relative flex items-center gap-1"
+      className="group relative flex items-center"
       onMouseLeave={() => setOpen(false)}
       onKeyDown={(event) => {
         if (event.key === "Escape") setOpen(false);
@@ -148,10 +148,10 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
         aria-expanded={open}
         aria-controls={`lsh-menu-${group.key}`}
         aria-label={`${open ? "Close" : "Open"} ${group.label} menu`}
-        className="grid h-6 w-6 place-items-center text-white/75 transition-colors hover:text-white"
+        className="-mr-1 grid h-6 w-5 place-items-center pb-1 text-white/75 transition-colors hover:text-white"
       >
         <ChevronDown
-          size={14}
+          size={13}
           aria-hidden="true"
           className={`transition-transform duration-200 group-focus-within:rotate-180 group-hover:rotate-180 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
         />
@@ -336,7 +336,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav
-            className="hidden items-center gap-5 xl:flex 2xl:gap-7"
+            className="hidden items-center gap-3.5 xl:flex 2xl:gap-5"
             aria-label="Primary navigation"
           >
             {PRIMARY_NAV.map((group) => (
