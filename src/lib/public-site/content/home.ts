@@ -37,6 +37,41 @@ export const homepage = {
   },
 
   /**
+   * Who we are, where we are going, where we want to be. Product owner,
+   * 2026-09-09, after the prior site's three-panel statement. The wording
+   * was drafted with Codex under the site's rules and edited here: "a
+   * decade" became the approved "more than 25 years" (2025 annual-report
+   * narrative); "growing annually, organically and through acquisition"
+   * became strategy and objective; the third panel, blank on the prior
+   * site, was written from the approved vision and direction copy. The
+   * founding-investor description is kept as a description of that base.
+   * Nothing here states a growth rate, a transaction, or a ranking as fact.
+   */
+  whoWeAre: {
+    eyebrow: "Experience and direction",
+    title: "Who we are, where we are going, and where we want to be.",
+    standfirst:
+      "An established operating base, a strategy for growth, and a long-term ambition for health and medical supply access.",
+    panels: [
+      {
+        eyebrow: "This is who we are",
+        headline: "Experienced",
+        text: "More than 25 years of operations, as cited in the 2025 annual-report narrative, and a founding investor base of medical practitioners, specialists and surgeons alongside investment bankers, brokers, analysts and capital-market professionals. Today the businesses connect online medical, health and home-care supply commerce with clinic planning, fit-out and equipment services in Canada and the United States.",
+      },
+      {
+        eyebrow: "This is where we are going",
+        headline: "Growing",
+        text: "The strategy is to build on the existing business through operating discipline, technology and complementary acquisitions. The objective is to integrate strategically located medical supply stores, pharmacies, clinics and distributors, broadening the products and services offered online in Canada and the United States. Forward-looking activities remain subject to approval and disclosure context.",
+      },
+      {
+        eyebrow: "This is where we want to be",
+        headline: "Connected",
+        text: "The ambition is to become a global leader in the online sale and distribution of health and medical products and related services: deeper clinic relationships, recurring patient-support supply programs, and commerce, clinic-development and equipment capabilities connected to serve a broader customer base over time.",
+      },
+    ],
+  },
+
+  /**
    * Group introduction. Stage 2 draft from the guide's proposed positioning
    * (S-120). The first sentence is the guide's wording; the second states
    * the expansion direction conditionally, in the qualification pattern the

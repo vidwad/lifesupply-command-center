@@ -145,6 +145,23 @@ test.describe("LifeSupply public site", () => {
     await expect(stats.nth(2)).toHaveText("1M+");
   });
 
+  test("opens the homepage after the hero with Experienced, Growing, and Connected, before the group introduction", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const main = page.locator("main");
+    const first = main.getByRole("heading", { level: 2 }).first();
+    await expect(first).toHaveText("Who we are, where we are going, and where we want to be.");
+    await expect(main.getByRole("heading", { level: 3, name: "Experienced" })).toBeVisible();
+    await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
+    await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
+    await expect(main.getByText("This is where we want to be")).toBeVisible();
+    const order = await main
+      .getByRole("heading", { level: 2 })
+      .evaluateAll((nodes) => nodes.slice(0, 2).map((node) => node.textContent?.trim()));
+    expect(order[1]).toBe("Commerce, clinic development, equipment, and ongoing supply.");
+  });
+
   test("keeps the hero heading one accessible sentence while its words animate", async ({
     page,
   }) => {
