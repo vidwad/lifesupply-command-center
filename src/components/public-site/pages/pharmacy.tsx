@@ -1,8 +1,16 @@
+import Image from "next/image";
+
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import { PublicHero } from "@/components/public-site/lifesupply-primitives";
+import {
+  Container,
+  PublicHero,
+  SectionHeading,
+} from "@/components/public-site/lifesupply-primitives";
+import { Reveal } from "@/components/public-site/motion";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
+import { getDiagram } from "@/lib/public-site/diagrams";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -15,6 +23,7 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
  */
 export function PharmacySolutionsPage() {
   const { hub } = LIFE_SUPPLY_CONTENT.pharmacy;
+  const diagram = getDiagram("pharmacyCarePathway");
   const [primary, secondary] = hub.actions as readonly ActionKey[];
   return (
     <LifeSupplyLayout>
@@ -30,12 +39,32 @@ export function PharmacySolutionsPage() {
         }
       />
 
-      {/* Why it matters: the value to the ecosystem, as design intent. */}
+      {/* Why it matters: the intro beside the hub diagram, the four value cards beneath. */}
+      <section className="px-5 pt-20 lg:px-8">
+        <Container className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <Reveal>
+            <SectionHeading
+              eyebrow={hub.value.eyebrow}
+              title={hub.value.title}
+              description={hub.value.intro}
+            />
+          </Reveal>
+          <Reveal delay={0.1}>
+            <figure className="border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-4 shadow-sm sm:p-6">
+              <Image
+                src={diagram.src}
+                alt={diagram.alt}
+                width={diagram.width}
+                height={diagram.height}
+                sizes="(min-width: 1024px) 720px, 100vw"
+                className="h-auto w-full"
+              />
+            </figure>
+          </Reveal>
+        </Container>
+      </section>
       <IconFeatureGrid
         columns={4}
-        eyebrow={hub.value.eyebrow}
-        title={hub.value.title}
-        description={hub.value.intro}
         items={hub.value.items.map((item) => ({
           title: item.title,
           text: item.text,
