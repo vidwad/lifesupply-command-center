@@ -91,7 +91,7 @@ export const investorRelations = {
       {
         route: "advancedTherapeutics",
         title: "Advanced therapeutics",
-        text: "Four regulated themes, each with its own status and dependencies.",
+        text: "Four regulated options under evaluation, each with its own status and dependencies.",
       },
       {
         route: "documents",
@@ -179,10 +179,10 @@ export const investorRelations = {
 
   advancedTherapeutics: {
     eyebrow: "Investor relations · Advanced therapeutics",
-    title: "Four regulated themes, none operating.",
+    title: "Four regulated options under evaluation, none operating.",
     intro:
-      "The expansion themes include activities that need licences, facilities, qualified people, and regulatory approvals that LifeSupply does not hold today. Each is listed separately with its status and what it depends on. None is a product, a service, or a commitment.",
-    themes: [
+      "The options under evaluation include activities that need licences, facilities, qualified people, and regulatory approvals that LifeSupply does not hold today. Each is listed separately with its status and what it depends on. None is a product, a service, or a commitment.",
+    options: [
       {
         title: "Pharmacy",
         status: "Under evaluation",
@@ -228,7 +228,7 @@ export const investorRelations = {
       },
     ],
     qualification:
-      "None of these themes is offered, licensed, or scheduled. Regulatory outcomes are not predicted, and no theme is presented as certain. Any progress would be published here with its date.",
+      "None of these options is offered, licensed, or scheduled. Regulatory outcomes are not predicted, and no option is presented as certain. Any progress would be published here with its date.",
     actions: ["acquisition_inquiry", "investor_materials"],
   },
 

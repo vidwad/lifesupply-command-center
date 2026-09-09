@@ -56,7 +56,7 @@ export const pharmacy = {
         {
           title: "Regulated care infrastructure",
           status: "Under evaluation",
-          text: "Specialty, compounding, and related themes, each with its own status and dependencies, described on the advanced therapeutics page.",
+          text: "Specialty, compounding, and related options under evaluation, each with its own status and dependencies, described on the advanced therapeutics page.",
         },
       ],
     },
