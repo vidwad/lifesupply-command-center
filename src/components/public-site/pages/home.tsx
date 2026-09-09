@@ -49,8 +49,47 @@ export function LifeSupplyHome() {
         }
       />
 
+      {/* Who we are, where we are going, where we want to be: three panels after the hero. */}
+      <section className="bg-[var(--lsh-paper)] px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={homepage.whoWeAre.eyebrow}
+              title={homepage.whoWeAre.title}
+              description={homepage.whoWeAre.standfirst}
+            />
+          </Reveal>
+          <Stagger as="ul" className="mt-12 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-3">
+            {homepage.whoWeAre.panels.map((panel, index) => (
+              <StaggerItem
+                key={panel.headline}
+                as="li"
+                className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8 lg:p-10"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+                    {panel.eyebrow}
+                  </p>
+                  <span className="lsh-display text-sm text-[var(--lsh-muted)]">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <h3 className="lsh-display mt-5 text-4xl leading-none tracking-tight text-[var(--lsh-charcoal)] sm:text-5xl">
+                  {panel.headline}
+                </h3>
+                <span
+                  aria-hidden="true"
+                  className="mt-6 block h-0.5 w-12 bg-[var(--lsh-brand-red)]"
+                />
+                <p className="mt-6 leading-7 text-[var(--lsh-muted)]">{panel.text}</p>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </section>
+
       {/* Group introduction. */}
-      <section className="px-5 py-20 lg:px-8">
+      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
         <Reveal className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <SectionHeading
             eyebrow={homepage.introduction.eyebrow}

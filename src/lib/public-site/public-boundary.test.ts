@@ -660,6 +660,7 @@ describe("Stage 2 registries and navigation", () => {
     const source = pages();
     expect((source.match(/<BrandGrid \/>/g) ?? []).length).toBe(2);
     for (const block of [
+      "homepage.whoWeAre.panels.map",
       "homepage.introduction",
       "homepage.clinicLifecycle.steps.map",
       "homepage.metabolic",
@@ -814,6 +815,34 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     );
     const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
     expect(page).toContain("{pharmacy.status.sentence}");
+  });
+
+  it("opens the homepage after the hero with the three-panel statement, stated as record, strategy, and ambition", () => {
+    const home = stripComments(read("src/lib/public-site/content/home.ts"));
+    for (const line of [
+      "This is who we are",
+      "This is where we are going",
+      "This is where we want to be",
+      "More than 25 years of operations",
+      "The strategy is to build on the existing business",
+      "The ambition is to become a global leader",
+    ]) {
+      expect(home, line).toContain(line);
+    }
+    for (const banned of [
+      /a decade/i,
+      /we are growing/i,
+      /we are acquiring/i,
+      /has acquired|have acquired/i,
+      /one of the largest/i,
+      /\bannually\b/i,
+    ]) {
+      expect(home, String(banned)).not.toMatch(banned);
+    }
+    // The panels sit between the hero and the group introduction.
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
+    expect(page.indexOf("homepage.whoWeAre")).toBeGreaterThan(page.indexOf("<PublicHero"));
+    expect(page.indexOf("homepage.whoWeAre")).toBeLessThan(page.indexOf("homepage.introduction"));
   });
 
   it("closes About on the developing opportunities, carries no group or capabilities section, and divides it with decorative legacy bands", () => {
