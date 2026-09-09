@@ -12,7 +12,6 @@ import {
 } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { partners } from "@/lib/public-site/content/partners";
-import { CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { STAGE_5_ROUTES } from "@/lib/public-site/routes";
 
@@ -187,7 +186,6 @@ export function PartnerPharmaciesPage() {
         title={p.responsibilities.title}
         graphic="pharmacy"
         side="left"
-        caption={CONCEPTUAL_CAPTION}
       >
         <RuleList items={p.responsibilities.items} />
       </SplitSection>
@@ -207,12 +205,7 @@ export function PartnerSuppliersPage() {
         description={s.intro}
         actions={<ActionLink action="supplier_inquiry" />}
       />
-      <SplitSection
-        eyebrow={s.fit.eyebrow}
-        title={s.fit.title}
-        graphic="warehouse"
-        caption={CONCEPTUAL_CAPTION}
-      >
+      <SplitSection eyebrow={s.fit.eyebrow} title={s.fit.title} graphic="warehouse">
         <p>{s.fit.text}</p>
         <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
           <Eyebrow as="h3">{s.requirements.title}</Eyebrow>
@@ -251,7 +244,6 @@ export function PartnerAcquisitionsPage() {
         title={a.structures.title}
         graphic="boardroom"
         side="left"
-        caption={CONCEPTUAL_CAPTION}
       >
         <p>{a.structures.text}</p>
       </SplitSection>

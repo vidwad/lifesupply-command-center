@@ -204,6 +204,7 @@ No company news later than June 2022 exists in either source. Stage 5 must not f
 | S-149 | Store home-page screen `lifesupply-home-laptop.jpg` (lifesupply.ca) | O (dated screenshot) | Captured 2026-09-09 at 1440×900, promotional overlays hidden, composed on a laptop frame at 1600×1000; a real screen, dated in its caption; refresh when the storefront changes |
 | S-150 | Store home-page screen `wellmart-medical-home-laptop.jpg` (wellmartmedical.com) | O (dated screenshot) | Captured 2026-09-09 at 1440×900, promotional overlays hidden, composed on a laptop frame at 1600×1000; a real screen, dated in its caption; refresh when the storefront changes |
 | S-151 | Store home-page screen `balkowitsch-home-laptop.jpg` (balkowitsch.com) | O (dated screenshot) | Captured 2026-09-09 at 1440×900, promotional overlays hidden, composed on a laptop frame at 1600×1000; a real screen, dated in its caption; refresh when the storefront changes |
+| S-152 | Store home-page screen `lifesupply-clinics-home-laptop.jpg` (lifesupplyclinics.com) | O (dated screenshot) | Captured 2026-09-09 at 1440×900, overlays hidden, composed on a laptop frame at 1600×1000; a real screen, dated in its caption; refresh when the site changes |
 
 ---
 

@@ -8,7 +8,7 @@ import { IconBadge, SplitSection } from "@/components/public-site/sections";
 import { SiteScreen } from "@/components/public-site/site-screen";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { brandGeography, getBrand, type BrandRecord } from "@/lib/public-site/brands";
-import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION, type GraphicKey } from "@/lib/public-site/graphics";
+import { BRAND_GRAPHICS, type GraphicKey } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -144,7 +144,6 @@ export function StoreBrandPage({
         eyebrow={brandGeography(record)}
         title={page.audience.title}
         graphic={STORE_GRAPHICS[brandKey]}
-        caption={CONCEPTUAL_CAPTION}
       >
         <p>{page.audience.text}</p>
       </SplitSection>

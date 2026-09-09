@@ -16,7 +16,6 @@ import {
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand, getBrandCategory } from "@/lib/public-site/brands";
 import { getKit, metabolic, type KitPathway } from "@/lib/public-site/content/metabolic";
-import { CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { METABOLIC_ROUTES, kitRoute } from "@/lib/public-site/routes";
 
@@ -123,7 +122,6 @@ export function MetabolicHealthPage() {
         eyebrow={hub.audiences.eyebrow}
         title={hub.audiences.title}
         graphic="metabolicSupplies"
-        caption={CONCEPTUAL_CAPTION}
       >
         <p>{hub.audiences.intro}</p>
         <ul className="grid gap-5">
@@ -424,7 +422,6 @@ export function RefillsPage() {
         title={refills.today.title}
         graphic="pharmacy"
         side="left"
-        caption={CONCEPTUAL_CAPTION}
       >
         <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
           {refills.today.items.map((item) => (

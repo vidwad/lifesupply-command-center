@@ -4,7 +4,6 @@ import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesup
 import { Reveal } from "@/components/public-site/motion";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
-import { CONCEPTUAL_CAPTION } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -65,7 +64,6 @@ export function PharmacySolutionsPage() {
         title={hub.direction.title}
         graphic="pharmacy"
         side="left"
-        caption={CONCEPTUAL_CAPTION}
       >
         <p>{hub.direction.text}</p>
         <ul className="grid gap-4">

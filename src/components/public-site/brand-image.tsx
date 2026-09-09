@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 import type { OperatingBrandKey } from "@/lib/public-site/brands";
-import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION, getGraphic } from "@/lib/public-site/graphics";
+import { BRAND_GRAPHICS, getGraphic } from "@/lib/public-site/graphics";
 
 /**
  * The conceptual photograph for an operating brand (graphics.ts,
@@ -14,9 +14,8 @@ import { BRAND_GRAPHICS, CONCEPTUAL_CAPTION, getGraphic } from "@/lib/public-sit
  *
  * Brand names, descriptions, and actions stay HTML beside the image; the
  * image never carries text or a logo. Inside a link the image is decorative
- * (empty alt) so the link keeps its text as its accessible name, and the
- * conceptual caption is hidden from assistive technology there because the
- * sighted reading is the only one it adds to.
+ * (empty alt) so the link keeps its text as its accessible name. No visible
+ * caption: the product owner removed image notices on 2026-09-09.
  */
 export function BrandImage({
   brand,
@@ -47,12 +46,6 @@ export function BrandImage({
         style={{ objectPosition: g.position ?? "50% 50%" }}
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       />
-      <figcaption
-        aria-hidden={decorative ? "true" : undefined}
-        className="lsh-display absolute bottom-0 left-0 bg-black/70 px-3 py-1.5 text-[10px] text-white/80"
-      >
-        {CONCEPTUAL_CAPTION}
-      </figcaption>
     </figure>
   );
 }

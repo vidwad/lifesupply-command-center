@@ -178,7 +178,6 @@ export function SplitSection({
   graphic,
   side = "right",
   tone = "onLight",
-  caption,
 }: {
   eyebrow: string;
   title: string;
@@ -186,7 +185,6 @@ export function SplitSection({
   graphic: GraphicKey;
   side?: "left" | "right";
   tone?: Tone;
-  caption?: string;
 }) {
   const g = getGraphic(graphic);
   const dark = tone === "onDark";
@@ -216,11 +214,6 @@ export function SplitSection({
               sizes="(min-width: 1024px) 600px, 100vw"
               className="h-auto w-full transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             />
-            {caption ? (
-              <figcaption className="lsh-display absolute bottom-0 left-0 bg-black/70 px-4 py-2 text-[10px] text-white/80">
-                {caption}
-              </figcaption>
-            ) : null}
           </figure>
         </Reveal>
       </Container>
