@@ -249,7 +249,16 @@ function parseFigure(raw: string) {
  * what the visitor ends on is exactly what was approved. Figures the parser
  * does not understand, and reduced-motion visitors, get the static text.
  */
-export function CountUp({ value, className }: { value: string; className?: string }) {
+export function CountUp({
+  value,
+  className,
+  suffixClassName,
+}: {
+  value: string;
+  className?: string;
+  /** Styles the unit or sign after the digits ("+", "M", "K") separately from the digits. */
+  suffixClassName?: string;
+}) {
   const reduce = useHydratedReducedMotion();
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "0px 0px -40px 0px" });
@@ -277,7 +286,7 @@ export function CountUp({ value, className }: { value: string; className?: strin
     <span ref={ref} className={`tabular-nums ${className ?? ""}`.trim()}>
       {parsed.prefix}
       <motion.span>{text}</motion.span>
-      {parsed.suffix}
+      {parsed.suffix ? <span className={suffixClassName}>{parsed.suffix}</span> : null}
     </span>
   );
 }

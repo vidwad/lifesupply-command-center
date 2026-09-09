@@ -78,8 +78,8 @@ export function LifeSupplyHome() {
       </Reveal>
 
       {/* Verified proof: the three approved figures, with their source context. */}
-      <section>
-        <Container className="grid gap-12 py-20 lg:grid-cols-[0.8fr_1.2fr]">
+      <section className="bg-[var(--lsh-paper)]">
+        <Container className="py-20">
           <Reveal>
             <SectionHeading
               eyebrow={homepage.glance.eyebrow}
@@ -87,10 +87,10 @@ export function LifeSupplyHome() {
               description={homepage.glance.description}
             />
           </Reveal>
-          <Stagger className="grid gap-4 sm:grid-cols-3">
+          <Stagger className="mt-12 grid gap-5 sm:grid-cols-3">
             {homepage.publicMetrics.map((metric) => (
               <StaggerItem key={metric.label} className="h-full">
-                <EditorialStat value={metric.value} label={metric.label} />
+                <EditorialStat value={metric.value} label={metric.label} size="large" />
               </StaggerItem>
             ))}
           </Stagger>

@@ -304,14 +304,49 @@ export function CommandCenterLoginLink({ variant }: { variant: "utility" | "menu
   );
 }
 
-/** A reported figure with its source qualification. Red top rule, condensed numeral. */
-export function EditorialStat({ value, label }: { value: string; label: string }) {
+/**
+ * A reported figure with its source qualification: a red top rule, a large
+ * condensed numeral that counts up on first view with its sign or unit in
+ * brand red, a red hairline that extends on hover, and a faint red glow in
+ * the corner. `size="large"` is the homepage treatment; the default suits
+ * the investor pages' three-up figures.
+ */
+export function EditorialStat({
+  value,
+  label,
+  size = "default",
+}: {
+  value: string;
+  label: string;
+  size?: "default" | "large";
+}) {
+  const hero = size === "large";
   return (
-    <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] px-5 py-7 shadow-sm">
-      <p className="lsh-display text-4xl text-[var(--lsh-charcoal)]">
-        <CountUp value={value} />
+    <div
+      className={`lsh-lift group relative h-full overflow-hidden border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] shadow-md ${
+        hero ? "px-7 py-10 lg:px-9 lg:py-12" : "px-5 py-7"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(222,0,0,0.16),transparent_68%)]"
+      />
+      <p
+        className={`lsh-display relative leading-none tracking-tight text-[var(--lsh-charcoal)] ${
+          hero ? "text-6xl sm:text-7xl lg:text-8xl" : "text-4xl sm:text-5xl"
+        }`}
+      >
+        <CountUp value={value} suffixClassName="text-[var(--lsh-brand-red)]" />
       </p>
-      <p className="mt-3 text-sm leading-5 text-[var(--lsh-muted)]">{label}</p>
+      <span
+        aria-hidden="true"
+        className="mt-5 block h-0.5 w-10 bg-[var(--lsh-brand-red)] transition-[width] duration-500 group-hover:w-20 motion-reduce:transition-none"
+      />
+      <p
+        className={`mt-4 leading-6 text-[var(--lsh-muted)] first-letter:uppercase ${hero ? "max-w-xs text-base" : "text-sm"}`}
+      >
+        {label}
+      </p>
     </div>
   );
 }
