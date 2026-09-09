@@ -49,19 +49,17 @@ export const homepage = {
    */
   whoWeAre: {
     eyebrow: "Experience and direction",
-    title: "Who we are, where we are going, and where we want to be.",
-    standfirst:
-      "An established operating base, a strategy for growth, and a long-term ambition for health and medical supply access.",
+    title: "Who we are and where we are going.",
     panels: [
       {
         eyebrow: "This is who we are",
         headline: "Experienced",
-        text: "More than 25 years of operations, as cited in the 2025 annual-report narrative, and a founding investor base of medical practitioners, specialists and surgeons alongside investment bankers, brokers, analysts and capital-market professionals. Today the businesses connect online medical, health and home-care supply commerce with clinic planning, fit-out and equipment services in Canada and the United States.",
+        text: "More than 25 years of operations and a founding investor base of medical practitioners, specialists and surgeons alongside investment bankers, brokers, analysts and capital-market professionals. Today the businesses connect online medical, health and home-care supply commerce with clinic planning, fit-out and equipment services in Canada and the United States.",
       },
       {
         eyebrow: "This is where we are going",
         headline: "Growing",
-        text: "The strategy is to build on the existing business through operating discipline, technology and complementary acquisitions. The objective is to integrate strategically located medical supply stores, pharmacies, clinics and distributors, broadening the products and services offered online in Canada and the United States. Forward-looking activities remain subject to approval and disclosure context.",
+        text: "The strategy is to build on the existing business through operating discipline, technology and complementary acquisitions. The objective is to integrate strategically located medical supply stores, pharmacies, clinics and distributors, broadening the products and services offered online in Canada and the United States.",
       },
       {
         eyebrow: "This is where we want to be",

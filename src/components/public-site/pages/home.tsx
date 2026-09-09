@@ -53,11 +53,7 @@ export function LifeSupplyHome() {
       <section className="bg-[var(--lsh-paper)] px-5 py-20 lg:px-8">
         <Container>
           <Reveal>
-            <SectionHeading
-              eyebrow={homepage.whoWeAre.eyebrow}
-              title={homepage.whoWeAre.title}
-              description={homepage.whoWeAre.standfirst}
-            />
+            <SectionHeading eyebrow={homepage.whoWeAre.eyebrow} title={homepage.whoWeAre.title} />
           </Reveal>
           <Stagger as="ul" className="mt-12 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-3">
             {homepage.whoWeAre.panels.map((panel, index) => (
