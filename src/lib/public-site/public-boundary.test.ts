@@ -718,6 +718,9 @@ describe("Stage 2 registries and navigation", () => {
     expect(code).toContain("aria-expanded={open}");
     expect(code).toMatch(/aria-controls=\{`lsh-menu-\$\{group\.key\}`\}/);
     expect(code).toContain('if (event.key === "Escape") setOpen(false);');
+    // Every dropdown and expanded mobile group opens with the group's own page.
+    expect((code.match(/label="Overview"/g) ?? []).length).toBe(2);
+    expect(code).toContain("neverCurrent");
     // The mobile panel lists group children as plain rows; nothing depends on hover there.
     expect(code).toMatch(/id="lsh-mobile-menu"[\s\S]*?PRIMARY_NAV\.map[\s\S]*?group\.links\.map/);
     // Groups collapse behind a real button with state and a controlled list,
