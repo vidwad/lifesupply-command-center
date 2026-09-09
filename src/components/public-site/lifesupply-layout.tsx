@@ -164,7 +164,7 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
       >
         <ul className="border border-white/15 bg-[var(--lsh-charcoal)] p-2 shadow-xl shadow-black/40">
           {/* The group's own page, so a visitor who goes straight to the dropdown does not miss it. */}
-          <li className="mb-1 border-b border-white/10 pb-1">
+          <li>
             <NavItem
               href={group.href}
               label="Overview"
@@ -404,7 +404,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                           : "hidden"
                       }
                     >
-                      <li className="mb-0.5 border-b border-white/10 pb-0.5">
+                      <li>
                         <NavItem
                           href={group.href}
                           label="Overview"

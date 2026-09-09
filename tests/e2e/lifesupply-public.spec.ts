@@ -243,8 +243,8 @@ test.describe("LifeSupply public site", () => {
       "Home",
       "Medical Supply Solutions",
       "Clinic Solutions",
-      "Metabolic Health",
       "Pharmacy Solutions",
+      "Metabolic Health",
       "Partners",
     ]) {
       await expect(panel.getByRole("link", { name, exact: true })).toBeVisible();
