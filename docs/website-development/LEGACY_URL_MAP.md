@@ -52,6 +52,7 @@ Legacy addresses that 404 on the old site as well (`/privacy/`, `/terms/`) now e
 | Leadership portraits | kept | `/lsh/abdul-ladha.jpg`, and from 2026-09-09 `/lsh/keith-dolo.jpg`, `/lsh/barrett-sleeman.jpg`, `/lsh/david-vogt.jpg`, copied from the prior site (S-104, S-153 to S-155). |
 | Company video (YouTube `Jb3m3Nt3S50`) | embedded on request | About page, from 2026-09-09; local greyscale poster `/lsh/video/about-abdul-ladha-poster.jpg`, click-to-load privacy-enhanced player (S-156). |
 | `Lifesupply-Investor-Presentation.pdf` (May 2022, 21.9 MB) | archive, on request | Listed as a historical document in the investor documents index, now on the News & resources page, with no hosted file (S-64). |
+| About page section backgrounds `about1.jpg`, `lshome1.jpg`, `ob3-1024x683-1.png` | kept | Served from `/lsh/graphics/legacy/` as decorative parallax dividers on the About page from 2026-09-09 (S-157 to S-159); greyscale, behind the site's overlay colouring. |
 | Remaining `wp-content/uploads` images (Stage 1 counted 49 references) | archive | Elementor layout imagery and the legacy timeline graphic; not carried forward (S-133). Any that must survive can be added to `public/lsh/` with provenance. |
 
 ## After cutover

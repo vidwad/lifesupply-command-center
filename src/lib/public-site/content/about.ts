@@ -94,41 +94,26 @@ export const about = {
   },
 
   /**
-   * The corporate portfolio, moved here from the former Our Businesses hub
-   * on 2026-09-08: the approved operating statement (published since PR
-   * #60), the published entities, the shared capabilities narrative, and the
-   * developing programs with their status.
+   * Developing opportunities, presented with their status. This block closes
+   * the page (product owner, 2026-09-09); the former group statement,
+   * published-entities list, and shared-capabilities grid were removed the
+   * same day. Nothing here is offered as available.
    */
-  corporate: {
-    eyebrow: "The group",
-    title: "Connected channels designed around medical-product access.",
-    text: "The public operating narrative describes online commerce, fulfillment, retail, wholesale, and regulated-care infrastructure as complementary functions. Brands, legal entities, shared capabilities, and developing programs are kept distinct below, so a brand is never confused with a company, or a plan with an operation.",
-    entities: {
-      eyebrow: "Published entities",
-      title: "Names on the public record.",
-      note: "Listed as they appear in the published corporate directory. The brand each entity operates is stated only where the owner has confirmed it.",
-    },
-    capabilities: {
-      eyebrow: "Shared capabilities",
-      title: "What the public overview describes.",
-      note: "Descriptions are the approved public operating narrative, unchanged.",
-    },
-    developing: {
-      eyebrow: "Developing programs",
-      title: "Presented with their status.",
-      items: [
-        {
-          title: "Metabolic-health supply services",
-          status: "In development",
-          text: "Non-drug supplies, clinic procurement, kitting and fulfilment, and contracted workflow support for metabolic-health programs. Availability will be published when it is confirmed.",
-        },
-        {
-          title: "Pharmacy solutions",
-          status: "Development focus",
-          text: "A stated development focus around pharmacy-related operations and regulated care infrastructure, subject to current regulatory, operational, and partner confirmation. Non-drug supply programs for pharmacies are the part in development today.",
-        },
-      ],
-    },
+  developing: {
+    eyebrow: "Looking ahead",
+    title: "Developing opportunities under evaluation.",
+    items: [
+      {
+        title: "Metabolic-health supply services",
+        status: "In development",
+        text: "Non-drug supplies, clinic procurement, kitting and fulfilment, and contracted workflow support for metabolic-health programs. Availability will be published when it is confirmed.",
+      },
+      {
+        title: "Pharmacy solutions",
+        status: "Development focus",
+        text: "A stated development focus around pharmacy-related operations and regulated care infrastructure, subject to current regulatory, operational, and partner confirmation. Non-drug supply programs for pharmacies are the part in development today.",
+      },
+    ],
   },
 
   // Stage 2 draft heading; the cards come from the brand registry.

@@ -54,6 +54,7 @@ const SCROLL_TO_TOP = `${PUBLIC_DIR}/scroll-to-top.tsx`;
 const BRAND_IMAGE = `${PUBLIC_DIR}/brand-image.tsx`;
 const SITE_SCREEN = `${PUBLIC_DIR}/site-screen.tsx`;
 const VIDEO_EMBED = `${PUBLIC_DIR}/video-embed.tsx`;
+const PARALLAX_BAND = `${PUBLIC_DIR}/parallax-band.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
 // carries the legacy-compatible route table.
@@ -91,6 +92,7 @@ const scrollToTop = () => stripComments(read(SCROLL_TO_TOP));
 const brandImage = () => stripComments(read(BRAND_IMAGE));
 const siteScreen = () => stripComments(read(SITE_SCREEN));
 const videoEmbed = () => stripComments(read(VIDEO_EMBED));
+const parallaxBand = () => stripComments(read(PARALLAX_BAND));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -107,6 +109,7 @@ const publicComponents = () => [
   brandImage(),
   siteScreen(),
   videoEmbed(),
+  parallaxBand(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -665,6 +668,7 @@ describe("Stage 2 registries and navigation", () => {
       "about.footprint",
       "about.milestones.items.map",
       "about.direction",
+      "about.developing.items.map",
     ]) {
       expect(source, block).toContain(block);
     }
@@ -809,6 +813,33 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     );
     const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
     expect(page).toContain("{pharmacy.status.sentence}");
+  });
+
+  it("closes About on the developing opportunities, carries no group or capabilities section, and divides it with decorative legacy bands", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`));
+    const aboutContent = stripComments(read("src/lib/public-site/content/about.ts"));
+    for (const gone of [
+      "Connected channels",
+      "Published entities",
+      "Shared capabilities",
+      "corporate",
+    ]) {
+      expect(page, gone).not.toContain(gone);
+      expect(aboutContent, gone).not.toContain(gone);
+    }
+    expect(aboutContent).toContain("Developing opportunities under evaluation.");
+    // The developing grid is the last block before the layout closes.
+    expect(page.trimEnd()).toMatch(
+      /about\.developing\.items\.map[\s\S]*?\/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
+    );
+    // Three bands, each decorative, drawn from the registry, never a path literal.
+    expect((page.match(/<ParallaxBand /g) ?? []).length).toBe(3);
+    const band = parallaxBand();
+    expect(band).toContain('aria-hidden="true"');
+    expect(band).toContain('alt=""');
+    expect(band).toContain("useReducedMotion()");
+    expect(band).not.toContain("/lsh/");
+    expect(band).not.toMatch(/#[0-9a-f]{3,6}\b/i);
   });
 
   it("lists the confirmed leader and the four directors of the prior site, and none of the withdrawn people", () => {
