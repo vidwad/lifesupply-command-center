@@ -17,11 +17,6 @@
  * dispenses, diagnoses, or prescribes.
  */
 export const pharmacy = {
-  status: {
-    label: "Development focus",
-    sentence:
-      "Pharmacy Solutions describes a stated development focus. The non-drug supply program for pharmacies is in development; pharmacy-related operations are under evaluation and are not offered on this site.",
-  },
   hub: {
     eyebrow: "Pharmacy Solutions",
     title: "Non-drug supply support for pharmacies, in development.",
