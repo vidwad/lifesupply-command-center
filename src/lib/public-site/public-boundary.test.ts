@@ -636,10 +636,42 @@ describe("round two: qualified inquiries and policy accuracy", () => {
 
   it("claims no accessibility audit it has not had, and no booking it has not made", () => {
     const policies = stripComments(read("src/lib/public-site/content/policies.ts"));
-    expect(policies).toContain("no such review is booked");
-    expect(policies).not.toMatch(/review is scheduled|audit is (booked|scheduled)/i);
+    expect(policies).toContain("has not been audited by an external accessibility reviewer");
+    expect(policies).not.toMatch(/review is (scheduled|booked)|audit is (booked|scheduled)/i);
     // It states what actually runs instead.
-    expect(policies).toContain("Automated checks run against every public route");
+    expect(policies).toContain("Automated accessibility checks run against every public route");
+  });
+});
+
+describe("round two: independent review corrections", () => {
+  it("states no fee, price, or purchasing assurance in the commercial model", () => {
+    const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
+    expect(c).toContain("commercialModel");
+    // No fee structure is established by any source.
+    expect(c).not.toMatch(/a service fee|fee (schedule|basis|per)|priced at/i);
+    expect(c).toContain("Nothing is priced.");
+    // No assurance about what a buyer does or does not have to sign.
+    expect(c).not.toMatch(/no (project or )?agreement is required/i);
+  });
+
+  it("promises no access to material that is not published", () => {
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    expect(investors).not.toMatch(/available on request|on request through/i);
+    expect(investors).toContain("the extent of what is published on this site");
+  });
+
+  it("asks for nothing that identifies a person, and assures nothing about it", () => {
+    const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
+    // The withdrawn assurance: an organization and a role can identify someone.
+    expect(contact).not.toMatch(/none of them is personal or clinical information/i);
+    expect(contact).not.toMatch(/commits you to anything/i);
+    expect(contact).toContain("Programs in development are not currently offered.");
+  });
+
+  it("implies no account, checkout, or inventory shared between the brands", () => {
+    const businesses = stripComments(read("src/lib/public-site/content/businesses.ts"));
+    expect(businesses).not.toMatch(/the same account|shared (account|inventory|checkout)/i);
+    expect(businesses).toContain("no separate professional portal");
   });
 });
 
@@ -730,7 +762,7 @@ describe("round two: cross-page factual consistency", () => {
 
   it("states no currency for the reported figures, because no source gives one", () => {
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
-    expect(investors).toContain("does not state one");
+    expect(investors).toContain('"Currency: not stated."');
     // Never assert a currency the sources do not support.
     expect(investors).not.toMatch(/Currency: (CAD|USD|Canadian|US)/i);
     // The scope labels that are evidenced must stay.
@@ -1238,7 +1270,8 @@ describe("Stage 4 Metabolic Health and the eight pathways", () => {
     expect(c).toContain("no automatic shipment, no reminder service, and no subscription");
     // Today's position, not a permanent prohibition (round two, 2026-09-10).
     expect(c).toContain("on this site today");
-    expect(c).toContain("would be proposed separately");
+    // No recurring-arrangement process is described, because none exists (round two review).
+    expect(c).not.toMatch(/would be proposed separately|recurring arrangement/i);
     expect(c).not.toMatch(/subscribe and save|auto-?ship (is|now) available/i);
   });
 

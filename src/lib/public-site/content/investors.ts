@@ -70,7 +70,7 @@ export const investorRelations = {
       ],
     },
     forwardLooking:
-      "Statements about expansion, programs in development, and opportunities under evaluation are forward-looking. They depend on approvals, financing, regulatory requirements, and transaction terms that have not been obtained, and they may not occur.",
+      "Statements about expansion, programs in development, and opportunities under evaluation are forward-looking. They depend on approvals, financing, regulatory requirements, and transaction terms that are not in place, and they may not occur.",
     sections: [
       {
         route: "operations",
@@ -282,14 +282,14 @@ export const investorRelations = {
       "Period: year ended December 31, 2025.",
       "Basis: unaudited consolidated financial information, as cited in the annual-report narrative.",
       "Entity scope: LifeSupply Health Supplies Inc., consolidated.",
-      "Currency: the annual-report narrative does not state one, so none is given here.",
+      "Currency: not stated.",
     ],
     forwardLooking: {
       title: "Forward-looking statements",
-      text: "Statements on this site about programs in development, opportunities under evaluation, expansion themes, and possible transactions are forward-looking. They are based on current plans and assumptions, depend on approvals, financing, regulatory requirements, market conditions, and transaction terms that have not been obtained, and may not occur. They are not guarantees, and LifeSupply undertakes no obligation to update them except as required.",
+      text: "Statements on this site about programs in development, opportunities under evaluation, expansion themes, and possible transactions are forward-looking. They are based on current plans and assumptions, depend on approvals, financing, regulatory requirements, market conditions, and transaction terms that are not in place, and may not occur. They are not guarantees, and LifeSupply undertakes no obligation to update them except as required.",
     },
     materials:
-      "Where a document is restricted, the figure shown on this page is the extent of what is published. Everything else is available on request through investor relations.",
+      "The figures above are the extent of what is published on this site. Investor inquiries go to investor relations.",
     actions: ["news_resources", "investor_materials"],
   },
 } as const;

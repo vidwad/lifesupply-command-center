@@ -61,15 +61,15 @@ export const contact = {
     guide: {
       title: "What to include",
       intro:
-        "A first message is easier to answer with a few facts. None of them commits you to anything, and none of them is personal or clinical information.",
+        "A first message is easier to answer with a few facts. None of them is required, and none of them asks for health, patient, or account information.",
       items: [
-        "Your organization and your role in it.",
-        "The region you operate in.",
+        "The organization and the sender's role in it.",
+        "The region it operates in.",
         "The type of business or practice: clinic, pharmacy, distributor, supplier, or something else.",
-        "Broadly what you need, in a sentence or two.",
-        "What you would like the first conversation to cover.",
+        "Broadly what is needed, in a sentence or two.",
+        "What the first conversation should cover.",
       ],
-      next: "A first exchange is about fit: whether what you need matches what LifeSupply does today or is developing. If it does, scope, responsibilities, and any commercial terms are defined in writing after that, before anything runs.",
+      next: "A first exchange is about fit: whether the need matches what LifeSupply does today or is developing. Programs in development are not currently offered.",
     },
     sensitive:
       "Please do not send health information, personal medical details, prescriptions, or account or payment details through these channels.",
