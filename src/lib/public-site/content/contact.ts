@@ -30,7 +30,13 @@ export const contact = {
       email: "abdul@lifesupply.com",
       phone: "604-677-4146",
     },
-    { label: "Corporate office", name: "General inquiries", email: "info@lifesupply.com" },
+    {
+      label: "Corporate office",
+      name: "General inquiries",
+      email: "info@lifesupply.com",
+      /** The group's one corporate address (product owner, 2026-09-10). */
+      address: "6911 King George Highway, Surrey, British Columbia V3W 5A1",
+    },
   ],
   /**
    * The corporate structure as set out in the consolidated financial
@@ -48,8 +54,7 @@ export const contact = {
     {
       name: "Wellmart Health Supplies Ltd.",
       relationship: "Canadian subsidiary, wholly owned",
-      detail:
-        "The group's Canadian operating base, acquired in 2020. It trades as LifeSupply, from 6911 King George Highway, Surrey, British Columbia V3W 5A1.",
+      detail: "The group's Canadian operating base, acquired in 2020. It trades as LifeSupply.",
       phone: "1-855-755-5433",
       url: "https://lifesupply.ca",
     },

@@ -79,13 +79,14 @@ Codex generated no image or asset this round.
 
 ## 7. Open questions for the product owner
 
-1. **Parent entity name.** The financial statements, the trademark line and the copyright line all say "LifeSupply Health Inc." The lifesupply.ca footer says "LifeSupply Health Supplies Inc." The site now uses the former. One constant controls it.
-2. **The 2024 comparative results.** Approved for publication or not.
-3. **The Surrey address.** The parent's registered office, Wellmart's, or both. It appears in the footer, the structured data and the entity card.
-4. **The homepage founding-investor sentence** still has no source in any register. Carried from round two.
-5. **Current titles for the three non-executive directors.** Needed before the site can state them.
-6. Which investor materials are genuinely available on request.
-7. How a British Columbia clinic project is initiated, and which project types are accepted.
+**Three were answered on September 10, 2026 and are applied.** The parent is **LifeSupply Health Inc.**, which the site already used, so WEB-01 is closed and the lifesupply.ca footer is the stale one. **Every address points to the Surrey corporate address**, which is the group's rather than Wellmart's; it now sits on the Contact directory as the corporate office and has come off the subsidiary card. The **homepage founding-investor sentence is withdrawn** and replaced with the verified acquisition history. Canaries hold all three.
+
+Still open:
+
+1. **The 2024 comparative results.** Approved for publication or not. They would strengthen the investor pages and are historical actuals, but they come from a confidential document.
+2. **Current titles for the three non-executive directors.** Needed before the site can state them, and the reason outcome 9 is partial.
+3. Which investor materials are genuinely available on request.
+4. How a British Columbia clinic project is initiated, and which project types are accepted.
 
 ## 8. Verification results
 

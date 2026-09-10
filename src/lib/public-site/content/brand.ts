@@ -2,9 +2,10 @@
  * Corporate identity and shell copy. Approved as already published; see
  * docs/website-development/SOURCE_REGISTER.md (S-13, S-20, S-130, S-131).
  *
- * The address is the one the repository has published since consolidation.
- * The operating websites show a different office address (S-21); WEB-01
- * decides which is current. Until then the published one stands.
+ * The Surrey address is the corporate address for the whole group, confirmed
+ * by the product owner on 2026-09-10, which closes WEB-01 and supersedes the
+ * different office address some operating websites show (S-21). Every address
+ * on this site points here.
  */
 export const brand = {
   name: "LifeSupply Health",

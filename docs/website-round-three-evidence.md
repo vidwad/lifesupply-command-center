@@ -52,12 +52,19 @@ The 2025 and 2024 comparative operating results are treated separately: they are
 
 ## Open questions for the product owner
 
+## Resolved by the product owner, September 10, 2026
+
+| # | Question | Decision | Applied |
+| --- | --- | --- | --- |
+| 1 | Parent entity name | **"LifeSupply Health Inc." is correct.** The lifesupply.ca storefront footer is the stale one | Already in use sitewide since Stage A. WEB-01 closed. A canary now requires the name and bans the old one from every content file |
+| 3 | Which office address the site should publish | **All addresses point to the Surrey corporate address.** It is the group's, not Wellmart's | The Surrey address is now presented as the corporate office on the Contact directory. The Wellmart entity card no longer carries it, because it is not that subsidiary's alone. A canary requires it in the footer, the structured data and the directory, and fails any second street address |
+| 4 | The homepage founding-investor sentence | **Withdrawn and replaced.** The owner asked for something better | The "Experienced" panel now states the group's verified acquisition history: Wellmart Health Supplies as the Canadian operating base in 2020, Balkowitsch Enterprises adding United States reach and a distributor network in 2023. A canary bans the withdrawn claim |
+
+## Open questions for the product owner
+
 | # | Question | Why it matters |
 | --- | --- | --- |
-| 1 | **Parent entity name.** The financial statements, trademark line and copyright line say "LifeSupply Health Inc."; the lifesupply.ca footer says "LifeSupply Health Supplies Inc." The site now uses the former | A public corporate site names the wrong company either way. One constant controls it |
 | 2 | Is the 2024 comparative disclosure approved for the public site? | It strengthens the investor page materially and is historical fact, but it comes from a confidential document |
-| 3 | Is the Surrey address the parent's registered office, Wellmart's, or both? | It appears in the footer, the structured data and the entity card |
-| 4 | The homepage founding-investor sentence has no source in any register | Carried from round two, still unresolved |
 | 5 | Current titles for the three non-executive directors | The site states one verified title, Chairman & CEO. The rest need confirmation before they can be published |
 | 6 | Which investor materials are genuinely available on request | The documents index names three, none downloadable |
 | 7 | How a British Columbia clinic project is initiated, and which project types are accepted | Raised by the independent review as a gap a business reader cannot close |

@@ -776,6 +776,44 @@ describe("round three: architecture, placement and voice", () => {
     expect(teamContent).toContain('role: "Chairman & CEO"');
   });
 
+  it("uses one corporate address and one parent name, as the owner confirmed", () => {
+    // Product owner, 2026-09-10: the parent is LifeSupply Health Inc., and every
+    // address on the site is the Surrey corporate address. WEB-01 is closed.
+    const SURREY = "6911 King George Highway";
+    const brand = stripComments(read("src/lib/public-site/content/brand.ts"));
+    const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
+    const seo = stripComments(read("src/lib/public-site/seo.ts"));
+    for (const [name, source] of [
+      ["brand", brand],
+      ["contact", contact],
+      ["seo", seo],
+    ] as const) {
+      expect(source, name).toContain(SURREY);
+    }
+    expect(brand).toContain("LifeSupply Health Inc.");
+    expect(seo).toContain("LifeSupply Health Inc.");
+    // No second street address anywhere in the content model.
+    for (const file of publicContentFiles()) {
+      const text = stripComments(read(file));
+      const streets = [
+        ...text.matchAll(/\d{3,5}\s+[A-Z][A-Za-z]+\s+(Highway|Street|Avenue|Road|Way|Drive)/g),
+      ];
+      for (const match of streets) {
+        expect(match[0], `${file} :: ${match[0]}`).toContain("King George Highway");
+      }
+      expect(text, file).not.toContain("Health Supplies Inc.");
+    }
+  });
+
+  it("claims no founding investor base, because no source supports one", () => {
+    // Withdrawn at the owner's direction on 2026-09-10 and replaced with the
+    // group's verified acquisition history.
+    const home = stripComments(read("src/lib/public-site/content/home.ts"));
+    expect(home).not.toMatch(/founding investor|investment bankers|capital-market professionals/i);
+    expect(home).toContain("Wellmart Health Supplies became the Canadian operating base in 2020");
+    expect(home).toContain("Balkowitsch Enterprises added United States reach");
+  });
+
   it("keeps internal workflow and publication language out of public copy", () => {
     const files = [...publicContentFiles(), `${PUBLIC_DIR}/pages/contact.tsx`];
     for (const file of files) {
