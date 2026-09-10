@@ -160,9 +160,9 @@ export const investorRelations = {
           proposal:
             "Pharmacist-selected non-drug supplies, onboarding and refill support, and fulfilment under an agreed scope. Medication is excluded.",
           capability:
-            "The group's online medical-supply commerce, its fulfilment arrangements, and the clinic supply work already running.",
+            "The group's online medical-supply businesses in Canada and the United States, and the clinic supply route those stores already serve.",
           conditions:
-            "Product selection, fulfilment responsibilities, service scope, and commercial terms have to be agreed in writing with each partner. Terms are not established, so no revenue mechanism is stated.",
+            "Product selection, fulfilment responsibilities, service scope, and commercial terms are agreed in writing with each partner before anything runs. Until they are, there is nothing to buy and no price to quote.",
         },
         {
           title: "Metabolic-health supply services",
@@ -172,7 +172,7 @@ export const investorRelations = {
           proposal:
             "Starter equipment, usage-driven consumables, clinic procurement, kitting and fulfilment, and contracted non-clinical workflow support.",
           capability:
-            "The same commerce and fulfilment base, plus clinic equipment sourcing and the procurement relationships that come with clinic work.",
+            "The same online supply businesses, and the clinic equipment work LifeSupply Clinics does for projects in British Columbia.",
           conditions:
             "Pathway contents, device compatibility, fulfilment capacity, and service scope have to be confirmed per program. Availability is published only as each pathway is confirmed.",
         },

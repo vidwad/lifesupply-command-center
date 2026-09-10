@@ -84,6 +84,9 @@ export function IconFeatureGrid({
   numbered?: boolean;
 }) {
   const dark = tone === "onDark";
+  // Without a section heading the cards are the section, so their titles take
+  // h2 and the outline never skips a level (QA sweep, 2026-09-09).
+  const Heading = title ? "h3" : "h2";
   const cols =
     columns === 2
       ? "md:grid-cols-2"
@@ -127,11 +130,11 @@ export function IconFeatureGrid({
                     </span>
                   ) : null}
                 </div>
-                <h3
+                <Heading
                   className={`lsh-display mt-6 text-xl leading-tight ${dark ? "" : "text-[var(--lsh-charcoal)]"}`}
                 >
                   {item.title}
-                </h3>
+                </Heading>
                 <p
                   className={`mt-3 leading-7 ${dark ? "text-white/75" : "text-[var(--lsh-muted)]"}`}
                 >
@@ -380,11 +383,14 @@ export function BentoGrid({
                   ) : null}
                   {tile.title || !g ? (
                     <div className="mt-3 flex items-start justify-between gap-4">
-                      <h3
+                      {/* The grid carries no heading of its own, so each tile is a
+                          section and takes h2; otherwise the outline skips a level
+                          wherever the grid follows the page title (QA sweep, 2026-09-09). */}
+                      <h2
                         className={`lsh-display text-2xl leading-tight ${g || dark ? "" : "text-[var(--lsh-charcoal)]"}`}
                       >
                         {tile.title}
-                      </h3>
+                      </h2>
                       {!g ? <IconBadge icon={tile.icon} tone={tone} /> : null}
                     </div>
                   ) : null}
