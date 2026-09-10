@@ -155,7 +155,7 @@ export const clinics = {
       options: [
         {
           title: "Opening or renovating a clinic",
-          text: "Planning, design, construction, fit-out, and equipment for clinic projects in British Columbia, within verified delivery arrangements.",
+          text: "Planning, design, construction, fit-out, and equipment for clinic projects in British Columbia.",
           action: "plan_clinic",
         },
         {

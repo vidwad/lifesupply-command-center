@@ -45,7 +45,7 @@ export const contact = {
   routing: {
     eyebrow: "Start with what you need",
     title: "Routed to the right conversation.",
-    text: "Choose the route that matches your inquiry. Each one reaches a verified LifeSupply channel or the page that answers it.",
+    text: "Choose the route that matches your inquiry. Each one leads to the relevant LifeSupply page or email address.",
     sensitive:
       "Please do not send health information, personal medical details, prescriptions, or account or payment details through these channels.",
   },
@@ -57,7 +57,7 @@ export const contact = {
     },
     {
       label: "Equipment quote",
-      text: "Room-by-room equipment planning and a written quote for a new or renovated clinic.",
+      text: "Room-by-room equipment planning and a quote for a new or renovated clinic.",
       action: "equipment_quote",
     },
     {
@@ -67,7 +67,7 @@ export const contact = {
     },
     {
       label: "Metabolic-health program",
-      text: "Supply services for a metabolic-health program. In development; nothing is sold from this site.",
+      text: "Supply services for a metabolic-health program. In development, and not available today.",
       action: "discuss_program",
     },
     {
@@ -87,7 +87,7 @@ export const contact = {
     },
     {
       label: "Acquisition or strategic",
-      text: "A first confidential conversation about an acquisition or a strategic arrangement.",
+      text: "A first conversation about an acquisition or a strategic arrangement.",
       action: "acquisition_inquiry",
     },
     {
