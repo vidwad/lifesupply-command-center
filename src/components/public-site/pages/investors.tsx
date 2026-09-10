@@ -217,6 +217,7 @@ export function GrowthStrategyPage() {
         }))}
       />
       <DevelopmentCase />
+      <ExecutionSequence />
       <section className="px-5 pb-20 lg:px-8">
         <Container>
           <ForwardLooking text={investorRelations.hub.forwardLooking} />
@@ -255,6 +256,61 @@ export function GrowthStrategyPage() {
         <ActionRow actions={g.actions} />
       </section>
     </LifeSupplyLayout>
+  );
+}
+
+/**
+ * How the developing work is intended to reach scale (round three, outcome 6).
+ *
+ * The investor pages explained prerequisites well and sequence badly: a reader
+ * could see what had to be true but not the order management intends to work
+ * in. Four numbered steps, each written as planned rather than achieved, with
+ * the gate that governs scaling stated separately so it is not mistaken for a
+ * schedule. No date, duration, count or target appears.
+ */
+function ExecutionSequence() {
+  const e = investorRelations.growthStrategy.execution;
+  return (
+    <section className="px-5 py-20 lg:px-8">
+      <Container className="min-w-0">
+        <Reveal>
+          <SectionHeading eyebrow={e.eyebrow} title={e.title} description={e.intro} />
+        </Reveal>
+        <Stagger
+          as="ol"
+          className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-4"
+        >
+          {e.stages.map((stage) => (
+            <StaggerItem
+              as="li"
+              key={stage.index}
+              className="flex h-full flex-col bg-[var(--lsh-paper)] p-6"
+            >
+              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                {e.stageLabel} {stage.index}
+              </p>
+              <h3 className="lsh-display mt-2 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                {stage.title}
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{stage.text}</p>
+            </StaggerItem>
+          ))}
+        </Stagger>
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+            <Eyebrow as="h3">{e.gate.title}</Eyebrow>
+            <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{e.gate.text}</p>
+          </Reveal>
+          <Reveal
+            delay={0.05}
+            className="border-l-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-6"
+          >
+            <Eyebrow as="h3">Where it stands</Eyebrow>
+            <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{e.status}</p>
+          </Reveal>
+        </div>
+      </Container>
+    </section>
   );
 }
 

@@ -92,6 +92,14 @@ export function MetabolicHealthPage() {
       />
       <StatusBand />
 
+      {/*
+       * Who buys what, and on what basis (round three, outcome 4). This used to
+       * sit below the page's closing actions and disclosures, where a reader
+       * reached it only after the whole pathway pitch. The commercial
+       * explanation now precedes the detail it explains.
+       */}
+      <CommercialModel model={commercialModel} />
+
       {/* A connected supply experience: start, continue, support. */}
       <ProcessSteps
         eyebrow={hub.experience.eyebrow}
@@ -219,7 +227,6 @@ export function MetabolicHealthPage() {
           </Reveal>
         </Container>
       </section>
-      <CommercialModel model={commercialModel} />
     </LifeSupplyLayout>
   );
 }

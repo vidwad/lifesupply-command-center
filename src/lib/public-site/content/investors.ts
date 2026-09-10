@@ -191,6 +191,50 @@ export const investorRelations = {
       note: "Statements about these opportunities are forward-looking. They set no launch date, imply no funding commitment, and do not describe a service that can be bought today.",
     },
 
+    /**
+     * How management intends to move the developing work from design to scale
+     * (round three, outcome 6). Drafted with Codex and edited before use.
+     *
+     * The shape of the sequence is publishable; the timings, clinic counts and
+     * targets attached to it in the August 2026 materials are not, and none
+     * appears here. Every stage is written as planned, not achieved.
+     */
+    execution: {
+      eyebrow: "How it gets built",
+      title: "The sequence, and where it currently stands.",
+      intro:
+        "The developing programs follow four steps. Each one has to produce evidence before the next begins, which is why no launch date is published: the gate is what the work shows, not what a calendar says.",
+      stageLabel: "Planned step",
+      stages: [
+        {
+          index: "01",
+          title: "Design and de-risk",
+          text: "Settle scope, the products a pathway needs, who is responsible for what, and where supply support stops and clinical care begins. Legal and operating requirements are worked out here rather than discovered later.",
+        },
+        {
+          index: "02",
+          title: "Controlled pilot",
+          text: "Run the defined workflow with a small number of partners before anything is offered broadly. Procurement, kitting, fulfilment and non-clinical support are tested against real orders, with the clinical or pharmacy provider keeping every clinical decision.",
+        },
+        {
+          index: "03",
+          title: "Launch and integrate",
+          text: "Take what the pilot proved and connect it to the commerce and fulfilment operations that already run: ordering, inventory, billing and reporting on one footing rather than as a side process.",
+        },
+        {
+          index: "04",
+          title: "Replicate and scale",
+          text: "Extend only the parts that repeat reliably. Capacity, partner readiness and consistent service quality decide how far and how fast, one program at a time.",
+        },
+      ],
+      gate: {
+        title: "What has to be true before scaling",
+        text: "Unit economics that hold, customers who stay, technology that carries the volume, and service quality that does not slip. Scaling follows those, not a date.",
+      },
+      status:
+        "All four steps are planned. None of the developing programs has completed a pilot, and nothing described here is available to buy.",
+    },
+
     record: {
       eyebrow: "Dated public record",
       title: "What has been published, by date.",

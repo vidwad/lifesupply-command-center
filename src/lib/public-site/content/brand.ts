@@ -29,5 +29,5 @@ export const brand = {
   footerTagline:
     "Corporate information, operating context, and investor resources from LifeSupply Health Inc.",
   // moved from JSX (footer)
-  legalNotice: "Public information is subject to update and applicable disclosure context.",
+  legalNotice: "Information on this site is current at the date published and may be updated.",
 } as const;

@@ -17,6 +17,18 @@
  * dispenses, diagnoses, or prescribes.
  */
 export const pharmacy = {
+  /**
+   * Round three, outcome 3. "Pharmacy" meant two things across this site and a
+   * reader could not tell which one a page was about. This block says so on
+   * the page most likely to be misread. Drafted with Codex, edited before use.
+   */
+  scope: {
+    title: "Which pharmacy business this is",
+    paragraphs: [
+      "This page is about supplying pharmacies. LifeSupply is developing pharmacist-selected non-drug supply and fulfilment programs, where the pharmacy is the customer and medication is excluded entirely. The programs are in development and cannot be bought yet.",
+      "Whether LifeSupply should hold licensed pharmacy operations of its own is a separate question. That sits under evaluation alongside specialty and compounding, peptide research, and manufacturing, and none of them is offered, licensed or operating. Supplying pharmacies and running one are different businesses.",
+    ],
+  },
   hub: {
     eyebrow: "Pharmacy Solutions",
     title: "Non-drug supply support for pharmacies, in development.",
