@@ -138,7 +138,9 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/");
     const glance = page.getByText("years of operations cited in the 2025 annual report");
     await glance.scrollIntoViewIfNeeded();
-    const stats = page.locator('main p[data-stat="figure"]');
+    // The figures band became a definition list in the 2026-09-10 design pass:
+    // the figure is the description, its label the term.
+    const stats = page.locator('main [data-stat="figure"]');
     await expect(stats).toHaveCount(3);
     await expect(stats.nth(0)).toHaveText("25+", { timeout: 8_000 });
     await expect(stats.nth(1)).toHaveText("50K+");

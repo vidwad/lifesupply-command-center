@@ -198,6 +198,57 @@
     text-transform: uppercase;
   }
 
+  /*
+   * A loud register (2026-09-10). The first build set almost every heading at
+   * the same size, so the page had no quiet and no loud: eleven sections all
+   * arrived at one volume. These two sizes exist to be used sparingly, on the
+   * few moments that carry the page, so everything around them can recede.
+   *
+   * `lsh-statement` is for a headline that has to stop the scroll.
+   * `lsh-figure` is for a numeral standing on its own, where the digits are
+   * the picture. Both set their own tight leading, because condensed display
+   * type at this scale needs far less than the body rhythm.
+   */
+  .lsh-statement {
+    font-family: var(--lsh-display-font);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.005em;
+    line-height: 0.88;
+    font-size: clamp(2.75rem, 7vw, 5.5rem);
+  }
+
+  .lsh-figure {
+    font-family: var(--lsh-display-font);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.78;
+    font-size: clamp(4rem, 12vw, 9rem);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * A rule that draws itself across a row on hover, replacing the bordered
+   * card as the way a list signals it is interactive. Collapses to a static
+   * rule for reduced motion, handled in the media query below.
+   */
+  .lsh-rule-draw::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--lsh-brand-red);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .lsh-rule-draw:hover::after,
+  .lsh-rule-draw:focus-within::after {
+    transform: scaleX(1);
+  }
+
   /* Keyboard focus: a red ring, visible on paper, surface, and ink. */
   .lsh-shell :is(a, button):focus-visible {
     outline: 3px solid var(--lsh-brand-red);

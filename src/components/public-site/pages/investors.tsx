@@ -1,4 +1,4 @@
-import { Mail, Phone, ShieldCheck } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
@@ -9,6 +9,7 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
+import { renderIcon } from "@/components/public-site/icons";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { BentoGrid, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
@@ -434,7 +435,7 @@ export function DisclosuresPage() {
             <IconBadge icon="shield" />
             <div>
               <div className="lsh-display flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-                <ShieldCheck size={16} aria-hidden="true" /> {d.forwardLooking.title}
+                {renderIcon("shield", { size: 16 })} {d.forwardLooking.title}
               </div>
               <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.forwardLooking.text}</p>
               <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.materials}</p>

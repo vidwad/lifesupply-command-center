@@ -7,14 +7,13 @@ import { HeroVideo } from "@/components/public-site/hero-video";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
-  EditorialStat,
   Eyebrow,
   InfoBand,
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { IconBadge } from "@/components/public-site/sections";
+import { renderIcon } from "@/components/public-site/icons";
+import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -50,28 +49,46 @@ export function LifeSupplyHome() {
         }
       />
 
-      {/* Audience routes: the three journeys, immediately under the hero. */}
-      <section className="border-b border-[var(--lsh-rule)] px-5 py-12 lg:px-8">
+      {/*
+       * Where to start: an index, not a card grid (2026-09-10).
+       *
+       * These were three bordered tiles with an 18px glyph boxed in the
+       * corner, the same shape as the six sections below them. As an index
+       * the rows can breathe, the icon can be drawn at a size where it is
+       * actually a drawing, and the red rule that draws under a row on hover
+       * does the work the border was doing badly.
+       */}
+      <section className="px-5 py-14 lg:px-8">
         <Container>
           <Reveal>
             <Eyebrow as="h2">{homepage.audiences.eyebrow}</Eyebrow>
           </Reveal>
-          <Stagger as="ul" className="mt-6 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
-            {homepage.audiences.items.map((route) => (
+          <Stagger as="ul" className="mt-8">
+            {homepage.audiences.items.map((route, index) => (
               <StaggerItem
                 key={route.title}
                 as="li"
-                className="flex h-full flex-col bg-[var(--lsh-paper)] p-6 lg:p-7"
+                className="lsh-rule-draw relative border-t border-[var(--lsh-rule)] last:border-b"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="lsh-display text-lg leading-tight text-[var(--lsh-charcoal)]">
-                    {route.title}
-                  </h3>
-                  <IconBadge icon={iconForTitle(route.title)} size={18} />
-                </div>
-                <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{route.text}</p>
-                <div className="mt-auto pt-5">
-                  <ActionLink action={route.action as ActionKey} variant="text" />
+                <div className="grid items-baseline gap-x-8 gap-y-4 py-8 md:grid-cols-[auto_minmax(0,22rem)_minmax(0,1fr)_auto] lg:py-10">
+                  <span
+                    aria-hidden="true"
+                    className="lsh-display hidden text-[11px] text-[var(--lsh-muted)] md:block"
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[var(--lsh-brand-red)]" aria-hidden="true">
+                      {renderIcon(iconForTitle(route.title), { size: 34, strokeWidth: 1.5 })}
+                    </span>
+                    <h3 className="lsh-display text-2xl leading-none text-[var(--lsh-charcoal)] lg:text-3xl">
+                      {route.title}
+                    </h3>
+                  </div>
+                  <p className="max-w-xl leading-7 text-[var(--lsh-muted)]">{route.text}</p>
+                  <div className="md:justify-self-end">
+                    <ActionLink action={route.action as ActionKey} variant="text" />
+                  </div>
                 </div>
               </StaggerItem>
             ))}
@@ -85,29 +102,35 @@ export function LifeSupplyHome() {
           <Reveal>
             <SectionHeading eyebrow={homepage.whoWeAre.eyebrow} title={homepage.whoWeAre.title} />
           </Reveal>
-          <Stagger as="ul" className="mt-12 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-3">
+          {/*
+           * Three columns, no panels. The gap-px trick drew a box around each
+           * one, which made a statement of intent look like a specification
+           * table. A single red rule over each column and a headline set two
+           * steps larger carries it instead.
+           */}
+          <Stagger as="ul" className="mt-14 grid gap-x-10 gap-y-14 lg:grid-cols-3">
             {homepage.whoWeAre.panels.map((panel, index) => (
-              <StaggerItem
-                key={panel.headline}
-                as="li"
-                className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8 lg:p-10"
-              >
-                <div className="flex items-start justify-between gap-4">
+              <StaggerItem key={panel.headline} as="li" className="flex h-full flex-col">
+                <span aria-hidden="true" className="block h-1 w-full bg-[var(--lsh-brand-red)]" />
+                <div className="mt-5 flex items-baseline justify-between gap-4">
                   <p className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
                     {panel.eyebrow}
                   </p>
-                  <span className="lsh-display text-sm text-[var(--lsh-muted)]">
+                  <span
+                    aria-hidden="true"
+                    className="lsh-display text-[11px] text-[var(--lsh-rule-strong)]"
+                  >
                     {String(index + 1).padStart(2, "0")}
                   </span>
                 </div>
-                <h3 className="lsh-display mt-5 text-4xl leading-none tracking-tight text-[var(--lsh-charcoal)] sm:text-5xl">
+                {/*
+                 * Sized for the column, not the viewport: the statement scale
+                 * is a full-width device and overruns a third of the grid.
+                 */}
+                <h3 className="lsh-display mt-4 text-[2.5rem] leading-[0.9] tracking-tight text-[var(--lsh-charcoal)] sm:text-5xl lg:text-[3.25rem]">
                   {panel.headline}
                 </h3>
-                <span
-                  aria-hidden="true"
-                  className="mt-6 block h-0.5 w-12 bg-[var(--lsh-brand-red)]"
-                />
-                <p className="mt-6 leading-7 text-[var(--lsh-muted)]">{panel.text}</p>
+                <p className="mt-6 max-w-md leading-7 text-[var(--lsh-muted)]">{panel.text}</p>
               </StaggerItem>
             ))}
           </Stagger>
@@ -140,20 +163,44 @@ export function LifeSupplyHome() {
         />
       </Reveal>
 
-      {/* Verified proof: the three approved figures, with their source context. */}
-      <section className="bg-[var(--lsh-paper)]">
-        <Container className="py-20">
-          <Reveal>
-            <SectionHeading
-              eyebrow={homepage.glance.eyebrow}
-              title={homepage.glance.title}
-              description={homepage.glance.description}
-            />
+      {/*
+       * Verified proof, given the page's loudest moment (2026-09-10).
+       *
+       * Twenty-five years, fifty thousand products and a million customers is
+       * the strongest thing this company can say, and it was set as three
+       * hairline tiles indistinguishable from the partner cards further down.
+       * On ink, at the figure scale, the digits become the picture. It also
+       * breaks a long run of white sections at the point the page needs air.
+       */}
+      <section className="bg-[var(--lsh-ink)] px-5 py-24 text-white lg:px-8">
+        <Container>
+          <Reveal className="max-w-3xl">
+            <p className="lsh-display text-[11px] text-[var(--lsh-red-on-ink)]">
+              {homepage.glance.eyebrow}
+            </p>
+            <h2 className="lsh-display mt-4 text-3xl leading-tight sm:text-4xl">
+              {homepage.glance.title}
+            </h2>
+            <p className="mt-4 leading-7 text-white/70">{homepage.glance.description}</p>
           </Reveal>
-          <Stagger className="mt-12 grid gap-5 sm:grid-cols-3">
+          {/*
+           * Each entry is reversed so the figure reads first and the label
+           * sits under it, while the source keeps the term before its
+           * description. The label is the `dt` itself rather than a hidden
+           * copy, so a screen reader announces it once, not twice.
+           */}
+          <Stagger as="dl" className="mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-3">
             {homepage.publicMetrics.map((metric) => (
-              <StaggerItem key={metric.label} className="h-full">
-                <EditorialStat value={metric.value} label={metric.label} size="large" />
+              <StaggerItem
+                key={metric.label}
+                className="flex flex-col-reverse border-t border-white/20 pt-6"
+              >
+                <dt className="mt-6 max-w-[18rem] text-sm leading-6 text-white/60">
+                  {metric.label}
+                </dt>
+                <dd data-stat="figure" className="lsh-figure text-[var(--lsh-red-on-ink)]">
+                  {metric.value}
+                </dd>
               </StaggerItem>
             ))}
           </Stagger>
@@ -187,22 +234,20 @@ export function LifeSupplyHome() {
               description={homepage.clinicLifecycle.intro}
             />
           </Reveal>
-          <Stagger as="ul" className="mt-12 grid gap-px bg-white/15 lg:grid-cols-3">
+          {/* Steps in a sequence, ruled rather than boxed (2026-09-10). */}
+          <Stagger as="ul" className="mt-14 grid gap-x-10 gap-y-12 lg:grid-cols-3">
             {homepage.clinicLifecycle.steps.map((step) => (
               <StaggerItem
                 key={step.index}
                 as="li"
-                className="flex h-full flex-col bg-[var(--lsh-charcoal)] p-8"
+                className="flex h-full flex-col border-t border-white/25 pt-6"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <IconBadge icon={iconForTitle(step.title)} tone="onDark" />
-                  <span className="lsh-display text-sm text-[var(--lsh-red-on-ink)]">
-                    {step.index}
-                  </span>
-                </div>
-                <h3 className="lsh-display mt-6 text-2xl">{step.title}</h3>
-                <p className="mt-3 leading-7 text-white/75">{step.text}</p>
-                <div className="mt-auto pt-6">
+                <span className="lsh-display text-[11px] text-[var(--lsh-red-on-ink)]">
+                  {step.index}
+                </span>
+                <h3 className="lsh-display mt-4 text-2xl leading-none lg:text-3xl">{step.title}</h3>
+                <p className="mt-4 max-w-md leading-7 text-white/70">{step.text}</p>
+                <div className="mt-auto pt-7">
                   <ActionLink action={step.action} variant="onDark">
                     {step.actionLabel}
                   </ActionLink>
@@ -222,13 +267,10 @@ export function LifeSupplyHome() {
       <section className="px-5 py-20 lg:px-8">
         <Reveal className="mx-auto grid max-w-7xl gap-8 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-2 lg:pl-8">
           <div>
-            <div className="flex items-start gap-5">
-              <IconBadge icon="activity" />
-              <span className="lsh-display inline-flex border border-[var(--lsh-brand-red)] px-3 py-1 text-[10px] text-[var(--lsh-brand-red)]">
-                {homepage.metabolic.eyebrow}
-              </span>
-            </div>
-            <h2 className="lsh-display mt-5 text-3xl leading-[1.08] text-[var(--lsh-charcoal)] sm:text-4xl">
+            <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+              {homepage.metabolic.eyebrow}
+            </p>
+            <h2 className="lsh-display mt-4 text-3xl leading-[1.02] text-[var(--lsh-charcoal)] sm:text-4xl lg:text-[2.75rem]">
               {homepage.metabolic.title}
             </h2>
           </div>
@@ -245,27 +287,27 @@ export function LifeSupplyHome() {
 
       {/* Partner and investor paths. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <Stagger className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-2">
+        {/*
+         * Two routes, set as an editorial pair rather than two identical
+         * bordered tiles with a glyph in the corner (2026-09-10). The red rule
+         * over each one and the larger title do the separating.
+         */}
+        <Stagger className="mx-auto grid max-w-7xl gap-x-14 gap-y-14 lg:grid-cols-2">
           {homepage.paths.map((path) => (
-            <StaggerItem key={path.eyebrow} className="h-full">
-              <SpotlightCard
-                as="article"
-                className="lsh-lift flex h-full flex-col border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <Eyebrow as="h3">{path.eyebrow}</Eyebrow>
-                  <IconBadge icon={iconForTitle(path.eyebrow)} />
-                </div>
-                <p className="lsh-display mt-4 text-2xl leading-[1.1] text-[var(--lsh-charcoal)]">
-                  {path.title}
-                </p>
-                <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{path.text}</p>
-                <div className="mt-auto pt-6">
-                  <ActionLink action={path.action} variant="text">
-                    {path.actionLabel}
-                  </ActionLink>
-                </div>
-              </SpotlightCard>
+            <StaggerItem key={path.eyebrow} as="article" className="flex h-full flex-col">
+              <span aria-hidden="true" className="block h-1 w-full bg-[var(--lsh-brand-red)]" />
+              <div className="mt-6">
+                <Eyebrow as="h3">{path.eyebrow}</Eyebrow>
+              </div>
+              <p className="lsh-display mt-4 text-3xl leading-[1.02] text-[var(--lsh-charcoal)] lg:text-[2.5rem]">
+                {path.title}
+              </p>
+              <p className="mt-5 max-w-xl leading-7 text-[var(--lsh-muted)]">{path.text}</p>
+              <div className="mt-auto pt-7">
+                <ActionLink action={path.action} variant="text">
+                  {path.actionLabel}
+                </ActionLink>
+              </div>
             </StaggerItem>
           ))}
         </Stagger>
@@ -284,16 +326,13 @@ export function LifeSupplyHome() {
               <ActionLink action="contact_directory">Contact directory</ActionLink>
             </div>
           </Reveal>
-          <Stagger className="mt-10 grid gap-px bg-white/15 md:grid-cols-2 xl:grid-cols-3">
+          <Stagger className="mt-12 grid gap-x-10 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
             {contact.channels.map((channel) => (
-              <StaggerItem key={channel.label} className="bg-[var(--lsh-ink)] p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
-                    {channel.label}
-                  </p>
-                  <IconBadge icon={iconForTitle(channel.label)} tone="onDark" size={18} />
-                </div>
-                <p className="lsh-display mt-2 text-xl">{channel.name}</p>
+              <StaggerItem key={channel.label} className="border-t border-white/25 pt-6">
+                <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+                  {channel.label}
+                </p>
+                <p className="lsh-display mt-3 text-2xl leading-none">{channel.name}</p>
                 <div className="mt-4 grid gap-1.5 text-sm text-white/75">
                   <a
                     href={`mailto:${channel.email}`}

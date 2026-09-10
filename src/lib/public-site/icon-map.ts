@@ -106,6 +106,10 @@ export const ICON_BY_TITLE: Record<string, string> = {
   "Pharmacy-related operations": "building",
   "Regulated care infrastructure": "shield",
   "Pharmacy solutions": "pill",
+  // The three homepage "Where to start" cards, each with an icon drawn for it.
+  "Operating businesses": "operatingBusinesses",
+  "Partnership opportunities": "partnershipOpportunities",
+  "Investor information": "investorInformation",
   // Home and about
   Mission: "compass",
   Vision: "globe",
