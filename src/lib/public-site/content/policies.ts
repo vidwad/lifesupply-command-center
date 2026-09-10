@@ -96,7 +96,7 @@ export const policies = {
       {
         title: "What this site is",
         paragraphs: [
-          "This site provides corporate, operating, partner, and investor information about LifeSupply Health Supplies Inc. and the businesses it presents. It does not sell products, take orders, or process payments.",
+          "This site provides corporate, operating, partner, and investor information about LifeSupply Health Inc. and the businesses it presents. It does not sell products, take orders, or process payments.",
         ],
       },
       {
@@ -126,7 +126,7 @@ export const policies = {
       {
         title: "Content and marks",
         paragraphs: [
-          "Text, images, video, and marks on this site belong to LifeSupply Health Supplies Inc. or their respective owners and are provided for viewing. Operating-brand names and the news sources linked remain the property of their owners.",
+          "Text, images, video, and marks on this site belong to LifeSupply Health Inc. or their respective owners and are provided for viewing. Operating-brand names and the news sources linked remain the property of their owners.",
         ],
       },
       {

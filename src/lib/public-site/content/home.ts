@@ -20,7 +20,7 @@ export const homepage = {
    * stores' commerce geography. Drafted with Codex against the evidence
    * register; no new claim is introduced.
    */
-  eyebrow: "LifeSupply Health Supplies Inc.",
+  eyebrow: "LifeSupply Health Inc.",
   title: "Medical supplies today, with new supply services in development.",
   description:
     "An established Canadian group: online medical, health, and home-care supply businesses serving Canada and the United States, and clinic planning, design, and equipment services for projects in British Columbia. Pharmacy and metabolic-health supply programs are in development.",

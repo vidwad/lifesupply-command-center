@@ -20,14 +20,14 @@ export const brand = {
   imageWidth: 661,
   imageHeight: 93,
   address: [
-    "Lifesupply Health Supplies Inc.",
+    "LifeSupply Health Inc.",
     "6911 King George Highway",
     "Surrey, British Columbia V3W 5A1",
     "Canada",
   ],
   // moved from JSX (footer)
   footerTagline:
-    "Corporate information, operating context, and investor resources from LifeSupply Health Supplies Inc.",
+    "Corporate information, operating context, and investor resources from LifeSupply Health Inc.",
   // moved from JSX (footer)
   legalNotice: "Public information is subject to update and applicable disclosure context.",
 } as const;

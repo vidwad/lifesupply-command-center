@@ -19,9 +19,9 @@
 export const team = {
   hero: {
     eyebrow: "Our team",
-    title: "Leadership and board of LifeSupply Health Supplies Inc.",
+    title: "Leadership and board of LifeSupply Health Inc.",
     description:
-      "Leadership and directors as confirmed by the company. Titles and biographies are as published on the prior LifeSupply website; each profile is preserved at its original address.",
+      "The people who run the group and the directors who oversee it, across online medical supply in Canada and the United States, clinic projects in British Columbia, and the supply programs now in development.",
   },
   labels: {
     management: "Leadership",

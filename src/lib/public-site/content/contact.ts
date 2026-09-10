@@ -33,23 +33,41 @@ export const contact = {
     { label: "Corporate office", name: "General inquiries", email: "info@lifesupply.com" },
   ],
   /**
-   * The related legal entity the operating stores publish, with the
-   * relationship exactly as those stores state it (S-10). Brands are not
-   * entities: four brands do not imply four companies, and no ownership
-   * percentage or further subsidiary is published (round two, 2026-09-10).
+   * The corporate structure as set out in the consolidated financial
+   * statements for the year ended December 31, 2025: one parent and three
+   * wholly-owned subsidiaries. Brand architecture is kept separate from legal
+   * structure; the four customer-facing brands do not map one-to-one onto the
+   * companies (round three, 2026-09-10).
    */
   entities: {
     eyebrow: "Corporate structure",
-    title: "Related legal entity",
-    note: "LifeSupply Health Supplies Inc. is the parent. The entity below is the one the operating stores name; the four brands are businesses and channels, not separate companies.",
+    title: "One parent company, three wholly-owned subsidiaries.",
+    note: "LifeSupply Health Inc. is the parent company, and it owns three operating subsidiaries outright. The customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing. The structure below is the one set out in the consolidated financial statements for the year ended December 31, 2025.",
   },
   subsidiaries: [
     {
-      name: "Wellmart Health Supplies Ltd. DBA Lifesupply",
-      relationship: "A division of LifeSupply Health Supplies Inc., as stated on lifesupply.ca",
-      detail: "6911 King George Highway, Surrey, British Columbia V3W 5A1",
+      name: "Wellmart Health Supplies Ltd.",
+      relationship: "Canadian subsidiary, wholly owned",
+      detail:
+        "The group's Canadian operating base, acquired in 2020. It trades as LifeSupply and runs the Canadian storefronts from 6911 King George Highway, Surrey, British Columbia V3W 5A1.",
       phone: "1-855-755-5433",
       url: "https://lifesupply.ca",
+    },
+    {
+      name: "LifeSupply US, Inc.",
+      relationship: "United States subsidiary, wholly owned",
+      detail:
+        "The group's United States operating company, holding its American commerce activity.",
+      phone: null,
+      url: null,
+    },
+    {
+      name: "Balkowitsch Enterprises Inc.",
+      relationship: "Wholly owned",
+      detail:
+        "Acquired in 2023, bringing a United States customer base, a distributor network, and 25 years of trading history. It goes to market as Balkowitsch Worldwide.",
+      phone: null,
+      url: "https://balkowitsch.com",
     },
   ],
 

@@ -174,26 +174,7 @@ export function ContactPage() {
             {contact.subsidiaries.map((entity) => (
               <StaggerItem key={entity.name} className="h-full">
                 <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                  <a
-                    href={entity.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex h-full flex-col p-6"
-                  >
-                    <IconBadge icon="building" size={18} />
-                    <h3 className="lsh-display mt-5 text-xl text-[var(--lsh-charcoal)]">
-                      {entity.name}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
-                      {entity.relationship}
-                    </p>
-                    <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                      {entity.detail}
-                    </p>
-                    <p className="lsh-display mt-auto pt-3 text-[10px] text-[var(--lsh-brand-red)]">
-                      {entity.phone}
-                    </p>
-                  </a>
+                  <EntityCardBody entity={entity} />
                 </SpotlightCard>
               </StaggerItem>
             ))}
@@ -201,5 +182,49 @@ export function ContactPage() {
         </div>
       </section>
     </LifeSupplyLayout>
+  );
+}
+
+/**
+ * One corporate-entity card. Only the entities that operate a public storefront
+ * carry a link, and only one publishes a telephone number, so the card falls
+ * back to a plain block rather than an empty anchor.
+ */
+function EntityCardBody({
+  entity,
+}: {
+  entity: {
+    name: string;
+    relationship: string;
+    detail: string;
+    phone: string | null;
+    url: string | null;
+  };
+}) {
+  const body = (
+    <>
+      <IconBadge icon="building" size={18} />
+      <h3 className="lsh-display mt-5 text-xl text-[var(--lsh-charcoal)]">{entity.name}</h3>
+      <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{entity.relationship}</p>
+      <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{entity.detail}</p>
+      {entity.phone ? (
+        <p className="lsh-display mt-auto pt-3 text-[10px] text-[var(--lsh-brand-red)]">
+          {entity.phone}
+        </p>
+      ) : null}
+    </>
+  );
+
+  return entity.url ? (
+    <a
+      href={entity.url}
+      target="_blank"
+      rel="noreferrer"
+      className="group flex h-full flex-col p-6"
+    >
+      {body}
+    </a>
+  ) : (
+    <div className="flex h-full flex-col p-6">{body}</div>
   );
 }
