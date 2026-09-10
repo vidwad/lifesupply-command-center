@@ -222,7 +222,9 @@ test.describe("LifeSupply public site", () => {
     // The three tiers of the business appear above the developing detail.
     await expect(main.getByRole("heading", { name: "Operating", exact: true })).toBeVisible();
     await expect(main.getByRole("heading", { name: "In development", exact: true })).toBeVisible();
-    await expect(main.getByRole("heading", { name: "Under evaluation", exact: true })).toBeVisible();
+    await expect(
+      main.getByRole("heading", { name: "Under evaluation", exact: true }),
+    ).toBeVisible();
     // The photograph moves with the scroll position.
     const first = bands.first();
     await page.evaluate(() => window.scrollTo(0, 0));
