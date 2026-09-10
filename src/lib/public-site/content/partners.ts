@@ -29,7 +29,7 @@ export const partners = {
         route: "pharmacies",
         title: "Pharmacies",
         text: "Non-drug supply programs with pharmacist-selected configurations and stated responsibilities.",
-        action: "discuss_program",
+        action: "pharmacy_program_inquiry",
       },
       {
         key: "suppliers",

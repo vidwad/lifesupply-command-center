@@ -35,6 +35,7 @@ export type ActionKey =
   | "pharmacy_hub"
   | "view_clinic_projects"
   | "discuss_program"
+  | "pharmacy_program_inquiry"
   | "metabolic_hub"
   | "explore_kits"
   | "refills_information"
@@ -222,7 +223,15 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "discuss_program",
     label: "Discuss a supply program",
     intent: "metabolic_program",
-    destination: mail("info@lifesupply.com", "Supply program inquiry"),
+    destination: mail("info@lifesupply.com", "Metabolic-health supply program"),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  pharmacy_program_inquiry: {
+    key: "pharmacy_program_inquiry",
+    label: "Discuss a pharmacy supply program",
+    intent: "pharmacy",
+    destination: mail("info@lifesupply.com", "Pharmacy supply program"),
     ownerChannel: null,
     verifiedAt: null,
   },

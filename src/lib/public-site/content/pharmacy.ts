@@ -93,6 +93,6 @@ export const pharmacy = {
         },
       ],
     },
-    actions: ["discuss_program", "partner_pharmacies"],
+    actions: ["pharmacy_program_inquiry", "partner_pharmacies"],
   },
 } as const;

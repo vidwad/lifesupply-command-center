@@ -161,7 +161,7 @@ export const policies = {
       {
         title: "Known limitations",
         paragraphs: [
-          "The site has not yet been audited by an external accessibility reviewer; a full review is scheduled before the public cutover. Pages linked on the operating stores and news sources are outside this statement.",
+          "The site has not been audited by an external accessibility reviewer, and no such review is booked. Automated checks run against every public route on each release: one main heading per page, a heading order that never skips a level, alternative text on every image, an accessible name on every link, no horizontal scrolling at 390 pixels, and visible keyboard focus. Pages on the operating stores and the news sources linked from here are outside this statement.",
         ],
       },
       {
