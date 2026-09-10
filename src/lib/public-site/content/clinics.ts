@@ -141,6 +141,30 @@ export const clinics = {
     title: "Plan it, equip it, or keep it supplied.",
     intro:
       "LifeSupply Clinics plans, designs, builds, and fits out medical, dental, and wellness clinics in British Columbia, and handles equipment inquiries for them, within verified delivery arrangements. An existing clinic can start at supply without a construction project.",
+    /**
+     * The two ways into Clinic Solutions, stated before the three needs
+     * (website improvement program, 2026-09-09, on a Codex recommendation):
+     * a visitor with an open clinic should not have to read a construction
+     * page to find out that supply needs no project. The two are
+     * independent choices, not steps, and neither implies the other.
+     */
+    entry: {
+      eyebrow: "Which do you need?",
+      title: "A clinic project, or supplies for a clinic already open.",
+      note: "The two are separate. Ordering supplies needs no project, and a project does not create a store account.",
+      options: [
+        {
+          title: "Opening or renovating a clinic",
+          text: "Planning, design, construction, fit-out, and equipment for clinic projects in British Columbia, within verified delivery arrangements.",
+          action: "plan_clinic",
+        },
+        {
+          title: "Supplying a clinic that is already open",
+          text: "Routine procurement and repeat ordering through the operating stores, on their own accounts and terms. No construction project is involved.",
+          action: "clinic_ongoing_supplies",
+        },
+      ],
+    },
     needs: [
       {
         index: "01",

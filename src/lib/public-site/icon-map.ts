@@ -21,6 +21,8 @@ export const ICON_BY_TITLE: Record<string, string> = {
   Consumables: "repeat",
   "Occasional items": "boxes",
   // Clinic Solutions
+  "Opening or renovating a clinic": "ruler",
+  "Supplying a clinic that is already open": "truck",
   "Plan or renovate a clinic": "compass",
   "Equip a clinic": "clipboardCheck",
   "Equip it": "clipboardCheck",

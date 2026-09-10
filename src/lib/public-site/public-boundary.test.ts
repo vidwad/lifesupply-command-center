@@ -1180,6 +1180,19 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(layout()).not.toMatch(/document\.cookie/);
   });
 
+  it("offers the two clinic entries as independent choices, with supply needing no project", () => {
+    const c = stripComments(read("src/lib/public-site/content/clinics.ts"));
+    expect(c).toContain("Opening or renovating a clinic");
+    expect(c).toContain("Supplying a clinic that is already open");
+    // Supply must never be described as depending on a project.
+    expect(c).toContain("No construction project is involved.");
+    expect(c).not.toMatch(/supply (requires|needs) a (project|build)/i);
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
+    expect(page).toContain("hub.entry.options.map");
+    // The choice is stated before the three needs.
+    expect(page.indexOf("hub.entry")).toBeLessThan(page.indexOf("hub.needs"));
+  });
+
   it("keeps clinic collaboration distinct from procurement and pharmacy programs non-drug", () => {
     const c = stripComments(read("src/lib/public-site/content/partners.ts"));
     expect(c).toContain("Collaboration is not procurement");

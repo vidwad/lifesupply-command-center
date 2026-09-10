@@ -108,6 +108,37 @@ export function ClinicSolutionsPage() {
       />
       <ClinicDistinction />
 
+      {/* The two ways in, before the three needs: a project, or supplies for an open clinic. */}
+      <section className="border-b border-[var(--lsh-rule)] px-5 py-16 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={hub.entry.eyebrow}
+              title={hub.entry.title}
+              description={hub.entry.note}
+            />
+          </Reveal>
+          <Stagger as="ul" className="mt-10 grid gap-5 md:grid-cols-2">
+            {hub.entry.options.map((option) => (
+              <StaggerItem as="li" key={option.title} className="h-full">
+                <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7 lg:p-8">
+                  <div className="flex items-start justify-between gap-4">
+                    <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                      {option.title}
+                    </h3>
+                    <IconBadge icon={iconForTitle(option.title)} />
+                  </div>
+                  <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{option.text}</p>
+                  <div className="mt-auto pt-6">
+                    <ActionLink action={option.action as ActionKey} />
+                  </div>
+                </article>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </section>
+
       {/* The three needs, each with its verified destination. */}
       <section className="px-5 pb-20 lg:px-8">
         <Stagger className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
