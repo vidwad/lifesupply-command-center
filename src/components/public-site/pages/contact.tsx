@@ -42,10 +42,31 @@ export function ContactPage() {
               description={contact.routing.text}
             />
           </Reveal>
-          <Reveal delay={0.05}>
-            <p className="mt-5 flex gap-4 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-5 text-sm leading-6 text-[var(--lsh-charcoal)]">
-              {contact.routing.sensitive}
-            </p>
+          <Reveal delay={0.05} className="mt-8 grid gap-5 lg:grid-cols-2">
+            <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+              <Eyebrow as="h3">{contact.routing.guide.title}</Eyebrow>
+              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+                {contact.routing.guide.intro}
+              </p>
+              <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                {contact.routing.guide.items.map((item) => (
+                  <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="grid content-start gap-5">
+              <div className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-6">
+                <Eyebrow as="h3">What happens next</Eyebrow>
+                <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+                  {contact.routing.guide.next}
+                </p>
+              </div>
+              <p className="flex gap-4 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-5 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                {contact.routing.sensitive}
+              </p>
+            </div>
           </Reveal>
           <Stagger
             as="ul"

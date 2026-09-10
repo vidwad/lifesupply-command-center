@@ -609,6 +609,40 @@ describe("design-pass graphics and section primitives", () => {
   });
 });
 
+describe("round two: qualified inquiries and policy accuracy", () => {
+  it("gives pharmacy and metabolic inquiries their own subjects", () => {
+    const actions = stripComments(read("src/lib/public-site/actions.ts"));
+    expect(actions).toContain('"Pharmacy supply program"');
+    expect(actions).toContain('"Metabolic-health supply program"');
+    // The generic shared subject is gone.
+    expect(actions).not.toContain('"Supply program inquiry"');
+  });
+
+  it("tells a visitor what to include, without asking for anything sensitive", () => {
+    const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
+    expect(contact).toContain("What to include");
+    expect(contact).toContain("A first exchange is about fit");
+    expect(contact).toContain("do not send health information");
+    // Nothing personal, clinical or financial is requested.
+    for (const banned of [
+      /date of birth|health card|patient (name|record)|prescription number/i,
+      /credit card|account number|social insurance/i,
+    ]) {
+      expect(contact, String(banned)).not.toMatch(banned);
+    }
+    // No response-time or service commitment is made.
+    expect(contact).not.toMatch(/within \d+ (business )?(hours|days)|we will respond/i);
+  });
+
+  it("claims no accessibility audit it has not had, and no booking it has not made", () => {
+    const policies = stripComments(read("src/lib/public-site/content/policies.ts"));
+    expect(policies).toContain("no such review is booked");
+    expect(policies).not.toMatch(/review is scheduled|audit is (booked|scheduled)/i);
+    // It states what actually runs instead.
+    expect(policies).toContain("Automated checks run against every public route");
+  });
+});
+
 describe("round two: comparison, replenishment and motion", () => {
   it("compares all eight pathways in one place, from their own entries", () => {
     const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
