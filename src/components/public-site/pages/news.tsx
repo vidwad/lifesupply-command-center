@@ -101,15 +101,34 @@ function PublishedDocuments({ published }: { published: Published<PublishedDocum
   );
 }
 
+/** The record's fields after its title, in one place for the phone list and the table. */
+const DOCUMENT_FIELDS = ["Date", "Access", "Version", "Status"] as const;
+
+function documentFields(record: (typeof news.documents.records)[number]) {
+  return [
+    record.date,
+    record.category,
+    record.version ?? "Not stated",
+    record.href ? "Available" : "On request",
+  ];
+}
+
 /**
  * The investor documents index, merged into this page on 2026-09-09: access
  * classes, the dated records at a request step, the governed published list,
  * and the request note. No file is ever linked by literal.
+ *
+ * The records are a five-column table from md up. On a phone that table
+ * needed 40rem and pushed the whole page sideways (product owner,
+ * 2026-09-09), so below md each record is a stacked card with its fields as
+ * a definition list instead. `min-w-0` keeps this block shrinkable inside
+ * the page's grid, so the table's scroller can contain it rather than the
+ * page widening around it.
  */
 function InvestorDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
   const d = news.documents;
   return (
-    <div>
+    <div className="min-w-0">
       <Reveal>
         <div className="flex items-center gap-4">
           <IconBadge icon="landmark" size={18} />
@@ -131,25 +150,46 @@ function InvestorDocuments({ published }: { published: Published<PublishedDocume
           </StaggerItem>
         ))}
       </Stagger>
-      <Reveal className="mt-10 overflow-x-auto">
-        <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+      {/* Phones: one stacked card per record. */}
+      <Stagger as="ul" className="mt-8 grid gap-4 md:hidden">
+        {d.records.map((record) => (
+          <StaggerItem
+            key={record.title}
+            as="li"
+            className="border-t-2 border-[var(--lsh-rule-strong)] bg-[var(--lsh-surface)] p-5"
+          >
+            <p className="font-medium leading-6 text-[var(--lsh-charcoal)]">{record.title}</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--lsh-muted)]">{record.note}</p>
+            <dl className="mt-4 grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-xs leading-5">
+              {documentFields(record).map((value, index) => (
+                <div key={DOCUMENT_FIELDS[index]} className="contents">
+                  <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                    {DOCUMENT_FIELDS[index]}
+                  </dt>
+                  <dd className="text-[var(--lsh-muted)]">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </StaggerItem>
+        ))}
+      </Stagger>
+      {/* Tablet and desktop: the same records as a table. */}
+      <Reveal className="mt-10 hidden min-w-0 overflow-x-auto md:block">
+        <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
               <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
                 Title
               </th>
-              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
-                Date
-              </th>
-              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
-                Access
-              </th>
-              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
-                Version
-              </th>
-              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3">
-                Status
-              </th>
+              {DOCUMENT_FIELDS.map((field) => (
+                <th
+                  key={field}
+                  scope="col"
+                  className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4"
+                >
+                  {field}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -164,18 +204,14 @@ function InvestorDocuments({ published }: { published: Published<PublishedDocume
                     {record.note}
                   </span>
                 </th>
-                <td className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]">
-                  {record.date}
-                </td>
-                <td className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]">
-                  {record.category}
-                </td>
-                <td className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]">
-                  {record.version ?? "Not stated"}
-                </td>
-                <td className="border-b border-[var(--lsh-rule)] py-4 text-[var(--lsh-muted)]">
-                  {record.href ? "Available" : "On request"}
-                </td>
+                {documentFields(record).map((value, index) => (
+                  <td
+                    key={DOCUMENT_FIELDS[index]}
+                    className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]"
+                  >
+                    {value}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
