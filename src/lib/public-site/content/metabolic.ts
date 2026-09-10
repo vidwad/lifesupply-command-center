@@ -256,7 +256,7 @@ export const metabolic = {
       title: "Today",
       items: [
         "Reordering happens through the operating stores, with their accounts and repeat ordering as each store provides.",
-        "There is no automatic shipment, no reminder service, and no subscription on this site today. Any recurring arrangement would be proposed separately and would depend on terms agreed in writing.",
+        "There is no automatic shipment, no reminder service, and no subscription on this site today.",
         "Intervals, pauses, changes, and cancellation therefore follow the store's own ordering, not a program schedule.",
       ],
     },
@@ -617,7 +617,7 @@ export const commercialModel = {
   eyebrow: "How the model works",
   title: "Who buys what, and on what basis.",
   intro:
-    "Product purchases and contracted services are separate things. This is how the four of them are proposed to fit together. Clinical and pharmacy providers keep every clinical decision throughout.",
+    "Product purchases and contracted services are separate things. This is how the four categories below are proposed to fit together. Clinical and pharmacy providers keep every clinical decision throughout.",
   labels: {
     customer: "Contracting party",
     provided: "What is provided",
@@ -644,7 +644,7 @@ export const commercialModel = {
       provided: "Equipment and consumables for the clinic's own use, chosen by the practice.",
       revenue: "Product revenue, on the store's ordinary terms.",
       frequency: "Equipment occasionally; consumables on the practice's own reordering cycle.",
-      status: "Operates today. No project or agreement is required.",
+      status: "Ordinary store purchasing, which operates today on the store's own terms.",
       retained: "Clinical suitability, selection, and use of what is bought.",
     },
     {
@@ -652,16 +652,16 @@ export const commercialModel = {
       customer: "The clinic or pharmacy, under a written scope agreed in advance.",
       provided:
         "Assembly of non-drug supply kits, direct shipment, replenishment administration, and exception handling.",
-      revenue: "A service fee, separate from the products themselves.",
+      revenue: "Service revenue rather than product revenue. Nothing is priced.",
       frequency: "As the agreed scope sets out.",
       status: "In development. Not available, and nothing is priced.",
       retained: "What the kit must contain, and whether it suits the patient.",
     },
     {
       category: "Contracted workflow support",
-      customer: "The clinic or pharmacy, under the same kind of written scope.",
+      customer: "The clinic or pharmacy, under a written scope agreed in advance.",
       provided: "Non-clinical administrative support for the supply side of a program.",
-      revenue: "A service fee.",
+      revenue: "Service revenue rather than product revenue. Nothing is priced.",
       frequency: "As the agreed scope sets out.",
       status: "In development. Reporting scope is not defined and is not offered.",
       retained: "All clinical decisions, interpretation, and patient care.",
