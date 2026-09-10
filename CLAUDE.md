@@ -34,6 +34,13 @@ A third round opened on September 10, 2026. **It changes how public copy is writ
 - `docs/website-round-three-acceptance.md` — the route-level acceptance matrix.
 - `docs/website-round-three-qa.md` and `docs/website-round-three-handoff.md` — checks, deployment verification and the final handoff.
 
+A fourth round, a targeted refinement, opened on September 10, 2026:
+
+- `docs/website-round-four-plan.md` — the baseline record, the findings retired against the deployed site, the nine changes and their acceptance conditions.
+- `docs/website-round-four-evidence.md`, `-acceptance.md`, `-qa.md`, `-handoff.md` — the same companion set, maintained rather than duplicated.
+
+**Two method rules from that round.** Expand accordions, tabs and menus before judging their content: the GLP-1 compatibility answer was wrongly reported missing because it was read collapsed, and it is correct as written. And test the hero with JavaScript disabled before calling an entrance animation a rendering failure.
+
 Two standing rules from that round: write public copy as forward-facing business language rather than as a compliance file, keeping source notes and publication reasoning in these documents; and never publish anything from the confidential annual report or the August 25, 2026 expansion materials beyond what the claim register records, which a canary enforces. This repository is public, so those documents are never quoted here either.
 
 This scoped website workstream supplements the Command Center instructions below. The earlier "sole active workstream" wording refers to the historical Command Center release plan; website work now follows the separate sequence below when explicitly requested. All existing Phase 11 security, data, approval, migration, and release gates remain in force. Website development does not accept a Command Center launch gate.
