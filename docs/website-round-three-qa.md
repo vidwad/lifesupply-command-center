@@ -82,7 +82,17 @@ Reported honestly: an intermediate serial run failed one test, the header scroll
 
 ## 5. Deployment verification
 
-Recorded in `docs/website-round-three-handoff.md` after the Stage E pull request merges. A merged pull request and a green build are not deployment verification; the handoff records the commit the production alias actually served, confirmed by fetching a marker unique to this round.
+Verified on September 10, 2026, after PR #135 was squash-merged.
+
+| | |
+| --- | --- |
+| Production alias | `https://lifesupply-command-center-vidwads-projects.vercel.app` |
+| Deployment | `dpl_GUpNbtHZuYFUxPp9xBzjcioBoiCL`, state READY, target production |
+| Commit served | `192c9f7e88d0f746e44df09dc2c751835339b163` (`192c9f7`), branch `main` |
+
+**The before-and-after test was unusually clean, because the Stage E correction fixed an error that was live.** Immediately before the merge, production served "four brands that each keep their own site, accounts, currency, prices and support" — the sentence that wrongly called LifeSupply Clinics an online store. The marker chosen was its replacement, "is a project business, not a store", which exists in no earlier build. The alias was polled every 20 seconds; it kept serving the erroneous copy for four polls after the merge and produced the corrected line on the fifth. Only then was the deployment treated as live.
+
+The full acceptance sweep was then run **against the live site rather than the local build**, including all six priority journeys and the stale-copy scan: **clean**. Output in `evidence/round-three-2026-09-10/stage-e/qa-sweep-production.txt`.
 
 ## 6. What this QA did not cover
 

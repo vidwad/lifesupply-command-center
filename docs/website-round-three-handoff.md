@@ -101,7 +101,9 @@ Codex generated no image or asset this round.
 
 Two honest notes. An intermediate serial Playwright run failed the header scroll-hide test; it passed four times in isolation and the next full run passed all 79. It has been intermittently flaky on this machine across three rounds. And CI caught a formatting failure on Stage B because the format gate ran before the last edit rather than after; the ordering was corrected for the remaining stages.
 
-**Deployment verification is recorded below after the Stage E merge.**
+**Deployment verified, September 10, 2026.** Production alias `https://lifesupply-command-center-vidwads-projects.vercel.app`, deployment `dpl_GUpNbtHZuYFUxPp9xBzjcioBoiCL`, state READY, serving commit `192c9f7e88d0f746e44df09dc2c751835339b163` from `main`.
+
+A merged pull request and a green build are not deployment verification, so this was checked. The alias kept serving the erroneous "four brands that each keep their own site" for four polls after the merge, and produced the corrected line on the fifth. The full acceptance sweep was then run against the live site, including all six priority journeys: clean. Details in `docs/website-round-three-qa.md` section 5.
 
 ## 9. Pull requests
 
@@ -111,7 +113,8 @@ Two honest notes. An intermediate serial Playwright run failed the header scroll
 | B — architecture, model placement, execution sequence | #132 | `4de6d6f` |
 | C — one pathway catalogue, store-first routing | #133 | `0917d6f` |
 | D — corporate overview, milestones, publishing voice | #134 | `ac2c892` |
-| E — QA, independent review, final corrections | recorded on merge | recorded on merge |
+| E — QA, independent review, final corrections | #135 | `192c9f7` |
+| Deployment record | this pull request | — |
 
 ## 10. Standing limitations
 
