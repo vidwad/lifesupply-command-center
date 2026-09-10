@@ -272,7 +272,7 @@ export const investorRelations = {
       "Period: year ended December 31, 2025.",
       "Basis: unaudited consolidated financial information, as cited in the annual-report narrative.",
       "Entity scope: LifeSupply Health Supplies Inc., consolidated.",
-      "Currency: as reported in the source material.",
+      "Currency: the annual-report narrative does not state one, so none is given here.",
     ],
     forwardLooking: {
       title: "Forward-looking statements",

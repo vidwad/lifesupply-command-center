@@ -20,6 +20,13 @@ A separate, staged program improves the existing public site rather than rebuild
 
 These supplement the website workstream brief above; they do not replace it, and the source register and status table remain authoritative for their own scope.
 
+A second round opened on September 10, 2026, auditing the first round's result and continuing it. Read these before touching public pages, and do not redo merged work:
+
+- `docs/website-round-two-plan.md` — the audit of ten items with each one's verified status, and the stage plan.
+- `docs/website-round-two-evidence.md` — this round's evidence register, including a correction: the reported figures' currency is not evidenced by any source and is not published.
+- `docs/website-round-two-qa.md` — checks and deployment verification.
+- `docs/website-round-two-handoff.md` — the final handoff.
+
 This scoped website workstream supplements the Command Center instructions below. The earlier "sole active workstream" wording refers to the historical Command Center release plan; website work now follows the separate sequence below when explicitly requested. All existing Phase 11 security, data, approval, migration, and release gates remain in force. Website development does not accept a Command Center launch gate.
 
 The website brief updates the earlier public sitemap and page-family order for the approved planning direction. Preserve the red/black/white brand system and original assets. Preserve the existing public website codebase, staff dashboard, authenticated modules, separate public/internal deployment surfaces, and source-system controls.

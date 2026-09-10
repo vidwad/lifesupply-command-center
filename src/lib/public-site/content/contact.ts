@@ -32,9 +32,21 @@ export const contact = {
     },
     { label: "Corporate office", name: "General inquiries", email: "info@lifesupply.com" },
   ],
+  /**
+   * The related legal entity the operating stores publish, with the
+   * relationship exactly as those stores state it (S-10). Brands are not
+   * entities: four brands do not imply four companies, and no ownership
+   * percentage or further subsidiary is published (round two, 2026-09-10).
+   */
+  entities: {
+    eyebrow: "Corporate structure",
+    title: "Related legal entity",
+    note: "LifeSupply Health Supplies Inc. is the parent. The entity below is the one the operating stores name; the four brands are businesses and channels, not separate companies.",
+  },
   subsidiaries: [
     {
       name: "Wellmart Health Supplies Ltd. DBA Lifesupply",
+      relationship: "A division of LifeSupply Health Supplies Inc., as stated on lifesupply.ca",
       detail: "6911 King George Highway, Surrey, British Columbia V3W 5A1",
       phone: "1-855-755-5433",
       url: "https://lifesupply.ca",

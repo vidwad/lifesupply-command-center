@@ -609,6 +609,42 @@ describe("design-pass graphics and section primitives", () => {
   });
 });
 
+describe("round two: cross-page factual consistency", () => {
+  it("confines clinic services to British Columbia everywhere, and never to the group's commerce geography", () => {
+    const content = ["home", "about", "clinics", "businesses"].map((name) =>
+      stripComments(read(`src/lib/public-site/content/${name}.ts`)),
+    );
+    for (const code of content) {
+      // A clinic service must never be placed across Canada and the United States.
+      expect(code).not.toMatch(
+        /clinic[^.]{0,80}(planning|design|build|construction|fit-out)[^.]{0,80}(Canada and the United States|United States)/i,
+      );
+    }
+  });
+
+  it("states no currency for the reported figures, because no source gives one", () => {
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    expect(investors).toContain("does not state one");
+    // Never assert a currency the sources do not support.
+    expect(investors).not.toMatch(/Currency: (CAD|USD|Canadian|US)/i);
+    // The scope labels that are evidenced must stay.
+    expect(investors).toContain("Period: year ended December 31, 2025.");
+    expect(investors).toContain("Entity scope: LifeSupply Health Supplies Inc., consolidated.");
+    expect(investors).toContain("unaudited consolidated financial information");
+  });
+
+  it("does not call the operating brands subsidiaries", () => {
+    const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
+    expect(page).not.toContain("LifeSupply public subsidiaries");
+    expect(contact).toContain(
+      "the four brands are businesses and channels, not separate companies",
+    );
+    // No ownership structure is published.
+    expect(contact).not.toMatch(/\b\d{1,3}\s?% (owned|stake|interest)\b/i);
+  });
+});
+
 describe("public inquiry routing", () => {
   it("renders no form on the public site and never claims a submission succeeded", () => {
     // The public surface is database-free and the proxy blocks /api/ on the public
