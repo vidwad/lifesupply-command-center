@@ -58,3 +58,6 @@ The 2025 and 2024 comparative operating results are treated separately: they are
 | 2 | Is the 2024 comparative disclosure approved for the public site? | It strengthens the investor page materially and is historical fact, but it comes from a confidential document |
 | 3 | Is the Surrey address the parent's registered office, Wellmart's, or both? | It appears in the footer, the structured data and the entity card |
 | 4 | The homepage founding-investor sentence has no source in any register | Carried from round two, still unresolved |
+| 5 | Current titles for the three non-executive directors | The site states one verified title, Chairman & CEO. The rest need confirmation before they can be published |
+| 6 | Which investor materials are genuinely available on request | The documents index names three, none downloadable |
+| 7 | How a British Columbia clinic project is initiated, and which project types are accepted | Raised by the independent review as a gap a business reader cannot close |

@@ -127,7 +127,7 @@ export const metabolic = {
           text: "Ordering visibility, status reporting, and non-clinical workflow support under an agreed service scope.",
         },
       ],
-      note: "One portfolio, several ways in. Starter equipment is chosen once, not subscribed to. What recurs is the consumables a pathway uses up, the clinic's own ordinary purchasing, and any contracted service.",
+      note: "One portfolio, several ways in. Starter equipment is chosen once, not subscribed to. What recurs are the consumables a pathway uses up, the clinic's own ordinary purchasing, and any contracted service.",
     },
     audiences: {
       eyebrow: "For care partners",

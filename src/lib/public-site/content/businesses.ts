@@ -44,11 +44,11 @@ export const businesses = {
     procurement: {
       eyebrow: "Buying for a practice",
       title: "A supply review for clinics, pharmacies, and other professional buyers.",
-      text: "Professional buyers do not have to work out which of three stores carries what. A supply review goes through the categories a practice orders routinely, points each one at the store that carries it, and covers setting up an account there. Where a clinic project in British Columbia is involved, equipment planning is part of the same conversation.",
+      text: "Professional buyers do not have to work out which of three stores carries what. Start a conversation and it covers the ground below. Where a clinic project in British Columbia is involved, equipment is part of the same conversation.",
       covers: [
         "The categories a practice orders routinely, and which store carries each.",
-        "Setting up an account on that store, in its own currency and on its own terms.",
-        "Equipment planning for a British Columbia clinic project, where there is one.",
+        "How accounts work on that store, in its own currency and on its own terms.",
+        "Equipment for a British Columbia clinic project, where there is one.",
       ],
       limit:
         "Orders, prices, shipping and returns stay with the store that fulfils them. A review does not create credit terms, consolidated billing, or a connection between a practice's systems and the stores.",

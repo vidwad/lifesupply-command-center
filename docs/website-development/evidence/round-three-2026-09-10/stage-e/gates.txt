@@ -1,0 +1,14 @@
+﻿
+> lifesupply-command-center@0.0.1 format:check C:\Users\Vid Wadhwani\Documents\GitHub\lifesupply-command-center
+> prettier --check "**/*.{ts,tsx,js,jsx,json,md,css}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> lifesupply-command-center@0.0.1 typecheck C:\Users\Vid Wadhwani\Documents\GitHub\lifesupply-command-center
+> tsc --noEmit
+
+
+> lifesupply-command-center@0.0.1 lint C:\Users\Vid Wadhwani\Documents\GitHub\lifesupply-command-center
+> eslint .
+

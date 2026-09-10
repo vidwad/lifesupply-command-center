@@ -50,10 +50,10 @@ export const about = {
   mission:
     "Through a commitment to technology, innovation, and excellence, LifeSupply aims to serve a broad customer base with premium products, competitive pricing, and direct access.",
   vision:
-    "The public vision is to become a global leader in the online sale and distribution of health and medical products and related services.",
+    "LifeSupply's vision is to become a global leader in the online sale and distribution of health and medical products and related services.",
   /** The hero line: what the group is, not what a document says about it. */
   heroSummary:
-    "A Canadian group that has been selling health, safety, medical and industrial products online for more than 25 years, builds and equips clinics in British Columbia, and is developing two supply programs on top of that base.",
+    "A Canadian group with more than 25 years of operations. It sells health, safety, medical and industrial products online, builds and equips clinics in British Columbia, and is developing two supply programs on that base.",
   growth:
     "The strategy is to hold margin discipline in the existing supply business, put technology into ordering and fulfilment, add complementary businesses that fit the model, and go deeper in both Canada and the United States.",
 
@@ -157,7 +157,7 @@ export const about = {
         status: "In development",
         text: "Starter equipment, usage-driven consumables, clinic procurement, kitting and fulfilment, and contracted workflow support for clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
         detail:
-          "It applies the existing supply model to a recurring patient-support need. Availability is published as each pathway is confirmed.",
+          "It applies the existing supply model to a recurring patient-support need, one configurable pathway at a time.",
       },
       {
         title: "Pharmacy supply programs",
@@ -167,7 +167,7 @@ export const about = {
           "Holding licensed pharmacy operations of its own is a separate question, and it sits under evaluation rather than in development. Supplying pharmacies and running one are different businesses.",
       },
     ],
-    note: "Neither program can be bought today, and no launch date is set. Each is published with its own status, and that status changes here when it changes.",
+    note: "Neither program is available today, and no launch date is set.",
   },
 
   // Stage 2 draft heading; the cards come from the brand registry.

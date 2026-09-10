@@ -31,7 +31,7 @@ export const architecture = {
   tiers: [
     {
       status: "Operating",
-      meaning: "Running today, with customers and revenue.",
+      meaning: "Running today.",
       items: [
         {
           title: "Online supply commerce",
@@ -81,7 +81,7 @@ export const architecture = {
         },
         {
           title: "Manufacturing",
-          text: "Producing regulated products rather than distributing them. LifeSupply manufactures nothing today.",
+          text: "Producing regulated products rather than distributing them. LifeSupply does not manufacture regulated products today.",
         },
       ],
     },
@@ -92,6 +92,6 @@ export const architecture = {
   },
   principle: {
     title: "How participation works",
-    text: "LifeSupply takes part through lawful supply products, licensed dispensing by the licensed party, lawful compounding, and properly governed partnerships. It does not diagnose, prescribe, dispense or treat, and it does not deal outside those channels.",
+    text: "LifeSupply supplies products and delivers clinic projects. It does not diagnose, prescribe, dispense or treat, and it does not manufacture regulated products. Where a developing programme touches regulated care, LifeSupply's part is the supply side: the clinical or pharmacy provider holds the licence and makes every clinical decision.",
   },
 } as const;

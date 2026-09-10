@@ -188,7 +188,7 @@ export const investorRelations = {
             "Pathway contents, device compatibility, fulfilment capacity, and service scope have to be confirmed per program. Availability is published only as each pathway is confirmed.",
         },
       ],
-      note: "Statements about these opportunities are forward-looking. They set no launch date, imply no funding commitment, and do not describe a service that can be bought today.",
+      note: "Statements about these opportunities are forward-looking. They set no launch date and describe no service that is available today.",
     },
 
     /**

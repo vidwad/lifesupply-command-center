@@ -48,7 +48,7 @@ export const news = {
     eyebrow: "The company at a glance",
     title: "What LifeSupply is, in one place.",
     intro:
-      "For anyone arriving here first: the group, its businesses, and the figures it has reported. Each line is set out in full on the page it belongs to.",
+      "For anyone arriving here first: the group, its businesses, and the figures it has reported.",
     facts: [
       {
         label: "The group",
@@ -56,7 +56,7 @@ export const news = {
       },
       {
         label: "What it sells",
-        text: "Health, safety, medical and industrial products online, through four brands that each keep their own site, accounts, currency, prices and support.",
+        text: "Health, safety, medical and industrial products online, through LifeSupply.ca and Wellmart Medical in Canada and Balkowitsch Worldwide in the United States. LifeSupply Clinics is a project business, not a store.",
       },
       {
         label: "Where it operates",
@@ -72,7 +72,7 @@ export const news = {
       },
       {
         label: "In development",
-        text: "Metabolic-health supply and services, and non-drug supply programs for pharmacies. Neither can be bought today.",
+        text: "Metabolic-health supply and services, and non-drug supply programs for pharmacies. Neither is available today.",
       },
     ],
     action: "investor_materials",
