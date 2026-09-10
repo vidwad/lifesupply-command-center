@@ -143,7 +143,11 @@ export function ContactPage() {
       <section className="px-5 py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
-            <SectionHeading eyebrow="Operating entities" title="LifeSupply public subsidiaries" />
+            <SectionHeading
+              eyebrow={contact.entities.eyebrow}
+              title={contact.entities.title}
+              description={contact.entities.note}
+            />
           </Reveal>
           <Stagger className="mt-8 grid gap-4 lg:grid-cols-3">
             {contact.subsidiaries.map((entity) => (
@@ -159,6 +163,9 @@ export function ContactPage() {
                     <h3 className="lsh-display mt-5 text-xl text-[var(--lsh-charcoal)]">
                       {entity.name}
                     </h3>
+                    <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
+                      {entity.relationship}
+                    </p>
                     <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
                       {entity.detail}
                     </p>
