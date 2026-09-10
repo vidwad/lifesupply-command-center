@@ -8,6 +8,7 @@ Every image, diagram and media file the public site serves, with where it is use
 
 | Diagram | Component | Placement | Text equivalent | Notes |
 | --- | --- | --- | --- | --- |
+| Clinic entry choice | `pages/clinic-solutions.tsx` | Clinic Solutions, before the three needs | Two semantic cards; each states its scope and carries its own action | HTML in tokens, no image file. Added 2026-09-09 on a Codex recommendation so a visitor with an open clinic is not routed through construction copy |
 | Care pathway hub and spoke | `care-pathway-diagram.tsx` | Pharmacy Solutions, "Connecting supply needs across the care pathway" | Every word is real text from `content/pharmacy.ts`; a labelled group containing a list | Typeset in tokens, no image file. Connectors decorative and hidden from assistive technology. Replaced a generated raster on 2026-09-09 (S-160) |
 
 ## Photography and graphics
@@ -25,6 +26,24 @@ Every image, diagram and media file the public site serves, with where it is use
 | `lifesupply-mark.png` | Layout | Header and footer | Company name | Official mark, product owner, 2026-09-08 (S-130). Dark field only |
 | `og-default.jpg` | `seo.ts` | Social preview | — | Site-wide default card |
 | `investor-presentation-preview.png` | Held, not served | — | — | Retained; not published |
+
+## Loading
+
+Every served image goes through `next/image` at its registered size. Each usage carries a `sizes` hint matching the slot it renders into, so the pipeline does not ship a full-resolution file for a small one; the brand marks, the footer mark and the leadership portraits were given hints on 2026-09-09. Only the two images that can appear above the fold, the hero poster and the About hero backdrop, are marked `priority`; everything else loads lazily.
+
+## Visual proposals considered and declined
+
+Codex reviewed the whole site on 2026-09-09 and recommended the smallest useful set. Its full proposal is kept at `docs/website-development/evidence/improvement-2026-09-09/stage3/codex-visual-proposal.md`. Declined, with reason:
+
+| Candidate | Reason it was not built |
+| --- | --- |
+| Homepage group ecosystem diagram | Would repeat the brand cards and could suggest integration between businesses that keep separate accounts |
+| Growth strategy roadmap | A roadmap implies an approved sequence or timetable that no source establishes |
+| Growth strategy capability diagram | The business case already carries the comparison as headed text; arrows would imply certainty |
+| New financial or operating chart | No approved trend or comparison exists to chart; permission to publish a number is not a reason to draw one |
+| Additional generated photography | The site has enough imagery, and more could not substantiate operational capability |
+
+Codex also proposed replacing the storefront laptop screens with a plain four-website directory. That was not done: the screens were requested by the product owner on 2026-09-09, and the facts the directory would add (market, currency, separate accounts and support) are already carried by the brand cards and the store-choice section.
 
 ## Rules for new assets
 

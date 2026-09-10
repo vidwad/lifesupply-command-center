@@ -467,6 +467,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               alt="LifeSupply Health"
               width={brand.imageWidth}
               height={brand.imageHeight}
+              sizes="220px"
               className="h-7 w-auto"
             />
             <p className="mt-5 max-w-sm text-sm leading-6 text-white/70">{brand.footerTagline}</p>

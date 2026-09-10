@@ -43,6 +43,7 @@ export function TeamPage() {
                     alt={member.name}
                     width={200}
                     height={200}
+                    sizes="(min-width: 1024px) 192px, 160px"
                     className="h-40 w-40 rounded-full object-cover ring-0 ring-[var(--lsh-brand-red)] transition-[box-shadow] duration-300 group-hover:ring-4 motion-reduce:transition-none lg:h-48 lg:w-48"
                   />
                   <div>

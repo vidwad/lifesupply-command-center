@@ -42,6 +42,7 @@ export function BrandGrid() {
                   alt={record.name}
                   width={record.asset.width}
                   height={record.asset.height}
+                  sizes="200px"
                   className="mt-6 h-8 w-auto"
                 />
               ) : (
