@@ -215,6 +215,7 @@ export function GrowthStrategyPage() {
           linkLabel: "Read more",
         }))}
       />
+      <DevelopmentCase />
       <section className="px-5 pb-20 lg:px-8">
         <Container>
           <ForwardLooking text={investorRelations.hub.forwardLooking} />
@@ -253,6 +254,52 @@ export function GrowthStrategyPage() {
         <ActionRow actions={g.actions} />
       </section>
     </LifeSupplyLayout>
+  );
+}
+
+/** The business case for each opportunity being developed, on the growth-strategy page. */
+function DevelopmentCase() {
+  const d = investorRelations.growthStrategy.development;
+  return (
+    <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
+      <Container>
+        <Reveal>
+          <SectionHeading eyebrow={d.eyebrow} title={d.title} description={d.intro} />
+        </Reveal>
+        <Stagger as="ul" className="mt-10 grid gap-5 lg:grid-cols-2">
+          {d.items.map((item) => (
+            <StaggerItem as="li" key={item.title} className="h-full">
+              <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">{item.title}</h3>
+                  <StatusTag status={item.status} />
+                </div>
+                <dl className="mt-5 grid gap-4">
+                  {(
+                    [
+                      [d.labels.customer, item.customer],
+                      [d.labels.proposal, item.proposal],
+                      [d.labels.capability, item.capability],
+                      [d.labels.conditions, item.conditions],
+                    ] as const
+                  ).map(([label, value]) => (
+                    <div key={label}>
+                      <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                        {label}
+                      </dt>
+                      <dd className="mt-1 text-sm leading-6 text-[var(--lsh-muted)]">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            </StaggerItem>
+          ))}
+        </Stagger>
+        <Reveal className="mt-8 border-l-4 border-[var(--lsh-rule-strong)] pl-5 text-sm leading-6 text-[var(--lsh-muted)]">
+          {d.note}
+        </Reveal>
+      </Container>
+    </section>
   );
 }
 

@@ -19,7 +19,7 @@
 import Link from "next/link";
 import { ArrowRight, ExternalLink, LogIn } from "lucide-react";
 
-import { CountUp, Enter, HeroTitle } from "@/components/public-site/motion";
+import { Enter, HeroTitle } from "@/components/public-site/motion";
 import { getCommandCenterLoginUrl } from "@/lib/public-site/command-center";
 
 type Tone = "onLight" | "onDark";
@@ -101,8 +101,8 @@ export function PublicHero({
   return (
     <section
       className={`relative overflow-hidden bg-[var(--lsh-ink)] px-5 text-white lg:px-8 ${
-        isHome ? "pb-20 pt-16 lg:pb-28 lg:pt-24" : "py-16 lg:py-24"
-      } ${media ? "flex min-h-[32rem] items-center lg:min-h-[42rem]" : ""}`}
+        isHome ? "pb-16 pt-12 lg:pb-20 lg:pt-16" : "py-14 lg:py-20"
+      } ${media ? "flex min-h-[24rem] items-center lg:min-h-[30rem]" : ""}`}
     >
       {media}
       {/*
@@ -135,8 +135,8 @@ export function PublicHero({
             text={title}
             className={`lsh-display mt-5 ${
               isHome
-                ? "text-[clamp(2.5rem,7.2vw,5.75rem)] leading-[0.94]"
-                : "text-[clamp(2rem,5vw,4rem)] leading-[1.02]"
+                ? "text-[clamp(2.25rem,5.4vw,4.25rem)] leading-[0.98]"
+                : "text-[clamp(1.875rem,4.2vw,3.25rem)] leading-[1.04]"
             }`}
           />
           {description ? (
@@ -308,6 +308,17 @@ export function CommandCenterLoginLink({ variant }: { variant: "utility" | "menu
 }
 
 /**
+ * Split a reported figure into sign or unit, digits, and unit, so the
+ * non-numeric parts can carry the brand colour. Figures render immediately:
+ * they are financial and operating facts, not an animation (website
+ * improvement program, 2026-09-09).
+ */
+function splitFigure(value: string): [string, string, string] {
+  const match = /^([^\d]*)([\d.,]+)(.*)$/.exec(value);
+  return match ? [match[1] ?? "", match[2] ?? "", match[3] ?? ""] : ["", value, ""];
+}
+
+/**
  * A reported figure with its source qualification: a red top rule, a large
  * condensed numeral that counts up on first view with its sign or unit in
  * brand red, a red hairline that extends on hover, and a faint red glow in
@@ -340,7 +351,15 @@ export function EditorialStat({
           hero ? "text-6xl sm:text-7xl lg:text-8xl" : "text-4xl sm:text-5xl"
         }`}
       >
-        <CountUp value={value} suffixClassName="text-[var(--lsh-brand-red)]" />
+        {splitFigure(value).map((part, index) =>
+          index === 1 ? (
+            part
+          ) : (
+            <span key={part} className="text-[var(--lsh-brand-red)]">
+              {part}
+            </span>
+          ),
+        )}
       </p>
       <span
         aria-hidden="true"

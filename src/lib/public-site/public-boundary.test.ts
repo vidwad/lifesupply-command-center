@@ -1154,8 +1154,14 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(c).not.toMatch(/author: "/);
     expect(c).not.toMatch(/reviewer: "/);
     const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
-    expect(page).toContain("sections.current.empty");
-    expect(page).toContain("sections.resources.empty");
+    // Items come only from the published read model; the page authors none.
+    expect(page).toContain("current.data.map");
+    expect(page).toContain("resources.data.map");
+    // A section that fetched cleanly and returned nothing is left out rather than
+    // announcing itself as empty (2026-09-09); an outage still says so.
+    expect((page.match(/isEmpty\(/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect(page).toContain("sections.current.unavailable");
+    expect(page).toContain("sections.resources.unavailable");
   });
 
   it("states the policies as current behaviour: no form, no cookie, no tracker, and no consent claim", () => {

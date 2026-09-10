@@ -90,6 +90,32 @@ export const homepage = {
       "The stated direction is to build on those capabilities toward deeper clinic relationships and recurring supply programs. Pharmacy and metabolic-health supply services are in development and are not available today.",
   },
 
+  /**
+   * Audience routes, directly under the hero (website improvement program,
+   * 2026-09-09): the three journeys the site serves, each to a page that
+   * already exists. Destinations are registry action keys, never literals.
+   */
+  audiences: {
+    eyebrow: "Where to start",
+    items: [
+      {
+        title: "Operating businesses",
+        text: "Four operating websites for medical, health, and home-care supplies, and for clinic planning, design, and equipment.",
+        action: "explore_businesses",
+      },
+      {
+        title: "Partnership opportunities",
+        text: "Clinics, pharmacies, suppliers, and strategic counterparties, each with the conversation that fits.",
+        action: "partners_hub",
+      },
+      {
+        title: "Investor information",
+        text: "Reported figures with their basis, the growth strategy, and the dated public record.",
+        action: "investor_information",
+      },
+    ],
+  },
+
   // Approved (moved from JSX in PR #61). Verified proof, with source context.
   glance: {
     eyebrow: "LifeSupply at a glance",
