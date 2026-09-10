@@ -1,6 +1,5 @@
-import Image from "next/image";
-
 import { ActionLink } from "@/components/public-site/action-link";
+import { CarePathwayDiagram } from "@/components/public-site/care-pathway-diagram";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
@@ -10,7 +9,6 @@ import {
 import { Reveal } from "@/components/public-site/motion";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
-import { getDiagram } from "@/lib/public-site/diagrams";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -23,7 +21,6 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
  */
 export function PharmacySolutionsPage() {
   const { hub } = LIFE_SUPPLY_CONTENT.pharmacy;
-  const diagram = getDiagram("pharmacyCarePathway");
   const [primary, secondary] = hub.actions as readonly ActionKey[];
   return (
     <LifeSupplyLayout>
@@ -39,9 +36,9 @@ export function PharmacySolutionsPage() {
         }
       />
 
-      {/* Why it matters: the intro beside the hub diagram, the four value cards beneath. */}
-      <section className="px-5 pt-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+      {/* Why it matters: the intro, then the typeset hub diagram, which carries the four value items. */}
+      <section className="px-5 py-20 lg:px-8">
+        <Container className="grid gap-10">
           <Reveal>
             <SectionHeading
               eyebrow={hub.value.eyebrow}
@@ -50,27 +47,10 @@ export function PharmacySolutionsPage() {
             />
           </Reveal>
           <Reveal delay={0.1}>
-            <figure className="border border-t-4 border-[var(--lsh-rule)] border-t-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-4 shadow-sm sm:p-6">
-              <Image
-                src={diagram.src}
-                alt={diagram.alt}
-                width={diagram.width}
-                height={diagram.height}
-                sizes="(min-width: 1024px) 720px, 100vw"
-                className="h-auto w-full"
-              />
-            </figure>
+            <CarePathwayDiagram centre={hub.value.centre} items={hub.value.items} />
           </Reveal>
         </Container>
       </section>
-      <IconFeatureGrid
-        columns={4}
-        items={hub.value.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          icon: iconForTitle(item.title),
-        }))}
-      />
 
       {/* In development today: the pharmacy supply program. */}
       <IconFeatureGrid
