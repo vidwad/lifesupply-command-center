@@ -585,6 +585,71 @@ export const metabolic = {
   ] satisfies readonly KitPathway[],
 } as const;
 
+/**
+ * The proposed supply and service model in one table (round two, 2026-09-10;
+ * drafted with Codex against the evidence register). Four categories, each
+ * with its contracting party, what is provided, whether the money is product
+ * revenue or a service fee, how often it recurs, its status, and what the
+ * clinical or pharmacy provider keeps. No price, percentage or volume, and
+ * nothing here is a contract or an integration.
+ */
+export const commercialModel = {
+  eyebrow: "How the model works",
+  title: "Who buys what, and on what basis.",
+  intro:
+    "Product purchases and contracted services are separate things. This is how the four of them are proposed to fit together. Clinical and pharmacy providers keep every clinical decision throughout.",
+  labels: {
+    customer: "Contracting party",
+    provided: "What is provided",
+    revenue: "Revenue type",
+    frequency: "Frequency",
+    status: "Status",
+    retained: "Provider retains",
+  },
+  rows: [
+    {
+      category: "Patient supply purchases",
+      customer: "The patient or caregiver, buying from an operating store on its own account.",
+      provided:
+        "Pharmacist-selected non-drug supplies, or metabolic-health starter equipment and usage-driven consumables. Medication is excluded.",
+      revenue: "Product revenue, on the store's ordinary terms.",
+      frequency: "Starter equipment once; consumables as they are used.",
+      status:
+        "Store purchasing operates today. The programs that would shape these selections are in development.",
+      retained: "Prescribing, treatment, and every clinical decision.",
+    },
+    {
+      category: "Clinic-wide procurement",
+      customer: "The clinic, purchasing through an operating store.",
+      provided: "Equipment and consumables for the clinic's own use, chosen by the practice.",
+      revenue: "Product revenue, on the store's ordinary terms.",
+      frequency: "Equipment occasionally; consumables on the practice's own reordering cycle.",
+      status: "Operates today. No project or agreement is required.",
+      retained: "Clinical suitability, selection, and use of what is bought.",
+    },
+    {
+      category: "Contracted kitting and fulfilment",
+      customer: "The clinic or pharmacy, under a written scope agreed in advance.",
+      provided:
+        "Assembly of non-drug supply kits, direct shipment, replenishment administration, and exception handling.",
+      revenue: "A service fee, separate from the products themselves.",
+      frequency: "As the agreed scope sets out.",
+      status: "In development. Not available, and nothing is priced.",
+      retained: "What the kit must contain, and whether it suits the patient.",
+    },
+    {
+      category: "Contracted workflow support",
+      customer: "The clinic or pharmacy, under the same kind of written scope.",
+      provided: "Non-clinical administrative support for the supply side of a program.",
+      revenue: "A service fee.",
+      frequency: "As the agreed scope sets out.",
+      status: "In development. Reporting scope is not defined and is not offered.",
+      retained: "All clinical decisions, interpretation, and patient care.",
+    },
+  ],
+  note: "This describes a proposed model. It is not an offer, it establishes no contract, and it implies no integration between the operating stores or with a provider's own systems. The two contracted categories are in development and cannot be bought today.",
+} as const;
+
 export const KIT_SLUGS = metabolic.kits.map((kit) => kit.slug);
 
 export function getKit(slug: string) {

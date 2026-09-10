@@ -73,24 +73,34 @@ export const investorRelations = {
       "Statements about expansion, programs in development, and opportunities under evaluation are forward-looking. They depend on approvals, financing, regulatory requirements, and transaction terms that have not been obtained, and they may not occur.",
     sections: [
       {
+        route: "operations",
+        title: "The business today",
+        text: "The four operating businesses, their markets, and what each one does.",
+        linkLabel: "Explore the operating businesses",
+      },
+      {
         route: "growthStrategy",
         title: "Growth strategy",
-        text: "The five strands and the status of each.",
+        text: "The five strands and the status of each, and the business case for the two in development.",
+        linkLabel: "Read the growth model",
       },
       {
         route: "advancedTherapeutics",
-        title: "Advanced therapeutics",
-        text: "Four regulated options under evaluation, each with its own status and dependencies.",
+        title: "Conditions for execution",
+        text: "Four regulated options under evaluation, each with what it depends on before it could proceed.",
+        linkLabel: "Review the conditions",
       },
       {
         route: "news",
         title: "News & resources",
         text: "Company news, investor documents, and the historical record.",
+        linkLabel: "Open news and documents",
       },
       {
         route: "disclosures",
         title: "Disclosures",
         text: "The reported figures with their scope, and the forward-looking basis.",
+        linkLabel: "See the reported figures",
       },
     ],
     actions: ["investor_materials", "growth_strategy"],
@@ -279,7 +289,7 @@ export const investorRelations = {
       text: "Statements on this site about programs in development, opportunities under evaluation, expansion themes, and possible transactions are forward-looking. They are based on current plans and assumptions, depend on approvals, financing, regulatory requirements, market conditions, and transaction terms that have not been obtained, and may not occur. They are not guarantees, and LifeSupply undertakes no obligation to update them except as required.",
     },
     materials:
-      "Figures and forward-looking themes are tied to the materials listed in the documents index. Where a material is restricted, the figure shown here is the extent of what is published.",
+      "Where a document is restricted, the figure shown on this page is the extent of what is published. Everything else is available on request through investor relations.",
     actions: ["news_resources", "investor_materials"],
   },
 } as const;

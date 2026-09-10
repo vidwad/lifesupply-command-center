@@ -609,6 +609,47 @@ describe("design-pass graphics and section primitives", () => {
   });
 });
 
+describe("round two: commercial model, portfolio and editorial voice", () => {
+  it("sets out the proposed model in one place, with status and provider responsibility on every row", () => {
+    const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
+    expect(c).toContain("commercialModel");
+    for (const row of [
+      "Patient supply purchases",
+      "Clinic-wide procurement",
+      "Contracted kitting and fulfilment",
+      "Contracted workflow support",
+    ]) {
+      expect(c, row).toContain(row);
+    }
+    // Proposed, never an offer; and no price, percentage or volume.
+    expect(c).toContain("It is not an offer, it establishes no contract");
+    const model = stripComments(read(`${PUBLIC_DIR}/commercial-model.tsx`));
+    expect(model).not.toMatch(/\$\s?\d|\b\d{1,3}\s?%/);
+    expect(model).toContain("<table");
+    expect(model).toContain("lg:hidden");
+  });
+
+  it("carries no internal editorial voice in the public copy", () => {
+    const content = ["businesses", "clinics", "investors", "contact", "home"].map((n) =>
+      stripComments(read(`src/lib/public-site/content/${n}.ts`)),
+    );
+    for (const code of content) {
+      expect(code).not.toMatch(/that is a marketing direction/i);
+      expect(code).not.toMatch(/the site names/i);
+      expect(code).not.toMatch(/supplied (presentation|for review)/i);
+    }
+  });
+
+  it("replaces the generic investor link label with a described destination", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
+    expect(page).not.toContain('linkLabel: "Open"');
+    expect(page).toContain("linkLabel: section.linkLabel");
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    expect(investors).toContain("The business today");
+    expect(investors).toContain("Conditions for execution");
+  });
+});
+
 describe("round two: cross-page factual consistency", () => {
   it("confines clinic services to British Columbia everywhere, and never to the group's commerce geography", () => {
     const content = ["home", "about", "clinics", "businesses"].map((name) =>

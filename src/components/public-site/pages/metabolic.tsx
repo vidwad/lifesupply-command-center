@@ -3,6 +3,7 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 
 import { Accordion } from "@/components/public-site/accordion";
 import { ActionLink } from "@/components/public-site/action-link";
+import { CommercialModel } from "@/components/public-site/commercial-model";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
@@ -15,7 +16,12 @@ import {
 } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand, getBrandCategory } from "@/lib/public-site/brands";
-import { getKit, metabolic, type KitPathway } from "@/lib/public-site/content/metabolic";
+import {
+  commercialModel,
+  getKit,
+  metabolic,
+  type KitPathway,
+} from "@/lib/public-site/content/metabolic";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { METABOLIC_ROUTES, kitRoute } from "@/lib/public-site/routes";
 
@@ -210,6 +216,7 @@ export function MetabolicHealthPage() {
           </Reveal>
         </Container>
       </section>
+      <CommercialModel model={commercialModel} />
     </LifeSupplyLayout>
   );
 }
