@@ -13,11 +13,17 @@
  * registry keys (actions.ts), never raw destinations.
  */
 export const homepage = {
-  // Approved (published since PR #60).
+  /**
+   * Hero. Rewritten in the website improvement program (2026-09-09) so the
+   * first screen states what the group operates today and what it is
+   * developing, and so clinic-service geography is not conflated with the
+   * stores' commerce geography. Drafted with Codex against the evidence
+   * register; no new claim is introduced.
+   */
   eyebrow: "LifeSupply Health Supplies Inc.",
-  title: "Health and medical supply infrastructure for a changing market.",
+  title: "Medical supplies today, with new supply services in development.",
   description:
-    "LifeSupply is an established ecommerce and supply-platform company serving health, safety, medical, and industrial product categories across Canada and the United States.",
+    "An established Canadian group: online medical, health, and home-care supply businesses serving Canada and the United States, and clinic planning, design, and equipment services for projects in British Columbia. Pharmacy and metabolic-health supply programs are in development.",
   /**
    * Background footage for the hero: the legacy lifesupplyhealth.com hero
    * video (wp-content/uploads/2021/10/LSHomeVid.mp4, 19 s, 1488×836), cut
@@ -79,9 +85,9 @@ export const homepage = {
     eyebrow: "The LifeSupply group",
     title: "Commerce, clinic development, equipment, and ongoing supply.",
     statement:
-      "LifeSupply connects medical-supply commerce, clinic development, equipment sourcing, and ongoing supply services across its Canadian and U.S. businesses.",
+      "Four operating websites sit under one corporate group, combining online supply commerce in Canada and the United States with clinic development services for British Columbia projects. Each keeps its own accounts, currency, and customer support.",
     qualification:
-      "Its expansion strategy is intended to build on these capabilities toward deeper clinic relationships and recurring patient-support supply programs. Forward-looking activities remain subject to approval and disclosure context.",
+      "The stated direction is to build on those capabilities toward deeper clinic relationships and recurring supply programs. Pharmacy and metabolic-health supply services are in development and are not available today.",
   },
 
   // Approved (moved from JSX in PR #61). Verified proof, with source context.
