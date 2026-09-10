@@ -54,12 +54,17 @@ const IN_VIEW_STAGGER = {
   viewport: { once: true, margin: "0px 0px -60px 0px" },
 } as const;
 
+/**
+ * Entrances fade and rise. They never blur: a heading or a sentence must be
+ * readable the instant it is painted, and a blur filter makes meaningful
+ * text depend on an animation finishing (round two, 2026-09-10).
+ */
 const rise: Variants = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0 },
 };
 
-/** Fade, rise, and un-blur once, when the element scrolls into view. */
+/** Fade and rise once, when the element scrolls into view. */
 export function Reveal({
   children,
   delay = 0,
@@ -174,11 +179,10 @@ export function HeroTitle({ text, className }: { text: string; className?: strin
   const reduce = useReducedMotion();
   const words = text.split(" ");
   const word: Variants = {
-    hidden: { opacity: 0, y: 14, filter: "blur(8px)" },
+    hidden: { opacity: 0, y: 14 },
     visible: {
       opacity: 1,
       y: 0,
-      filter: "blur(0px)",
       transition: reduce ? INSTANT : { duration: 0.55, ease: EASE },
     },
   };

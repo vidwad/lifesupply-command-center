@@ -609,6 +609,37 @@ describe("design-pass graphics and section primitives", () => {
   });
 });
 
+describe("round two: comparison, replenishment and motion", () => {
+  it("compares all eight pathways in one place, from their own entries", () => {
+    const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
+    expect(c).toContain("pathwayComparison");
+    expect(c).toContain("comparisonRows");
+    // Pathways overlap on purpose; the note must not present them as exclusive.
+    expect(c).toContain("none of them excludes another");
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
+    expect(page).toContain("<PathwayComparison");
+    const table = stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`));
+    expect(table).toContain("<table");
+    expect(table).toContain("lg:hidden");
+    // The comparison adds no purchase route and no device recommendation.
+    expect(table).not.toMatch(/add to cart|buy now|subscribe|we recommend/i);
+  });
+
+  it("never blurs meaningful text into view", () => {
+    const motion = stripComments(read(MOTION));
+    expect(motion).not.toMatch(/filter:\s*"blur/);
+    for (const code of publicComponents()) {
+      expect(code).not.toMatch(/blur\(\d/);
+    }
+  });
+
+  it("keeps staff login out of the utility strip and the mobile panel, and in the footer", () => {
+    const code = layout();
+    expect((code.match(/<CommandCenterLoginLink/g) ?? []).length).toBe(1);
+    expect(code).toContain('<CommandCenterLoginLink variant="utility" />');
+  });
+});
+
 describe("round two: commercial model, portfolio and editorial voice", () => {
   it("sets out the proposed model in one place, with status and provider responsibility on every row", () => {
     const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
@@ -1171,6 +1202,9 @@ describe("Stage 4 Metabolic Health and the eight pathways", () => {
     const c = metabolicContent();
     expect(c).toContain("Starter items are not refills.");
     expect(c).toContain("no automatic shipment, no reminder service, and no subscription");
+    // Today's position, not a permanent prohibition (round two, 2026-09-10).
+    expect(c).toContain("on this site today");
+    expect(c).toContain("would be proposed separately");
     expect(c).not.toMatch(/subscribe and save|auto-?ship (is|now) available/i);
   });
 

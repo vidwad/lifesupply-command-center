@@ -256,7 +256,7 @@ export const metabolic = {
       title: "Today",
       items: [
         "Reordering happens through the operating stores, with their accounts and repeat ordering as each store provides.",
-        "There is no automatic shipment, no reminder service, and no subscription on this site.",
+        "There is no automatic shipment, no reminder service, and no subscription on this site today. Any recurring arrangement would be proposed separately and would depend on terms agreed in writing.",
         "Intervals, pauses, changes, and cancellation therefore follow the store's own ordering, not a program schedule.",
       ],
     },
@@ -593,6 +593,26 @@ export const metabolic = {
  * clinical or pharmacy provider keeps. No price, percentage or volume, and
  * nothing here is a contract or an integration.
  */
+/**
+ * The eight pathways side by side, so a visitor can compare them without
+ * opening eight pages (round two, 2026-09-10). Every field is taken from the
+ * pathway's own entry; the table adds no claim. Pathways are starting
+ * points, not exclusive choices, and the note says so.
+ */
+export const pathwayComparison = {
+  eyebrow: "Compare the pathways",
+  title: "Eight starting points, side by side.",
+  intro:
+    "Each pathway is a configurable starting point for a supply conversation, not a product. They overlap on purpose: a program can draw on more than one, and none of them excludes another.",
+  labels: {
+    audience: "Intended for",
+    purpose: "Supply purpose",
+    role: "Durable and consumable roles",
+    status: "Status",
+  },
+  note: "All eight are in development. Nothing is purchasable on this site, no configuration has been published, and starter equipment is chosen once rather than replenished on a cycle.",
+} as const;
+
 export const commercialModel = {
   eyebrow: "How the model works",
   title: "Who buys what, and on what basis.",
@@ -649,6 +669,19 @@ export const commercialModel = {
   ],
   note: "This describes a proposed model. It is not an offer, it establishes no contract, and it implies no integration between the operating stores or with a provider's own systems. The two contracted categories are in development and cannot be bought today.",
 } as const;
+
+/** One comparison row per pathway, built from its own fields. Adds no claim. */
+export function comparisonRows() {
+  return metabolic.kits.map((kit) => ({
+    id: kit.id,
+    slug: kit.slug,
+    label: kit.label,
+    audience: kit.audience,
+    purpose: kit.purpose,
+    roles: kit.roles.map((role) => role.title).join(", "),
+    status: metabolic.status.label,
+  }));
+}
 
 export const KIT_SLUGS = metabolic.kits.map((kit) => kit.slug);
 
