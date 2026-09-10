@@ -79,8 +79,20 @@ export const about = {
   milestones: {
     eyebrow: "Milestones",
     title: "A dated public record.",
-    note: "Items are listed with their original date and source. Figures are as cited in the 2025 annual-report narrative.",
+    note: "Each item carries its date. The 2022 releases link to the sources that carried them.",
     items: [
+      {
+        date: "2020",
+        text: "Acquired Wellmart Health Supplies Ltd., which became the group's Canadian operating base.",
+        source: "Corporate record",
+        href: null,
+      },
+      {
+        date: "2023",
+        text: "Acquired Balkowitsch Enterprises Inc., adding a United States customer base and distributor network.",
+        source: "Corporate record",
+        href: null,
+      },
       {
         date: "April 5, 2022",
         text: "Acquisition of Smart Move Medical assets announced.",
@@ -106,9 +118,15 @@ export const about = {
         href: "https://www.newswire.ca/news-releases/lifesupply-joins-forces-with-mothers-choice-products-for-online-distribution-of-top-tier-maternal-health-products-808815327.html",
       },
       {
+        date: "Year ended December 31, 2025",
+        text: "Reported consolidated net sales of C$6.75M, gross profit of C$2.20M, and net income of C$284K, unaudited.",
+        source: "Investor disclosures",
+        href: null,
+      },
+      {
         date: "2025 annual report",
         text: "Cites more than 25 years of operations, more than 50,000 products, and more than 1 million customers served since inception.",
-        source: "2025 annual-report narrative",
+        source: "2025 annual report",
         href: null,
       },
     ],

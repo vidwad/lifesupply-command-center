@@ -8,6 +8,7 @@ import {
   Eyebrow,
   PrimaryAction,
   PublicHero,
+  SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge } from "@/components/public-site/sections";
@@ -257,10 +258,42 @@ export function NewsPage({
   documents: Published<PublishedDocumentDto[]>;
   resources: Published<PublicResourceDto[]>;
 }) {
-  const { hero, sections, historical } = news;
+  const { hero, sections, historical, overview } = news;
   return (
     <LifeSupplyLayout>
       <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
+
+      {/*
+       * The company at a glance (round three, outcome 9). The news and
+       * resources sections below are legitimately empty; this states what the
+       * group is from facts already published elsewhere on the site, rather
+       * than leaving a visitor with nothing or inventing an announcement.
+       */}
+      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
+        <Container className="min-w-0">
+          <Reveal>
+            <SectionHeading
+              eyebrow={overview.eyebrow}
+              title={overview.title}
+              description={overview.intro}
+            />
+          </Reveal>
+          <Stagger as="dl" className="mt-8 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2">
+            {overview.facts.map((fact) => (
+              <StaggerItem key={fact.label} className="bg-[var(--lsh-paper)] p-6">
+                <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                  {fact.label}
+                </dt>
+                <dd className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{fact.text}</dd>
+              </StaggerItem>
+            ))}
+          </Stagger>
+          <Reveal className="mt-8">
+            <ActionLink action={overview.action as ActionKey} />
+          </Reveal>
+        </Container>
+      </section>
+
       <section className="px-5 py-20 lg:px-8">
         <Container className="grid gap-16">
           {isEmpty(current) ? null : (
