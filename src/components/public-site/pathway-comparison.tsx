@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Container, Eyebrow, SectionHeading } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 
@@ -19,6 +21,8 @@ type Pathway = {
   purpose: string;
   roles: string;
   status: string;
+  /** The pathway's own page. Every name here is the way into its detail. */
+  href: string;
 };
 
 type Comparison = {
@@ -64,7 +68,9 @@ export function PathwayComparison({
             >
               <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{p.id}</p>
               <h3 className="lsh-display mt-1 text-lg leading-tight text-[var(--lsh-charcoal)]">
-                {p.label}
+                <Link href={p.href} className="transition-colors hover:text-[var(--lsh-brand-red)]">
+                  {p.label}
+                </Link>
               </h3>
               <dl className="mt-4 grid gap-3">
                 {fields(p).map(([label, value]) => (
@@ -103,7 +109,12 @@ export function PathwayComparison({
                     scope="row"
                     className="border-b border-[var(--lsh-rule)] py-4 pr-4 font-medium text-[var(--lsh-charcoal)]"
                   >
-                    {p.label}
+                    <Link
+                      href={p.href}
+                      className="transition-colors hover:text-[var(--lsh-brand-red)]"
+                    >
+                      {p.label}
+                    </Link>
                     <span className="mt-1 block text-xs font-normal text-[var(--lsh-muted)]">
                       {p.id}
                     </span>

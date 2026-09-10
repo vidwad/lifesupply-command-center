@@ -702,6 +702,44 @@ describe("round three: architecture, placement and voice", () => {
     expect(execution).not.toMatch(/\bby (Q[1-4]|20\d\d)\b/i);
   });
 
+  it("lists the pathways once, with every name opening its own page", () => {
+    // The care-kits hub used to render the comparison and then eight cards
+    // repeating it (round three, outcome 5).
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
+    expect(page).toContain("<PathwayComparison");
+    expect(page).toContain("kitRoute(row.slug)");
+    // No second catalogue: the kit list is not mapped into cards on the hub.
+    expect(page).not.toMatch(/metabolic\.kits\.map/);
+    // Every row still carries a route into its detail page.
+    const comparison = stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`));
+    expect(comparison).toContain("href={p.href}");
+  });
+
+  it("puts the store first on every operating-brand card, with the brand page second", () => {
+    // The cards used to offer only an internal "About" link, so a visitor who
+    // wanted to buy had to pass through a corporate page (round three, outcome 7).
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/operations.tsx`));
+    const shop = page.indexOf("hub.stores.shopLabel");
+    const about = page.indexOf("hub.stores.aboutLabel");
+    expect(shop).toBeGreaterThan(-1);
+    expect(about).toBeGreaterThan(shop);
+    expect(page).toContain("record.canonicalUrl");
+    // No card-covering overlay, so both links stay reachable.
+    expect(page).not.toContain("after:absolute after:inset-0");
+    // The professional route says what it covers and what it does not create.
+    const businesses = stripComments(read("src/lib/public-site/content/businesses.ts"));
+    expect(businesses).toContain("procurement:");
+    expect(businesses).toContain("A supply review goes through the categories");
+    for (const banned of [
+      /credit terms (are|is) (available|offered)/i,
+      /consolidated billing (is|are) (available|offered)/i,
+      /dedicated account (manager|management)/i,
+      /integrat(es|ed|ion) with your (system|ERP|practice)/i,
+    ]) {
+      expect(businesses, String(banned)).not.toMatch(banned);
+    }
+  });
+
   it("keeps internal workflow and publication language out of public copy", () => {
     const files = [...publicContentFiles(), `${PUBLIC_DIR}/pages/contact.tsx`];
     for (const file of files) {

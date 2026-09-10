@@ -28,6 +28,31 @@ export const businesses = {
     stores: {
       eyebrow: "The stores",
       title: "Each store keeps its own site, accounts, currency, and support.",
+      /** Card actions: the store first, the brand page second (round three, outcome 7). */
+      shopLabel: "Shop",
+      aboutLabel: "About",
+    },
+    /**
+     * A distinct route for professional buyers (round three, outcome 7). What a
+     * supply review covers is described from verified capability only: the
+     * categories the stores actually carry, account setup on the store that
+     * carries them, and equipment planning where a British Columbia clinic
+     * project is involved. No credit terms, consolidated billing, system
+     * integration or named account management is offered, because none is
+     * established.
+     */
+    procurement: {
+      eyebrow: "Buying for a practice",
+      title: "A supply review for clinics, pharmacies, and other professional buyers.",
+      text: "Professional buyers do not have to work out which of three stores carries what. A supply review goes through the categories a practice orders routinely, points each one at the store that carries it, and covers setting up an account there. Where a clinic project in British Columbia is involved, equipment planning is part of the same conversation.",
+      covers: [
+        "The categories a practice orders routinely, and which store carries each.",
+        "Setting up an account on that store, in its own currency and on its own terms.",
+        "Equipment planning for a British Columbia clinic project, where there is one.",
+      ],
+      limit:
+        "Orders, prices, shipping and returns stay with the store that fulfils them. A review does not create credit terms, consolidated billing, or a connection between a practice's systems and the stores.",
+      action: "clinic_supply_review",
     },
     clinics: {
       eyebrow: "Clinic projects and clinic supply",

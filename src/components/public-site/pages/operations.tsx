@@ -1,15 +1,21 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { BrandImage } from "@/components/public-site/brand-image";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import { PublicHero, SectionHeading } from "@/components/public-site/lifesupply-primitives";
+import {
+  Container,
+  Eyebrow,
+  PublicHero,
+  SectionHeading,
+} from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { Callout } from "@/components/public-site/sections";
+import { Callout, IconBadge } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
+import { measurementAttributes } from "@/lib/public-site/measurement";
 import { BRAND_ROUTES } from "@/lib/public-site/routes";
 
 /** The three online stores; LifeSupply Clinics has its own section. */
@@ -51,7 +57,7 @@ export function MedicalSupplySolutionsPage() {
             {stores.map((record) => (
               <StaggerItem key={record.key} className="h-full">
                 <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                  <article className="group relative flex h-full flex-col p-7">
+                  <article className="group flex h-full flex-col p-7">
                     <BrandImage
                       brand={record.key as OperatingBrandKey}
                       presentation="square"
@@ -64,23 +70,87 @@ export function MedicalSupplySolutionsPage() {
                       {record.name}
                     </h3>
                     <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{record.purpose}</p>
-                    <Link
-                      href={BRAND_ROUTES[record.key as OperatingBrandKey]}
-                      className="lsh-display mt-auto inline-flex items-center gap-2 pt-6 text-[11px] text-[var(--lsh-brand-red)] after:absolute after:inset-0 after:content-['']"
-                    >
-                      About {record.name}{" "}
-                      <ArrowRight
-                        size={15}
-                        aria-hidden="true"
-                        className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
-                      />
-                    </Link>
+                    {/*
+                     * The store is the primary action and the brand page the
+                     * secondary one (round three, outcome 7). These cards used to
+                     * offer only "About", so a visitor who wanted to buy had to
+                     * go through a corporate page first. Two explicit links
+                     * rather than one card-covering overlay, so both are
+                     * reachable by pointer and keyboard alike.
+                     */}
+                    <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-6">
+                      <a
+                        {...measurementAttributes("brand_destination_click", { brand: record.key })}
+                        href={record.canonicalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]"
+                      >
+                        {hub.stores.shopLabel} {record.name}{" "}
+                        <ExternalLink
+                          size={15}
+                          aria-hidden="true"
+                          className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                        />
+                      </a>
+                      <Link
+                        href={BRAND_ROUTES[record.key as OperatingBrandKey]}
+                        className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors hover:text-[var(--lsh-charcoal)]"
+                      >
+                        {hub.stores.aboutLabel} {record.name}{" "}
+                        <ArrowRight size={14} aria-hidden="true" />
+                      </Link>
+                    </div>
                   </article>
                 </SpotlightCard>
               </StaggerItem>
             ))}
           </Stagger>
         </div>
+      </section>
+
+      {/*
+       * A distinct route for professional buyers (round three, outcome 7).
+       * What a supply review covers is stated from verified capability, and
+       * what it does not create is stated beside it.
+       */}
+      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
+        <Container className="min-w-0">
+          <Reveal>
+            <SectionHeading
+              eyebrow={hub.procurement.eyebrow}
+              title={hub.procurement.title}
+              description={hub.procurement.text}
+            />
+          </Reveal>
+          <div className="mt-8 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+            <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-6">
+              <Eyebrow as="h3">What a supply review covers</Eyebrow>
+              <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                {hub.procurement.covers.map((item) => (
+                  <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6">
+                <ActionLink action={hub.procurement.action as ActionKey} />
+              </div>
+            </Reveal>
+            <Reveal
+              delay={0.05}
+              className="flex gap-5 border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-paper)] p-6"
+            >
+              <IconBadge icon="shield" size={18} />
+              <div>
+                <Eyebrow as="h3">What stays with the store</Eyebrow>
+                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
+                  {hub.procurement.limit}
+                </p>
+              </div>
+            </Reveal>
+          </div>
+        </Container>
       </section>
 
       {/* Clinic projects and clinic supply have their own section. */}
