@@ -729,7 +729,7 @@ describe("round three: architecture, placement and voice", () => {
     // The professional route says what it covers and what it does not create.
     const businesses = stripComments(read("src/lib/public-site/content/businesses.ts"));
     expect(businesses).toContain("procurement:");
-    expect(businesses).toContain("A supply review goes through the categories");
+    expect(businesses).toContain("Start a conversation and it covers the ground below");
     for (const banned of [
       /credit terms (are|is) (available|offered)/i,
       /consolidated billing (is|are) (available|offered)/i,
@@ -751,7 +751,7 @@ describe("round three: architecture, placement and voice", () => {
       expect(newsContent).toContain(figure);
     }
     // Developing programs stay unpurchasable here too.
-    expect(newsContent).toContain("Neither can be bought today");
+    expect(newsContent).toContain("Neither is available today");
     const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
     expect(page).toContain("overview.facts.map");
   });
@@ -1302,9 +1302,7 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
     // Neither developing program may read as purchasable, and neither carries a
     // launch date (round three replaced the older double-hedge with this).
-    expect(aboutContent).toContain(
-      "Neither program can be bought today, and no launch date is set",
-    );
+    expect(aboutContent).toContain("Neither program is available today, and no launch date is set");
     // Supplying pharmacies and running one stay distinguishable here too.
     expect(aboutContent).toContain("Supplying pharmacies and running one are different businesses");
     for (const banned of [

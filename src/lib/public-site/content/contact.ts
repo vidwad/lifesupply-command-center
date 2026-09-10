@@ -49,7 +49,7 @@ export const contact = {
       name: "Wellmart Health Supplies Ltd.",
       relationship: "Canadian subsidiary, wholly owned",
       detail:
-        "The group's Canadian operating base, acquired in 2020. It trades as LifeSupply and runs the Canadian storefronts from 6911 King George Highway, Surrey, British Columbia V3W 5A1.",
+        "The group's Canadian operating base, acquired in 2020. It trades as LifeSupply, from 6911 King George Highway, Surrey, British Columbia V3W 5A1.",
       phone: "1-855-755-5433",
       url: "https://lifesupply.ca",
     },
