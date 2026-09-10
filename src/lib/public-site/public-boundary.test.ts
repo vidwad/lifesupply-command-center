@@ -55,6 +55,7 @@ const BRAND_IMAGE = `${PUBLIC_DIR}/brand-image.tsx`;
 const SITE_SCREEN = `${PUBLIC_DIR}/site-screen.tsx`;
 const VIDEO_EMBED = `${PUBLIC_DIR}/video-embed.tsx`;
 const PARALLAX_BAND = `${PUBLIC_DIR}/parallax-band.tsx`;
+const CARE_PATHWAY = `${PUBLIC_DIR}/care-pathway-diagram.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
 // carries the legacy-compatible route table.
@@ -93,6 +94,7 @@ const brandImage = () => stripComments(read(BRAND_IMAGE));
 const siteScreen = () => stripComments(read(SITE_SCREEN));
 const videoEmbed = () => stripComments(read(VIDEO_EMBED));
 const parallaxBand = () => stripComments(read(PARALLAX_BAND));
+const carePathway = () => stripComments(read(CARE_PATHWAY));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -110,6 +112,7 @@ const publicComponents = () => [
   siteScreen(),
   videoEmbed(),
   parallaxBand(),
+  carePathway(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -826,9 +829,15 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(page).toContain('status: "In development"');
     // The value block (2026-09-09) is design intent, never a result or an operation; its hub
     // diagram is drawn from the registry and repeats the cards' copy.
-    expect(page).toContain("hub.value.items.map");
-    expect(page).toContain('getDiagram("pharmacyCarePathway")');
-    expect(page).not.toContain("/lsh/graphics/diagrams");
+    expect(page).toContain("items={hub.value.items}");
+    expect(page).toContain(
+      "<CarePathwayDiagram centre={hub.value.centre} items={hub.value.items} />",
+    );
+    // The diagram is typeset from the content model: a semantic list, no raster, no hard-coded copy.
+    const diagram = carePathway();
+    expect(diagram).toContain("<ul");
+    expect(diagram).not.toMatch(/<img|next\/image|figcaption/);
+    expect(diagram).not.toMatch(/For the pharmacy|supply platform/);
     expect(pharmacy).toContain("No pharmacy supply program is operating.");
     expect(pharmacy).not.toMatch(/\b(has|have) (helped|reduced|improved|delivered)\b/i);
     expect(pharmacy).not.toMatch(/subscription is available\b/i);

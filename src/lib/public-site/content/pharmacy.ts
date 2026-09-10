@@ -32,6 +32,11 @@ export const pharmacy = {
       title: "Connecting supply needs across the care pathway.",
       intro:
         "The program is designed to connect pharmacy-supported patient supplies with the group's broader supply platform, with responsibilities defined at each step.",
+      /** The diagram's hub: what the four items connect to. */
+      centre: {
+        title: "LifeSupply supply platform",
+        subtitle: "commerce, fulfilment, clinic capabilities",
+      },
       items: [
         {
           title: "For the pharmacy",
