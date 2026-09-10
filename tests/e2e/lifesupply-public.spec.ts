@@ -10,7 +10,7 @@ test.describe("LifeSupply public site", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Health and medical supply infrastructure for a changing market.",
+        name: "Medical supplies today, with new supply services in development.",
       }),
     ).toBeVisible();
 

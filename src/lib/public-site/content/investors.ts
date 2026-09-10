@@ -35,9 +35,9 @@ export const investorRelations = {
   },
   expansionContext: {
     date: "August 25, 2026",
-    title: "Expansion strategy source material",
+    title: "Expansion strategy",
     description:
-      "A supplied financing presentation outlines proposed metabolic-health and therapeutics expansion themes, subject to investor suitability, forward-looking disclosure, board approval, regulatory requirements, and final transaction terms.",
+      "A financing presentation of this date sets out proposed metabolic-health and therapeutics expansion themes. Those themes depend on board approval, regulatory requirements, investor suitability, and final terms. No offering is made on this site, and no terms are published here.",
   },
 
   // Stage 5 draft: the hub's structure.
@@ -133,6 +133,53 @@ export const investorRelations = {
         route: "acquisitions",
       },
     ],
+    /**
+     * The growth business case (website improvement program, 2026-09-09):
+     * for each opportunity being developed, who it serves, what is proposed,
+     * which existing capability supports it, and what must be confirmed
+     * before it progresses. Drafted with Codex against the evidence
+     * register. No revenue mechanism is stated where terms are not
+     * established, no date is given, and nothing here is offered.
+     */
+    development: {
+      eyebrow: "The business case",
+      title: "What is being developed, and what each depends on.",
+      intro:
+        "Two supply opportunities are being developed on the existing operating base. Each is described by who it would serve, what is proposed, the capability it builds on, and what has to be confirmed before it can progress.",
+      labels: {
+        customer: "Intended customer",
+        proposal: "Proposed service",
+        capability: "Existing capability it builds on",
+        conditions: "Before it can progress",
+      },
+      items: [
+        {
+          title: "Pharmacy supply programs",
+          status: "In development",
+          customer: "Pharmacies supporting patients on a care pathway.",
+          proposal:
+            "Pharmacist-selected non-drug supplies, onboarding and refill support, and fulfilment under an agreed scope. Medication is excluded.",
+          capability:
+            "The group's online medical-supply commerce, its fulfilment arrangements, and the clinic supply work already running.",
+          conditions:
+            "Product selection, fulfilment responsibilities, service scope, and commercial terms have to be agreed in writing with each partner. Terms are not established, so no revenue mechanism is stated.",
+        },
+        {
+          title: "Metabolic-health supply services",
+          status: "In development",
+          customer:
+            "Clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
+          proposal:
+            "Starter equipment, usage-driven consumables, clinic procurement, kitting and fulfilment, and contracted non-clinical workflow support.",
+          capability:
+            "The same commerce and fulfilment base, plus clinic equipment sourcing and the procurement relationships that come with clinic work.",
+          conditions:
+            "Pathway contents, device compatibility, fulfilment capacity, and service scope have to be confirmed per program. Availability is published only as each pathway is confirmed.",
+        },
+      ],
+      note: "Statements about these opportunities are forward-looking. They set no launch date, imply no funding commitment, and do not describe a service that can be bought today.",
+    },
+
     record: {
       eyebrow: "Dated public record",
       title: "What has been published, by date.",
@@ -154,7 +201,7 @@ export const investorRelations = {
         },
         {
           date: "August 25, 2026",
-          text: "Financing presentation outlining proposed expansion themes supplied for review.",
+          text: "Financing presentation outlining proposed expansion themes.",
         },
       ],
     },
