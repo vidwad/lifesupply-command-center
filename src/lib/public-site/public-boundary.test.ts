@@ -579,6 +579,10 @@ describe("design-pass graphics and section primitives", () => {
     expect(graphics).toContain("conceptual, not operational photography");
     // Section primitives resolve icons through the registry, never an ad-hoc lucide import per page.
     expect(sections()).toContain("iconFor(icon)");
+    // A page resolves its content icons through the registry: either through
+    // the section primitives, or directly through `icons.ts` where the design
+    // draws the glyph itself rather than boxing it (2026-09-10). What is
+    // banned either way is a page reaching into lucide for a content icon.
     for (const name of [
       "home",
       "about",
@@ -589,9 +593,26 @@ describe("design-pass graphics and section primitives", () => {
       "partners",
       "investors",
     ]) {
-      expect(read(`${PUBLIC_DIR}/pages/${name}.tsx`), name).toContain(
-        "@/components/public-site/sections",
-      );
+      const page = read(`${PUBLIC_DIR}/pages/${name}.tsx`);
+      expect(page, name).toMatch(/@\/components\/public-site\/(sections|icons)/);
+      // Only interface affordances may come straight from lucide.
+      const lucide = /import \{([^}]*)\} from "lucide-react"/.exec(page)?.[1] ?? "";
+      const AFFORDANCES = [
+        "ArrowRight",
+        "ArrowUp",
+        "ExternalLink",
+        "Mail",
+        "MapPin",
+        "Phone",
+        "Play",
+        "Search",
+      ];
+      for (const glyph of lucide
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)) {
+        expect(AFFORDANCES, `${name} imports ${glyph} from lucide`).toContain(glyph);
+      }
     }
   });
 
@@ -812,6 +833,29 @@ describe("round three: architecture, placement and voice", () => {
     expect(home).not.toMatch(/founding investor|investment bankers|capital-market professionals/i);
     expect(home).toContain("Wellmart Health Supplies became the Canadian operating base in 2020");
     expect(home).toContain("Balkowitsch Enterprises added United States reach");
+  });
+
+  it("draws the three card icons to the same rules as the stock set", () => {
+    const custom = stripComments(read(`${PUBLIC_DIR}/custom-icons.tsx`));
+    // Colour is inherited, never stored: no hex, no named colour, no fill.
+    expect(custom).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    expect(custom).not.toMatch(/(fill|stroke)="(?!none"|currentColor")[a-z]/i);
+    expect(custom).toContain('stroke: "currentColor"');
+    expect(custom).toContain('fill: "none"');
+    // The lucide construction, so they sit beside the stock glyphs.
+    expect(custom).toContain('viewBox: "0 0 24 24"');
+    expect(custom).toContain("strokeLinecap");
+    // No text or numerals inside an icon.
+    expect(custom).not.toMatch(/<text|<tspan/);
+    // Each of the three cards resolves to one of them.
+    const map = stripComments(read("src/lib/public-site/icon-map.ts"));
+    for (const [title, key] of [
+      ["Operating businesses", "operatingBusinesses"],
+      ["Partnership opportunities", "partnershipOpportunities"],
+      ["Investor information", "investorInformation"],
+    ]) {
+      expect(map).toContain(`"${title}": "${key}"`);
+    }
   });
 
   it("keeps internal workflow and publication language out of public copy", () => {
@@ -1152,9 +1196,15 @@ describe("Stage 2 registries and navigation", () => {
     // The brand set keeps its own provenance; the served files are the JPEG derivatives.
     expect(graphics).toContain("PNG master 1672×941 retained");
     expect(graphics).not.toMatch(/brands\/[a-z-]+\.png/);
+    // Every brand photograph declares a registered crop rather than being left
+    // to the source aspect. The homepage columns use the portrait crop added
+    // in the 2026-09-10 design pass; the other two stay square.
     for (const page of ["brand-grid", "pages/shop", "pages/operations"]) {
-      expect(read(`${PUBLIC_DIR}/${page}.tsx`), page).toContain('presentation="square"');
+      expect(read(`${PUBLIC_DIR}/${page}.tsx`), page).toMatch(
+        /presentation="(square|portrait|landscape)"/,
+      );
     }
+    expect(brandImage()).toContain('presentation === "portrait"');
   });
 
   it("keeps the grouped navigation keyboard-operable and the panel hover-free", () => {

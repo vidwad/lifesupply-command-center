@@ -25,7 +25,8 @@ export function BrandImage({
   className = "",
 }: {
   brand: OperatingBrandKey;
-  presentation?: "landscape" | "square";
+  /** `portrait` is the 4:5 editorial crop the homepage brand columns use. */
+  presentation?: "landscape" | "square" | "portrait";
   decorative?: boolean;
   sizes?: string;
   className?: string;
@@ -34,7 +35,11 @@ export function BrandImage({
   return (
     <figure
       className={`relative overflow-hidden bg-[var(--lsh-ink)] ${
-        presentation === "square" ? "aspect-square" : "aspect-video"
+        presentation === "square"
+          ? "aspect-square"
+          : presentation === "portrait"
+            ? "aspect-[4/5]"
+            : "aspect-video"
       } ${className}`.trim()}
     >
       <Image
