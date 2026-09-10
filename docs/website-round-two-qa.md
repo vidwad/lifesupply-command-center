@@ -94,7 +94,29 @@ This is reported honestly rather than tidily: **two earlier parallel runs on thi
 
 ## 5. Deployment verification
 
-Recorded in `docs/website-round-two-handoff.md` section 8, after the Stage E pull request is squash-merged. A merged pull request and a green build are not deployment verification; the handoff records the commit that the production alias actually served, confirmed by fetching a marker string unique to this stage.
+Verified on September 10, 2026, after PR #129 was squash-merged.
+
+| | |
+| --- | --- |
+| Production alias | `https://lifesupply-command-center-vidwads-projects.vercel.app` |
+| Deployment | `dpl_2Y2dZ6n9Nn9JYDtDy9g8RxPForz3`, state READY, target production |
+| Commit served | `9a283d030569a5ce77426bc68bfcf29dcbc29640` (`9a283d0`), branch `main` |
+| Verified by | Polling the alias for a marker unique to this stage |
+
+**A merged pull request and a green build are not deployment verification, and this was checked rather than assumed.** Immediately before the merge, the alias served the Stage D copy: "Currency: the annual-report narrative does not state one, so none is given here." The marker chosen was the Stage E replacement, "Currency: not stated." — a string that exists in no earlier build. The alias was polled every 20 seconds and continued serving the previous build for four polls after the merge; the marker appeared on the fifth. Only then was the deployment treated as live.
+
+Every Stage E correction was then confirmed on the production alias, and every withdrawn string confirmed absent, route by route:
+
+| Route | Present | Absent |
+| --- | --- | --- |
+| `/investor-relations/disclosures` | "Currency: not stated", "the extent of what is published on this site" | "available on request", "have not been obtained" |
+| `/metabolic-health` | "Nothing is priced" | "A service fee", "No project or agreement" |
+| `/metabolic-health/refills` | — | "would be proposed separately" |
+| `/contact` | "Programs in development are not currently offered" | "commits you to anything" |
+| `/accessibility` | "has not been audited by an external" | "no such review is booked" |
+| `/medical-supply-solutions/lifesupply` | "no separate professional portal" | "the same account", "broad general catalogue" |
+
+The full QA sweep from section 2 was then re-run against the live site rather than the local build. **Result: clean**, 20 routes at 5 widths plus keyboard, reduced motion, outbound links, sitemap and robots. Output in `evidence/round-two-2026-09-10/stage-e/qa-sweep-production.txt`.
 
 ## 6. What this QA did not cover
 
