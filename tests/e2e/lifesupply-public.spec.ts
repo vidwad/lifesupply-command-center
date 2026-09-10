@@ -283,12 +283,16 @@ test.describe("LifeSupply public site", () => {
       .toBe("1");
   });
 
-  test("carries the external login in the utility strip on every viewport", async ({ page }) => {
+  test("keeps staff login in the footer only, still external to Render", async ({ page }) => {
     await page.goto("/about-us");
-    // The strip precedes the header, so it is the first login control in the DOM.
-    const strip = page.getByRole("link", { name: "Command Center login" }).first();
-    await expect(strip).toBeVisible();
-    expect(new URL((await strip.getAttribute("href"))!).origin).toBe(RENDER_ORIGIN);
+    // Round two moved it out of the utility strip and the mobile panel; the footer
+    // keeps a discreet staff route, and it still leaves this host.
+    const links = page.getByRole("link", { name: "Command Center login" });
+    await expect(links).toHaveCount(1);
+    await expect(
+      page.locator("footer").getByRole("link", { name: "Command Center login" }),
+    ).toHaveCount(1);
+    expect(new URL((await links.first().getAttribute("href"))!).origin).toBe(RENDER_ORIGIN);
   });
 
   test("opens the grouped desktop navigation from the keyboard and lists the three stores", async ({
@@ -673,7 +677,9 @@ test.describe("LifeSupply public site", () => {
     await expect(
       page
         .locator("main")
-        .getByText(/no automatic shipment, no reminder service, and no subscription/),
+        .getByText(
+          /no automatic shipment, no reminder service, and no subscription on this site today/,
+        ),
     ).toBeVisible();
   });
 
@@ -1030,11 +1036,10 @@ test.describe("LifeSupply public site", () => {
     await expect(menu).toBeVisible();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
-    // The menu carries the same external login boundary as the header.
-    const menuLogin = await menu
-      .getByRole("link", { name: "Command Center login" })
-      .getAttribute("href");
-    expect(new URL(menuLogin!).origin).toBe(RENDER_ORIGIN);
+    // Round two removed staff login from the panel; it lives only in the footer now.
+    await expect(menu.getByRole("link", { name: "Command Center login" })).toHaveCount(0);
+    // The panel still carries the public utility links.
+    await expect(menu.getByRole("link", { name: "Shop & Services" })).toHaveCount(1);
 
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);

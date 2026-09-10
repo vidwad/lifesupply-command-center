@@ -317,7 +317,6 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             <div className="hidden items-center gap-5 md:flex">
               {UTILITY_NAV.map((link) => renderUtility(link))}
             </div>
-            <CommandCenterLoginLink variant="utility" />
           </nav>
         </div>
       </div>
@@ -447,7 +446,6 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               ))}
               <div className="mt-2 grid justify-items-start gap-2 border-t border-white/15 pt-4">
                 {UTILITY_NAV.map((link) => renderUtility(link, closeMenu))}
-                <CommandCenterLoginLink variant="menu" />
               </div>
             </div>
           </nav>

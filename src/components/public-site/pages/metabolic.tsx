@@ -4,6 +4,7 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import { Accordion } from "@/components/public-site/accordion";
 import { ActionLink } from "@/components/public-site/action-link";
 import { CommercialModel } from "@/components/public-site/commercial-model";
+import { PathwayComparison } from "@/components/public-site/pathway-comparison";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
@@ -18,7 +19,9 @@ import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand, getBrandCategory } from "@/lib/public-site/brands";
 import {
   commercialModel,
+  comparisonRows,
   getKit,
+  pathwayComparison,
   metabolic,
   type KitPathway,
 } from "@/lib/public-site/content/metabolic";
@@ -233,6 +236,7 @@ export function CareKitsPage() {
         actions={<ActionLink action="discuss_program" />}
       />
       <StatusBand />
+      <PathwayComparison comparison={pathwayComparison} pathways={comparisonRows()} />
 
       <section className="px-5 pb-20 lg:px-8">
         <Container>
