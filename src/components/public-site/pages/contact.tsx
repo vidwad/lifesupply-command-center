@@ -42,6 +42,11 @@ export function ContactPage() {
               description={contact.routing.text}
             />
           </Reveal>
+          <Reveal delay={0.05}>
+            <p className="mt-5 flex gap-4 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-5 text-sm leading-6 text-[var(--lsh-charcoal)]">
+              {contact.routing.sensitive}
+            </p>
+          </Reveal>
           <Stagger
             as="ul"
             className="mt-10 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2 xl:grid-cols-5"

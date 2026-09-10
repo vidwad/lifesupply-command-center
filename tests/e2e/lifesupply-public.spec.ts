@@ -150,16 +150,26 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/");
     const main = page.locator("main");
-    const first = main.getByRole("heading", { level: 2 }).first();
-    await expect(first).toHaveText("Who we are and where we are going.");
+    // Audience routes open the page, then the three-panel statement, then the group
+    // introduction (website improvement program, 2026-09-09).
+    const headings = main.getByRole("heading", { level: 2 });
+    await expect(headings.nth(0)).toHaveText("Where to start");
+    await expect(headings.nth(1)).toHaveText("Who we are and where we are going.");
+    for (const route of [
+      "Operating businesses",
+      "Partnership opportunities",
+      "Investor information",
+    ]) {
+      await expect(main.getByRole("heading", { level: 3, name: route })).toBeVisible();
+    }
     await expect(main.getByRole("heading", { level: 3, name: "Experienced" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
     await expect(main.getByText("This is where we want to be")).toBeVisible();
     const order = await main
       .getByRole("heading", { level: 2 })
-      .evaluateAll((nodes) => nodes.slice(0, 2).map((node) => node.textContent?.trim()));
-    expect(order[1]).toBe("Commerce, clinic development, equipment, and ongoing supply.");
+      .evaluateAll((nodes) => nodes.slice(0, 3).map((node) => node.textContent?.trim()));
+    expect(order[2]).toBe("Commerce, clinic development, equipment, and ongoing supply.");
   });
 
   test("keeps the hero heading one accessible sentence while its words animate", async ({
@@ -497,13 +507,17 @@ test.describe("LifeSupply public site", () => {
       "href",
       /^\/metabolic-health\/?$/,
     );
-    await expect(main.getByRole("link", { name: "Explore partner relationships" })).toHaveAttribute(
-      "href",
-      /^\/partners\/?$/,
-    );
-    await expect(
-      main.getByRole("link", { name: "Investor relations", exact: true }),
-    ).toHaveAttribute("href", /^\/investor-relations\/?$/); // next/link drops the trailing slash
+    // The audience routes under the hero reuse these actions, so every match must agree.
+    for (const link of await main
+      .getByRole("link", { name: "Explore partner relationships" })
+      .all()) {
+      await expect(link).toHaveAttribute("href", /^\/partners\/?$/);
+    }
+    for (const link of await main
+      .getByRole("link", { name: "Investor relations", exact: true })
+      .all()) {
+      await expect(link).toHaveAttribute("href", /^\/investor-relations\/?$/);
+    } // next/link drops the trailing slash
     // Four brand cards, all external, all verified hosts.
     const cards = main.locator('a[href^="https://"]:has-text("Visit ")');
     await expect(cards).toHaveCount(4);
@@ -772,16 +786,21 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/news");
     const main = page.locator("main");
-    // Governed sections read the Command Center published endpoints: the honest empty note or,
-    // when the service is unreachable, the fail-closed unavailable note; never blank.
+    // Governed sections read the Command Center published endpoints. With nothing published
+    // the section is left out; when the service is unreachable it says so and is never blank
+    // (website improvement program, 2026-09-09).
+    for (const [heading, unavailable] of [
+      ["Company news", "Company news is temporarily unavailable"],
+      ["Resources", "Resources are temporarily unavailable"],
+    ] as const) {
+      const section = main.getByRole("heading", { level: 2, name: heading });
+      if ((await section.count()) > 0) {
+        await expect(main.getByText(unavailable, { exact: false })).toBeVisible();
+      }
+    }
     await expect(
-      main.getByText(
-        /No company news has been published on this site\.|Company news is temporarily unavailable/,
-      ),
-    ).toBeVisible();
-    await expect(
-      main.getByText(/No resources have been published yet|Resources are temporarily unavailable/),
-    ).toBeVisible();
+      main.getByText(/No company news has been published|No resources have been published/),
+    ).toHaveCount(0);
     await expect(main.locator('a[href^="https://"]')).toHaveCount(4);
     // An unpublished slug is a 404 when the service answers; an outage renders the unavailable page.
     const missing = await page.request.get("/news/anything");
@@ -810,14 +829,16 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/news");
     const main = page.locator("main");
-    // Four section headings, in order: company news, investor documents (since 2026-09-09),
-    // historical, resources.
+    // A governed section that fetched cleanly and returned nothing is left out rather
+    // than announcing itself as empty (website improvement program, 2026-09-09), so with
+    // no published records the page shows the investor documents and the historical record.
     await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-      "Company news",
       "Investor documents",
       "Historical releases",
-      "Resources",
     ]);
+    await expect(
+      main.getByText(/has been published on this site|have been published yet/),
+    ).toHaveCount(0);
     // Nothing under "Company news" links to an item unless the read model published it.
     const items = main.locator('a[href^="/news/"]');
     const count = await items.count();
@@ -834,12 +855,16 @@ test.describe("LifeSupply public site", () => {
   test("keeps the published document list fail-closed on the news page", async ({ page }) => {
     await page.goto("/news");
     const main = page.locator("main");
-    await expect(main.getByRole("heading", { name: "Published public documents" })).toBeVisible();
-    await expect(
-      main.getByText(
-        /No public document has been published yet|The published document list is temporarily unavailable/,
-      ),
-    ).toBeVisible();
+    // Fail-closed: with nothing published the list is left out entirely rather than
+    // announcing itself as empty; an outage still says so, and neither state ever
+    // links a file (website improvement program, 2026-09-09).
+    const list = main.getByRole("heading", { name: "Published public documents" });
+    if ((await list.count()) > 0) {
+      await expect(
+        main.getByText("The published document list is temporarily unavailable", { exact: false }),
+      ).toBeVisible();
+    }
+    await expect(main.getByText("No public document has been published yet")).toHaveCount(0);
     await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
   });
 

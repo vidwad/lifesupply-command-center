@@ -23,7 +23,17 @@ import type {
   PublishedDocumentDto,
 } from "@/server/public-web/contracts";
 
-/** A section that says plainly when it is empty or unreachable rather than filling itself. */
+/**
+ * A governed section is shown when it has records, and when it could not be
+ * reached, where it says so. A section that fetched cleanly and returned
+ * nothing is left out entirely rather than announcing that it is empty
+ * (website improvement program, 2026-09-09).
+ */
+function isEmpty<T>(published: { ok: true; data: T[] } | { ok: false }): boolean {
+  return published.ok && published.data.length === 0;
+}
+
+/** A section that says plainly when it is unreachable rather than filling itself. */
 function Note({ text, tone = "empty" }: { text: string; tone?: "empty" | "unavailable" }) {
   return (
     <p
@@ -54,13 +64,12 @@ export function displayDate(iso: string) {
 /** Governed public documents from the published read model; fails closed when unreachable. */
 function PublishedDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
   const copy = news.documents.published;
+  if (isEmpty(published)) return null;
   return (
     <Reveal className="mt-12">
       <Eyebrow as="h3">{copy.title}</Eyebrow>
       {!published.ok ? (
         <Note text={copy.unavailable} tone="unavailable" />
-      ) : published.data.length === 0 ? (
-        <Note text={copy.empty} />
       ) : (
         <ul className="mt-6 grid gap-4 md:grid-cols-2">
           {published.data.map((doc) => (
@@ -254,38 +263,38 @@ export function NewsPage({
       <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
       <section className="px-5 py-20 lg:px-8">
         <Container className="grid gap-16">
-          <Reveal>
-            <div className="flex items-center gap-4">
-              <IconBadge icon="file" size={18} />
-              <Eyebrow as="h2">{sections.current.title}</Eyebrow>
-            </div>
-            {!current.ok ? (
-              <Note text={sections.current.unavailable} tone="unavailable" />
-            ) : current.data.length === 0 ? (
-              <Note text={sections.current.empty} />
-            ) : (
-              <ul className="mt-6 grid gap-4">
-                {current.data.map((item) => (
-                  <li key={item.slug}>
-                    <SpotlightCard className="lsh-lift border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                      <Link href={newsItemRoute(item.slug)} className="group grid gap-3 p-7">
-                        <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                          {displayDate(item.date)}
-                        </p>
-                        <h3 className="lsh-display text-2xl text-[var(--lsh-charcoal)]">
-                          {item.title}
-                        </h3>
-                        <p className="leading-7 text-[var(--lsh-muted)]">{item.summary}</p>
-                        <span className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-                          Read <ArrowRight size={15} aria-hidden="true" />
-                        </span>
-                      </Link>
-                    </SpotlightCard>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Reveal>
+          {isEmpty(current) ? null : (
+            <Reveal>
+              <div className="flex items-center gap-4">
+                <IconBadge icon="file" size={18} />
+                <Eyebrow as="h2">{sections.current.title}</Eyebrow>
+              </div>
+              {!current.ok ? (
+                <Note text={sections.current.unavailable} tone="unavailable" />
+              ) : (
+                <ul className="mt-6 grid gap-4">
+                  {current.data.map((item) => (
+                    <li key={item.slug}>
+                      <SpotlightCard className="lsh-lift border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
+                        <Link href={newsItemRoute(item.slug)} className="group grid gap-3 p-7">
+                          <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                            {displayDate(item.date)}
+                          </p>
+                          <h3 className="lsh-display text-2xl text-[var(--lsh-charcoal)]">
+                            {item.title}
+                          </h3>
+                          <p className="leading-7 text-[var(--lsh-muted)]">{item.summary}</p>
+                          <span className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
+                            Read <ArrowRight size={15} aria-hidden="true" />
+                          </span>
+                        </Link>
+                      </SpotlightCard>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Reveal>
+          )}
 
           <InvestorDocuments published={documents} />
 
@@ -330,35 +339,37 @@ export function NewsPage({
             </Stagger>
           </div>
 
-          <Reveal>
-            <div className="flex items-center gap-4">
-              <IconBadge icon="clipboardList" size={18} />
-              <Eyebrow as="h2">{sections.resources.title}</Eyebrow>
-            </div>
-            {!resources.ok ? (
-              <Note text={sections.resources.unavailable} tone="unavailable" />
-            ) : resources.data.length === 0 ? (
-              <Note text={sections.resources.empty} />
-            ) : (
-              <ul className="mt-6 grid gap-4 md:grid-cols-2">
-                {resources.data.map((item) => (
-                  <li key={item.slug}>
-                    <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                      <Link href={resourceRoute(item.slug)} className="group grid gap-3 p-7">
-                        <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                          Reviewed {displayDate(item.reviewed)}
-                        </p>
-                        <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">
-                          {item.title}
-                        </h3>
-                        <p className="text-sm leading-6 text-[var(--lsh-muted)]">{item.summary}</p>
-                      </Link>
-                    </SpotlightCard>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Reveal>
+          {isEmpty(resources) ? null : (
+            <Reveal>
+              <div className="flex items-center gap-4">
+                <IconBadge icon="clipboardList" size={18} />
+                <Eyebrow as="h2">{sections.resources.title}</Eyebrow>
+              </div>
+              {!resources.ok ? (
+                <Note text={sections.resources.unavailable} tone="unavailable" />
+              ) : (
+                <ul className="mt-6 grid gap-4 md:grid-cols-2">
+                  {resources.data.map((item) => (
+                    <li key={item.slug}>
+                      <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
+                        <Link href={resourceRoute(item.slug)} className="group grid gap-3 p-7">
+                          <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                            Reviewed {displayDate(item.reviewed)}
+                          </p>
+                          <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">
+                            {item.title}
+                          </h3>
+                          <p className="text-sm leading-6 text-[var(--lsh-muted)]">
+                            {item.summary}
+                          </p>
+                        </Link>
+                      </SpotlightCard>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Reveal>
+          )}
         </Container>
       </section>
     </LifeSupplyLayout>

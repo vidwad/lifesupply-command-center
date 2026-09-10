@@ -1,6 +1,7 @@
 import { Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
+import type { ActionKey } from "@/lib/public-site/actions";
 import { BrandGrid } from "@/components/public-site/brand-grid";
 import { HeroVideo } from "@/components/public-site/hero-video";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
@@ -48,6 +49,35 @@ export function LifeSupplyHome() {
           </>
         }
       />
+
+      {/* Audience routes: the three journeys, immediately under the hero. */}
+      <section className="border-b border-[var(--lsh-rule)] px-5 py-12 lg:px-8">
+        <Container>
+          <Reveal>
+            <Eyebrow as="h2">{homepage.audiences.eyebrow}</Eyebrow>
+          </Reveal>
+          <Stagger as="ul" className="mt-6 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
+            {homepage.audiences.items.map((route) => (
+              <StaggerItem
+                key={route.title}
+                as="li"
+                className="flex h-full flex-col bg-[var(--lsh-paper)] p-6 lg:p-7"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="lsh-display text-lg leading-tight text-[var(--lsh-charcoal)]">
+                    {route.title}
+                  </h3>
+                  <IconBadge icon={iconForTitle(route.title)} size={18} />
+                </div>
+                <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{route.text}</p>
+                <div className="mt-auto pt-5">
+                  <ActionLink action={route.action as ActionKey} variant="text" />
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </section>
 
       {/* Who we are, where we are going, where we want to be: three panels after the hero. */}
       <section className="bg-[var(--lsh-paper)] px-5 py-20 lg:px-8">
