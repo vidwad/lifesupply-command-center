@@ -750,10 +750,13 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
     await expect(main.locator("table tbody tr")).toHaveCount(3);
     await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
-    await expect(main.getByRole("link", { name: "Request investor materials" })).toHaveAttribute(
-      "href",
-      /^mailto:invest@lifesupply\.com\?subject=/,
-    );
+    // The corporate overview added in round three offers the same action, so
+    // check every instance rather than assuming a single one.
+    const requests = await main.getByRole("link", { name: "Request investor materials" }).all();
+    expect(requests.length).toBeGreaterThan(0);
+    for (const request of requests) {
+      await expect(request).toHaveAttribute("href", /^mailto:invest@lifesupply\.com\?subject=/);
+    }
     await page.goto("/investor-relations/disclosures");
     await expect(
       page
@@ -771,9 +774,8 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/our-team");
     const main = page.locator("main");
-    await expect(
-      main.getByText("Titles as published on the prior LifeSupply website."),
-    ).toBeVisible();
+    // Round three replaced the provenance note with the title itself.
+    await expect(main.getByText(/as published on the prior LifeSupply website/)).toHaveCount(0);
     await expect(main.getByText("Chairman & CEO", { exact: true }).first()).toBeVisible();
     await expect(main.getByRole("heading", { name: "Our Board of Directors" })).toBeVisible();
     for (const [name, href] of [
@@ -848,9 +850,11 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/news");
     const main = page.locator("main");
     // A governed section that fetched cleanly and returned nothing is left out rather
-    // than announcing itself as empty (website improvement program, 2026-09-09), so with
-    // no published records the page shows the investor documents and the historical record.
+    // than announcing itself as empty (website improvement program, 2026-09-09). With no
+    // published records the page shows the round-three corporate overview, the investor
+    // documents and the historical record.
     await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+      "What LifeSupply is, in one place.",
       "Investor documents",
       "Historical releases",
     ]);

@@ -26,12 +26,13 @@ export const team = {
   labels: {
     management: "Leadership",
     board: "Our Board of Directors",
-    titlesNote: "Titles as published on the prior LifeSupply website.",
   },
   management: [
     {
       name: "Abdul Ladha",
       slug: "abdul-ladha",
+      /** Already published on this site beside the company video. */
+      role: "Chairman & CEO",
       summary:
         "Electrical engineer, entrepreneur, business leader, and philanthropist with 30 years of business and capital-market experience.",
       image: "/lsh/abdul-ladha.jpg",

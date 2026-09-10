@@ -23,12 +23,16 @@ export function TeamPage() {
 
       {/* Leadership: the single confirmed executive, at full width. */}
       <section className="mx-auto max-w-7xl px-5 pb-16 pt-20 lg:px-8">
+        {/*
+         * The sourcing note that sat here ("Titles as published on the prior
+         * LifeSupply website") was internal provenance shown to visitors. The
+         * title itself now carries the information (round three, outcome 9).
+         */}
         <Reveal className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex items-center gap-4">
             <IconBadge icon="users" size={18} />
             <Eyebrow as="h2">{labels.management}</Eyebrow>
           </div>
-          <p className="text-xs text-[var(--lsh-muted)]">{labels.titlesNote}</p>
         </Reveal>
         <div className="mt-6 grid gap-5">
           {management.map((member) => (

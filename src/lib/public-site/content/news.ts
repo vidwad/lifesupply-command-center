@@ -35,12 +35,52 @@ export const news = {
     eyebrow: "News & resources",
     title: "Company news, investor documents, the historical record, and practical resources.",
     description:
-      "Current company news is published here with its date. Investor documents are listed by access class, with public documents published through the governed workflow. The historical releases keep their original dates and public sources. Practical resources appear once they carry a named author, reviewer, and review date.",
+      "Company news carries its date. Investor documents are grouped by who can see them: some are open, some are shared on request. The 2022 releases are kept as a record and link to their original sources.",
+  },
+  /**
+   * A corporate overview built entirely from facts already published
+   * elsewhere on this site (round three, outcome 9). The news and resources
+   * sections are legitimately empty; rather than leave a visitor with nothing
+   * or invent an announcement to fill the gap, the page states what the group
+   * is. Every figure here appears on the investor pages with its full scope.
+   */
+  overview: {
+    eyebrow: "The company at a glance",
+    title: "What LifeSupply is, in one place.",
+    intro:
+      "For anyone arriving here first: the group, its businesses, and the figures it has reported. Each line is set out in full on the page it belongs to.",
+    facts: [
+      {
+        label: "The group",
+        text: "LifeSupply Health Inc. is a Canadian parent company with three wholly-owned subsidiaries: Wellmart Health Supplies Ltd. in Canada, LifeSupply US, Inc. in the United States, and Balkowitsch Enterprises Inc.",
+      },
+      {
+        label: "What it sells",
+        text: "Health, safety, medical and industrial products online, through four brands that each keep their own site, accounts, currency, prices and support.",
+      },
+      {
+        label: "Where it operates",
+        text: "Online commerce across Canada and the United States. Clinic planning, design, construction, fit-out and equipment for projects in British Columbia.",
+      },
+      {
+        label: "Scale",
+        text: "More than 25 years of operations, more than 50,000 products, and over 1,000,000 customers served since inception.",
+      },
+      {
+        label: "Reported results",
+        text: "For the year ended December 31, 2025: consolidated net sales of C$6.75M, gross profit of C$2.20M, and net income of C$284K, in Canadian dollars, unaudited.",
+      },
+      {
+        label: "In development",
+        text: "Metabolic-health supply and services, and non-drug supply programs for pharmacies. Neither can be bought today.",
+      },
+    ],
+    action: "investor_materials",
   },
   sections: {
     current: {
       title: "Company news",
-      empty: "No company news has been published on this site.",
+      empty: "There is no company news on this site yet.",
       unavailable:
         "Company news is temporarily unavailable. The historical record below is unaffected.",
     },
@@ -50,8 +90,7 @@ export const news = {
     },
     resources: {
       title: "Resources",
-      empty:
-        "No resources have been published yet. Each will carry its author, reviewer, and review date.",
+      empty: "There are no resources here yet.",
       unavailable: "Resources are temporarily unavailable.",
     },
   },
@@ -65,19 +104,19 @@ export const news = {
     eyebrow: "Investor documents",
     title: "Investor documents: public, on request, and historical.",
     intro:
-      "This index lists investor materials by access class. No document file is hosted on this site yet; public documents will be published here with their version and date, and restricted materials remain available on request through the investor-relations channel.",
+      "The materials LifeSupply holds for investors, and who can see each one. No file is downloadable from this site; restricted material is shared through investor relations, with the recipient and any confidentiality terms settled first.",
     classes: [
       {
         title: "Public",
-        text: "Published here once approved, with title, date, version, and effective date.",
+        text: "Open to anyone, with its date and version shown.",
       },
       {
         title: "Restricted, on request",
-        text: "Shared with suitable recipients after a request and any confidentiality terms; never at a public address.",
+        text: "Shared through investor relations with suitable recipients, and never posted at a public address.",
       },
       {
         title: "Historical",
-        text: "Earlier materials kept for the record and labelled by their original date.",
+        text: "Earlier material kept for the record, labelled with its original date.",
       },
     ],
     records: [
@@ -108,8 +147,7 @@ export const news = {
     ] satisfies readonly DocumentRecord[],
     published: {
       title: "Published public documents",
-      empty:
-        "No public document has been published yet. Approved public documents appear here with their date and version.",
+      empty: "There is no public document here yet.",
       unavailable:
         "The published document list is temporarily unavailable. The records below are unaffected.",
       download: "Download",

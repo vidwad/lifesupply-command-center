@@ -740,6 +740,42 @@ describe("round three: architecture, placement and voice", () => {
     }
   });
 
+  it("states the company plainly where the governed sections are empty", () => {
+    // Rather than leave a visitor nothing or invent an announcement to fill the
+    // gap (round three, outcome 9). Every fact here appears in full elsewhere.
+    const newsContent = stripComments(read("src/lib/public-site/content/news.ts"));
+    expect(newsContent).toContain("overview:");
+    expect(newsContent).toContain("LifeSupply Health Inc. is a Canadian parent company");
+    // The figures match the investor pages exactly, currency and all.
+    for (const figure of ["C$6.75M", "C$2.20M", "C$284K"]) {
+      expect(newsContent).toContain(figure);
+    }
+    // Developing programs stay unpurchasable here too.
+    expect(newsContent).toContain("Neither can be bought today");
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
+    expect(page).toContain("overview.facts.map");
+  });
+
+  it("carries no document or leadership provenance note in public copy", () => {
+    const newsContent = stripComments(read("src/lib/public-site/content/news.ts"));
+    const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
+    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team.tsx`));
+    // Publishing mechanics: reviewers, versions-on-approval, governed workflow.
+    for (const banned of [
+      /author, reviewer, and review date/i,
+      /governed workflow/i,
+      /once approved, with title, date, version/i,
+    ]) {
+      expect(newsContent, String(banned)).not.toMatch(banned);
+    }
+    // Where titles came from is not a fact about the company.
+    expect(teamContent).not.toContain("titlesNote");
+    expect(teamPage).not.toContain("titlesNote");
+    expect(teamContent).not.toMatch(/as published on the prior/i);
+    // The leadership title itself is stated instead.
+    expect(teamContent).toContain('role: "Chairman & CEO"');
+  });
+
   it("keeps internal workflow and publication language out of public copy", () => {
     const files = [...publicContentFiles(), `${PUBLIC_DIR}/pages/contact.tsx`];
     for (const file of files) {
