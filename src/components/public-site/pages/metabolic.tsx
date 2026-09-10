@@ -7,7 +7,7 @@ import { CommercialModel } from "@/components/public-site/commercial-model";
 import { PathwayComparison } from "@/components/public-site/pathway-comparison";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import {
   Callout,
   IconBadge,
@@ -243,7 +243,11 @@ export function CareKitsPage() {
         actions={<ActionLink action="discuss_program" />}
       />
       <StatusBand />
-      <PathwayComparison comparison={pathwayComparison} pathways={comparisonRows()} />
+      {/* The hub's single catalogue: every row opens that pathway's own page. */}
+      <PathwayComparison
+        comparison={pathwayComparison}
+        pathways={comparisonRows().map((row) => ({ ...row, href: kitRoute(row.slug) }))}
+      />
 
       <section className="px-5 pb-20 lg:px-8">
         <Container>
@@ -260,35 +264,13 @@ export function CareKitsPage() {
             ))}
           </Stagger>
 
-          {/* The eight pathways. */}
-          <Stagger className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {metabolic.kits.map((kit) => (
-              <StaggerItem key={kit.slug} className="h-full">
-                <SpotlightCard className="lsh-lift h-full border border-t-2 border-[var(--lsh-rule)] border-t-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] transition-colors hover:border-t-[var(--lsh-brand-red)]">
-                  <Link href={kitRoute(kit.slug)} className="group flex h-full flex-col p-7">
-                    <div className="flex items-start justify-between gap-4">
-                      <IconBadge icon={iconForTitle(kit.id)} />
-                      <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                        {kit.id} · {metabolic.status.label}
-                      </p>
-                    </div>
-                    <h3 className="lsh-display mt-6 text-xl leading-tight text-[var(--lsh-charcoal)]">
-                      {kit.label}
-                    </h3>
-                    <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{kit.audience}</p>
-                    <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-6 text-[11px] text-[var(--lsh-brand-red)]">
-                      Pathway details{" "}
-                      <ArrowRight
-                        size={15}
-                        aria-hidden="true"
-                        className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
-                      />
-                    </span>
-                  </Link>
-                </SpotlightCard>
-              </StaggerItem>
-            ))}
-          </Stagger>
+          {/*
+           * The eight pathway cards that stood here repeated the comparison
+           * above them: same identifier, name, audience and status, twice on
+           * one page (round three, outcome 5). The comparison is now the single
+           * catalogue and every pathway name in it opens that pathway's page,
+           * so nothing is lost and nothing is read twice.
+           */}
           <Reveal className="mt-10 flex flex-wrap gap-3">
             {kitsHub.actions.map((action, index) => (
               <ActionLink

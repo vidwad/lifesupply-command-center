@@ -640,11 +640,15 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/metabolic-health/care-kits");
     const main = page.locator("main");
+    // One catalogue, rendered as a table from `lg` up and as cards below it, so
+    // every pathway has two link elements and eight distinct destinations
+    // (round three, outcome 5).
     const kitLinks = main.locator('a[href^="/metabolic-health/care-kits/"]');
-    await expect(kitLinks).toHaveCount(8);
-    const hrefs = await kitLinks.evaluateAll((links) =>
+    const allHrefs = await kitLinks.evaluateAll((links) =>
       links.map((link) => (link as HTMLAnchorElement).getAttribute("href")!),
     );
+    const hrefs = [...new Set(allHrefs)];
+    expect(hrefs).toHaveLength(8);
     for (const href of hrefs) {
       const response = await page.request.get(href);
       expect(response.ok(), href).toBe(true);

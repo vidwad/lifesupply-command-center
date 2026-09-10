@@ -670,7 +670,13 @@ export const commercialModel = {
   note: "This describes a proposed model. It is not an offer, it establishes no contract, and it implies no integration between the operating stores or with a provider's own systems. The two contracted categories are in development and cannot be bought today.",
 } as const;
 
-/** One comparison row per pathway, built from its own fields. Adds no claim. */
+/**
+ * One comparison row per pathway, built from its own fields. Adds no claim.
+ *
+ * This is the care-kits hub's only catalogue (round three, outcome 5): the
+ * eight cards that used to repeat it are gone, so each row carries the route
+ * to its own page and the name is the way in.
+ */
 export function comparisonRows() {
   return metabolic.kits.map((kit) => ({
     id: kit.id,
