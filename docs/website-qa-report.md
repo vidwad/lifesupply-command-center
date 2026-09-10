@@ -65,6 +65,18 @@ Codex reviewed the cumulative content and action-registry diff without access to
 
 Two were not adopted, with reason: the financing-presentation description and the development-program scope are pre-existing approved copy drawn from the partner overview and the earlier investor stages, which the diff did not show Codex. Its stylistic note that a direct question heading departs from third-person voice was declined, because the question form is what makes the clinic choice legible to a visitor.
 
+## Deployment verification, September 9, 2026
+
+The merge of Stage 5 (`6616883`) was not assumed to be deployed. The production alias was polled until it served a marker unique to that build, and an earlier check confirmed why this matters: for a period after the merge the alias was still serving the Stage 2 to 4 build, and the Stage 5 heading fix was absent from it.
+
+| Checked on `https://lifesupply-command-center-vidwads-projects.vercel.app` | Result |
+| --- | --- |
+| Alias serving the Stage 5 build | Confirmed by a copy marker unique to that stage |
+| Sweep of 15 principal routes at 1440 px and 390 px | Clean: status, overflow, one `h1`, heading order, image `alt`, third-party scripts, `noindex`, canonical |
+| Heading order on Partners and Growth strategy | `h1` then `h2`, the defect fixed in Stage 5 |
+| Legacy redirects | `/our-operations`, `/investor-relations/documents`, `/contact-2` and a withdrawn profile all answer 308 to their replacements |
+| Inquiry routes | Encoded subjects present on the live contact page |
+
 ## Final verification checklist
 
 Completed in Stage 5 and recorded there.
