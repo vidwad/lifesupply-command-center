@@ -232,12 +232,26 @@ export const clinics = {
     actions: ["equipment_quote"],
   },
 
-  /** `/clinic-solutions/ongoing-supplies/` */
+  /**
+   * `/clinic-solutions/ongoing-supplies/`
+   *
+   * Round four, change 5. This page is read by a clinic that is already open
+   * and wants to buy. It used to carry the construction attribution and the
+   * project-sequence qualification, both of which belong to a project the
+   * reader is not undertaking. They stay on the project pages; a single line
+   * points there for anyone who does need them, and the non-clinical boundary
+   * stays because it qualifies what is on this page.
+   */
   ongoingSupplies: {
     eyebrow: "Ongoing supplies",
     title: "Keep an open clinic supplied.",
     intro:
       "Routine procurement runs through the operating stores, with their accounts, published prices, and repeat ordering as each store provides them. A supply review matches the practice to the right categories and channel.",
+    /** The one line about projects on a page that is not about projects. */
+    projectPointer:
+      "Planning, design, construction and fit-out are a separate service for British Columbia projects, set out under Clinic Solutions.",
+    boundary:
+      "LifeSupply does not operate patient-care clinics and takes no part in clinical decisions. What is on this page is supply.",
     available: {
       title: "Available today",
       items: [

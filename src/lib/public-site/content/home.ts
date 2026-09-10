@@ -81,13 +81,22 @@ export const homepage = {
    * the expansion direction conditionally, in the qualification pattern the
    * approved About copy already uses. Pending product-owner approval.
    */
+  /**
+   * Round four, change 1. This section used to restate the operating scope
+   * and the growth direction, which the panels above it and the brand cards
+   * below it already carry. It now does the one job nothing else on the page
+   * does: it says how the group is put together. The growth direction is
+   * stated once, in the "Growing" panel above; the brands are shown once, in
+   * the cards below; the full structure with acquisition years is on Contact.
+   * Drafted with Codex against the verified facts and edited before use.
+   */
   introduction: {
     eyebrow: "The LifeSupply group",
-    title: "Commerce, clinic development, equipment, and ongoing supply.",
+    title: "One parent company, three wholly-owned subsidiaries.",
     statement:
-      "Four operating websites sit under one corporate group, combining online supply commerce in Canada and the United States with clinic development services for British Columbia projects. Each keeps its own accounts, currency, and customer support.",
+      "LifeSupply Health Inc. is the parent of Wellmart Health Supplies Ltd. in Canada, LifeSupply US, Inc. in the United States, and Balkowitsch Enterprises Inc., all wholly owned.",
     qualification:
-      "The stated direction is to build on those capabilities toward deeper clinic relationships and recurring supply programs. Pharmacy and metabolic-health supply services are in development and are not available today.",
+      "The four customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing. Each brand keeps its own site, accounts, currency, prices and support.",
   },
 
   /**

@@ -168,10 +168,13 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
     await expect(main.getByText("This is where we want to be")).toBeVisible();
+    // The third section explains how the group is put together. It used to
+    // restate the operating scope the panels above already carry (round four,
+    // change 1).
     const order = await main
       .getByRole("heading", { level: 2 })
       .evaluateAll((nodes) => nodes.slice(0, 3).map((node) => node.textContent?.trim()));
-    expect(order[2]).toBe("Commerce, clinic development, equipment, and ongoing supply.");
+    expect(order[2]).toBe("One parent company, three wholly-owned subsidiaries.");
   });
 
   test("keeps the hero heading one accessible sentence while its words animate", async ({

@@ -19,9 +19,16 @@ export type BusinessStatus = "Operating" | "In development" | "Under evaluation"
 
 export const investorRelations = {
   // Approved (published since PR #60/#61).
-  title: "Investor information, presented with context.",
+  /**
+   * Round four, change 6. The opening described the information policy rather
+   * than the business: a reader learned how documents are classified before
+   * learning what the company does. It now leads with operations and the
+   * reported result, and the access classes stay on the documents index where
+   * they belong. Drafted with Codex and edited before use.
+   */
+  title: "An operating supply business, building on it.",
   description:
-    "The investor section presents current annual-report context alongside historical news and materials, with a clear distinction between disclosed information, forward-looking statements, and offering-specific content.",
+    "LifeSupply Health Inc. sells health, safety, medical and industrial products online across Canada and the United States, and plans, builds and equips clinics for projects in British Columbia. For the year ended December 31, 2025 it reported consolidated net sales of C$6.75M and net income of C$284K, in Canadian dollars and unaudited. Two supply programs are in development on that base, and the pages below set out the results, the growth sequence, and how to request materials.",
   contact: { email: "invest@lifesupply.com", phone: "604-677-4146" },
   currentReport: {
     period: "Year ended December 31, 2025",

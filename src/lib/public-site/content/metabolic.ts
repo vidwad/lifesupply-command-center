@@ -78,12 +78,12 @@ export const metabolic = {
     eyebrow: "Metabolic Care Supply & Services",
     title: "Support that stays with the patient.",
     intro:
-      "Patient supplies, clinic procurement, partner-ready fulfilment, and workflow support for modern care pathways. LifeSupply is developing this as one commercial relationship, configured around the care pathway; this page explains the model and its status.",
+      "Patient supplies, clinic procurement, partner-ready fulfilment, and workflow support for modern care pathways. LifeSupply is developing the four to work together around a care pathway. They stay separate arrangements: not one contract, not one account, and not a connection between anyone's systems. This page explains the model and its status.",
     experience: {
       eyebrow: "A connected supply experience",
       title: "Start well. Stay supplied. Keep care moving.",
       intro:
-        "LifeSupply connects non-drug patient supplies with clinic procurement, coordinated fulfilment, and practical workflow support: one commercial relationship, configured around the care pathway.",
+        "LifeSupply connects non-drug patient supplies with clinic procurement, coordinated fulfilment, and practical workflow support, configured around the care pathway and coordinated rather than combined into a single agreement.",
       steps: [
         {
           index: "01",
@@ -124,7 +124,9 @@ export const metabolic = {
         },
         {
           title: "Workflow & reporting",
-          text: "Ordering visibility, status reporting, and non-clinical workflow support under an agreed service scope.",
+          // Round four, change 4: this promised reporting while the commercial
+          // model said reporting scope was undefined. One statement now.
+          text: "Non-clinical administrative support for the supply side of a programme, under a scope agreed in advance. In development, and not available today.",
         },
       ],
       note: "One portfolio, several ways in. Starter equipment is chosen once, not subscribed to. What recurs are the consumables a pathway uses up, the clinic's own ordinary purchasing, and any contracted service.",
@@ -155,7 +157,9 @@ export const metabolic = {
           "Usage-driven replenishment",
           "Clinic supply account",
           "Coordinated fulfilment",
-          "Workflow and status reporting",
+          // Round four, change 4: this listed reporting as program support
+          // while the commercial model said reporting scope was undefined.
+          "Non-clinical workflow support, under an agreed scope",
         ],
       },
       principle: {
@@ -663,7 +667,7 @@ export const commercialModel = {
       provided: "Non-clinical administrative support for the supply side of a program.",
       revenue: "Service revenue rather than product revenue. Nothing is priced.",
       frequency: "As the agreed scope sets out.",
-      status: "In development. Reporting scope is not defined and is not offered.",
+      status: "In development, and not available today.",
       retained: "All clinical decisions, interpretation, and patient care.",
     },
   ],
