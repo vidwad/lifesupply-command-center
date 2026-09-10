@@ -8,6 +8,18 @@ For LifeSupplyHealth.com, public-site expansion, Clinic Solutions, operating-bra
 - `docs/website-development/STATUS.md` — stage status, decisions, evidence.
 - `docs/website-development/KICKOFF_PROMPT.md` — initial Stage 1 prompt and later-stage template.
 
+### Website improvement program (opened September 9, 2026)
+
+A separate, staged program improves the existing public site rather than rebuilding it: proposition and information architecture, the growth business case, public-facing language, inquiry routes, clinic pathways, store pathways, static financial presentation, and visuals. Claude coordinates and integrates; Codex is used for content rewriting, design proposals, and independent review, with every contribution inspected before it ships. Each stage runs the repository's checks, then commits, pushes, opens a pull request, waits for the required checks, and squash-merges. Its documents are:
+
+- `docs/website-improvement-plan.md` — scope, decisions, stages, risks.
+- `docs/website-content-evidence.md` — evidence register for material public claims, with status and release authority.
+- `docs/website-change-log.md` — what changed per stage, with the merge commit.
+- `docs/website-qa-report.md` — standing checks and the final verification checklist.
+- `docs/website-asset-manifest.md` — diagrams and images: placement, alt text, provenance, rules for new assets.
+
+These supplement the website workstream brief above; they do not replace it, and the source register and status table remain authoritative for their own scope.
+
 This scoped website workstream supplements the Command Center instructions below. The earlier "sole active workstream" wording refers to the historical Command Center release plan; website work now follows the separate sequence below when explicitly requested. All existing Phase 11 security, data, approval, migration, and release gates remain in force. Website development does not accept a Command Center launch gate.
 
 The website brief updates the earlier public sitemap and page-family order for the approved planning direction. Preserve the red/black/white brand system and original assets. Preserve the existing public website codebase, staff dashboard, authenticated modules, separate public/internal deployment surfaces, and source-system controls.
