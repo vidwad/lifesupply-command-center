@@ -365,7 +365,18 @@ export function OngoingSuppliesPage() {
         description={page.intro}
         actions={<ActionLink action="clinic_supply_review" />}
       />
-      <ClinicDistinction />
+      {/*
+       * Round four, change 5: the shared distinction block carries the
+       * construction attribution and belongs on the project pages. An open
+       * clinic gets the boundary that applies to buying, and one line saying
+       * where projects are dealt with.
+       */}
+      <section className="px-5 py-12 lg:px-8">
+        <Reveal className="mx-auto grid max-w-7xl gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-2 lg:pl-8">
+          <p className="leading-7 text-[var(--lsh-charcoal)]">{page.boundary}</p>
+          <p className="leading-7 text-[var(--lsh-muted)]">{page.projectPointer}</p>
+        </Reveal>
+      </section>
       <SplitSection
         tone="onSurface"
         eyebrow="Supply categories"
@@ -383,7 +394,22 @@ export function OngoingSuppliesPage() {
       <Callout icon="shield" eyebrow={page.conditional.title} tone="onLight">
         <p>{page.conditional.text}</p>
       </Callout>
-      <ConditionalClose actions={page.actions} />
+      {/*
+       * The project-sequence note ("a consultation is not a contracted
+       * project") closes the project pages, not this one. An open clinic gets
+       * the two actions that apply to buying.
+       */}
+      <section className="bg-[var(--lsh-ink)] px-5 py-16 text-white lg:px-8">
+        <Reveal className="mx-auto flex max-w-7xl flex-wrap gap-3 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:pl-8">
+          {page.actions.map((action, index) => (
+            <ActionLink
+              key={action}
+              action={action as ActionKey}
+              variant={index === 0 ? "primary" : "onDark"}
+            />
+          ))}
+        </Reveal>
+      </section>
     </LifeSupplyLayout>
   );
 }

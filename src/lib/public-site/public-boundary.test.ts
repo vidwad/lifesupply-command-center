@@ -673,6 +673,71 @@ describe("round two: qualified inquiries and policy accuracy", () => {
   });
 });
 
+describe("round four: consolidation, precision and available actions", () => {
+  it("gives each homepage section its own job", () => {
+    const home = stripComments(read("src/lib/public-site/content/home.ts"));
+    // The group introduction explains the structure; it no longer restates the
+    // operating scope the panels above and the brand cards below already carry.
+    expect(home).toContain("One parent company, three wholly-owned subsidiaries.");
+    expect(home).not.toMatch(/introduction:[\s\S]{0,600}Four operating websites sit under one/);
+    // The growth direction is stated once, in the panels.
+    const introBlock = home.slice(home.indexOf("introduction:"), home.indexOf("audiences:"));
+    expect(introBlock).not.toMatch(/stated direction|growth strateg/i);
+  });
+
+  it("says the four categories are coordinated, never one contract or account", () => {
+    const metabolic = stripComments(read("src/lib/public-site/content/metabolic.ts"));
+    expect(metabolic).not.toMatch(/one commercial relationship/i);
+    expect(metabolic).toContain("not one contract, not one account");
+    // Reporting scope is stated once, the same way in both places.
+    expect(metabolic).not.toMatch(/Reporting scope is not defined/i);
+    expect(metabolic).not.toMatch(/status reporting/i);
+  });
+
+  it("opens the investor section with the business, not the access policy", () => {
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    const opening = investors.slice(0, investors.indexOf("currentReport:"));
+    expect(opening).toContain("sells health, safety, medical and industrial products online");
+    expect(opening).toContain("C$6.75M");
+    // The classification scheme is not the first thing a reader meets.
+    expect(opening).not.toMatch(/disclosed information, forward-looking statements/i);
+  });
+
+  it("keeps project qualifications off the ongoing-supplies page", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
+    const supplies = page.slice(page.indexOf("export function OngoingSuppliesPage"));
+    // The construction attribution and the project-sequence note belong to a
+    // project the reader of this page is not undertaking.
+    expect(supplies).not.toContain("<ClinicDistinction />");
+    expect(supplies).not.toContain("<ConditionalClose ");
+    expect(supplies).toContain("{page.projectPointer}");
+  });
+
+  it("orders the milestones oldest first and marks the cumulative figure", () => {
+    const about = stripComments(read("src/lib/public-site/content/about.ts"));
+    expect(about).toContain("orderedMilestones");
+    // Every entry carries a sort key, so a new one cannot land out of order.
+    const entries = about.match(/date: "/g) ?? [];
+    const keys = about.match(/sortKey: "/g) ?? [];
+    expect(keys.length).toBe(entries.length);
+    // Cumulative is never presented as a current customer count.
+    expect(about).toContain("cumulative since inception, not a count of current customers");
+    expect(about).not.toMatch(/\b1 million (active|current) customers\b/i);
+  });
+
+  it("advertises no empty document category and no download that does not exist", () => {
+    const news = stripComments(read("src/lib/public-site/content/news.ts"));
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
+    // The three access-class tiles are gone; one of them held nothing at all.
+    expect(page).not.toContain("d.classes.map");
+    expect(news).toContain("None is downloadable here");
+    // Every record still shows where it stands.
+    for (const category of ["Restricted, on request", "Historical"]) {
+      expect(news).toContain(category);
+    }
+  });
+});
+
 describe("round three: architecture, placement and voice", () => {
   it("sets out three tiers with one status vocabulary, and separates the two pharmacy businesses", () => {
     const architecture = stripComments(read("src/lib/public-site/content/architecture.ts"));
@@ -1148,7 +1213,8 @@ describe("Stage 2 registries and navigation", () => {
       "homepage.paths.map",
       "homepage.closing",
       "about.footprint",
-      "about.milestones.items.map",
+      // Ordered by sortKey rather than by array position (round four).
+      "orderedMilestones().map",
       "about.direction",
       "about.developing.lead",
       "about.developing.items.map",
@@ -1472,8 +1538,16 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     // the Clinics brand page render it. Nothing anywhere describes owned
     // clinics or patient care as a company service.
     expect(clinicsContent()).toContain("does not operate patient-care clinics");
-    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(3);
+    // Two project pages carry the shared distinction block. The ongoing-supplies
+    // page carries the same boundary in its own words, because the shared block
+    // also carries construction attribution that belongs to a project (round
+    // four, change 5). What matters is that every clinic page states it.
+    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(2);
     expect(clinicPages()).toContain("{clinics.distinction}");
+    expect(clinicsContent()).toContain(
+      "LifeSupply does not operate patient-care clinics and takes no part in clinical decisions",
+    );
+    expect(clinicPages()).toContain("{page.boundary}");
     for (const source of [content(), ...publicComponents()]) {
       expect(source).not.toMatch(/\bour (patient-care )?clinics\b/i);
       expect(source).not.toMatch(/\bpatient care (is|we) (provided|provide)/i);
@@ -1488,8 +1562,16 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
 
   it("treats post-opening supply as conditional on every clinic page", () => {
     expect(clinicsContent()).toContain("creates no supply commitment");
-    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(3);
+    // The project-sequence note closes the two project pages. The ongoing-
+    // supplies page keeps its own conditional block, which states what is not
+    // offered to a clinic that is already buying (round four, change 5).
+    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(2);
     expect(clinicPages()).toContain("{clinics.postOpening}");
+    expect(clinicsContent()).toContain("are not offered on this site today");
+    expect(clinicPages()).toContain("{page.conditional.text}");
+    // And the supplies page points at the project service rather than
+    // explaining it, so a buying clinic is not made to read project terms.
+    expect(clinicsContent()).toContain("are a separate service for British Columbia projects");
   });
 
   it("never restates store terms: thresholds, delivery times, or prices", () => {

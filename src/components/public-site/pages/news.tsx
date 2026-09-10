@@ -14,7 +14,6 @@ import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public
 import { IconBadge } from "@/components/public-site/sections";
 import { ACTIONS, type ActionKey } from "@/lib/public-site/actions";
 import { news } from "@/lib/public-site/content/news";
-import { iconForTitle } from "@/lib/public-site/icon-map";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
 import { LIFE_SUPPLY_ROUTES, newsItemRoute, resourceRoute } from "@/lib/public-site/routes";
@@ -149,17 +148,12 @@ function InvestorDocuments({ published }: { published: Published<PublishedDocume
         </p>
         <p className="mt-3 max-w-3xl leading-7 text-[var(--lsh-muted)]">{d.intro}</p>
       </Reveal>
-      <Stagger className="mt-8 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
-        {d.classes.map((entry) => (
-          <StaggerItem key={entry.title} className="flex gap-4 bg-[var(--lsh-surface)] p-6">
-            <IconBadge icon={iconForTitle(entry.title)} size={18} />
-            <div>
-              <Eyebrow as="h3">{entry.title}</Eyebrow>
-              <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{entry.text}</p>
-            </div>
-          </StaggerItem>
-        ))}
-      </Stagger>
+      {/*
+       * The three access-class tiles were removed in round four, change 9.
+       * They described a classification scheme rather than anything a visitor
+       * could act on, and one of the three, "Public", held nothing at all.
+       * Each record still shows its access label in the table below.
+       */}
       {/* Phones: one stacked card per record. */}
       <Stagger as="ul" className="mt-8 grid gap-4 md:hidden">
         {d.records.map((record) => (

@@ -76,57 +76,72 @@ export const about = {
    * citations already rendered as figures. Nothing from the legacy timeline
    * graphic or the legacy site's undated claims.
    */
+  /**
+   * Round four, change 8. The entries ran 2020, 2023, then four from 2022,
+   * then 2025, which is neither chronological nor a deliberate grouping. They
+   * are ordered by `sortKey` now, oldest first, so the order cannot drift when
+   * an entry is added; a regression test checks it. Year-only dates stay
+   * year-only, because no month or day is evidenced for them.
+   */
   milestones: {
     eyebrow: "Milestones",
     title: "A dated public record.",
-    note: "Each item carries its date. The 2022 releases link to the sources that carried them.",
+    note: "Oldest first. The 2022 releases link to the sources that carried them.",
     items: [
       {
         date: "2020",
+        sortKey: "2020-00-00",
         text: "Acquired Wellmart Health Supplies Ltd., which became the group's Canadian operating base.",
         source: "Corporate record",
         href: null,
       },
       {
-        date: "2023",
-        text: "Acquired Balkowitsch Enterprises Inc., adding a United States customer base and distributor network.",
-        source: "Corporate record",
-        href: null,
-      },
-      {
         date: "April 5, 2022",
+        sortKey: "2022-04-05",
         text: "Acquisition of Smart Move Medical assets announced.",
         source: "Yahoo News",
         href: "https://www.yahoo.com/now/lifesupply-announces-acquisition-medical-supplies-150000544.html",
       },
       {
         date: "April 21, 2022",
+        sortKey: "2022-04-21",
         text: "Dr. Margaret Clarke appointed to the Board of Directors.",
         source: "Yahoo Finance",
         href: "https://ca.finance.yahoo.com/news/lifesupply-appoints-dr-margaret-clarke-150000607.html",
       },
       {
         date: "May 11, 2022",
+        sortKey: "2022-05-11",
         text: "Distribution partnership with Ortho Active expanded.",
         source: "Newswire",
         href: "https://www.newswire.ca/news-releases/lifesupply-expands-distribution-partnership-with-ortho-active-864792320.html",
       },
       {
         date: "June 14, 2022",
+        sortKey: "2022-06-14",
         text: "Distribution partnership with Mothers Choice Products announced.",
         source: "Newswire",
         href: "https://www.newswire.ca/news-releases/lifesupply-joins-forces-with-mothers-choice-products-for-online-distribution-of-top-tier-maternal-health-products-808815327.html",
       },
       {
-        date: "Year ended December 31, 2025",
-        text: "Reported consolidated net sales of C$6.75M, gross profit of C$2.20M, and net income of C$284K, unaudited.",
-        source: "Investor disclosures",
+        date: "2023",
+        sortKey: "2023-00-00",
+        text: "Acquired Balkowitsch Enterprises Inc., adding a United States customer base and distributor network.",
+        source: "Corporate record",
         href: null,
       },
       {
         date: "2025 annual report",
-        text: "Cites more than 25 years of operations, more than 50,000 products, and more than 1 million customers served since inception.",
+        sortKey: "2025-00-01",
+        text: "Cites more than 25 years of operations, more than 50,000 products, and more than 1 million customers served since inception. The customer figure is cumulative since inception, not a count of current customers.",
         source: "2025 annual report",
+        href: null,
+      },
+      {
+        date: "Year ended December 31, 2025",
+        sortKey: "2025-12-31",
+        text: "Reported consolidated net sales of C$6.75M, gross profit of C$2.20M, and net income of C$284K, unaudited.",
+        source: "Investor disclosures",
         href: null,
       },
     ],
@@ -186,3 +201,13 @@ export const about = {
     text: "The stated direction is to develop deeper clinic relationships and recurring patient-support supply programs on top of the existing commerce, clinic-development, and equipment capabilities. Each initiative is presented on this site with its own status.",
   },
 } as const;
+
+/**
+ * Milestones oldest first, ordered by `sortKey` rather than by the order the
+ * entries happen to sit in (round four, change 8). A year-only entry sorts to
+ * the start of its year, which is why its key ends `-00-00`: no month or day
+ * is evidenced, and none is invented to make sorting work.
+ */
+export function orderedMilestones() {
+  return [...about.milestones.items].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+}

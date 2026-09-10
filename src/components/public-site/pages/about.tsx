@@ -23,6 +23,7 @@ import { IconBadge, SplitSection } from "@/components/public-site/sections";
 import { VideoEmbed } from "@/components/public-site/video-embed";
 import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
+import { orderedMilestones } from "@/lib/public-site/content/about";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import { ABOUT_VIDEO, youtubeWatchUrl } from "@/lib/public-site/video";
 
@@ -142,7 +143,7 @@ export function AboutPage() {
             </Reveal>
             <ScrollBeam className="mt-10 pl-8">
               <ol className="grid gap-8">
-                {about.milestones.items.map((item) => (
+                {orderedMilestones().map((item) => (
                   <Reveal key={`${item.date}-${item.text}`} as="li" className="relative">
                     <span
                       className="absolute -left-8 top-1.5 h-3 w-3 -translate-x-[calc(50%-1px)] rounded-full bg-[var(--lsh-brand-red)] ring-4 ring-[var(--lsh-surface)]"

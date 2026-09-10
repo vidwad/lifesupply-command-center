@@ -103,22 +103,16 @@ export const news = {
   documents: {
     eyebrow: "Investor documents",
     title: "Investor documents: public, on request, and historical.",
+    /**
+     * Round four, change 9. Three access classes were published while nothing
+     * was downloadable, so two-thirds of the block described categories a
+     * visitor could not act on: "Public" held nothing, and the classification
+     * scheme is document control rather than information a reader needs. The
+     * page now names the materials that exist and the one action available,
+     * which is to ask for them. The classes stay on each record as a label.
+     */
     intro:
-      "The materials LifeSupply holds for investors, and who can see each one. No file is downloadable from this site; restricted material is shared through investor relations, with the recipient and any confidentiality terms settled first.",
-    classes: [
-      {
-        title: "Public",
-        text: "Open to anyone, with its date and version shown.",
-      },
-      {
-        title: "Restricted, on request",
-        text: "Shared through investor relations with suitable recipients, and never posted at a public address.",
-      },
-      {
-        title: "Historical",
-        text: "Earlier material kept for the record, labelled with its original date.",
-      },
-    ],
+      "Three materials are held for investors. None is downloadable here: each is shared through investor relations, with the recipient and any confidentiality terms settled first.",
     records: [
       {
         title: "Annual-report narrative, year ended December 31, 2025",
