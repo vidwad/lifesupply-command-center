@@ -132,7 +132,7 @@ export const homepage = {
   // Stage 2 draft. Section heading only; the cards come from the brand registry.
   brands: {
     eyebrow: "Operating brands",
-    title: "Four operating websites across Canada and the United States.",
+    title: "Four operating businesses, each with its own customers.",
     description:
       "Each brand keeps its own storefront or service site, accounts, currency, and customer support. LifeSupply Health is the corporate hub, not a store.",
   },

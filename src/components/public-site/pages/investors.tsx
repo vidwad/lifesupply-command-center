@@ -27,6 +27,7 @@ const SECTION_ROUTES = {
   growthStrategy: STAGE_5_ROUTES.growthStrategy,
   advancedTherapeutics: STAGE_5_ROUTES.advancedTherapeutics,
   news: LIFE_SUPPLY_ROUTES.news,
+  operations: LIFE_SUPPLY_ROUTES.operations,
   disclosures: STAGE_5_ROUTES.disclosures,
 } as const;
 
@@ -183,7 +184,7 @@ export function InvestorRelationsPage() {
             text: section.text,
             icon: iconForTitle(section.title),
             href: SECTION_ROUTES[section.route],
-            linkLabel: "Open",
+            linkLabel: section.linkLabel,
           })),
         ]}
       />

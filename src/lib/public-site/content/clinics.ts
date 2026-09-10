@@ -186,7 +186,7 @@ export const clinics = {
       },
     ],
     servicesHeading: { eyebrow: "Services", title: "From feasibility to hand-over." },
-    specialtiesHeading: { eyebrow: "Specialties", title: "Clinic types the site names." },
+    specialtiesHeading: { eyebrow: "Specialties", title: "Clinic types served." },
     processHeading: {
       eyebrow: "Process",
       title: "Four stages, as the Clinics site describes them.",

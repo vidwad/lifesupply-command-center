@@ -52,7 +52,7 @@ export const businesses = {
         "LifeSupply.ca is a Canadian online store for medical, health, and home-care supplies, with clinic-supply categories for professional buyers. It serves patients, caregivers, and professionals through one storefront.",
       audience: {
         title: "Who it serves",
-        text: "Patients, caregivers, and medical professionals alike. This corporate site presents LifeSupply.ca with an emphasis on clinic procurement; that is a marketing direction, not a restriction, and every customer keeps the same store, accounts, and checkout.",
+        text: "Patients, caregivers, and medical professionals alike, including buyers purchasing for a clinic. Every customer uses the same store, the same account, and the same checkout.",
       },
       categories: {
         title: "Categories",
@@ -90,7 +90,7 @@ export const businesses = {
         "Balkowitsch Worldwide sells medical, health, wellness, and related categories to U.S. customers from the United States, with a broad general catalogue and its own established identity.",
       audience: {
         title: "Its place on this site",
-        text: "Balkowitsch Worldwide is one of the four operating websites presented here. Its catalogue, accounts, currency, prices, and customer support are its own, and it keeps its identity.",
+        text: "Balkowitsch Worldwide is one of the group's four operating businesses. Its catalogue, accounts, currency, prices, and customer support are its own, and it keeps its identity.",
       },
       categories: {
         title: "Categories",
