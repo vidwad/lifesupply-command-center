@@ -688,6 +688,26 @@ test.describe("LifeSupply public site", () => {
     ).toHaveAttribute("href", "mailto:abdul@lifesupply.com");
   });
 
+  test("never scrolls sideways: no public page is wider than the viewport", async ({ page }) => {
+    // The investor documents table needed 40rem and widened the whole news page on a
+    // phone (product owner, 2026-09-09). It now stacks below md; this holds the line.
+    for (const route of [
+      "/",
+      "/about-us",
+      "/news",
+      "/pharmacy-solutions",
+      "/our-team",
+      "/investor-relations/disclosures",
+    ]) {
+      await page.goto(route);
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(scrollWidth, route).toBeLessThanOrEqual(clientWidth + 1);
+    }
+  });
+
   test("keeps investor documents at a request step with no file link, and shows the figures scoped", async ({
     page,
   }) => {
