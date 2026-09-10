@@ -355,7 +355,21 @@ describe("action registry", () => {
 
   it("renders hrefs by destination kind", () => {
     expect(actionHref("investor_information")).toBe("/investor-relations/");
-    expect(actionHref("clinic_supply_review")).toBe("mailto:info@lifesupply.com");
+    expect(actionHref("clinic_supply_review")).toBe(
+      "mailto:info@lifesupply.com?subject=Clinic%20supply%20review",
+    );
+    // Every inquiry channel arrives with a subject a recipient can route on;
+    // navigation and commerce actions carry none.
+    for (const key of [
+      "discuss_program",
+      "supplier_inquiry",
+      "acquisition_inquiry",
+      "general_inquiry",
+      "investor_materials",
+    ] as const) {
+      expect(actionHref(key), key).toMatch(/^mailto:[^?]+\?subject=[A-Za-z0-9%]/);
+    }
+    expect(actionHref("shop_lifesupply")).not.toContain("subject=");
     expect(actionHref("explore_businesses")).toBe("/medical-supply-solutions/");
     expect(actionHref("pharmacy_hub")).toBe("/pharmacy-solutions/");
     expect(actionHref("plan_clinic")).toBe("https://www.lifesupplyclinics.com/contact-us/");

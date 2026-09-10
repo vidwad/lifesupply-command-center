@@ -66,7 +66,7 @@ export type ActionKey =
 export type ActionDestination =
   | { kind: "internal"; path: string }
   | { kind: "external"; url: string }
-  | { kind: "mailto"; value: string }
+  | { kind: "mailto"; value: string; subject?: string }
   | { kind: "tel"; value: string };
 
 export type InquiryIntent =
@@ -96,7 +96,19 @@ const VERIFIED = "2026-09-08";
 
 const internal = (path: string): ActionDestination => ({ kind: "internal", path });
 const external = (url: string): ActionDestination => ({ kind: "external", url });
-const mail = (value: string): ActionDestination => ({ kind: "mailto", value });
+/**
+ * A mail channel, optionally with the subject the visitor's mail
+ * application opens with. The public surface is database-free and the proxy
+ * blocks `/api/` on the public host, so there is no approved server-side
+ * delivery: these routes are the inquiry mechanism rather than a
+ * placeholder, and a subject line is what makes an arriving message
+ * routable (website improvement program, 2026-09-09).
+ */
+const mail = (value: string, subject?: string): ActionDestination => ({
+  kind: "mailto",
+  value,
+  subject,
+});
 
 export const ACTIONS: Record<ActionKey, ActionRecord> = {
   explore_businesses: {
@@ -138,7 +150,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Request a supply review",
     intent: "ongoing_procurement",
     // Routed to the corporate office since 2026-09-08 (the prior named channel was withdrawn).
-    destination: mail("info@lifesupply.com"),
+    destination: mail("info@lifesupply.com", "Clinic supply review"),
     ownerChannel: "Corporate office",
     verifiedAt: null,
   },
@@ -210,7 +222,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "discuss_program",
     label: "Discuss a supply program",
     intent: "metabolic_program",
-    destination: mail("info@lifesupply.com"),
+    destination: mail("info@lifesupply.com", "Supply program inquiry"),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -242,7 +254,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "clinic_collaboration",
     label: "Discuss clinic collaboration",
     intent: "partner",
-    destination: mail("info@lifesupply.com"),
+    destination: mail("info@lifesupply.com", "Clinic collaboration"),
     ownerChannel: "info@lifesupply.com",
     verifiedAt: null,
   },
@@ -274,7 +286,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "partner_inquiry",
     label: "Start a partner conversation",
     intent: "partner",
-    destination: mail("info@lifesupply.com"),
+    destination: mail("info@lifesupply.com", "Partner inquiry"),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -282,7 +294,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "supplier_inquiry",
     label: "Submit a supplier inquiry",
     intent: "supplier",
-    destination: mail("info@lifesupply.com"),
+    destination: mail("info@lifesupply.com", "Supplier or distribution inquiry"),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -290,7 +302,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "us_business_inquiry",
     label: "U.S. business inquiry",
     intent: "general",
-    destination: mail("info@lifesupply.com"),
+    destination: mail("info@lifesupply.com", "United States business inquiry"),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -298,7 +310,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "acquisition_inquiry",
     label: "Acquisition or strategic inquiry",
     intent: "acquisition",
-    destination: mail("abdul@lifesupply.com"),
+    destination: mail("abdul@lifesupply.com", "Acquisition or strategic inquiry"),
     ownerChannel: "Mergers & acquisitions",
     verifiedAt: null,
   },
@@ -306,7 +318,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "general_inquiry",
     label: "General inquiry",
     intent: "general",
-    destination: mail("info@lifesupply.com"),
+    destination: mail("info@lifesupply.com", "General inquiry"),
     ownerChannel: "Corporate office",
     verifiedAt: null,
   },
@@ -322,7 +334,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "investor_materials",
     label: "Request investor materials",
     intent: "investor",
-    destination: mail("invest@lifesupply.com"),
+    destination: mail("invest@lifesupply.com", "Investor materials request"),
     ownerChannel: "Investor relations",
     verifiedAt: null,
   },
@@ -421,7 +433,9 @@ export function actionHref(key: ActionKey): string {
     case "external":
       return destination.url;
     case "mailto":
-      return `mailto:${destination.value}`;
+      return destination.subject
+        ? `mailto:${destination.value}?subject=${encodeURIComponent(destination.subject)}`
+        : `mailto:${destination.value}`;
     case "tel":
       return `tel:${destination.value.replace(/[^+\d]/g, "")}`;
   }

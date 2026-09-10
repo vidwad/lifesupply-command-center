@@ -501,7 +501,7 @@ test.describe("LifeSupply public site", () => {
     );
     await expect(main.getByRole("link", { name: "Request a supply review" })).toHaveAttribute(
       "href",
-      "mailto:info@lifesupply.com",
+      /^mailto:info@lifesupply\.com\?subject=/,
     );
     await expect(main.getByRole("link", { name: "Metabolic Health", exact: true })).toHaveAttribute(
       "href",
@@ -577,7 +577,7 @@ test.describe("LifeSupply public site", () => {
     // The action appears in the hero and again in the closing band; it reaches the corporate office.
     await expect(
       page.locator("main").getByRole("link", { name: "Request a supply review" }).first(),
-    ).toHaveAttribute("href", "mailto:info@lifesupply.com");
+    ).toHaveAttribute("href", /^mailto:info@lifesupply\.com\?subject=/);
   });
 
   test("names geography and currency for the four choices on Shop & Services, and sells nothing", async ({
@@ -614,7 +614,7 @@ test.describe("LifeSupply public site", () => {
     );
     await expect(
       main.getByRole("link", { name: "Acquisition or strategic inquiry" }),
-    ).toHaveAttribute("href", "mailto:abdul@lifesupply.com");
+    ).toHaveAttribute("href", /^mailto:abdul@lifesupply\.com\?subject=/);
     await expect(main.getByText(/Shareholder services/)).toHaveCount(0);
     // Existing orders go to the store that took them.
     await expect(main.getByRole("link", { name: "LifeSupply support" })).toHaveAttribute(
@@ -641,7 +641,7 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByText(/add to cart|buy now/i)).toHaveCount(0);
     await expect(
       main.getByRole("link", { name: "Discuss a supply program" }).first(),
-    ).toHaveAttribute("href", "mailto:info@lifesupply.com");
+    ).toHaveAttribute("href", /^mailto:info@lifesupply\.com\?subject=/);
   });
 
   test("says K03 has no store destination and keeps browse links on registered store hosts", async ({
@@ -699,7 +699,7 @@ test.describe("LifeSupply public site", () => {
     await expect(page.locator("main").getByRole("heading", { name: "Boundaries" })).toHaveCount(0);
     await expect(
       page.locator("main").getByRole("link", { name: "Acquisition or strategic inquiry" }).first(),
-    ).toHaveAttribute("href", "mailto:abdul@lifesupply.com");
+    ).toHaveAttribute("href", /^mailto:abdul@lifesupply\.com\?subject=/);
   });
 
   test("never scrolls sideways: no public page is wider than the viewport", async ({ page }) => {
@@ -734,7 +734,7 @@ test.describe("LifeSupply public site", () => {
     await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
     await expect(main.getByRole("link", { name: "Request investor materials" })).toHaveAttribute(
       "href",
-      "mailto:invest@lifesupply.com",
+      /^mailto:invest@lifesupply\.com\?subject=/,
     );
     await page.goto("/investor-relations/disclosures");
     await expect(

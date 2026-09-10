@@ -609,6 +609,34 @@ describe("design-pass graphics and section primitives", () => {
   });
 });
 
+describe("public inquiry routing", () => {
+  it("renders no form on the public site and never claims a submission succeeded", () => {
+    // The public surface is database-free and the proxy blocks /api/ on the public
+    // host, so there is no approved delivery path. The verified mail routes are the
+    // mechanism; a form that cannot deliver is never rendered, and no success state
+    // exists to be shown falsely (website improvement program, 2026-09-09).
+    for (const code of publicComponents()) {
+      expect(code).not.toContain("<InquiryForm");
+      expect(code).not.toMatch(/<form[\s>]/);
+      expect(code).not.toMatch(/thank you|message sent|we will respond within/i);
+    }
+  });
+
+  it("gives every inquiry channel a routable subject and asks for no sensitive data", () => {
+    const actions = stripComments(read("src/lib/public-site/actions.ts"));
+    expect(actions).toContain("subject?: string");
+    expect(actions).toContain("encodeURIComponent(destination.subject)");
+    const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
+    expect(contact).toContain("do not send health information");
+    for (const banned of [
+      /health card|patient (name|record)|prescription number/i,
+      /date of birth|social insurance|credit card|account number/i,
+    ]) {
+      expect(contact, String(banned)).not.toMatch(banned);
+    }
+  });
+});
+
 describe("Stage 2 registries and navigation", () => {
   it("resolves every external destination through the registries, never in a component", () => {
     // Store, brand, and channel destinations live in brands.ts, actions.ts,
