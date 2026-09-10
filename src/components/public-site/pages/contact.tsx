@@ -1,4 +1,4 @@
-import { ExternalLink, Mail, Phone } from "lucide-react";
+import { ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
@@ -151,6 +151,12 @@ export function ContactPage() {
                       >
                         <Phone size={15} aria-hidden="true" /> {channel.phone}
                       </a>
+                    ) : null}
+                    {"address" in channel ? (
+                      <address className="flex items-start gap-2 not-italic">
+                        <MapPin size={15} aria-hidden="true" className="mt-1 shrink-0" />
+                        {channel.address}
+                      </address>
                     ) : null}
                   </div>
                 </SpotlightCard>

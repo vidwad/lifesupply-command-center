@@ -60,7 +60,7 @@ export const homepage = {
       {
         eyebrow: "This is who we are",
         headline: "Experienced",
-        text: "More than 25 years of operations and a founding investor base of medical practitioners and specialists alongside investment bankers and capital-market professionals. Today the businesses connect online medical, health, and supply commerce across Canada and the United States with clinic planning, design, and build services for projects in British Columbia.",
+        text: "More than 25 years of operations, built up by acquisition: Wellmart Health Supplies became the Canadian operating base in 2020, and Balkowitsch Enterprises added United States reach and a distributor network in 2023. Today the businesses connect online medical, health, and supply commerce across Canada and the United States with clinic planning, design, and build services for projects in British Columbia.",
       },
       {
         eyebrow: "This is where we are going",
