@@ -105,7 +105,11 @@ All actual, from `docs/website-round-two-qa.md`.
 
 Two parallel Playwright runs on this machine each failed 8 tests with navigation timeouts, and the failing sets barely overlapped; every one passed alone, and the serial run is clean. That is a local capacity limit, not a regression, and it is recorded rather than hidden. CI is the authoritative gate.
 
-**Deployment verification is recorded separately, after the Stage E pull request merges.** A merged pull request and a green build are not deployment verification. The follow-up records the commit the production alias actually served, confirmed by fetching a marker string unique to this round.
+**Deployment verified, September 10, 2026.** Production alias `https://lifesupply-command-center-vidwads-projects.vercel.app`, deployment `dpl_2Y2dZ6n9Nn9JYDtDy9g8RxPForz3`, state READY, serving commit `9a283d030569a5ce77426bc68bfcf29dcbc29640` from `main`.
+
+A merged pull request and a green build are not deployment verification, so this was checked. The alias was polled for a marker that exists in no earlier build, and it kept serving the previous build for four polls after the merge before the marker appeared. Each Stage E correction was then confirmed live route by route, and the full QA sweep re-run against the live site came back clean. Details in `docs/website-round-two-qa.md` section 5.
+
+The site remains `noindex` on this host, which the sweep confirms on every route.
 
 ## 9. Pull requests
 
@@ -115,7 +119,8 @@ Two parallel Playwright runs on this machine each failed 8 tests with navigation
 | B — commercial model, investor journey, portfolio, editorial | #126 | `0b5fcb3` |
 | C — comparison, replenishment, motion, navigation | #127 | `018afa8` |
 | D — qualified inquiries and policy accuracy | #128 | `e086327` |
-| E — QA, independent review, final corrections | recorded on merge | recorded on merge |
+| E — QA, independent review, final corrections | #129 | `9a283d0` |
+| Deployment record | this pull request | — |
 
 ## 10. Standing limitations
 
