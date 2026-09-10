@@ -14,6 +14,7 @@
  * where every destination is resolved.
  */
 import { about } from "@/lib/public-site/content/about";
+import { architecture } from "@/lib/public-site/content/architecture";
 import { brand } from "@/lib/public-site/content/brand";
 import { businesses } from "@/lib/public-site/content/businesses";
 import { clinics } from "@/lib/public-site/content/clinics";
@@ -35,6 +36,7 @@ export const LIFE_SUPPLY_CONTENT = {
   brand,
   homepage,
   about,
+  architecture,
   operations,
   businesses,
   clinics,

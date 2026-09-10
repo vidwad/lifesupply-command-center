@@ -132,7 +132,8 @@ export function Stagger({
 }: {
   children: React.ReactNode;
   className?: string;
-  as?: "div" | "ul";
+  /** `ol` for a sequence whose order carries meaning, such as numbered steps. */
+  as?: "div" | "ul" | "ol";
 }) {
   const reduce = useReducedMotion();
   const Tag = motion[as];

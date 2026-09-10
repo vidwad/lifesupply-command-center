@@ -18,6 +18,7 @@ import {
   StaggerItem,
 } from "@/components/public-site/motion";
 import { HeroBackdrop, ParallaxBand } from "@/components/public-site/parallax-band";
+import { ProgramArchitecture } from "@/components/public-site/program-architecture";
 import { IconBadge, SplitSection } from "@/components/public-site/sections";
 import { VideoEmbed } from "@/components/public-site/video-embed";
 import { getGraphic } from "@/lib/public-site/graphics";
@@ -35,14 +36,14 @@ import { ABOUT_VIDEO, youtubeWatchUrl } from "@/lib/public-site/video";
  * and shared-capabilities grid were removed the same day.
  */
 export function AboutPage() {
-  const { about } = LIFE_SUPPLY_CONTENT;
+  const { about, architecture } = LIFE_SUPPLY_CONTENT;
   const footprintGraphic = getGraphic("facade");
   return (
     <LifeSupplyLayout>
       <PublicHero
         eyebrow={about.hero.eyebrow}
         title={about.hero.title}
-        description={about.growth}
+        description={about.heroSummary}
         actions={<ActionLink action="explore_businesses" />}
         media={<HeroBackdrop band="data" />}
       />
@@ -195,7 +196,7 @@ export function AboutPage() {
         </Container>
       </section>
 
-      {/* Growth direction, stated conditionally, closing on the stores. */}
+      {/* Growth direction, closing on the stores. */}
       <SplitSection
         tone="onDark"
         eyebrow={about.direction.eyebrow}
@@ -209,6 +210,13 @@ export function AboutPage() {
           <ActionLink action="explore_businesses" />
         </div>
       </SplitSection>
+
+      {/*
+       * The whole shape of the business in one view (round three, outcome 3):
+       * what operates, what is being built, and what is still being weighed.
+       * The developing programs below this are the detail beneath it.
+       */}
+      <ProgramArchitecture content={architecture} />
 
       {/*
        * Developing opportunities, closing the page. Two columns: the heading,

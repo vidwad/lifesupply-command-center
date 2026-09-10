@@ -29,7 +29,7 @@ export function ContactPage() {
       <PublicHero
         eyebrow="Contact"
         title="Direct public channels for the right LifeSupply conversation."
-        description="Published contact details are treated as a verified corporate directory. Future form routing will be managed through the Command Center publication and approval workflow."
+        description="Every route below reaches a named person or team, with a subject line already set. Choose the one that matches the conversation you want to have."
       />
 
       {/* Intent routing. */}

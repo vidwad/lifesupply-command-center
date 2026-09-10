@@ -211,11 +211,19 @@ test.describe("LifeSupply public site", () => {
     await expect(
       main.getByText(/The growth strategy is to acquire profitable operations/),
     ).toBeVisible();
+    // Each developing card still carries its own detail, and the pharmacy card
+    // now distinguishes supplying pharmacies from running one (round three).
     await expect(
-      main.getByText(/Non-drug supply programs that a pharmacist selects and the store fulfils/),
+      main.getByText(/Holding licensed pharmacy operations of its own is a separate question/),
     ).toBeVisible();
     await expect(
       main.getByText(/It applies the existing supply model to a recurring patient-support need/),
+    ).toBeVisible();
+    // The three tiers of the business appear above the developing detail.
+    await expect(main.getByRole("heading", { name: "Operating", exact: true })).toBeVisible();
+    await expect(main.getByRole("heading", { name: "In development", exact: true })).toBeVisible();
+    await expect(
+      main.getByRole("heading", { name: "Under evaluation", exact: true }),
     ).toBeVisible();
     // The photograph moves with the scroll position.
     const first = bands.first();

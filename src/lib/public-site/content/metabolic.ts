@@ -127,7 +127,7 @@ export const metabolic = {
           text: "Ordering visibility, status reporting, and non-clinical workflow support under an agreed service scope.",
         },
       ],
-      note: "One portfolio, multiple starting points. Starter items are chosen once and are never a subscription; recurring value comes from usage-driven consumables, ordinary clinic purchasing, and contracted services.",
+      note: "One portfolio, several ways in. Starter equipment is chosen once, not subscribed to. What recurs is the consumables a pathway uses up, the clinic's own ordinary purchasing, and any contracted service.",
     },
     audiences: {
       eyebrow: "For care partners",
@@ -617,7 +617,7 @@ export const commercialModel = {
   eyebrow: "How the model works",
   title: "Who buys what, and on what basis.",
   intro:
-    "Product purchases and contracted services are separate things. This is how the four categories below are proposed to fit together. Clinical and pharmacy providers keep every clinical decision throughout.",
+    "Buying products and contracting a service are different arrangements, and the four categories below keep them apart. Two of them operate today through the stores. Two are in development. Clinical and pharmacy providers keep every clinical decision in all four.",
   labels: {
     customer: "Contracting party",
     provided: "What is provided",

@@ -51,8 +51,11 @@ export const about = {
     "Through a commitment to technology, innovation, and excellence, LifeSupply aims to serve a broad customer base with premium products, competitive pricing, and direct access.",
   vision:
     "The public vision is to become a global leader in the online sale and distribution of health and medical products and related services.",
+  /** The hero line: what the group is, not what a document says about it. */
+  heroSummary:
+    "A Canadian group that has been selling health, safety, medical and industrial products online for more than 25 years, builds and equips clinics in British Columbia, and is developing two supply programs on top of that base.",
   growth:
-    "The current annual-report narrative describes a platform strategy combining operating discipline, technology deployment, complementary acquisitions, and Canadian and United States market reach. Forward-looking activities remain subject to approval and disclosure context.",
+    "The strategy is to hold margin discipline in the existing supply business, put technology into ordering and fulfilment, add complementary businesses that fit the model, and go deeper in both Canada and the United States.",
 
   /**
    * Footprint. Stage 2 draft from observed store facts: two Canadian
@@ -129,7 +132,7 @@ export const about = {
      * available.
      */
     lead: "The growth strategy is to acquire profitable operations that complement the existing business model. The objective is to integrate strategically located bricks-and-mortar medical supply stores, pharmacies, clinics, and distributors into current operations, broadening the range of inventory available to LifeSupply and enabling a wider range of products and services to be offered online in Canada and the United States.",
-    intro: "Two opportunities are being developed alongside that strategy.",
+    intro: "A closer look at the two programs in development above.",
     items: [
       {
         title: "Metabolic-health supply services",
@@ -139,14 +142,14 @@ export const about = {
           "It applies the existing supply model to a recurring patient-support need. Availability is published as each pathway is confirmed.",
       },
       {
-        title: "Pharmacy solutions",
-        status: "Development focus",
-        text: "A stated development focus around pharmacy-related operations and regulated care infrastructure, subject to regulatory, operational, and partner confirmation.",
+        title: "Pharmacy supply programs",
+        status: "In development",
+        text: "Pharmacist-selected non-drug supplies and fulfilment for pharmacies. The pharmacy is the customer, and medication is excluded entirely.",
         detail:
-          "Non-drug supply programs that a pharmacist selects and the store fulfils are the part in development today. Pharmacy-related operations remain under evaluation and are not offered on this site.",
+          "Holding licensed pharmacy operations of its own is a separate question, and it sits under evaluation rather than in development. Supplying pharmacies and running one are different businesses.",
       },
     ],
-    note: "Each initiative is presented on this site with its own status. Forward-looking activities remain subject to approval and disclosure context, and nothing here is offered as available until it is.",
+    note: "Neither program can be bought today, and no launch date is set. Each is published with its own status, and that status changes here when it changes.",
   },
 
   // Stage 2 draft heading; the cards come from the brand registry.

@@ -541,7 +541,7 @@ describe("routes and content governance", () => {
     // content model only; a component that re-embeds one fails here.
     const sentences = [
       "Corporate information, operating context, and investor resources",
-      "Public information is subject to update and applicable disclosure context.",
+      "Information on this site is current at the date published and may be updated.",
       "Health, safety, medical, and industrial supply categories across Canada",
       "Publicly reported scale, with source context.",
       "A clinic project can start at any stage.",
@@ -649,6 +649,77 @@ describe("round two: qualified inquiries and policy accuracy", () => {
     expect(policies).not.toMatch(/review is (scheduled|booked)|audit is (booked|scheduled)/i);
     // It states what actually runs instead.
     expect(policies).toContain("Automated accessibility checks run against every public route");
+  });
+});
+
+describe("round three: architecture, placement and voice", () => {
+  it("sets out three tiers with one status vocabulary, and separates the two pharmacy businesses", () => {
+    const architecture = stripComments(read("src/lib/public-site/content/architecture.ts"));
+    for (const status of ["Operating", "In development", "Under evaluation"]) {
+      expect(architecture).toContain(`status: "${status}"`);
+    }
+    // Supplying pharmacies is in development; running one is under evaluation.
+    expect(architecture).toContain("Pharmacy supply programs");
+    expect(architecture).toContain("Licensed pharmacy operations");
+    expect(architecture).toContain("Supplying pharmacies and running one are different businesses");
+    // Nothing in development or under evaluation may read as purchasable.
+    expect(architecture).toContain("Nothing here can be bought");
+    expect(architecture).toContain("None is offered, licensed or operating");
+    // Commerce geography is never given to the clinic business.
+    expect(architecture).not.toMatch(
+      /clinic[^.]{0,80}(Canada and the United States|across Canada)/i,
+    );
+  });
+
+  it("puts the commercial explanation before the pathway detail it explains", () => {
+    // It used to sit below the page's closing actions and disclosures.
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
+    const model = page.indexOf("<CommercialModel");
+    const experience = page.indexOf("hub.experience.eyebrow");
+    const important = page.indexOf("hub.important.title");
+    expect(model).toBeGreaterThan(-1);
+    expect(model).toBeLessThan(experience);
+    expect(model).toBeLessThan(important);
+  });
+
+  it("gives the investor pages a planned sequence with no date, count or target", () => {
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    expect(investors).toContain("execution:");
+    for (const stage of [
+      "Design and de-risk",
+      "Controlled pilot",
+      "Launch and integrate",
+      "Replicate and scale",
+    ]) {
+      expect(investors).toContain(stage);
+    }
+    // Planned, never achieved.
+    expect(investors).toContain("All four steps are planned");
+    expect(investors).toContain("has completed a pilot");
+    // No schedule or scale target reaches the sequence.
+    const execution = investors.slice(investors.indexOf("execution:"));
+    expect(execution).not.toMatch(/\b\d+\s*(days?|weeks?|months?|clinics?|partners?|patients?)\b/i);
+    expect(execution).not.toMatch(/\bby (Q[1-4]|20\d\d)\b/i);
+  });
+
+  it("keeps internal workflow and publication language out of public copy", () => {
+    const files = [...publicContentFiles(), `${PUBLIC_DIR}/pages/contact.tsx`];
+    for (const file of files) {
+      const text = stripComments(read(file));
+      for (const banned of [
+        /publication and approval workflow|approval workflow/i,
+        /disclosure context/i,
+        /annual-report narrative describes/i,
+        /subject to update and applicable/i,
+      ]) {
+        expect(text, `${file} :: ${banned}`).not.toMatch(banned);
+      }
+      // The privacy statement has to describe the staff login the footer links
+      // to; nowhere else may name the internal system.
+      if (!file.endsWith("policies.ts")) {
+        expect(text, `${file} :: Command Center`).not.toMatch(/Command Center/i);
+      }
+    }
   });
 });
 
@@ -1068,9 +1139,18 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       );
     }
     expect(pharmacy).not.toMatch(/\bour pharmac(y|ies)\b/i);
+    // Round three: the page must be able to say that holding licensed pharmacy
+    // operations is under evaluation, so the ban targets the claim of having or
+    // running one rather than the words themselves.
+    expect(pharmacy).not.toMatch(/\b(our|its|the company's) licen[cs]ed pharmacy\b/i);
     expect(pharmacy).not.toMatch(
-      /licen[cs]ed pharmacy|dispens(es|ing) (medication|prescriptions)/i,
+      /(operates?|owns?|runs?|holds?) an? licen[cs]ed pharmac(y|ies)\b/i,
     );
+    expect(pharmacy).not.toMatch(/dispens(es|ing) (medication|prescriptions)/i);
+    // And it must state which of the two pharmacy businesses this page is.
+    expect(pharmacy).toContain("This page is about supplying pharmacies");
+    expect(pharmacy).toContain("Supplying pharmacies and running one are different businesses");
+    expect(pharmacy).toContain("none of them is offered, licensed or operating");
     expect(pharmacy).not.toMatch(
       /(acquire|acquisition of|closing|signed|announce[sd]?) (a |the )?pharmacy/i,
     );
@@ -1146,7 +1226,13 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(page).toContain("{about.developing.lead}");
     expect(page).toContain("{item.detail}");
     expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
-    expect(aboutContent).toContain("nothing here is offered as available until it is");
+    // Neither developing program may read as purchasable, and neither carries a
+    // launch date (round three replaced the older double-hedge with this).
+    expect(aboutContent).toContain(
+      "Neither program can be bought today, and no launch date is set",
+    );
+    // Supplying pharmacies and running one stay distinguishable here too.
+    expect(aboutContent).toContain("Supplying pharmacies and running one are different businesses");
     for (const banned of [
       /we are acquiring/i,
       /has acquired|have acquired/i,
