@@ -23,6 +23,15 @@ const stripComments = (source: string): string =>
   source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1");
 
 const PUBLIC_DIR = "src/components/public-site";
+
+/** Every file in the public content model, for sweeps that must cover all copy. */
+function publicContentFiles() {
+  const dir = "src/lib/public-site/content";
+  return readdirSync(join(ROOT, dir))
+    .filter((file) => file.endsWith(".ts"))
+    .map((file) => `${dir}/${file}`);
+}
+
 const LAYOUT = `${PUBLIC_DIR}/lifesupply-layout.tsx`;
 const PAGES = `${PUBLIC_DIR}/lifesupply-pages.tsx`;
 // Stage 2 split the Home and About pages into their own files, still exported
@@ -760,26 +769,66 @@ describe("round two: cross-page factual consistency", () => {
     }
   });
 
-  it("states no currency for the reported figures, because no source gives one", () => {
+  it("labels every reported figure with its currency, period, entity and basis", () => {
+    // The consolidated statements express all amounts in Canadian dollars under
+    // IFRS, unaudited (round three, 2026-09-10).
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
-    expect(investors).toContain('"Currency: not stated."');
-    // Never assert a currency the sources do not support.
-    expect(investors).not.toMatch(/Currency: (CAD|USD|Canadian|US)/i);
-    // The scope labels that are evidenced must stay.
+    expect(investors).toContain('"Currency: Canadian dollars."');
+    // No bare dollar figure: every published amount carries the currency marker.
+    for (const figure of ["C$6.75M", "C$2.20M", "C$284K"]) {
+      expect(investors).toContain(figure);
+    }
+    expect(investors).not.toMatch(/value: "\$\d/);
     expect(investors).toContain("Period: year ended December 31, 2025.");
-    expect(investors).toContain("Entity scope: LifeSupply Health Supplies Inc., consolidated.");
-    expect(investors).toContain("unaudited consolidated financial information");
+    expect(investors).toContain("LifeSupply Health Inc., consolidated");
+    expect(investors).toContain("IFRS");
+    expect(investors).toContain("Unaudited");
+    // Consolidated results are never attributed to one brand.
+    expect(investors).toContain("no result is attributable to any single brand");
   });
 
-  it("does not call the operating brands subsidiaries", () => {
+  it("publishes the verified corporate structure and keeps brands distinct from it", () => {
     const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
     const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
     expect(page).not.toContain("LifeSupply public subsidiaries");
-    expect(contact).toContain(
-      "the four brands are businesses and channels, not separate companies",
-    );
-    // No ownership structure is published.
-    expect(contact).not.toMatch(/\b\d{1,3}\s?% (owned|stake|interest)\b/i);
+    // The three subsidiaries the consolidated statements set out.
+    for (const entity of [
+      "Wellmart Health Supplies Ltd.",
+      "LifeSupply US, Inc.",
+      "Balkowitsch Enterprises Inc.",
+    ]) {
+      expect(contact).toContain(entity);
+    }
+    // Brand architecture is never equated with legal structure.
+    expect(contact).toContain("a brand name and a company name are not the same thing");
+    expect(contact).not.toMatch(/four (brands|businesses) are (the )?(subsidiaries|companies)/i);
+  });
+
+  it("publishes nothing from the confidential financing materials", () => {
+    // The August 25, 2026 expansion materials are accredited-investor documents
+    // marked private and confidential. Their financing terms, forward projections,
+    // acquisition pipeline and listing plans stay out of public copy entirely.
+    const banned = [
+      /\$4\.2\s?(million|M)\b/i,
+      /\bwarrants?\b/i,
+      /29\.74M|29,740,000/,
+      /\bCSE\b|initial public offering|\bIPO\b/i,
+      /Year 5|base[- ]case/i,
+      // The Year 5 revenue split and its components.
+      /\$25\.4M|\$25M|\$8\.6M|\$9\.2M|\$7\.6M|\$2\.00M|\$1\.75M|\$0\.45M/,
+      /liquidity event|acquisition pipeline|acquisition targets?\b/i,
+      /2\.70M|investor loan/i,
+      // Naming peptide research as an option under evaluation is approved copy;
+      // attaching revenue, upside or licensing income to it is not.
+      /peptide[^.]{0,60}(revenue|upside|projection|forecast)/i,
+      /R&D licensing/i,
+    ];
+    for (const file of publicContentFiles()) {
+      const text = stripComments(read(file));
+      for (const pattern of banned) {
+        expect(text, `${file} :: ${pattern}`).not.toMatch(pattern);
+      }
+    }
   });
 });
 

@@ -38,7 +38,7 @@ export interface BrandRecord {
   name: string;
   /** Legal entity, once confirmed. `null` until WEB-01. */
   legalEntity: string | null;
-  /** Relationship to LifeSupply Health Supplies Inc., once confirmed. `null` until WEB-01. */
+  /** Relationship to LifeSupply Health Inc., once confirmed. `null` until WEB-01. */
   relationship: "corporate" | "operated_by_group_entity" | "related" | null;
   canonicalUrl: string;
   country: "CA" | "US";
@@ -71,7 +71,7 @@ export const BRANDS: readonly BrandRecord[] = [
   {
     key: "corporate",
     name: "LifeSupply Health",
-    legalEntity: "LifeSupply Health Supplies Inc.",
+    legalEntity: "LifeSupply Health Inc.",
     relationship: "corporate",
     canonicalUrl: "https://lifesupplyhealth.com/",
     country: "CA",

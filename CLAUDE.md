@@ -27,6 +27,15 @@ A second round opened on September 10, 2026, auditing the first round's result a
 - `docs/website-round-two-qa.md` — checks and deployment verification.
 - `docs/website-round-two-handoff.md` — the final handoff.
 
+A third round opened on September 10, 2026. **It changes how public copy is written**, so read its plan before editing any page:
+
+- `docs/website-round-three-plan.md` — the direction change, the located source documents, the ten outcomes and the stage plan.
+- `docs/website-round-three-evidence.md` — this round's claim register, including two corrections that supersede round two: the reporting currency is Canadian dollars, and the group has three wholly-owned subsidiaries.
+- `docs/website-round-three-acceptance.md` — the route-level acceptance matrix.
+- `docs/website-round-three-qa.md` and `docs/website-round-three-handoff.md` — checks, deployment verification and the final handoff.
+
+Two standing rules from that round: write public copy as forward-facing business language rather than as a compliance file, keeping source notes and publication reasoning in these documents; and never publish anything from the confidential annual report or the August 25, 2026 expansion materials beyond what the claim register records, which a canary enforces. This repository is public, so those documents are never quoted here either.
+
 This scoped website workstream supplements the Command Center instructions below. The earlier "sole active workstream" wording refers to the historical Command Center release plan; website work now follows the separate sequence below when explicitly requested. All existing Phase 11 security, data, approval, migration, and release gates remain in force. Website development does not accept a Command Center launch gate.
 
 The website brief updates the earlier public sitemap and page-family order for the approved planning direction. Preserve the red/black/white brand system and original assets. Preserve the existing public website codebase, staff dashboard, authenticated modules, separate public/internal deployment surfaces, and source-system controls.

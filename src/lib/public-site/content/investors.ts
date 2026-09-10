@@ -25,12 +25,13 @@ export const investorRelations = {
   contact: { email: "invest@lifesupply.com", phone: "604-677-4146" },
   currentReport: {
     period: "Year ended December 31, 2025",
-    status: "Unaudited consolidated financial information",
-    entity: "LifeSupply Health Supplies Inc., consolidated",
+    status: "Unaudited consolidated financial information, prepared under IFRS",
+    entity: "LifeSupply Health Inc., consolidated",
+    currency: "Canadian dollars",
     highlights: [
-      { label: "Net sales", value: "$6.75M" },
-      { label: "Gross profit", value: "$2.20M" },
-      { label: "Net income", value: "$284K" },
+      { label: "Net sales", value: "C$6.75M" },
+      { label: "Gross profit", value: "C$2.20M" },
+      { label: "Net income", value: "C$284K" },
     ],
   },
   expansionContext: {
@@ -277,12 +278,12 @@ export const investorRelations = {
     eyebrow: "Investor relations · Disclosures",
     title: "Reported figures, with their scope.",
     intro:
-      "The figures below are the only financial figures published on this site. They are shown with their period, basis, and entity scope, and nothing is derived from them.",
+      "Consolidated results for the year ended December 31, 2025, in Canadian dollars, with the basis they were prepared on.",
     basis: [
+      "Currency: Canadian dollars.",
       "Period: year ended December 31, 2025.",
-      "Basis: unaudited consolidated financial information, as cited in the annual-report narrative.",
-      "Entity scope: LifeSupply Health Supplies Inc., consolidated.",
-      "Currency: not stated.",
+      "Entity scope: LifeSupply Health Inc., consolidated. The figures cover the parent and its wholly-owned subsidiaries together, so no result is attributable to any single brand.",
+      "Basis: prepared by management under IFRS. Unaudited, and not the subject of an audit or a review engagement.",
     ],
     forwardLooking: {
       title: "Forward-looking statements",

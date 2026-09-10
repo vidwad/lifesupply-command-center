@@ -519,7 +519,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-white/10 px-5 py-5 text-xs text-white/60 lg:px-8">
           <span>
-            © {new Date().getFullYear()} LifeSupply Health Supplies Inc. {brand.legalNotice}
+            © {new Date().getFullYear()} LifeSupply Health Inc. {brand.legalNotice}
           </span>
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {LEGAL_NAV.map((link) => (

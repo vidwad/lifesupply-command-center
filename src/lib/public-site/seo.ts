@@ -96,7 +96,7 @@ export function organizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "LifeSupply Health Supplies Inc.",
+    name: "LifeSupply Health Inc.",
     url: `${origin}/`,
     logo: `${origin}/lsh/lifesupply-mark.png`,
     address: {

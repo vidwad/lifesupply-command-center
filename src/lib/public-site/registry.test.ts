@@ -101,7 +101,9 @@ describe("brand registry", () => {
       expect(record.legalEntity, record.key).toBeNull();
       expect(record.relationship, record.key).toBeNull();
     }
-    expect(getBrand("corporate").legalEntity).toBe("LifeSupply Health Supplies Inc.");
+    // The parent named in the consolidated financial statements and the
+    // corporate-structure page of the August 25, 2026 materials.
+    expect(getBrand("corporate").legalEntity).toBe("LifeSupply Health Inc.");
   });
 
   it("carries a verification date and a register reference on every record", () => {
@@ -295,8 +297,13 @@ describe("route registry", () => {
       expect(record.date, record.title).toBeTruthy();
       expect(["Public", "Restricted, on request", "Historical"]).toContain(record.category);
     }
-    expect(investorRelations.currentReport.entity).toContain("LifeSupply Health Supplies Inc.");
+    expect(investorRelations.currentReport.entity).toContain("LifeSupply Health Inc.");
     expect(investorRelations.currentReport.status).toMatch(/unaudited/i);
+    // Currency, and every figure carrying it.
+    expect(investorRelations.currentReport.currency).toBe("Canadian dollars");
+    for (const highlight of investorRelations.currentReport.highlights) {
+      expect(highlight.value, highlight.label).toMatch(/^C\$/);
+    }
     for (const option of investorRelations.advancedTherapeutics.options) {
       expect(option.status, option.title).toBe("Under evaluation");
       expect(option.dependencies.length, option.title).toBeGreaterThan(0);
