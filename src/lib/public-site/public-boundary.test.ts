@@ -1695,22 +1695,19 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   });
 
   it("attributes delivery roles only as the Clinics site states them", () => {
-    // The work is attributed to LifeSupply Clinics and its core partners,
-    // and no further. The sentence that used to follow explained the site's
-    // own editorial rule, which is a note to a reviewer rather than anything
-    // a client needs (independent review, 2026-09-10).
-    expect(clinicsContent()).toContain("core partners");
-    expect(clinicsContent()).toContain("are not published");
+    // The work is attributed to LifeSupply Clinics and its core partners, and
+    // no further. It is said once, in the planning section, where the reader
+    // has just learned what the service is; the projects section used to
+    // restate it (product owner, 2026-09-11).
+    expect(clinicsContent()).toContain("delivers the construction with its core partners");
+    expect((clinicsContent().match(/core partners/g) ?? []).length).toBe(1);
     expect(clinicsContent()).not.toContain("this site attributes no construction work");
+    expect(sectionBody(clinicPages(), "ProjectsSection")).not.toContain("{attribution}");
     // And the projects are claimed as projects, not as six completed builds:
     // what is published is six project pages, one of which does not describe
     // construction at all.
     expect(clinicsContent()).toContain("Six clinic projects across British Columbia");
-    expect(clinicsContent()).not.toMatch(/clinics built/i);
-    // It renders beside the built projects, which is the claim it qualifies.
-    expect(sectionBody(clinicPages(), "ProjectsSection")).toContain("{attribution}");
-    // And the planning section says whose work the construction is.
-    expect(clinicsContent()).toContain("the clients behind each project, are not published");
+    expect(clinicsContent()).not.toMatch(/clinics built/i);
   });
 
   it("treats post-opening supply as conditional on every clinic page", () => {

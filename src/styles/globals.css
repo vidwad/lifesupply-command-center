@@ -268,6 +268,39 @@
    * card as the way a list signals it is interactive. Collapses to a static
    * rule for reduced motion, handled in the media query below.
    */
+  /**
+   * The site's bullet: a small red disc, set against the first line of the
+   * item so it stays with the text when the item wraps.
+   *
+   * Lists were marked with a two-pixel vertical rule down the left of each
+   * item, or with nothing at all. A rule reads as a quoted block rather than
+   * as a list, and two adjacent lists could carry different rule colours for
+   * no reason a reader could see (product owner, 2026-09-11).
+   *
+   * Applied to the `li`, which is where the rule it replaces sat.
+   */
+  .lsh-bullet {
+    position: relative;
+    padding-left: 1.0625rem;
+  }
+
+  .lsh-bullet::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    /* Against the first line's x-height, not the centre of a wrapped item. */
+    top: 0.58em;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: var(--lsh-brand-red);
+  }
+
+  /* Red on red would disappear; on a red ground the disc goes to paper. */
+  .lsh-on-red .lsh-bullet::before {
+    background: var(--lsh-paper);
+  }
+
   .lsh-rule-draw::after {
     content: "";
     position: absolute;

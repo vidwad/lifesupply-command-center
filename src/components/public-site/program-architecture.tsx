@@ -44,7 +44,7 @@ export function ProgramArchitecture({ content }: { content: typeof Architecture 
 
               <ul className="mt-5 grid gap-4 border-t border-[var(--lsh-rule)] pt-5">
                 {tier.items.map((item) => (
-                  <li key={item.title} className="border-l-2 border-[var(--lsh-rule-strong)] pl-4">
+                  <li key={item.title} className="lsh-bullet">
                     <h4 className="lsh-display text-base leading-tight text-[var(--lsh-charcoal)]">
                       {item.href ? (
                         <Link

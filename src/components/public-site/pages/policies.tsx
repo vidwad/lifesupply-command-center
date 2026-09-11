@@ -69,7 +69,7 @@ export function PolicyPage({ policy }: { policy: PolicyKey }) {
                   {"items" in section && section.items ? (
                     <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
                       {section.items.map((item) => (
-                        <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+                        <li key={item} className="lsh-bullet">
                           {item}
                         </li>
                       ))}

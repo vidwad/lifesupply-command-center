@@ -165,7 +165,7 @@ function PartnerProgramSection() {
               <Eyebrow as="h3">{partnerProgram.responsibilities.title}</Eyebrow>
               <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] lg:grid-cols-3">
                 {partnerProgram.responsibilities.items.map((item) => (
-                  <li key={item} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                  <li key={item} className="lsh-bullet">
                     {item}
                   </li>
                 ))}

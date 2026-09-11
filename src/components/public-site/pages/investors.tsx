@@ -389,7 +389,7 @@ export function AdvancedTherapeuticsPage() {
                 </Eyebrow>
                 <ul className="mt-3 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
                   {option.dependencies.map((dependency) => (
-                    <li key={dependency} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                    <li key={dependency} className="lsh-bullet">
                       {dependency}
                     </li>
                   ))}
@@ -423,7 +423,7 @@ export function DisclosuresPage() {
             </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
               {d.basis.map((line) => (
-                <li key={line} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                <li key={line} className="lsh-bullet">
                   {line}
                 </li>
               ))}

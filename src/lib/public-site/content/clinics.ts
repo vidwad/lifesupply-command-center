@@ -17,16 +17,6 @@
  * External destinations come from the action and brand registries.
  */
 export const clinics = {
-  /**
-   * How the projects are attributed. LifeSupply Clinics presents them as
-   * delivered with its core partners and names none of them, so this says who
-   * the work is done with and stops there. It used to end by explaining the
-   * site's own editorial rule, which is a note to a reviewer rather than
-   * anything a client needs (independent review, 2026-09-10).
-   */
-  attribution:
-    "LifeSupply Clinics delivers its projects together with its core partners. Individual partner roles, and the clients behind each project, are not published.",
-
   services: [
     {
       title: "Planning",
@@ -211,21 +201,6 @@ export const clinics = {
       eyebrow: "Process",
       title: "Four stages, from first conversation to hand-over.",
     },
-    consultation: {
-      title: "Start with the practice and the space",
-      text: "A first conversation is easier with a few facts to hand. None of them is a commitment.",
-      items: [
-        "Practice type and specialty",
-        "Location and approximate size",
-        "Current stage: concept, leased space, renovation, or expansion",
-        "Target opening",
-        "Equipment and supply interests",
-      ],
-    },
-    channelsHeading: {
-      title: "Service channels",
-      text: "Consultations and equipment quotes are handled by LifeSupply Clinics on its own site. Its published channels are below.",
-    },
     actions: ["plan_clinic", "equipment_quote", "clinic_supply_review"],
 
     /** The closing band: one call to action, and what each step does not commit anyone to. */
@@ -257,8 +232,6 @@ export const clinics = {
       title: "Collaboration is not procurement",
       items: [
         "A clinic that purchases supplies is a customer of the operating store, with that store's account, prices, and support. No collaboration is required.",
-        "A program collaboration would mean the clinic helping define a supply configuration, a workflow, or a pilot, agreed in writing before anything is fulfilled.",
-        "A design partnership relates to a clinic project delivered through LifeSupply Clinics and its delivery partners, on the terms of that project.",
         "An expression of interest is not a pilot. A pilot begins when both sides have signed an agreement for it, and not before.",
       ],
     },
