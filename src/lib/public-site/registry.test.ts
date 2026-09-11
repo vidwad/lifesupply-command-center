@@ -24,11 +24,13 @@ import { legacyTitle, team } from "@/lib/public-site/content/team";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import {
   BRAND_ROUTES,
+  CONSOLIDATED_ROUTES,
   LIFE_SUPPLY_NAVIGATION,
   LIFE_SUPPLY_ROUTES,
   LIVE_ROUTES,
   METABOLIC_ROUTES,
   ROUTES,
+  SECTION_ANCHORS,
   STAGE_3_ROUTES,
   WITHDRAWN_ROUTES,
   STAGE_5_ROUTES,
@@ -38,6 +40,9 @@ import {
   buildPrimaryNavigation,
   buildUtilityNavigation,
   isLiveRoute,
+  isLiveSection,
+  sectionRoute,
+  splitSection,
 } from "@/lib/public-site/routes";
 
 const ROOT = join(__dirname, "..", "..", "..");
@@ -161,10 +166,52 @@ describe("route registry", () => {
       "/investor-relations/",
       "/news/",
       "/contact/",
-      "/shop/",
     ]) {
       expect(isLiveRoute(path), path).toBe(true);
     }
+  });
+
+  it("retires each consolidated address as a redirect row that leads somewhere real", () => {
+    // Website consolidation, stage 1 (2026-09-10). Four addresses were
+    // retired only after their content moved. Each must be gone from the
+    // live set, present as a redirect row so the sitemap and menus stay
+    // derived, and the fragment it redirects to must be a declared anchor
+    // on a live page — otherwise a redirect would land on nothing.
+    const destinations: Record<string, string> = {
+      [CONSOLIDATED_ROUTES.shop]: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores"),
+      [CONSOLIDATED_ROUTES.equipment]: sectionRoute(STAGE_3_ROUTES.clinicSolutions, "equipment"),
+      [CONSOLIDATED_ROUTES.ongoingSupplies]: sectionRoute(
+        STAGE_3_ROUTES.clinicSolutions,
+        "ongoing-supplies",
+      ),
+      [CONSOLIDATED_ROUTES.partnerClinics]: sectionRoute(
+        STAGE_3_ROUTES.clinicSolutions,
+        "collaboration",
+      ),
+    };
+    for (const [from, to] of Object.entries(destinations)) {
+      expect(isLiveRoute(from), from).toBe(false);
+      expect(ROUTES.find((route) => route.path === from)?.status, from).toBe("redirect");
+      expect(isLiveSection(to), to).toBe(true);
+    }
+    // The `/partners` hazard: retiring the clinic child must never take its
+    // siblings with it. Both are retained pages and must stay live.
+    expect(isLiveRoute(STAGE_5_ROUTES.partnerSuppliers)).toBe(true);
+    expect(isLiveRoute(STAGE_5_ROUTES.partnerAcquisitions)).toBe(true);
+  });
+
+  it("accepts only section anchors a page actually declares", () => {
+    expect(isLiveSection(STAGE_3_ROUTES.clinicSolutions)).toBe(true);
+    expect(isLiveSection(sectionRoute(STAGE_3_ROUTES.clinicSolutions, "planning"))).toBe(true);
+    // A fragment no page declares, and a fragment on a page that declares none.
+    expect(isLiveSection(sectionRoute(STAGE_3_ROUTES.clinicSolutions, "design-build"))).toBe(false);
+    expect(isLiveSection(sectionRoute("/contact/", "stores"))).toBe(false);
+    // A fragment on a retired page resolves to nothing, however plausible.
+    expect(isLiveSection(sectionRoute(CONSOLIDATED_ROUTES.shop, "stores"))).toBe(false);
+    expect(splitSection("/clinic-solutions/#equipment")).toEqual({
+      path: "/clinic-solutions/",
+      anchor: "equipment",
+    });
   });
 
   it("makes the Stage 3 pages live under their groups", () => {
@@ -193,9 +240,14 @@ describe("route registry", () => {
     expect(BRAND_ROUTES.clinics).toBe(STAGE_3_ROUTES.clinicSolutions);
     const clinic = groups.find((group) => group.key === "clinic")!;
     expect(clinic.href).toBe(STAGE_3_ROUTES.clinicSolutions);
-    expect(clinic.links.map((link) => link.href)).toEqual([
-      STAGE_3_ROUTES.equipment,
-      STAGE_3_ROUTES.ongoingSupplies,
+    // Clinic Solutions has no child pages since the consolidation: Equipment
+    // and Ongoing supplies are sections of it, reached by fragment.
+    expect(clinic.links).toEqual([]);
+    expect(SECTION_ANCHORS[STAGE_3_ROUTES.clinicSolutions]).toEqual([
+      "planning",
+      "equipment",
+      "ongoing-supplies",
+      "collaboration",
     ]);
     // Every withdrawn address is a redirect row, so the allowlist and sitemap stay derived.
     for (const path of Object.values(WITHDRAWN_ROUTES)) {
@@ -220,11 +272,12 @@ describe("route registry", () => {
     expect(KIT_SLUGS).toHaveLength(8);
   });
 
-  it("makes the Stage 5 pages live: Partners with four children, Investors with five, three policy pages", () => {
+  it("makes the Stage 5 pages live: Partners with three children, Investors with five, three policy pages", () => {
     for (const path of Object.values(STAGE_5_ROUTES)) expect(isLiveRoute(path), path).toBe(true);
     const groups = buildPrimaryNavigation();
+    // The clinic child left the group on 2026-09-10; it is a Clinic Solutions
+    // section now, and the hub links to that section rather than to a page.
     expect(groups.find((g) => g.key === "partners")!.links.map((l) => l.href)).toEqual([
-      STAGE_5_ROUTES.partnerClinics,
       STAGE_5_ROUTES.partnerPharmacies,
       STAGE_5_ROUTES.partnerSuppliers,
       STAGE_5_ROUTES.partnerAcquisitions,
@@ -310,8 +363,8 @@ describe("route registry", () => {
     }
   });
 
-  it("keeps Shop & Services and Contact as utility links", () => {
-    expect(buildUtilityNavigation().map((link) => link.href)).toEqual(["/shop/", "/contact/"]);
+  it("leaves Contact as the only utility link once Shop & Services is consolidated", () => {
+    expect(buildUtilityNavigation().map((link) => link.href)).toEqual(["/contact/"]);
   });
 
   it("uses trailing-slash paths throughout", () => {
@@ -325,10 +378,13 @@ describe("action registry", () => {
   const approvedEmails = LIFE_SUPPLY_CONTENT.contact.channels.map((channel) => channel.email);
   const brandHosts = BRANDS.map((record) => new URL(record.canonicalUrl).host);
 
-  it("resolves every internal action to a live route", () => {
+  it("resolves every internal action to a live route, and every fragment to a declared section", () => {
     for (const action of Object.values(ACTIONS)) {
       if (action.destination.kind === "internal") {
-        expect(isLiveRoute(action.destination.path), action.key).toBe(true);
+        // `isLiveSection` is `isLiveRoute` plus the anchor check, so an
+        // action that names a section it invented fails here rather than
+        // shipping as a link that scrolls nowhere.
+        expect(isLiveSection(action.destination.path), action.key).toBe(true);
       }
     }
   });
@@ -378,6 +434,17 @@ describe("action registry", () => {
     }
     expect(actionHref("shop_lifesupply")).not.toContain("subject=");
     expect(actionHref("explore_businesses")).toBe("/medical-supply-solutions/");
+    // Consolidated destinations name a section, and every one of them resolves.
+    for (const key of [
+      "medical_supply_stores",
+      "clinic_equipment",
+      "clinic_ongoing_supplies",
+      "partner_clinics",
+    ] as const) {
+      expect(actionHref(key), key).toContain("#");
+      expect(isLiveSection(actionHref(key)), key).toBe(true);
+    }
+    expect(Object.keys(ACTIONS)).not.toContain("shop_services");
     expect(actionHref("pharmacy_hub")).toBe("/pharmacy-solutions/");
     expect(actionHref("plan_clinic")).toBe("https://www.lifesupplyclinics.com/contact-us/");
     expect(actionHref("brand_clinics")).toBe(BRAND_ROUTES.clinics);
@@ -386,7 +453,7 @@ describe("action registry", () => {
   });
 
   it("backs every action the content model declares", () => {
-    const { clinics, businesses, shop, contact, homepage } = LIFE_SUPPLY_CONTENT;
+    const { clinics, businesses, contact, homepage } = LIFE_SUPPLY_CONTENT;
     const declared: string[] = [
       ...homepage.clinicLifecycle.steps.map((step) => step.action),
       homepage.metabolic.action,
@@ -397,17 +464,16 @@ describe("action registry", () => {
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[0],
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[1],
       LIFE_SUPPLY_CONTENT.businesses.hub.clinics.action,
-      LIFE_SUPPLY_CONTENT.businesses.hub.services.action,
+      ...LIFE_SUPPLY_CONTENT.businesses.hub.procurement.actions,
       ...clinics.equipment.actions,
       ...clinics.ongoingSupplies.actions,
-      ...shop.choices.map((choice) => choice.action),
+      ...clinics.collaboration.actions,
       ...contact.intents.map((intent) => intent.action),
       ...metabolic.hub.actions,
       ...metabolic.kitsHub.actions,
       ...metabolic.refills.actions,
       ...partners.hub.relationships.map((r) => r.action),
       partners.hub.procurement.action,
-      ...partners.clinics.actions,
       ...partners.pharmacies.actions,
       ...partners.suppliers.actions,
       ...partners.acquisitions.actions,

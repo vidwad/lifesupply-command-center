@@ -176,11 +176,11 @@ export function StoreBrandPage({
                 <IconBadge icon="globe" size={18} />
               </div>
               <p className="mt-4 leading-7 text-[var(--lsh-muted)]">
-                {LIFE_SUPPLY_CONTENT.shop.support.text}
+                {LIFE_SUPPLY_CONTENT.businesses.hub.stores.support.text}
               </p>
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
-              <ActionLink action="shop_services" variant="onLight" />
+              <ActionLink action="medical_supply_stores" variant="onLight" />
               <ActionLink action="contact_directory" variant="onLight" />
             </div>
           </Reveal>

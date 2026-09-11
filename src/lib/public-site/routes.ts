@@ -23,7 +23,6 @@ export const LIFE_SUPPLY_ROUTES = {
   news: "/news/",
   contact: "/contact/",
   legacyContact: "/contact-2/",
-  shop: "/shop/",
 } as const;
 
 /**
@@ -40,9 +39,60 @@ export const BRAND_ROUTES: Record<OperatingBrandKey, string> = {
 
 export const STAGE_3_ROUTES = {
   clinicSolutions: "/clinic-solutions/",
+} as const;
+
+/**
+ * Addresses retired by the website consolidation (stage 1, 2026-09-10).
+ * Their content was moved first; each address then became a permanent
+ * redirect to the section that now carries it (next.config.ts, and
+ * docs/website-consolidation/REDIRECTS.md for the reasoning). They stay in
+ * the registry as `redirect` rows so the sitemap and the menus keep being
+ * derived rather than hand-maintained.
+ */
+export const CONSOLIDATED_ROUTES = {
+  shop: "/shop/",
   equipment: "/clinic-solutions/equipment/",
   ongoingSupplies: "/clinic-solutions/ongoing-supplies/",
+  partnerClinics: "/partners/clinics/",
 } as const;
+
+/**
+ * The section anchors a consolidated page publishes, by page.
+ *
+ * A consolidated page absorbs what used to be several addresses, so an
+ * internal link now often has to name a section rather than a page. Listing
+ * the anchors here is what makes that checkable: `isLiveSection()` refuses a
+ * fragment that no page declares, so a link can never point at a section
+ * that was renamed or never built. The page component takes its anchors from
+ * this same table, so the two cannot drift.
+ */
+export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
+  [LIFE_SUPPLY_ROUTES.operations]: ["stores"],
+  [STAGE_3_ROUTES.clinicSolutions]: ["planning", "equipment", "ongoing-supplies", "collaboration"],
+};
+
+/** `"/clinic-solutions/" + "equipment"` → `"/clinic-solutions/#equipment"`. */
+export function sectionRoute(path: string, anchor: string): string {
+  return `${path}#${anchor}`;
+}
+
+/** Splits an internal href into its page path and its anchor, if it has one. */
+export function splitSection(href: string): { path: string; anchor: string | null } {
+  const hash = href.indexOf("#");
+  return hash === -1
+    ? { path: href, anchor: null }
+    : { path: href.slice(0, hash), anchor: href.slice(hash + 1) };
+}
+
+/**
+ * True when an internal href resolves: its page is live, and where it names
+ * an anchor, that page declares it.
+ */
+export function isLiveSection(href: string): boolean {
+  const { path, anchor } = splitSection(href);
+  if (!isLiveRoute(path)) return false;
+  return anchor === null || (SECTION_ANCHORS[path]?.includes(anchor) ?? false);
+}
 
 /** Addresses withdrawn on 2026-09-08; each one permanently redirects (next.config.ts). */
 export const WITHDRAWN_ROUTES = {
@@ -78,7 +128,6 @@ export function kitRoute(slug: string): string {
 /** Stage 5 pages. News items and resources are dynamic routes with no approved record yet. */
 export const STAGE_5_ROUTES = {
   partners: "/partners/",
-  partnerClinics: "/partners/clinics/",
   partnerPharmacies: "/partners/pharmacies/",
   partnerSuppliers: "/partners/suppliers/",
   partnerAcquisitions: "/partners/acquisitions/",
@@ -165,20 +214,6 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "clinic",
   },
   {
-    path: STAGE_3_ROUTES.equipment,
-    label: "Equipment",
-    stage: 3,
-    status: "live",
-    navGroup: "clinic",
-  },
-  {
-    path: STAGE_3_ROUTES.ongoingSupplies,
-    label: "Ongoing supplies",
-    stage: 3,
-    status: "live",
-    navGroup: "clinic",
-  },
-  {
     path: PHARMACY_ROUTES.hub,
     label: "Pharmacy Solutions",
     stage: 5,
@@ -217,13 +252,6 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "metabolic",
   },
   { path: "/partners/", label: "Partners", stage: 5, status: "live", navGroup: "partners" },
-  {
-    path: "/partners/clinics/",
-    label: "Clinics",
-    stage: 5,
-    status: "live",
-    navGroup: "partners",
-  },
   {
     path: "/partners/pharmacies/",
     label: "Pharmacies",
@@ -277,9 +305,20 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "investors",
   },
   { path: "/our-team/", label: "Our team", stage: 5, status: "live", navGroup: "about" },
-  { path: "/shop/", label: "Shop & Services", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: "utility" },
   { path: "/contact-2/", label: "Contact (legacy)", stage: 9, status: "redirect", navGroup: null },
+  // Website consolidation, stage 1 (2026-09-10): Shop & Services merged into
+  // the Medical Supplies stores section; Equipment, Ongoing supplies and the
+  // Partners clinic page merged into Clinic Solutions as sections.
+  ...Object.values(CONSOLIDATED_ROUTES).map(
+    (path): RouteRecord => ({
+      path,
+      label: "Consolidated address (redirect)",
+      stage: 3,
+      status: "redirect",
+      navGroup: null,
+    }),
+  ),
   // Restructure of 2026-09-08 (product owner): Our Businesses became Medical
   // Supply Solutions, the Clinics brand page merged into Clinic Solutions,
   // Design & build merged into the Clinic Solutions hub, and Technology &

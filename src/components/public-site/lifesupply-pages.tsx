@@ -13,11 +13,7 @@
  */
 export { AboutPage } from "@/components/public-site/pages/about";
 export { StoreBrandPage } from "@/components/public-site/pages/brands";
-export {
-  ClinicSolutionsPage,
-  EquipmentPage,
-  OngoingSuppliesPage,
-} from "@/components/public-site/pages/clinic-solutions";
+export { ClinicSolutionsPage } from "@/components/public-site/pages/clinic-solutions";
 export { PharmacySolutionsPage } from "@/components/public-site/pages/pharmacy";
 export { ContactPage } from "@/components/public-site/pages/contact";
 export { LifeSupplyHome } from "@/components/public-site/pages/home";
@@ -42,11 +38,9 @@ export {
 export { MedicalSupplySolutionsPage } from "@/components/public-site/pages/operations";
 export {
   PartnerAcquisitionsPage,
-  PartnerClinicsPage,
   PartnerPharmaciesPage,
   PartnersPage,
   PartnerSuppliersPage,
 } from "@/components/public-site/pages/partners";
 export { PolicyPage } from "@/components/public-site/pages/policies";
-export { ShopServicesPage } from "@/components/public-site/pages/shop";
 export { LegacyProfilePage, TeamPage } from "@/components/public-site/pages/team";

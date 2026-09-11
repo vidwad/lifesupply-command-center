@@ -25,12 +25,31 @@ export const businesses = {
     title: "Three online stores for medical, health, and home-care supply.",
     description:
       "LifeSupply, Wellmart Medical, and Balkowitsch Worldwide each keep their own catalogue, accounts, currency, prices, and support. This section introduces each store and where its emphasis lies; buying happens on the store.",
+    /**
+     * The stores section, at the `#stores` anchor. Shop & Services merged
+     * into it on 2026-09-10 (website consolidation, stage 1): that page
+     * existed to answer "which destination, in which currency, and who
+     * handles my order", which is the same question this section already
+     * raised one click earlier. Its geography and support-boundary copy
+     * moved here verbatim in substance, and the clinic destination it
+     * listed fourth is the Clinic Solutions call-out below.
+     */
     stores: {
       eyebrow: "The stores",
       title: "Each store keeps its own site, accounts, currency, and support.",
+      intro:
+        "This corporate site does not sell products or take orders. Each destination below has its own catalogue, accounts, currency, prices, and customer support.",
       /** Card actions: the store first, the brand page second (round three, outcome 7). */
       shopLabel: "Shop",
       aboutLabel: "About",
+      geography: {
+        title: "Geography and currency",
+        text: "The Canadian stores price in Canadian dollars and ship within Canada. Balkowitsch Worldwide prices in U.S. dollars and ships from the United States. Shipping thresholds, delivery times, and returns are published on each store.",
+      },
+      support: {
+        title: "Support boundary",
+        text: "For an existing order, contact the store that took it. This site cannot see or change store orders. For clinic projects, equipment quotes, and supply programs, use the Contact page's intent routing.",
+      },
     },
     /**
      * A distinct route for professional buyers (round three, outcome 7). What a
@@ -52,19 +71,20 @@ export const businesses = {
       ],
       limit:
         "Orders, prices, shipping and returns stay with the store that fulfils them. A review does not create credit terms, consolidated billing, or a connection between a practice's systems and the stores.",
-      action: "clinic_supply_review",
+      /**
+       * The full ongoing-procurement explanation lives on Clinic Solutions
+       * (website consolidation, stage 1). This page introduces professional
+       * buying and points there rather than repeating it in two places.
+       */
+      clinicPointer:
+        "A clinic that is already open has more to work through than a store account: categories, repeat ordering, and what is and is not offered. That is set out in full under Clinic Solutions.",
+      actions: ["clinic_supply_review", "clinic_ongoing_supplies"],
     },
     clinics: {
       eyebrow: "Clinic projects and clinic supply",
       title: "Clinic planning, equipment, and ongoing supply have their own section.",
       text: "Clinic Solutions covers LifeSupply Clinics: planning, design, construction and fit-out, equipment quotes, and keeping an open clinic supplied through the stores.",
       action: "clinic_solutions",
-    },
-    services: {
-      eyebrow: "Choosing a store",
-      title: "Geography, currency, and support at a glance.",
-      text: "Shop & Services lists the four destinations with their geography and currency, and where an existing order is handled.",
-      action: "shop_services",
     },
   },
 

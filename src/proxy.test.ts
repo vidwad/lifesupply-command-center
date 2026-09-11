@@ -56,6 +56,8 @@ describe("public host (D-03, D-12)", () => {
       "/",
       "/about-us",
       "/medical-supply-solutions/lifesupply",
+      // Retired addresses since 2026-09-10. They must still reach the app, or
+      // the permanent redirect that replaced each page could never run.
       "/clinic-solutions/equipment",
       "/metabolic-health/care-kits/glp-1-support",
       "/partners/pharmacies",

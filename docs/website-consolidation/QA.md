@@ -71,3 +71,57 @@ Tests are updated to match the approved architecture **without weakening** the b
 | `pnpm test` | Pass, 104 files, 1,318 tests |
 
 Stage 0 changed no source, so no browser verification applies. The route inventory was enumerated from the page files, the route registry and the dynamic routes' static parameters, and reconciled against the audited total.
+
+## Stage 1
+
+| Check | Result |
+| --- | --- |
+| `pnpm typecheck` | Pass |
+| `pnpm lint` | Pass |
+| `pnpm test` | Pass, 104 files, 1,325 tests |
+| `pnpm format:check` | Pass |
+| `PUBLIC_SITE_MODE=true pnpm build` | Pass, 42 static pages |
+| Playwright, `--workers=1`, both projects | Pass, 83 passed, 5 skipped (project-specific) |
+
+### Routes, verified against a live build
+
+Requested on a production build at `127.0.0.1:3100`, reading the status and `Location` of each response.
+
+| Address | Result |
+| --- | --- |
+| `/shop` | 308 → `/medical-supply-solutions#stores` |
+| `/clinic-solutions/equipment` | 308 → `/clinic-solutions#equipment` |
+| `/clinic-solutions/ongoing-supplies` | 308 → `/clinic-solutions#ongoing-supplies` |
+| `/partners/clinics` | 308 → `/clinic-solutions#collaboration` |
+| `/partners/suppliers`, `/partners/acquisitions`, `/partners` | 200 |
+| `/clinic-solutions`, `/medical-supply-solutions` | 200 |
+| `/nothing-here` | 404 recovery page |
+| `/contact-2`, `/our-operations`, `/our-operations/lifesupply-clinics`, `/clinic-solutions/design-build`, `/investor-relations/documents` | 308, one hop each, destinations unchanged |
+| `/abdul-ladha` | 200, retained profile |
+
+**A slashed variant takes two hops.** `/shop/` answers 308 to `/shop`, which answers 308 to the destination. That is the repository's existing trailing-slash convention, identical for the legacy rules that predate this work; it was verified rather than introduced.
+
+### Deep links without JavaScript
+
+`#planning`, `#equipment`, `#ongoing-supplies`, `#collaboration` and `#stores` are all present in the served HTML, read from the response body rather than from a rendered page. Nothing depends on a script to reveal a section.
+
+### Journeys
+
+| Journey | Result |
+| --- | --- |
+| Store selection, Canadian and U.S. | Pass — geography, currency and each store's own support channel in `#stores` |
+| Existing-order support | Pass — the support boundary sends an existing order to the store that took it |
+| Clinic consultation | Pass — reaches the Clinics site's own consultation page |
+| Equipment quote | Pass — reaches the Clinics site's own quote page |
+| Existing-clinic procurement | Pass — supply review reaches the corporate office by mail |
+| Clinic collaboration | Pass — reaches the approved channel, with its statuses shown |
+
+Outbound destinations were verified by reading the resolved address. **No enquiry or order was sent.**
+
+### Responsive
+
+`/clinic-solutions` overflowed 91 px at 320 px on the first run, caused by a status badge that could not shrink. Fixed, re-verified: no public page is wider than the viewport at 320, 375, or at 200% zoom.
+
+### A note on the header test
+
+The header scroll-hide test failed on the first Stage 1 run on both projects and passed on the re-run. It has been intermittent since round two. It is **not** a regression from this stage, and it is **not** covered by CI, which does not run Playwright. It remains an open item.

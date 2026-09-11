@@ -56,6 +56,30 @@ const nextConfig: NextConfig = {
         destination: "/investor-relations",
         permanent: true,
       },
+      // Website consolidation, stage 1 (2026-09-10): Shop & Services merged
+      // into the Medical Supplies stores section, and Equipment, Ongoing
+      // supplies and the Partners clinic page became sections of Clinic
+      // Solutions. Content moved first; these rules retire the addresses.
+      // Each rule is an exact path. `/partners/clinics` in particular must
+      // never be written as a prefix or wildcard match: `/partners/suppliers`
+      // and `/partners/acquisitions` are retained pages that must keep
+      // answering 200 (docs/website-consolidation/REDIRECTS.md).
+      { source: "/shop", destination: "/medical-supply-solutions#stores", permanent: true },
+      {
+        source: "/clinic-solutions/equipment",
+        destination: "/clinic-solutions#equipment",
+        permanent: true,
+      },
+      {
+        source: "/clinic-solutions/ongoing-supplies",
+        destination: "/clinic-solutions#ongoing-supplies",
+        permanent: true,
+      },
+      {
+        source: "/partners/clinics",
+        destination: "/clinic-solutions#collaboration",
+        permanent: true,
+      },
       // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
       // involved); the addresses go to the team page. The three directors
       // restored on 2026-09-09 are live profiles again. Keep in step with

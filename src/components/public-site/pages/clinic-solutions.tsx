@@ -9,6 +9,7 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
 import { ServiceChannels } from "@/components/public-site/pages/brands";
 import { SiteScreen } from "@/components/public-site/site-screen";
 import { Callout, IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
@@ -18,7 +19,7 @@ import { BRAND_GRAPHICS } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
-/** The two sentences every Clinic Solutions page leads with. */
+/** The two sentences the clinic project material leads with. */
 function ClinicDistinction() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
   return (
@@ -47,7 +48,7 @@ function Checklist({
   return (
     <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
       <div className="flex items-start justify-between gap-4">
-        <Eyebrow as="h2">{title}</Eyebrow>
+        <Eyebrow as="h3">{title}</Eyebrow>
         <IconBadge icon={icon} size={18} />
       </div>
       {text ? <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{text}</p> : null}
@@ -83,62 +84,16 @@ function ConditionalClose({ actions }: { actions: readonly ActionKey[] }) {
 }
 
 /**
- * `/clinic-solutions/` — the LifeSupply Clinics section (since 2026-09-08):
- * the three-need router, the brand's services, specialties, process, and
- * published projects, the consultation checklist, and the post-opening
- * supply opportunity.
+ * Planning and building (`#planning`): the three needs that route the page,
+ * the brand's services and specialties, its process, its published projects,
+ * and what a consultation covers.
  */
-export function ClinicSolutionsPage() {
+function PlanningSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
   const { hub } = clinics;
   const record = getBrand("clinics");
-  const [primary, secondary] = hub.actions as readonly ActionKey[];
   return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={hub.eyebrow}
-        title={hub.title}
-        description={hub.intro}
-        actions={
-          <>
-            {primary ? <ActionLink action={primary} /> : null}
-            {secondary ? <ActionLink action={secondary} variant="onDark" /> : null}
-          </>
-        }
-      />
-      <ClinicDistinction />
-
-      {/* The two ways in, before the three needs: a project, or supplies for an open clinic. */}
-      <section className="border-b border-[var(--lsh-rule)] px-5 py-16 lg:px-8">
-        <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow={hub.entry.eyebrow}
-              title={hub.entry.title}
-              description={hub.entry.note}
-            />
-          </Reveal>
-          <Stagger as="ul" className="mt-10 grid gap-5 md:grid-cols-2">
-            {hub.entry.options.map((option) => (
-              <StaggerItem as="li" key={option.title} className="h-full">
-                <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7 lg:p-8">
-                  <div className="flex items-start justify-between gap-4">
-                    <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
-                      {option.title}
-                    </h3>
-                    <IconBadge icon={iconForTitle(option.title)} />
-                  </div>
-                  <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{option.text}</p>
-                  <div className="mt-auto pt-6">
-                    <ActionLink action={option.action as ActionKey} />
-                  </div>
-                </article>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </section>
-
+    <AnchoredSection id="planning">
       {/* The three needs, each with its verified destination. */}
       <section className="px-5 pb-20 lg:px-8">
         <Stagger className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
@@ -280,31 +235,29 @@ export function ClinicSolutionsPage() {
           />
         </Container>
       </section>
-
-      {/* After opening: conditional. */}
-      <Callout icon="truck" eyebrow={hub.supplyHeading.eyebrow} tone="onLight">
-        <p className="lsh-display text-2xl leading-[1.1]">{hub.supplyHeading.title}</p>
-      </Callout>
-      <ConditionalClose actions={hub.actions as readonly ActionKey[]} />
-    </LifeSupplyLayout>
+    </AnchoredSection>
   );
 }
 
-/** `/clinic-solutions/equipment/` */
-export function EquipmentPage() {
+/**
+ * Equipment (`#equipment`), absorbed from `/clinic-solutions/equipment/` on
+ * 2026-09-10: what a quote request needs, and where the opening-supply
+ * categories are published. Equipment pricing is quoted, never listed here.
+ */
+function EquipmentSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
   const page = clinics.equipment;
   const store = getBrand("lifesupply");
   const clinicCategories = store.categories.filter((category) => /clinic/i.test(category.label));
   return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={page.eyebrow}
-        title={page.title}
-        description={page.intro}
-        actions={<ActionLink action="equipment_quote" />}
-      />
-      <ClinicDistinction />
+    <AnchoredSection id="equipment">
+      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading eyebrow={page.eyebrow} title={page.title} description={page.intro} />
+          </Reveal>
+        </Container>
+      </section>
       <SplitSection
         tone="onSurface"
         eyebrow="Quote request"
@@ -328,7 +281,7 @@ export function EquipmentPage() {
           <Reveal className="flex gap-5">
             <IconBadge icon="layout" />
             <div>
-              <Eyebrow as="h2">{page.catalogue.title}</Eyebrow>
+              <Eyebrow as="h3">{page.catalogue.title}</Eyebrow>
               <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{page.catalogue.text}</p>
             </div>
           </Reveal>
@@ -348,34 +301,39 @@ export function EquipmentPage() {
           </Stagger>
         </Container>
       </section>
-      <ConditionalClose actions={page.actions} />
-    </LifeSupplyLayout>
+    </AnchoredSection>
   );
 }
 
-/** `/clinic-solutions/ongoing-supplies/` */
-export function OngoingSuppliesPage() {
+/**
+ * Ongoing supplies (`#ongoing-supplies`), absorbed from
+ * `/clinic-solutions/ongoing-supplies/` on 2026-09-10.
+ *
+ * Round four, change 5 still governs what belongs here: this is read by a
+ * clinic that is already open and wants to buy, so it keeps the non-clinical
+ * boundary that qualifies its own content and does not repeat the
+ * construction attribution or the project-sequence qualification. Those now
+ * sit a few sections above on the same page, which is what the project
+ * pointer refers to.
+ */
+function OngoingSuppliesSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
   const page = clinics.ongoingSupplies;
   return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={page.eyebrow}
-        title={page.title}
-        description={page.intro}
-        actions={<ActionLink action="clinic_supply_review" />}
-      />
-      {/*
-       * Round four, change 5: the shared distinction block carries the
-       * construction attribution and belongs on the project pages. An open
-       * clinic gets the boundary that applies to buying, and one line saying
-       * where projects are dealt with.
-       */}
-      <section className="px-5 py-12 lg:px-8">
-        <Reveal className="mx-auto grid max-w-7xl gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-2 lg:pl-8">
-          <p className="leading-7 text-[var(--lsh-charcoal)]">{page.boundary}</p>
-          <p className="leading-7 text-[var(--lsh-muted)]">{page.projectPointer}</p>
-        </Reveal>
+    <AnchoredSection id="ongoing-supplies">
+      <section className="px-5 pt-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading eyebrow={page.eyebrow} title={page.title} description={page.intro} />
+          </Reveal>
+          <Reveal
+            delay={0.05}
+            className="mt-10 grid gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-2 lg:pl-8"
+          >
+            <p className="leading-7 text-[var(--lsh-charcoal)]">{page.boundary}</p>
+            <p className="leading-7 text-[var(--lsh-muted)]">{page.projectPointer}</p>
+          </Reveal>
+        </Container>
       </section>
       <SplitSection
         tone="onSurface"
@@ -390,26 +348,182 @@ export function OngoingSuppliesPage() {
             </li>
           ))}
         </ul>
-      </SplitSection>
-      <Callout icon="shield" eyebrow={page.conditional.title} tone="onLight">
-        <p>{page.conditional.text}</p>
-      </Callout>
-      {/*
-       * The project-sequence note ("a consultation is not a contracted
-       * project") closes the project pages, not this one. An open clinic gets
-       * the two actions that apply to buying.
-       */}
-      <section className="bg-[var(--lsh-ink)] px-5 py-16 text-white lg:px-8">
-        <Reveal className="mx-auto flex max-w-7xl flex-wrap gap-3 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:pl-8">
+        <div className="flex flex-wrap gap-3 pt-2">
           {page.actions.map((action, index) => (
             <ActionLink
               key={action}
               action={action as ActionKey}
-              variant={index === 0 ? "primary" : "onDark"}
+              variant={index === 0 ? "primary" : "onLight"}
             />
           ))}
-        </Reveal>
+        </div>
+      </SplitSection>
+      <Callout icon="shield" eyebrow={page.conditional.title} tone="onLight">
+        <p>{page.conditional.text}</p>
+      </Callout>
+    </AnchoredSection>
+  );
+}
+
+/**
+ * Collaboration (`#collaboration`), absorbed from `/partners/clinics/` on
+ * 2026-09-10. It leads with the distinction it exists to draw — a clinic that
+ * buys supplies is a customer, not a partner — because nothing after it means
+ * anything until that is settled. The statuses are the section's own and stay
+ * visible on each item.
+ */
+function CollaborationSection() {
+  const { clinics } = LIFE_SUPPLY_CONTENT;
+  const section = clinics.collaboration;
+  return (
+    <AnchoredSection id="collaboration">
+      <section className="px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={section.eyebrow}
+              title={section.title}
+              description={section.intro}
+            />
+          </Reveal>
+          <div className="mt-10 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
+              <IconBadge icon="shield" />
+              <div>
+                <Eyebrow as="h3">{section.distinction.title}</Eyebrow>
+                <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                  {section.distinction.items.map((item) => (
+                    <li key={item} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+            <Stagger as="ul" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+              {section.items.map((item) => (
+                <StaggerItem as="li" key={item.title} className="h-full">
+                  <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7">
+                    {/*
+                     * The status wraps onto its own line rather than being
+                     * held beside the title: "Available through LifeSupply
+                     * Clinics" is longer than a 320 px card can hold, and a
+                     * status that cannot shrink pushes the page sideways.
+                     */}
+                    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+                      <h3 className="lsh-display min-w-0 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                        {item.title}
+                      </h3>
+                      <span className="lsh-display border border-[var(--lsh-rule-strong)] px-2 py-1 text-[10px] text-[var(--lsh-muted)]">
+                        {item.status}
+                      </span>
+                    </div>
+                    <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
+                  </article>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+          <Reveal
+            delay={0.1}
+            className="mt-8 flex flex-col gap-5 border-t border-[var(--lsh-rule)] pt-8 lg:flex-row lg:items-center lg:justify-between"
+          >
+            <p className="max-w-3xl leading-7 text-[var(--lsh-muted)]">{section.metabolicNote}</p>
+            <div className="flex shrink-0 flex-wrap gap-3">
+              {section.actions.map((action, index) => (
+                <ActionLink
+                  key={action}
+                  action={action as ActionKey}
+                  variant={index === 0 ? "primary" : "onLight"}
+                />
+              ))}
+            </div>
+          </Reveal>
+        </Container>
       </section>
+    </AnchoredSection>
+  );
+}
+
+/**
+ * `/clinic-solutions/` — the whole clinic relationship on one page (website
+ * consolidation, stage 1, 2026-09-10).
+ *
+ * Equipment, Ongoing supplies and the Partners clinic page were separate
+ * addresses until now. They made a visitor guess which of four pages
+ * described their situation, and each one had to re-establish the same
+ * context before it could say anything. The page is sectioned instead: plan
+ * and build, equip, keep supplied, collaborate. `OnThisPage` shows that shape
+ * before the reader scrolls, and the three retired addresses redirect to
+ * their section.
+ *
+ * Every section is an `AnchoredSection`, so a redirect or a link that names a
+ * fragment lands on the whole block with the sticky header cleared — and it
+ * does so with JavaScript disabled, because these are plain anchors rather
+ * than scripted scrolling.
+ */
+export function ClinicSolutionsPage() {
+  const { clinics } = LIFE_SUPPLY_CONTENT;
+  const { hub } = clinics;
+  const [primary, secondary] = hub.actions as readonly ActionKey[];
+  return (
+    <LifeSupplyLayout>
+      <PublicHero
+        eyebrow={hub.eyebrow}
+        title={hub.title}
+        description={hub.intro}
+        actions={
+          <>
+            {primary ? <ActionLink action={primary} /> : null}
+            {secondary ? <ActionLink action={secondary} variant="onDark" /> : null}
+          </>
+        }
+      />
+      <OnThisPage items={clinics.sections} />
+      <ClinicDistinction />
+
+      {/* The two ways in, before the three needs: a project, or supplies for an open clinic. */}
+      <section className="border-b border-[var(--lsh-rule)] px-5 py-16 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={hub.entry.eyebrow}
+              title={hub.entry.title}
+              description={hub.entry.note}
+            />
+          </Reveal>
+          <Stagger as="ul" className="mt-10 grid gap-5 md:grid-cols-2">
+            {hub.entry.options.map((option) => (
+              <StaggerItem as="li" key={option.title} className="h-full">
+                <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7 lg:p-8">
+                  <div className="flex items-start justify-between gap-4">
+                    <h2 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                      {option.title}
+                    </h2>
+                    <IconBadge icon={iconForTitle(option.title)} />
+                  </div>
+                  <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{option.text}</p>
+                  <div className="mt-auto pt-6">
+                    <ActionLink action={option.action as ActionKey} />
+                  </div>
+                </article>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </section>
+
+      <PlanningSection />
+      <EquipmentSection />
+
+      {/* After opening: conditional. */}
+      <Callout icon="truck" eyebrow={hub.supplyHeading.eyebrow} tone="onLight">
+        <p className="lsh-display text-2xl leading-[1.1]">{hub.supplyHeading.title}</p>
+      </Callout>
+
+      <OngoingSuppliesSection />
+      <CollaborationSection />
+      <ConditionalClose actions={hub.actions as readonly ActionKey[]} />
     </LifeSupplyLayout>
   );
 }
