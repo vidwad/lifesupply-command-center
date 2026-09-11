@@ -10,7 +10,6 @@ import {
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
-import { ServiceChannels } from "@/components/public-site/pages/brands";
 import { SiteScreen } from "@/components/public-site/site-screen";
 import { Callout, IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
@@ -93,36 +92,6 @@ function Router() {
   );
 }
 
-/** A checklist block. */
-function Checklist({
-  title,
-  text,
-  items,
-  icon = "clipboardCheck",
-}: {
-  title: string;
-  text?: string;
-  items: readonly string[];
-  icon?: string;
-}) {
-  return (
-    <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
-      <div className="flex items-start justify-between gap-4">
-        <Eyebrow as="h3">{title}</Eyebrow>
-        <IconBadge icon={icon} size={18} />
-      </div>
-      {text ? <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{text}</p> : null}
-      <ul className="mt-5 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-        {items.map((item) => (
-          <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
-            {item}
-          </li>
-        ))}
-      </ul>
-    </Reveal>
-  );
-}
-
 /**
  * Planning, design and construction (`#planning`).
  *
@@ -134,7 +103,6 @@ function Checklist({
 function PlanningSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
   const { hub } = clinics;
-  const record = getBrand("clinics");
   return (
     <AnchoredSection id="planning">
       <section className="px-5 py-20 lg:px-8">
@@ -174,7 +142,9 @@ function PlanningSection() {
                 <h3 className="lsh-display text-lg text-[var(--lsh-charcoal)]">{service.title}</h3>
                 <ul className="mt-2 grid gap-1 text-sm leading-6">
                   {service.items.map((item) => (
-                    <li key={item}>{item}</li>
+                    <li key={item} className="lsh-bullet">
+                      {item}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -209,26 +179,6 @@ function PlanningSection() {
       />
 
       <ProjectsSection />
-
-      {/* What a first conversation covers, and where it happens. */}
-      <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
-        {/* Stretched, not top-aligned: the two boxes are a pair and ended at
-            different heights, which read as a misalignment rather than as two
-            blocks of different length. */}
-        <Container className="grid gap-8 lg:grid-cols-2">
-          <Checklist
-            title={hub.consultation.title}
-            text={hub.consultation.text}
-            items={hub.consultation.items}
-            icon="clipboardList"
-          />
-          <ServiceChannels
-            record={record}
-            title={hub.channelsHeading.title}
-            text={hub.channelsHeading.text}
-          />
-        </Container>
-      </section>
     </AnchoredSection>
   );
 }
@@ -237,13 +187,16 @@ function PlanningSection() {
  * The six built clinics: the page's only proof, and previously a flat row of
  * bordered boxes competing with three other card grids.
  *
- * It is now the page's widest moment — the project list set against the
- * Clinics site's own home page, with the geography stated as a figure rather
- * than buried in a sentence. No project photography exists that this site may
- * publish, and none is invented, so the typography carries it.
+ * It is the page's widest moment: the project list set against the Clinics
+ * site's own home page, with the geography in the title rather than buried in
+ * a sentence. No project photography exists that this site may publish, and
+ * none is invented, so the typography carries it.
+ *
+ * The attribution that sat here restated the planning section's boundary,
+ * which already says the construction is delivered with the core partners.
  */
 function ProjectsSection() {
-  const { projects, attribution } = LIFE_SUPPLY_CONTENT.clinics;
+  const { projects } = LIFE_SUPPLY_CONTENT.clinics;
   return (
     <section className="border-b border-[var(--lsh-rule)] px-5 py-24 lg:px-8">
       <Container>
@@ -254,9 +207,6 @@ function ProjectsSection() {
               title={projects.title}
               description={projects.intro}
             />
-            <p className="mt-8 border-t border-[var(--lsh-rule)] pt-6 text-sm leading-6 text-[var(--lsh-muted)]">
-              {attribution}
-            </p>
           </Reveal>
           <Reveal delay={0.1}>
             <SiteScreen site="clinics" className="border border-[var(--lsh-rule)]" />
@@ -330,7 +280,7 @@ function EquipmentSection() {
       >
         <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
           {page.quote.items.map((item) => (
-            <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+            <li key={item} className="lsh-bullet">
               {item}
             </li>
           ))}
@@ -422,7 +372,7 @@ function OngoingSuppliesSection() {
       >
         <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] sm:grid-cols-2">
           {page.available.items.map((item) => (
-            <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+            <li key={item} className="lsh-bullet">
               {item}
             </li>
           ))}
@@ -478,7 +428,7 @@ function CollaborationSection() {
                 <Eyebrow as="h3">{section.distinction.title}</Eyebrow>
                 <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
                   {section.distinction.items.map((item) => (
-                    <li key={item} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                    <li key={item} className="lsh-bullet">
                       {item}
                     </li>
                   ))}

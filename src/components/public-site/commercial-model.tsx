@@ -103,7 +103,7 @@ export function CommercialModel({ model }: { model: Model }) {
             {/* Phones: one labelled block per category. */}
             <ul className="grid gap-6 pb-6 md:hidden">
               {model.rows.map((row) => (
-                <li key={row.category} className="border-l-2 border-[var(--lsh-brand-red)] pl-4">
+                <li key={row.category} className="lsh-bullet">
                   <p className="lsh-display text-sm text-[var(--lsh-charcoal)]">{row.category}</p>
                   <dl className="mt-3 grid gap-3">
                     {detailFields(row).map(([label, value]) => (

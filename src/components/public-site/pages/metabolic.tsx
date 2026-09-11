@@ -172,7 +172,7 @@ export function MetabolicHealthPage() {
             <Eyebrow as="h3">{hub.audiences.support.title}</Eyebrow>
             <ul className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--lsh-charcoal)]">
               {hub.audiences.support.items.map((item) => (
-                <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+                <li key={item} className="lsh-bullet">
                   {item}
                 </li>
               ))}
@@ -234,7 +234,7 @@ export function MetabolicHealthPage() {
             </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] md:grid-cols-2">
               {hub.important.items.map((item) => (
-                <li key={item} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                <li key={item} className="lsh-bullet">
                   {item}
                 </li>
               ))}
@@ -379,7 +379,7 @@ function PathwaySection({ slug }: { slug: string }) {
             </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
               {kit.compatibility.map((rule) => (
-                <li key={rule} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+                <li key={rule} className="lsh-bullet">
                   {rule}
                 </li>
               ))}
@@ -395,7 +395,7 @@ function PathwaySection({ slug }: { slug: string }) {
             </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
               {kit.exclusions.map((rule) => (
-                <li key={rule} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                <li key={rule} className="lsh-bullet">
                   {rule}
                 </li>
               ))}
@@ -457,7 +457,7 @@ function ReplenishmentSection() {
       >
         <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
           {refills.today.items.map((item) => (
-            <li key={item} className="border-l-2 border-[var(--lsh-brand-red)] pl-3">
+            <li key={item} className="lsh-bullet">
               {item}
             </li>
           ))}
