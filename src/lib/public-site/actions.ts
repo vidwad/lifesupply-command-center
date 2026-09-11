@@ -224,7 +224,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
   },
   discuss_program: {
     key: "discuss_program",
-    label: "Discuss a supply program",
+    label: "Discuss your supply needs",
     intent: "metabolic_program",
     destination: mail("info@lifesupply.com", "Metabolic-health supply program"),
     ownerChannel: null,

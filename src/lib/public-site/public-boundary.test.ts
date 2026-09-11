@@ -721,7 +721,12 @@ describe("round four: consolidation, precision and available actions", () => {
   it("says the four categories are coordinated, never one contract or account", () => {
     const metabolic = stripComments(read("src/lib/public-site/content/metabolic.ts"));
     expect(metabolic).not.toMatch(/one commercial relationship/i);
-    expect(metabolic).toContain("not one contract, not one account");
+    // Said as what each party keeps (2026-09-11) rather than as a list of
+    // things that do not exist. The rule is unchanged: nothing shared, nothing
+    // joined, and no proposed service without its own scope.
+    expect(metabolic).toContain("keep their own ordering arrangements and accounts");
+    expect(metabolic).toContain("would need its own agreed scope");
+    expect(metabolic).not.toMatch(/\b(one|a single|a shared) (account|contract) (for|across)\b/i);
     // Reporting scope is stated once, the same way in both places.
     expect(metabolic).not.toMatch(/Reporting scope is not defined/i);
     expect(metabolic).not.toMatch(/status reporting/i);
@@ -848,7 +853,7 @@ describe("round three: architecture, placement and voice", () => {
     expect(model).toBeGreaterThan(-1);
     // It explains who buys what, so it comes before the pathways and before
     // the closing, and after the description of the offer it prices.
-    expect(body.indexOf("<OfferSection />")).toBeLessThan(model);
+    expect(body.indexOf("<ValueSection />")).toBeLessThan(model);
     expect(model).toBeLessThan(body.indexOf("<PathwaysSection />"));
     expect(model).toBeLessThan(body.indexOf("<ClosingBand />"));
   });
@@ -874,21 +879,20 @@ describe("round three: architecture, placement and voice", () => {
   });
 
   it("lists the pathways once, with every name opening its own section", () => {
-    // The care-kits hub used to render the comparison and then eight cards
-    // repeating it (round three, outcome 5). The rule survives consolidation:
-    // the comparison is still the only catalogue, and each row still carries
-    // a destination — an anchor on this page since 2026-09-10 rather than a
-    // page of its own.
+    // The comparison table and the eight full sections repeating it are gone
+    // (2026-09-11). The rule survives in its new shape: the kit list is
+    // rendered once, as cards grouped by kind; every card carries its own
+    // anchor; and one compact overview links to each of them.
     const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
-    expect(page).toContain("<PathwayComparison");
-    expect(page).toContain("href: `#${row.slug}`");
-    // The kit list is mapped exactly once, to render the eight sections the
-    // catalogue points at, and never a second time into repeating cards.
-    expect((page.match(/metabolic\.kits\.map/g) ?? []).length).toBe(1);
-    expect(page).toContain("<PathwaySection key={kit.slug}");
-    // Every row still carries a destination.
-    const comparison = stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`));
-    expect(comparison).toContain("href={p.href}");
+    expect(existsSync(join(ROOT, `${PUBLIC_DIR}/pathway-comparison.tsx`))).toBe(false);
+    expect((page.match(/metabolic\.kits\.(map|filter)/g) ?? []).length).toBe(1);
+    expect(page).toContain("<PathwayCard key={kit.slug} kit={kit} />");
+    expect(page).toContain("id={kit.slug}");
+    expect(page).toContain("href={`#${kit.slug}`}");
+    // The anchor sits on the visible card, never inside the folded detail, so
+    // a deep link shows the pathway with JavaScript disabled.
+    const card = page.slice(page.indexOf("function PathwayCard("));
+    expect(card.indexOf("id={kit.slug}")).toBeLessThan(card.indexOf("<details"));
   });
 
   it("puts the store first on every operating-brand card, with the brand page second", () => {
@@ -1076,19 +1080,23 @@ describe("round two: independent review corrections", () => {
 
 describe("round two: comparison, replenishment and motion", () => {
   it("compares all eight pathways in one place, from their own entries", () => {
+    // Since 2026-09-11 the eight are explained as three kinds rather than
+    // compared in a table: two care-program applications, four supporting
+    // modules, two organisation-level configurations. Every pathway belongs
+    // to exactly one kind, and the kinds are the ones the section names.
     const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
-    expect(c).toContain("pathwayComparison");
-    expect(c).toContain("comparisonRows");
+    expect(c).toContain('export type PathwayGroup = "program" | "module" | "configuration"');
+    expect((c.match(/group: "program"/g) ?? []).length).toBe(2);
+    expect((c.match(/group: "module"/g) ?? []).length).toBe(4);
+    expect((c.match(/group: "configuration"/g) ?? []).length).toBe(2);
+    for (const key of ["program", "module", "configuration"]) {
+      expect(c).toContain(`key: "${key}"`);
+    }
     // Pathways overlap on purpose; nothing may present them as exclusive.
     expect(c).toMatch(/overlap on purpose/);
     expect(c).not.toMatch(/excludes? (?:any )?other pathway|mutually exclusive/i);
-    const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
-    expect(page).toContain("<PathwayComparison");
-    const table = stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`));
-    expect(table).toContain("<table");
-    expect(table).toContain("lg:hidden");
-    // The comparison adds no purchase route and no device recommendation.
-    expect(table).not.toMatch(/add to cart|buy now|subscribe|we recommend/i);
+    // The worked example illustrates the model and publishes no product.
+    expect(c).toContain("none is published yet");
   });
 
   it("never blurs meaningful text into view", () => {
@@ -1110,30 +1118,36 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
   it("sets out the proposed model in one place, with status and provider responsibility on every row", () => {
     const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
     expect(c).toContain("commercialModel");
-    for (const row of [
-      "Patient supply purchases",
-      "Clinic-wide procurement",
-      "Contracted kitting and fulfilment",
-      "Contracted workflow support",
+    // The four parts in the customer's terms (2026-09-11). The investor
+    // labels - "Contracting party", "Revenue type" - left with the table.
+    for (const part of [
+      "Patient supplies",
+      "Clinic purchasing",
+      "Fulfilment",
+      "Workflow support",
     ]) {
-      expect(c, row).toContain(row);
+      expect(c, part).toContain(`title: "${part}"`);
     }
+    expect(c).not.toMatch(/Contracting party|Revenue type/);
     // Proposed, never an offer; and no price, percentage or volume.
-    expect(c).toContain("It is not an offer, it establishes no contract");
+    expect(c).toMatch(/not an offer/);
+    expect(c).toMatch(/establishes no contract/);
     const model = stripComments(read(`${PUBLIC_DIR}/commercial-model.tsx`));
     expect(model).not.toMatch(/\$\s?\d|\b\d{1,3}\s?%/);
-    // Round four, change 3: two layers. The summary answers who contracts,
-    // what they get and whether it exists; the rest sits behind a native
-    // disclosure that needs no JavaScript, with a semantic table from md up
-    // and labelled stacked entries below it.
-    expect(model).toContain("<details");
-    expect(model).toContain("<summary");
-    expect(model).toContain("<table");
-    expect(model).toContain("md:hidden");
-    expect(model).toContain("<caption");
-    // Each detail field appears once, so there is no second copy to drift.
-    for (const field of ["row.revenue", "row.frequency", "row.retained"]) {
-      expect((model.match(new RegExp(field.replace(".", "\\."), "g")) ?? []).length).toBe(1);
+    // One layer. The diagram sets store purchasing against a proposed
+    // service before a word is read, and each card carries what it covers,
+    // who orders, the arrangement, the status, and who keeps the clinical
+    // decision - each exactly once, so there is no second copy to drift.
+    expect(model).toContain("<SupplyModelDiagram model={model} />");
+    for (const field of [
+      "item.purpose",
+      "item.customer",
+      "item.arrangement",
+      "item.status",
+      "item.retained",
+    ]) {
+      const hits = (model.match(new RegExp(field.replace(".", "\\."), "g")) ?? []).length;
+      expect(hits, field).toBe(1);
     }
   });
 
@@ -1800,13 +1814,20 @@ describe("Stage 4 Metabolic Health and the eight pathways", () => {
     // disclaimer and an "Important information" list of four carried these
     // between them before 2026-09-11, saying "not available" five times.
     expect((page.match(/<BoundariesBand \/>/g) ?? []).length).toBe(1);
+    // The status is the hero's own line, separate from the proposition it
+    // qualifies (2026-09-11), and the two boundaries close the page as
+    // essential information rather than opening it as a caveat.
+    expect(page).toContain("{hub.status}");
     const body = page.slice(page.indexOf("export function MetabolicHealthPage("));
-    expect(body.indexOf("<BoundariesBand />")).toBeLessThan(body.indexOf("<PathwaysSection />"));
-    expect(metabolicContent()).toContain("no pathway and no program can be ordered yet");
-    // And every pathway still carries its own status in the catalogue row.
-    expect(stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`))).toContain("p.status");
+    expect(body.indexOf("<BoundariesBand />")).toBeGreaterThan(body.indexOf("<ClosingBand />"));
+    expect(metabolicContent()).toContain(
+      "In development. Program configurations and contracted services are not yet available.",
+    );
+    // The eight share one status, stated once for the section rather than
+    // in a column that said the same thing eight times (2026-09-11).
+    expect(metabolicContent()).toContain("All eight are in development.");
     expect(
-      (metabolicContent().match(/can be ordered yet/g) ?? []).length,
+      (metabolicContent().match(/not yet available\./g) ?? []).length,
       "the availability statement is made once, in the hero",
     ).toBe(1);
     expect(metabolicContent()).toContain("does not diagnose, prescribe, or recommend");
@@ -2217,7 +2238,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
         const mapped =
           ((KIT_SLUGS as readonly string[]).includes(anchor) &&
             source.includes("id={kit.slug}") &&
-            source.includes("metabolic.kits.map")) ||
+            /metabolic\.kits\.(map|filter)/.test(source)) ||
           // The four profile anchors likewise come from one mapped component.
           ((PROFILE_ANCHORS as readonly string[]).includes(anchor) &&
             source.includes("id={profile.anchor}") &&
