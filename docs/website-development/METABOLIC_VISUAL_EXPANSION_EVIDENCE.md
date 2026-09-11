@@ -10,6 +10,10 @@ The pathway overview now has a deliberate image-and-navigation split rather than
 
 After resetting the shared local Next cache, the pathway overview rendered the approved `metabolic-supplies.jpg` still life beside the grouped pathway navigation. The replenishment anchor rendered the approved warehouse image alongside the unlabelled three-part continuity rhythm. The two modules now provide distinct visual pauses around the page’s densest approved content while leaving all visible explanatory text and the in-development qualification unchanged.
 
+## Vercel review deployment — 2026-09-11
+
+The PR #160 deployment for commit `afff259` was reviewed at `/metabolic-health#pathways`. The deployed pathway section rendered the resolved conceptual still life, grouped pathway navigation, existing card content, and Back to top control without a visible placeholder. The deployment’s CI production build, type/lint/format/tests, and Vercel checks completed successfully before this review.
+
 ## Guardrails retained
 
 The visual assets are decorative, use empty alternative text, and contain no embedded copy. They do not depict people, medication, injectable devices, labels, product configurations, clinical procedures, or confirmed operational services. The visible public copy remains the approved source of truth.
