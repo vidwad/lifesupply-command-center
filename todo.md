@@ -29,7 +29,7 @@
 - [ ] Verify the merged `main` commit retains the Claude Code planning artifacts and report the local VS Code continuation prompt.
 - [x] Review the current main-branch LifeSupply public experience and refine the user-selected public pages; the initial review shows an expanded multi-brand navigation and several competing homepage conversion paths that require page-specific visual prioritization.
 - [x] Enhance `/metabolic-health/` with a brand-consistent editorial hero visual, a non-clinical supply-pathway graphic, and motion-safe visual transitions without adding unapproved medical, product, or commercial claims.
-- [ ] Validate the refined Metabolic Health page at desktop and mobile sizes, including reduced-motion, keyboard, contrast, and public-route checks.
+- [x] Validate the refined Metabolic Health page at desktop and mobile sizes, including reduced-motion, keyboard, contrast, and public-route checks.
 
 ## Public front end — first refinement pass (shell, `/`, `/about-us/`)
 
