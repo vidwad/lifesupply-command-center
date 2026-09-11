@@ -125,3 +125,39 @@ Outbound destinations were verified by reading the resolved address. **No enquir
 ### A note on the header test
 
 The header scroll-hide test failed on the first Stage 1 run on both projects and passed on the re-run. It has been intermittent since round two. It is **not** a regression from this stage, and it is **not** covered by CI, which does not run Playwright. It remains an open item.
+
+## Stage 2
+
+| Check | Result |
+| --- | --- |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | Pass |
+| `pnpm test` | Pass, 104 files, 1,326 tests |
+| `PUBLIC_SITE_MODE=true pnpm build` | Pass, 31 static pages (42 less the eleven retired) |
+| Playwright, `--workers=1`, both projects | Pass, 87 passed, 5 project-specific skips |
+
+### Routes, verified against a live build
+
+All eleven answer 308 to the exact fragment:
+
+`/partners/pharmacies` → `/pharmacy-solutions#partner-program`; `/metabolic-health/care-kits` → `#pathways`; `/metabolic-health/refills` → `#replenishment`; and each of the eight pathway addresses → its own slug anchor, confirmed individually rather than by pattern.
+
+Retained and answering 200: `/metabolic-health`, `/pharmacy-solutions`, `/partners`, `/partners/suppliers`, `/partners/acquisitions`, `/clinic-solutions`, `/medical-supply-solutions`.
+
+### Deep links without JavaScript
+
+All eleven Metabolic Health anchors and `#partner-program` are present in the served HTML, read from the response body. Every pathway's parts — audience, distinction, compatibility, exclusions, store categories, FAQs — appear eight times each in that body, once per pathway.
+
+### Sitemap
+
+26 canonical URLs: 41 before the consolidation, less the four stage 1 retired and the eleven stage 2 retired. The eight pathway addresses are absent, which was the defect this stage found and fixed.
+
+### Journeys
+
+| Journey | Result |
+| --- | --- |
+| Metabolic program enquiry | Pass — reaches the approved channel from the pathways |
+| Pharmacy supply-program enquiry | Pass — reaches the approved channel from `#partner-program` |
+| Pathway comparison and selection | Pass — one catalogue, each row opening its section |
+| K03's absent store category | Pass — states plainly that no store carries it, offers no link |
+
+No enquiry or order was sent.

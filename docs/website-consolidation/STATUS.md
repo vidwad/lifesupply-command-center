@@ -5,8 +5,8 @@ One row per stage. A stage is complete only when its production deployment has b
 | Stage | Scope | PR | Squash-merge | Deployment verified |
 | --- | --- | --- | --- | --- |
 | 0 | Baseline, inventory, redirect map, documents | #144 | `bf0bda3` | Documentation only |
-| 1 | Shop → Medical Supplies; Equipment and Ongoing Supplies → Clinic Solutions | #145 | `pending` | `pending` |
-| 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | — | — | — |
+| 1 | Shop → Medical Supplies; Equipment and Ongoing Supplies → Clinic Solutions | #145 | `0eab3b0` | `pending` |
+| 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | #146 | `pending` | `pending` |
 | 3 | Final five-item navigation; Partners retirement | — | — | — |
 | 4 | Team merge; About, Home, News, Contact refinement | — | — | — |
 | 5 | Design, Codex review, final verification | — | — | — |
@@ -54,3 +54,32 @@ The `/partners` hazard was handled as planned: `/partners/clinics` is an **exact
 The route registry gained `CONSOLIDATED_ROUTES`, `SECTION_ANCHORS` and `isLiveSection()`. The last is the substantive addition: an internal action that names a fragment no page declares now fails a test instead of shipping as a link that scrolls nowhere.
 
 Remaining: stages 2 to 5.
+
+## Stage 2 — Pharmacy and Metabolic consolidation
+
+**Completed September 10, 2026.**
+
+Eleven addresses retired, their content moved first.
+
+| Retired | Now at |
+| --- | --- |
+| `/partners/pharmacies` | `/pharmacy-solutions#partner-program` |
+| `/metabolic-health/care-kits` | `/metabolic-health#pathways` |
+| `/metabolic-health/refills` | `/metabolic-health#replenishment` |
+| The eight pathway pages | `/metabolic-health#<slug>`, one per pathway |
+
+**Every pathway keeps the anchor its slug used**, so a bookmarked pathway address lands on the same material rather than on a hub the reader then has to search. The anchors are derived from `KIT_SLUGS` in the route registry, so a pathway and its anchor cannot drift apart.
+
+Metabolic Health is now one page: the commercial model and the experience, then `#pathways` with the comparison catalogue and the eight pathway sections, then `#replenishment`, then `#collaboration`. Each pathway section carries everything its page did — audience, the distinction that matters, its item roles, compatibility, exclusions, the verified store categories or the honest reason there are none, and its own FAQs.
+
+`#collaboration` is new. Stage 1 moved clinic collaboration onto Clinic Solutions pointing here for the fuller scope, and without this section that link went to a page that never picked the subject up.
+
+Pharmacy Solutions absorbed the partner programme at `#partner-program`, with its model and its complaints-and-recalls responsibilities intact. The non-drug rule travelled with it and is not left behind in the partners model; a canary asserts both halves of that.
+
+**Three defects found in verification, fixed rather than shipped.**
+
+1. **The sitemap advertised eleven URLs that answer 308.** It listed the eight pathway addresses from `KIT_SLUGS` directly rather than from the route registry, so retiring them in the registry did not remove them from the map. The sitemap is now wholly registry-derived.
+2. Two test assertions were wrong about the content, not the other way round. A pathway declares only the item roles it actually has — diabetes supplies has no occasional item, pharmacy patient support no starter one — and the assertion had demanded all three.
+3. A purchase canary matched the replenishment section's own denial, "no subscription on this site today", as though it were an offer. It now checks purchase affordances rather than words.
+
+Remaining: stages 3 to 5.

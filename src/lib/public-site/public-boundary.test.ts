@@ -20,9 +20,12 @@ import { describe, expect, it } from "vitest";
 import {
   CONSOLIDATED_ROUTES,
   LIFE_SUPPLY_ROUTES,
+  METABOLIC_ROUTES,
+  PHARMACY_ROUTES,
   SECTION_ANCHORS,
   STAGE_3_ROUTES,
 } from "@/lib/public-site/routes";
+import { KIT_SLUGS } from "@/lib/public-site/content/metabolic";
 
 const ROOT = join(__dirname, "..", "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
@@ -517,11 +520,7 @@ describe("routes and content governance", () => {
       "src/app/medical-supply-solutions/balkowitsch/page.tsx",
       "src/app/clinic-solutions/page.tsx",
       "src/app/metabolic-health/page.tsx",
-      "src/app/metabolic-health/care-kits/page.tsx",
-      "src/app/metabolic-health/care-kits/[kit]/page.tsx",
-      "src/app/metabolic-health/refills/page.tsx",
       "src/app/partners/page.tsx",
-      "src/app/partners/pharmacies/page.tsx",
       "src/app/partners/suppliers/page.tsx",
       "src/app/partners/acquisitions/page.tsx",
       "src/app/investor-relations/growth-strategy/page.tsx",
@@ -552,6 +551,9 @@ describe("routes and content governance", () => {
       // Retired addresses stay in the table as redirect rows, so the sitemap
       // and the menus keep being derived and no address is simply dropped.
       '"/shop/"',
+      '"/partners/pharmacies/"',
+      '"/metabolic-health/care-kits/"',
+      '"/metabolic-health/refills/"',
       '"/clinic-solutions/equipment/"',
       '"/clinic-solutions/ongoing-supplies/"',
       '"/partners/clinics/"',
@@ -862,15 +864,20 @@ describe("round three: architecture, placement and voice", () => {
     expect(execution).not.toMatch(/\bby (Q[1-4]|20\d\d)\b/i);
   });
 
-  it("lists the pathways once, with every name opening its own page", () => {
+  it("lists the pathways once, with every name opening its own section", () => {
     // The care-kits hub used to render the comparison and then eight cards
-    // repeating it (round three, outcome 5).
+    // repeating it (round three, outcome 5). The rule survives consolidation:
+    // the comparison is still the only catalogue, and each row still carries
+    // a destination — an anchor on this page since 2026-09-10 rather than a
+    // page of its own.
     const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
     expect(page).toContain("<PathwayComparison");
-    expect(page).toContain("kitRoute(row.slug)");
-    // No second catalogue: the kit list is not mapped into cards on the hub.
-    expect(page).not.toMatch(/metabolic\.kits\.map/);
-    // Every row still carries a route into its detail page.
+    expect(page).toContain("href: `#${row.slug}`");
+    // The kit list is mapped exactly once, to render the eight sections the
+    // catalogue points at, and never a second time into repeating cards.
+    expect((page.match(/metabolic\.kits\.map/g) ?? []).length).toBe(1);
+    expect(page).toContain("<PathwaySection key={kit.slug}");
+    // Every row still carries a destination.
     const comparison = stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`));
     expect(comparison).toContain("href={p.href}");
   });
@@ -1718,9 +1725,17 @@ describe("Stage 4 Metabolic Health and the eight pathways", () => {
   const metabolicPage = () => stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
   const metabolicContent = () => stripComments(read("src/lib/public-site/content/metabolic.ts"));
 
-  it("states the in-development status and the disclaimer on every metabolic page", () => {
+  it("states the in-development status and the disclaimer once, above everything it qualifies", () => {
     const page = metabolicPage();
-    expect((page.match(/<StatusBand \/>/g) ?? []).length).toBe(4);
+    // Metabolic Health is one page since 2026-09-10, so the band renders once
+    // — but it must render before any pathway, or a reader reaches a pathway
+    // without the status that qualifies it.
+    expect((page.match(/<StatusBand \/>/g) ?? []).length).toBe(1);
+    const body = page.slice(page.indexOf("export function MetabolicHealthPage("));
+    expect(body.indexOf("<StatusBand />")).toBeGreaterThan(-1);
+    expect(body.indexOf("<StatusBand />")).toBeLessThan(body.indexOf("<PathwaysSection />"));
+    // And every pathway still carries its own status in the catalogue row.
+    expect(stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`))).toContain("p.status");
     expect(metabolicContent()).toContain("No pathway is purchasable on this site");
     expect(metabolicContent()).toContain("does not diagnose, prescribe, or recommend");
   });
@@ -1904,7 +1919,12 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(clinics).toContain("Collaboration is not procurement");
     expect(clinics).toContain("No collaboration is required.");
     expect(c).not.toContain("Collaboration is not procurement");
-    expect(c).toContain("Medication is excluded from every configuration");
+    // The pharmacy partner programme moved to Pharmacy Solutions on
+    // 2026-09-10. Its non-drug rule travelled with it and is not left behind.
+    const pharmacyContent = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
+    expect(pharmacyContent).toContain("Medication is excluded from every configuration");
+    expect(pharmacyContent).toContain("Supply fulfilment is not dispensing");
+    expect(c).not.toContain("Medication is excluded from every configuration");
     expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
   });
 
@@ -2068,6 +2088,8 @@ describe("website consolidation: sections, redirects and deep links", () => {
   const PAGES_BY_ROUTE: Record<string, string> = {
     [LIFE_SUPPLY_ROUTES.operations]: `${PUBLIC_DIR}/pages/operations.tsx`,
     [STAGE_3_ROUTES.clinicSolutions]: `${PUBLIC_DIR}/pages/clinic-solutions.tsx`,
+    [PHARMACY_ROUTES.hub]: `${PUBLIC_DIR}/pages/pharmacy.tsx`,
+    [METABOLIC_ROUTES.hub]: `${PUBLIC_DIR}/pages/metabolic.tsx`,
   };
 
   it("renders every section anchor the registry declares", () => {
@@ -2080,7 +2102,14 @@ describe("website consolidation: sections, redirects and deep links", () => {
       for (const anchor of anchors) {
         // The whole section is the target, not a heading floating above its
         // own content, so a reader who follows a redirect lands on the block.
-        expect(source, `${route}#${anchor}`).toContain(`<AnchoredSection id="${anchor}"`);
+        // The eight pathway anchors come from one mapped component rather
+        // than eight literals, so that form counts too.
+        const literal = source.includes(`<AnchoredSection id="${anchor}"`);
+        const mapped =
+          (KIT_SLUGS as readonly string[]).includes(anchor) &&
+          source.includes("id={kit.slug}") &&
+          source.includes("metabolic.kits.map");
+        expect(literal || mapped, `${route}#${anchor}`).toBe(true);
       }
     }
   });
@@ -2120,6 +2149,16 @@ describe("website consolidation: sections, redirects and deep links", () => {
       "/clinic-solutions/equipment": "/clinic-solutions#equipment",
       "/clinic-solutions/ongoing-supplies": "/clinic-solutions#ongoing-supplies",
       "/partners/clinics": "/clinic-solutions#collaboration",
+      "/partners/pharmacies": "/pharmacy-solutions#partner-program",
+      "/metabolic-health/care-kits": "/metabolic-health#pathways",
+      "/metabolic-health/refills": "/metabolic-health#replenishment",
+      // Every pathway address keeps its slug as its anchor.
+      ...Object.fromEntries(
+        KIT_SLUGS.map((slug) => [
+          `/metabolic-health/care-kits/${slug}`,
+          `/metabolic-health#${slug}`,
+        ]),
+      ),
     };
     for (const [from, to] of Object.entries(destinations)) {
       expect(config, from).toContain(`source: "${from}"`);
@@ -2141,6 +2180,10 @@ describe("website consolidation: sections, redirects and deep links", () => {
       "src/app/clinic-solutions/equipment/page.tsx",
       "src/app/clinic-solutions/ongoing-supplies/page.tsx",
       "src/app/partners/clinics/page.tsx",
+      "src/app/partners/pharmacies/page.tsx",
+      "src/app/metabolic-health/care-kits/page.tsx",
+      "src/app/metabolic-health/care-kits/[kit]/page.tsx",
+      "src/app/metabolic-health/refills/page.tsx",
     ]) {
       expect(existsSync(join(ROOT, gone)), gone).toBe(false);
     }
@@ -2164,5 +2207,33 @@ describe("website consolidation: sections, redirects and deep links", () => {
     expect(businesses).toContain("Support boundary");
     expect(businesses).toContain("This site cannot see or change store orders.");
     expect(businesses).toContain("This corporate site does not sell products or take orders.");
+  });
+
+  it("keeps every pathway whole after the eight pages became eight sections", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
+    // Each part the pathway pages carried is rendered by the section that
+    // replaced them. Dropping any one of these would lose information that
+    // only existed on a page that no longer answers.
+    for (const part of [
+      "{kit.audience}",
+      "{kit.distinction}",
+      "kit.roles.map",
+      "kit.compatibility.map",
+      "kit.exclusions.map",
+      "<BrowseLinks kit={kit} />",
+      "items={kit.faqs}",
+    ]) {
+      expect(page, part).toContain(part);
+    }
+    // Replenishment and the pharmacy programme likewise.
+    expect(page).toContain("{refills.later.text}");
+    expect(page).toContain("{refills.substitutions}");
+    const pharmacyPage = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
+    expect(pharmacyPage).toContain("partnerProgram.model.items.map");
+    expect(pharmacyPage).toContain("partnerProgram.responsibilities.items.map");
+    // And a pathway is still never sold.
+    const content = stripComments(read("src/lib/public-site/content/metabolic.ts"));
+    expect(content).toContain("not a product");
+    expect(page).not.toMatch(/add to cart|buy now|subscribe/i);
   });
 });

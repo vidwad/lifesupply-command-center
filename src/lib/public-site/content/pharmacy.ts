@@ -18,6 +18,13 @@
  */
 export const pharmacy = {
   /**
+   * Section navigation (website consolidation, stage 2). The page now carries
+   * the partner programme as well as the overview, so a reader needs to see
+   * its shape before scrolling into it.
+   */
+  sections: [{ href: "#partner-program", label: "Partner program" }],
+
+  /**
    * Round three, outcome 3. "Pharmacy" meant two things across this site and a
    * reader could not tell which one a page was about. This block says so on
    * the page most likely to be misread. Drafted with Codex, edited before use.
@@ -105,6 +112,49 @@ export const pharmacy = {
         },
       ],
     },
-    actions: ["pharmacy_program_inquiry", "partner_pharmacies"],
+    actions: ["pharmacy_program_inquiry", "discuss_program"],
+  },
+
+  /**
+   * The pharmacy partner programme, moved here from `/partners/pharmacies`
+   * when that page was retired (website consolidation, stage 2, 2026-09-10).
+   *
+   * It belongs on the page that already explains the pharmacy supply model
+   * rather than in a partners hub: a pharmacist reading about the programme
+   * needs the scope distinction above it, and the partners page had to
+   * restate that distinction before it could say anything of its own.
+   */
+  partnerProgram: {
+    eyebrow: "Partner program",
+    title: "Non-drug supply programs for pharmacies.",
+    intro:
+      "A pharmacy can support its patients with non-drug supplies that the pharmacist selects. LifeSupply proposes to configure and fulfil those supplies, with every responsibility stated before a program starts. The service is in development; no pharmacy program is operating.",
+    model: {
+      eyebrow: "The model",
+      title: "The pharmacist selects; the supply service fulfils.",
+      items: [
+        {
+          title: "Pharmacist-selected configurations",
+          text: "The pharmacist chooses the supplies and their roles. LifeSupply does not substitute and does not select for the patient.",
+        },
+        {
+          title: "Non-drug only",
+          text: "Medication is excluded from every configuration. Supply fulfilment is not dispensing, and nothing in the program touches a prescription.",
+        },
+        {
+          title: "Fulfilment responsibilities stated per program",
+          text: "Who holds stock, who ships, who invoices, and who the patient contacts are written down before fulfilment begins.",
+        },
+      ],
+    },
+    responsibilities: {
+      title: "Complaints and recalls",
+      items: [
+        "Product complaints are routed to the party stated in the program agreement and to the manufacturer as required.",
+        "Recall handling follows the manufacturer's and the regulator's instructions; the program agreement names who notifies patients and who retrieves product.",
+        "Nothing is assumed by default. If a responsibility is not written into the program, it has not been agreed.",
+      ],
+    },
+    actions: ["discuss_program", "metabolic_hub"],
   },
 } as const;

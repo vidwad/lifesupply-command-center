@@ -54,7 +54,13 @@ export function Eyebrow({
   children,
 }: {
   tone?: "red" | "onDark" | "onRed";
-  as?: "p" | "h2" | "h3";
+  /**
+   * `h4` was added on 2026-09-10: the consolidated pages nest a section
+   * heading (h2), a pathway heading (h3) and labelled blocks inside it, and a
+   * label that is really a fourth-level heading should say so rather than
+   * skip a level to h3 or pretend to be a paragraph.
+   */
+  as?: "p" | "h2" | "h3" | "h4";
   className?: string;
   children: React.ReactNode;
 }) {

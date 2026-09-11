@@ -4,9 +4,11 @@
  * The hub routes by relationship. Each one distinguishes itself from ordinary
  * procurement (a clinic that buys supplies is a customer, not a program
  * partner) and ends on an approved directory channel, because no inquiry
- * intake exists before Stage 7 (WEB-07). Clinic collaboration left this file
- * on 2026-09-10: it is a section of the Clinic Solutions page now, and its
- * copy lives in `content/clinics.ts` beside the rest of the clinic material. Nothing here names a
+ * intake exists before Stage 7 (WEB-07). Clinic collaboration and the
+ * pharmacy partner programme left this file on 2026-09-10: each is a section
+ * of the page that already carried its subject, and each one's copy now lives
+ * beside the rest of that subject's material, in `content/clinics.ts` and
+ * `content/pharmacy.ts` respectively. Nothing here names a
  * partner, a pilot, a signed agreement, a transaction, or a counterparty:
  * the register holds no such approved fact (S-63, S-72). Statuses are
  * stated per relationship; "proposed" means LifeSupply is inviting the
@@ -54,40 +56,6 @@ export const partners = {
       text: "Clinics and other professional buyers purchase through the operating stores' own accounts today. A supply review for an existing clinic is a customer conversation, handled on the Clinic Solutions pages.",
       action: "clinic_solutions",
     },
-  },
-
-  pharmacies: {
-    eyebrow: "Partners · Pharmacies",
-    title: "Non-drug supply programs for pharmacies.",
-    intro:
-      "A pharmacy can support its patients with non-drug supplies that the pharmacist selects. LifeSupply proposes to configure and fulfil those supplies, with every responsibility stated before a program starts. The service is in development; no pharmacy program is operating.",
-    model: {
-      eyebrow: "The model",
-      title: "The pharmacist selects; the supply service fulfils.",
-      items: [
-        {
-          title: "Pharmacist-selected configurations",
-          text: "The pharmacist chooses the supplies and their roles. LifeSupply does not substitute and does not select for the patient.",
-        },
-        {
-          title: "Non-drug only",
-          text: "Medication is excluded from every configuration. Supply fulfilment is not dispensing, and nothing in the program touches a prescription.",
-        },
-        {
-          title: "Fulfilment responsibilities stated per program",
-          text: "Who holds stock, who ships, who invoices, and who the patient contacts are written down before fulfilment begins.",
-        },
-      ],
-    },
-    responsibilities: {
-      title: "Complaints and recalls",
-      items: [
-        "Product complaints are routed to the party stated in the program agreement and to the manufacturer as required.",
-        "Recall handling follows the manufacturer's and the regulator's instructions; the program agreement names who notifies patients and who retrieves product.",
-        "Nothing is assumed by default. If a responsibility is not written into the program, it has not been agreed.",
-      ],
-    },
-    actions: ["discuss_program", "metabolic_hub"],
   },
 
   suppliers: {

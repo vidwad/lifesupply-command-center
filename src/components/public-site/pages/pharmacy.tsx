@@ -8,6 +8,7 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal } from "@/components/public-site/motion";
+import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { iconForTitle } from "@/lib/public-site/icon-map";
@@ -19,6 +20,12 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
  * development today, and the stated direction for pharmacy-related
  * operations, each with its status. Nothing here dispenses, diagnoses, or
  * prescribes, and no transaction is named or implied.
+ *
+ * `/partners/pharmacies` merged into the `#partner-program` section on
+ * 2026-09-10 (website consolidation, stage 2) and permanently redirects here.
+ * A pharmacist reading about the programme needs the scope distinction above
+ * it, and the partners page had to restate that distinction before it could
+ * say anything of its own.
  */
 export function PharmacySolutionsPage() {
   const { hub, scope } = LIFE_SUPPLY_CONTENT.pharmacy;
@@ -36,6 +43,8 @@ export function PharmacySolutionsPage() {
           </>
         }
       />
+
+      <OnThisPage items={LIFE_SUPPLY_CONTENT.pharmacy.sections} />
 
       {/* Which of the two pharmacy businesses this page is about (round three). */}
       <section className="px-5 pt-16 lg:px-8">
@@ -108,6 +117,72 @@ export function PharmacySolutionsPage() {
           ))}
         </ul>
       </SplitSection>
+
+      <PartnerProgramSection />
     </LifeSupplyLayout>
+  );
+}
+
+/**
+ * The pharmacy partner programme (`#partner-program`), absorbed from
+ * `/partners/pharmacies` on 2026-09-10.
+ *
+ * It leads with the model, because the whole proposition turns on one
+ * division of labour: the pharmacist selects, the supply service fulfils.
+ * The complaints-and-recalls block stays with it — it is the part a pharmacy
+ * actually has to check before agreeing to anything.
+ */
+function PartnerProgramSection() {
+  const { partnerProgram } = LIFE_SUPPLY_CONTENT.pharmacy;
+  return (
+    <AnchoredSection id="partner-program">
+      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={partnerProgram.eyebrow}
+              title={partnerProgram.title}
+              description={partnerProgram.intro}
+            />
+          </Reveal>
+        </Container>
+      </section>
+      <IconFeatureGrid
+        numbered
+        eyebrow={partnerProgram.model.eyebrow}
+        title={partnerProgram.model.title}
+        items={partnerProgram.model.items.map((item) => ({
+          title: item.title,
+          text: item.text,
+          icon: iconForTitle(item.title),
+        }))}
+      />
+      <section className="px-5 pb-20 lg:px-8">
+        <Container>
+          <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
+            <IconBadge icon="shield" />
+            <div>
+              <Eyebrow as="h3">{partnerProgram.responsibilities.title}</Eyebrow>
+              <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] lg:grid-cols-3">
+                {partnerProgram.responsibilities.items.map((item) => (
+                  <li key={item} className="border-l-2 border-[var(--lsh-charcoal)] pl-3">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+          <Reveal delay={0.05} className="mt-8 flex flex-wrap gap-3">
+            {partnerProgram.actions.map((action, index) => (
+              <ActionLink
+                key={action}
+                action={action as ActionKey}
+                variant={index === 0 ? "primary" : "onLight"}
+              />
+            ))}
+          </Reveal>
+        </Container>
+      </section>
+    </AnchoredSection>
   );
 }
