@@ -115,6 +115,14 @@ const carePathway = () => stripComments(read(CARE_PATHWAY));
 const onThisPage = () => stripComments(read(ON_THIS_PAGE));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
+/** One function's body out of a source file, for section-scoped assertions. */
+const bodyOf = (source: string, name: string): string => {
+  const start = source.indexOf(`function ${name}(`);
+  if (start === -1) return "";
+  const rest = source.slice(start);
+  const next = rest.slice(1).search(/\n(export )?function /);
+  return next === -1 ? rest : rest.slice(0, next + 1);
+};
 const publicComponents = () => [
   layout(),
   pages(),
@@ -1368,9 +1376,12 @@ describe("Stage 2 registries and navigation", () => {
     expect(code).toContain("getSiteScreen(site)");
     const brands = stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
     expect(brands).toContain("<SiteScreen site={brandKey}");
-    expect(stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`))).toContain(
-      '<SiteScreen site="clinics"',
-    );
+    // Project photography goes through its own registry on the same terms.
+    for (const source of publicComponents()) {
+      expect(source).not.toContain("/lsh/graphics/projects/");
+    }
+    const clinicPage = stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
+    expect(clinicPage).toContain("getProjectPhotograph(");
   });
 
   it("renders the four brand photographs only through the registry mapping", () => {
@@ -1660,11 +1671,9 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
    * granularity the page now has.
    */
   const sectionBody = (source: string, name: string): string => {
-    const start = source.indexOf(`function ${name}(`);
-    expect(start, name).toBeGreaterThan(-1);
-    const rest = source.slice(start);
-    const next = rest.slice(1).search(/\n(export )?function /);
-    return next === -1 ? rest : rest.slice(0, next + 1);
+    const body = bodyOf(source, name);
+    expect(body, name).not.toBe("");
+    return body;
   };
   const brandPages = () => stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
   // Shop & Services merged into the Medical Supplies stores section on
@@ -1714,7 +1723,9 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   });
 
   it("treats post-opening supply as conditional on every clinic page", () => {
-    expect(clinicsContent()).toContain("creates no obligation to buy supplies");
+    expect(clinicsContent()).toMatch(
+      /Projects, equipment purchases, and ongoing supplies are scoped and agreed separately/,
+    );
     // One closing band, carrying the sequence qualification.
     //
     // The ongoing-supplies section used to carry a "Discussed case by case"
@@ -1724,8 +1735,11 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     // 2026-09-11).
     expect((clinicPages().match(/<ClosingBand \/>/g) ?? []).length).toBe(1);
     expect(clinicPages()).toContain("{close.qualification}");
-    expect(clinicsContent()).toContain("a quote is not an order");
-    expect(clinicsContent()).toContain('title: "Available today"');
+    const hrefs = clinicsContent().match(
+      /https:\/\/(?:lifesupply\.ca|wellmartmedical\.com)\/[a-z-]+\//g,
+    );
+    expect(hrefs, "the supply section names published store categories").not.toBeNull();
+    expect((hrefs ?? []).length).toBeGreaterThanOrEqual(4);
     for (const unclaimed of [
       /par-level/i,
       /automatic replenishment/i,
@@ -1751,7 +1765,7 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   it("reads categories, support channels, and project links from the registries and content", () => {
     expect(brandPages()).toContain("record.categories.map");
     expect(brandPages()).toContain("record.storeLinks.map");
-    expect(clinicPages()).toContain("projects.items.map");
+    expect(clinicPages()).toContain("projects.items");
     expect(contactPage()).toContain("contact.intents.map");
     expect(contactPage()).toContain("contact.existingOrder");
     // The stores section renders the registry, not a hand-written list, and
@@ -1998,11 +2012,20 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     // The introduction now says buying needs none of it, and every item
     // carries its own status.
     const clinics = stripComments(read("src/lib/public-site/content/clinics.ts"));
-    expect(clinics).toContain("Neither is needed to order supplies");
+    expect(clinics).toMatch(/(not|none of it is) needed to order supplies/i);
+    expect(clinics).toContain("a customer of the store, on that store's own terms");
     expect(clinics).toContain('status: "Proposed"');
     // Nothing proposed may read as a service that is running.
-    expect(clinics).toContain("None is running today.");
+    expect(clinics).toContain("no pilot is running today");
     expect(clinics).toContain("in development and not yet running");
+    // And the callout must still render both, not just the headline.
+    const callout = bodyOf(
+      stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`)),
+      "CollaborationSection",
+    );
+    expect(callout).toContain("{section.text}");
+    expect(callout).toContain("{section.note}");
+    expect(callout).toContain("{section.status}");
     expect(c).not.toContain("Collaboration is not procurement");
     // The pharmacy partner programme moved to Pharmacy Solutions on
     // 2026-09-10. Its non-drug rule travelled with it and is not left behind.
@@ -2308,12 +2331,17 @@ describe("website consolidation: sections, redirects and deep links", () => {
     // Equipment: the quote request and the catalogue boundary.
     expect(clinics).toContain("What a quote request needs");
     expect(clinics).toContain("priced by quote rather than listed");
-    // Ongoing supplies: what is available and what is only discussed.
-    expect(clinics).toContain("Available today");
-    // Collaboration: the three ways, with their statuses intact.
+    // Ongoing supplies: the published categories a practice can actually buy.
+    expect(clinics).toContain("What a practice can source");
+    expect(clinics).toContain("https://lifesupply.ca/clinic-supplies/");
+    // Collaboration and the design partnership, with their statuses intact
+    // and distinct: one is proposed, the other is available today.
     for (const status of ["Proposed", "Available through LifeSupply Clinics"]) {
       expect(clinics, status).toContain(status);
     }
+    expect(
+      bodyOf(stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`)), "PlanningSection"),
+    ).toContain("{hub.planning.partnershipStatus}");
     // Shop & Services: geography, currency, and the support boundary.
     expect(businesses).toContain("Geography and currency");
     expect(businesses).toContain("Support boundary");

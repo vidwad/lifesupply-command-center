@@ -32,8 +32,8 @@ export const ICON_BY_TITLE: Record<string, string> = {
   Design: "ruler",
   Construction: "building",
   "Project management": "clipboardList",
-  "Understand the practice": "search",
-  "Assess and plan": "compass",
+  Consultation: "search",
+  "Scope and budget": "compass",
   "Build and hand over": "badge",
   // Pharmacy Solutions
   "For the pharmacy": "pill",

@@ -56,6 +56,7 @@ export type ActionKey =
   | "investor_information"
   | "investor_materials"
   | "shop_lifesupply"
+  | "browse_clinic_supplies"
   | "shop_wellmart"
   | "shop_clinics"
   | "shop_balkowitsch"
@@ -371,6 +372,14 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Shop LifeSupply",
     intent: "commerce",
     destination: external(getBrand("lifesupply").canonicalUrl),
+    ownerChannel: null,
+    verifiedAt: VERIFIED,
+  },
+  browse_clinic_supplies: {
+    key: "browse_clinic_supplies",
+    label: "Browse clinic supplies",
+    intent: "commerce",
+    destination: external("https://lifesupply.ca/clinic-supplies/"),
     ownerChannel: null,
     verifiedAt: VERIFIED,
   },
