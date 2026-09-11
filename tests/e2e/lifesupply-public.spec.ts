@@ -844,7 +844,7 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByText("In development").first()).toBeVisible();
     await expect(main.getByText(/add to cart|buy now/i)).toHaveCount(0);
     await expect(
-      main.getByRole("link", { name: "Discuss a supply program" }).first(),
+      main.getByRole("link", { name: "Discuss your supply needs" }).first(),
     ).toHaveAttribute("href", /^mailto:info@lifesupply\.com\?subject=/);
   });
 
@@ -854,6 +854,9 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/metabolic-health");
     // K03 says plainly that no store carries the category, rather than
     // offering a link that goes nowhere.
+    await page
+      .locator("#sharps-supplies details, #diabetes-supplies details")
+      .evaluateAll((els) => els.forEach((el) => ((el as HTMLDetailsElement).open = true)));
     const sharps = page.locator("#sharps-supplies");
     await expect(
       sharps.getByText(/No operating store publishes a sharps-container category/),
@@ -922,9 +925,13 @@ test.describe("LifeSupply public site", () => {
     for (const slug of ["glp-1-support", "diabetes-supplies", "pharmacy-patient-support"]) {
       const section = page.locator(`#${slug}`);
       await expect(section, slug).toBeVisible();
+      // The name, purpose and audience are always visible; the rest is folded
+      // and is opened before it is judged (round four method rule).
+      await section
+        .locator("details")
+        .evaluateAll((els) => els.forEach((el) => ((el as HTMLDetailsElement).open = true)));
       for (const label of [
         "Who it is for",
-        "The distinction that matters",
         "Compatibility",
         "Excluded",
         "Browse related store categories",
