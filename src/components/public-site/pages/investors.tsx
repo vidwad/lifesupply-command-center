@@ -12,6 +12,7 @@ import {
 import { renderIcon } from "@/components/public-site/icons";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { BentoGrid, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { investorRelations, type BusinessStatus } from "@/lib/public-site/content/investors";
 import { iconForTitle } from "@/lib/public-site/icon-map";
@@ -134,7 +135,12 @@ export function InvestorRelationsPage() {
   const { hub } = investor;
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={hub.eyebrow} title={investor.title} description={investor.description} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="boardroom" position="70% 50%" />}
+        eyebrow={hub.eyebrow}
+        title={investor.title}
+        description={investor.description}
+      />
 
       {/* The business today, each strand with its status. */}
       <IconFeatureGrid
@@ -206,7 +212,12 @@ export function GrowthStrategyPage() {
   const g = investorRelations.growthStrategy;
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={g.eyebrow} title={g.title} description={g.intro} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="facade" position="70% 40%" />}
+        eyebrow={g.eyebrow}
+        title={g.title}
+        description={g.intro}
+      />
       <IconFeatureGrid
         items={g.strands.map((strand) => ({
           title: strand.title,
@@ -366,7 +377,12 @@ export function AdvancedTherapeuticsPage() {
   const t = investorRelations.advancedTherapeutics;
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={t.eyebrow} title={t.title} description={t.intro} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="equipment" position="75% 50%" />}
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.intro}
+      />
       <section className="px-5 py-20 lg:px-8">
         <Container>
           <Stagger className="grid gap-5 md:grid-cols-2">
@@ -410,7 +426,12 @@ export function DisclosuresPage() {
   const d = investorRelations.disclosures;
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={d.eyebrow} title={d.title} description={d.intro} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="facade" position="70% 40%" />}
+        eyebrow={d.eyebrow}
+        title={d.title}
+        description={d.intro}
+      />
       <section className="px-5 py-20 lg:px-8">
         <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div>

@@ -21,6 +21,7 @@ Every image, diagram and media file the public site serves, with where it is use
 | --- | --- | --- | --- | --- |
 | `abdul-ladha.jpg`, `keith-dolo.jpg`, `barrett-sleeman.jpg`, `david-vogt.jpg` | `content/team.ts` | Our team, leadership profiles | Person's name | Real portraits copied from the prior lifesupplyhealth.com profiles, 2026-09-09 (S-104, S-153 to S-155) |
 | `graphics/*.jpg` (boardroom, equipment, exam-room, facade, metabolic-supplies, pharmacy, shipping, supplies-flatlay, warehouse) | `graphics.ts` | Split sections and bands across the site | Registry alt, each beginning "Conceptual" | Gamma photo mode, monochrome brief, ffmpeg grayscale-plus-red treatment, 1600×900 (S-136 to S-144). Never operational photography |
+| `graphics/news-desk.jpg` | `graphics.ts` `newsDesk` | News & Resources heroes (hub, item, resource, unavailable) | Registry alt, beginning "Conceptual" | Gamma photo mode, monochrome brief, neutral greyscale at 1600×900, no red treatment (S-165). Commissioned 2026-09-11 for the hero pass, the one page family the existing set had nothing for. Never operational photography |
 | `graphics/brands/*-greyscale-v1.jpg` (PNG masters retained) | `graphics.ts` `BRAND_GRAPHICS` | Brand cards | Registry alt | Supplied by the product owner, PR #86 (S-145 to S-148). The Balkowitsch image shows a synthetic person who is never presented as staff or a customer |
 | `graphics/legacy/about-desk.jpg`, `about-data.jpg`, `about-warehouse.jpg` | `legacy-bands.ts` | About hero backdrop and two parallax dividers | Empty; decorative | Stock photographs the prior About page used as section backgrounds, copied 2026-09-09, greyscale, 1920×1080 (S-157 to S-159) |
 | `sites/*-home-laptop.jpg` | `site-screens.ts` | Medical Supplies store pages, Clinic Solutions | Registry alt naming the host | Dated screenshots of each live storefront at 1440×900, promotional overlays hidden, composed on a laptop frame (S-149 to S-152). Refresh when a storefront changes |
@@ -34,7 +35,7 @@ Every image, diagram and media file the public site serves, with where it is use
 
 ## Loading
 
-Every served image goes through `next/image` at its registered size. Each usage carries a `sizes` hint matching the slot it renders into, so the pipeline does not ship a full-resolution file for a small one; the brand marks, the footer mark and the leadership portraits were given hints on 2026-09-09. Only the two images that can appear above the fold, the hero poster and the About hero backdrop, are marked `priority`; everything else loads lazily.
+Every served image goes through `next/image` at its registered size. Each usage carries a `sizes` hint matching the slot it renders into, so the pipeline does not ship a full-resolution file for a small one; the brand marks, the footer mark and the leadership portraits were given hints on 2026-09-09. The images that can appear above the fold are marked `priority`: the hero poster, the About hero backdrop, and since 2026-09-11 the conceptual graphic behind every page hero (`graphic-backdrop.tsx`, one per page, from the registry); everything else loads lazily.
 
 ## Visual proposals considered and declined
 
@@ -49,6 +50,29 @@ Codex reviewed the whole site on 2026-09-09 and recommended the smallest useful 
 | Additional generated photography | The site has enough imagery, and more could not substantiate operational capability |
 
 Codex also proposed replacing the storefront laptop screens with a plain four-website directory. That was not done: the screens were requested by the product owner on 2026-09-09, and the facts the directory would add (market, currency, separate accounts and support) are already carried by the brand cards and the store-choice section.
+
+## Hero backdrops
+
+Since 2026-09-11 every page hero carries a conceptual graphic from the registry beneath `PublicHero`'s scrim, through `graphic-backdrop.tsx`, on the pattern Clinic Solutions set with a real project photograph. Decorative and hidden from assistive technology. The image per page:
+
+| Page | Graphic |
+| --- | --- |
+| Medical Supplies | `suppliesFlatlay` |
+| LifeSupply store | `brandLifeSupply` |
+| Wellmart Medical store | `brandWellmart` |
+| Balkowitsch Worldwide store | `warehouse` (the brand image shows a synthetic person, who must never stand behind a page as if staff) |
+| Clinic Solutions | real project photograph, `project-photography.ts` |
+| Pharmacy Solutions | `pharmacy` |
+| Metabolic Health Solutions | `metabolicSupplies` |
+| Suppliers & Manufacturers | `shipping` |
+| Acquisitions | `boardroom` |
+| Investor Relations | `boardroom` |
+| Growth Strategy, Disclosures, Privacy, Terms, Accessibility | `facade` |
+| Advanced Therapeutics | `equipment` |
+| Our Team | `boardroom` |
+| News & Resources | `newsDesk` |
+| Contact | `brandClinics` |
+| Home | hero footage; About | legacy backdrop — both unchanged |
 
 ## Rules for new assets
 

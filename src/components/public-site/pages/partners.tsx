@@ -3,6 +3,7 @@ import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal } from "@/components/public-site/motion";
 import { IconFeatureGrid, ProcessSteps, SplitSection } from "@/components/public-site/sections";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { partners } from "@/lib/public-site/content/partners";
 import { iconForTitle } from "@/lib/public-site/icon-map";
@@ -70,6 +71,7 @@ export function PartnerSuppliersPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
+        media={<GraphicBackdrop graphic="shipping" position="75% 55%" />}
         eyebrow={s.eyebrow}
         title={s.title}
         description={s.intro}
@@ -94,6 +96,7 @@ export function PartnerAcquisitionsPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
+        media={<GraphicBackdrop graphic="boardroom" position="70% 50%" />}
         eyebrow={a.eyebrow}
         title={a.title}
         description={a.intro}

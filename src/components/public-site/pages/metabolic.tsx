@@ -15,6 +15,7 @@ import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
 import { IconBadge } from "@/components/public-site/sections";
 import { SupplyRolesDiagram } from "@/components/public-site/supply-roles-diagram";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand, getBrandCategory } from "@/lib/public-site/brands";
 import {
@@ -54,6 +55,7 @@ export function MetabolicHealthPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
+        media={<GraphicBackdrop graphic="metabolicSupplies" position="80% 50%" />}
         eyebrow={hub.eyebrow}
         title={hub.title}
         description={hub.intro}

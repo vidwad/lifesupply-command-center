@@ -43,7 +43,18 @@ const PROVENANCE =
 const BRAND_PROVENANCE =
   "Greyscale brand photograph supplied by the product owner on 2026-09-08 (PR #86; PNG master 1672×941 retained in public/lsh/graphics/brands/); AI-generated conceptual image edited from an earlier colour concept; JPEG derivative scaled and cropped to 1600×900 with ffmpeg, neutral greyscale, no red treatment; conceptual, not operational photography.";
 
+const HERO_PROVENANCE =
+  "Gamma image generation (photo mode), commissioned 2026-09-11 for the hero backdrops; monochrome brief, no person, no text, no logo; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment because the hero scrim supplies the brand colour; conceptual, not operational photography.";
+
 export const GRAPHICS = {
+  /** Behind the News & Resources heroes. The one image commissioned for the hero pass. */
+  newsDesk: {
+    src: "/lsh/graphics/news-desk.jpg",
+    alt: "Conceptual still life of a folded newspaper, a stack of blank reports, a closed folio and reading glasses on a dark desk.",
+    width: 1600,
+    height: 900,
+    provenance: HERO_PROVENANCE,
+  },
   suppliesFlatlay: {
     src: "/lsh/graphics/supplies-flatlay.jpg",
     alt: "Conceptual still life of medical supplies: a glucose meter, sealed boxes, a stethoscope, gauze, a carton and a clipboard on slate.",

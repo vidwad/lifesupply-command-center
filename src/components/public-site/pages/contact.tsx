@@ -11,6 +11,7 @@ import {
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { IconBadge } from "@/components/public-site/sections";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { actionBehaviour, type ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS } from "@/lib/public-site/brands";
 import { iconForTitle } from "@/lib/public-site/icon-map";
@@ -29,6 +30,7 @@ export function ContactPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
+        media={<GraphicBackdrop graphic="brandClinics" position="60% 50%" />}
         eyebrow="Contact"
         title="Direct public channels for the right LifeSupply conversation."
         description="Every route below reaches a named person or team, with a subject line already set. Choose the one that matches the conversation you want to have."

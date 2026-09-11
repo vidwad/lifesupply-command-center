@@ -6,6 +6,7 @@ import { Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primiti
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge } from "@/components/public-site/sections";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { legacyProfile, legacyTitle, profileAnchor, team } from "@/lib/public-site/content/team";
 
 /**
@@ -24,7 +25,12 @@ export function TeamPage() {
   const { management, board, hero, labels } = team;
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="boardroom" position="60% 50%" />}
+        eyebrow={hero.eyebrow}
+        title={hero.title}
+        description={hero.description}
+      />
 
       {/* Leadership: the single confirmed executive, at full width. */}
       <section className="mx-auto max-w-7xl px-5 pb-16 pt-20 lg:px-8">
