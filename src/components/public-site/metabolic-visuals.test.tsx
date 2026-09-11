@@ -4,7 +4,12 @@ import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { MetabolicSupplyOrbit } from "./metabolic-visuals";
+import {
+  MetabolicCoordinationGrid,
+  MetabolicEditorialVisual,
+  MetabolicReplenishmentRhythm,
+  MetabolicSupplyOrbit,
+} from "./metabolic-visuals";
 
 const ROOT = join(__dirname, "../../..");
 const source = readFileSync(join(__dirname, "metabolic-visuals.tsx"), "utf8");
@@ -26,9 +31,23 @@ describe("Metabolic Health visual layer", () => {
     expect(source).not.toMatch(/needle|syringe|prescription|dose|clinician/i);
   });
 
+  it("renders each additional editorial visual as an empty-alt decorative image", () => {
+    for (const visual of ["pathways", "replenishment", "collaboration"] as const) {
+      const markup = renderToStaticMarkup(<MetabolicEditorialVisual visual={visual} />);
+      expect(markup).toContain('aria-hidden="true"');
+      expect(markup).toContain('alt=""');
+      expect(markup).toContain("%2Flsh%2Fgraphics%2F");
+    }
+
+    expect(renderToStaticMarkup(<MetabolicReplenishmentRhythm />)).not.toContain("<text");
+    expect(renderToStaticMarkup(<MetabolicCoordinationGrid />)).not.toContain("<text");
+  });
+
   it("gates decorative Metabolic Health motion behind the reduced-motion preference", () => {
     expect(styles).toContain(".lsh-metabolic-hero-halo--one");
     expect(styles).toContain(".lsh-metabolic-orbit svg");
+    expect(styles).toContain(".lsh-metabolic-editorial img");
+    expect(styles).toContain(".lsh-metabolic-coordinates");
     expect(styles).toContain("@media (prefers-reduced-motion: no-preference)");
     expect(styles).toContain("@media (prefers-reduced-motion: reduce)");
   });
