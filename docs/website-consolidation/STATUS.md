@@ -5,11 +5,11 @@ One row per stage. A stage is complete only when its production deployment has b
 | Stage | Scope | PR | Squash-merge | Deployment verified |
 | --- | --- | --- | --- | --- |
 | 0 | Baseline, inventory, redirect map, documents | #144 | `bf0bda3` | Documentation only |
-| 1 | Shop → Medical Supplies; Equipment and Ongoing Supplies → Clinic Solutions | #145 | `0eab3b0` | `pending` |
-| 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | #146 | `923a2af` | `pending` |
-| 3 | Final five-item navigation; Partners retirement | #147 | `pending` | `pending` |
-| 4 | Team merge; About, Home, News, Contact refinement | #148 | `92bc4e1` | `pending` |
-| 5 | Design, Codex review, final verification | #149 | `pending` | `pending` |
+| 1 | Shop → Medical Supplies; Equipment and Ongoing Supplies → Clinic Solutions | #145 | `0eab3b0` | Verified in `ddcd816` |
+| 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | #146 | `923a2af` | Verified in `ddcd816` |
+| 3 | Final five-item navigation; Partners retirement | #147 | `867e942` | Verified in `ddcd816` |
+| 4 | Team merge; About, Home, News, Contact refinement | #148 | `92bc4e1` | Verified in `ddcd816` |
+| 5 | Design, Codex review, final verification | #149 | `ddcd816` | **Verified** |
 
 ## Stage 0 — baseline and plan
 
@@ -186,3 +186,17 @@ Adopted — voice, against the owner's standing instruction that a page is not a
 A standing sweep now lives at `tests/e2e/consolidation-sweep.spec.ts`: **32 checks across both projects, all passing.** Three of them came from the review asking what a status code cannot tell you — a retired address keeps its query string and resolves its fragment; the sticky header does not cover a section a redirect lands on, measured after layout settles; no target sits inside a closed disclosure.
 
 **The consolidation is complete: 41 pages to 21, twenty permanent redirects, none dropped.**
+
+## Deployment verified
+
+**September 10, 2026.**
+
+Production deployment `dpl_EUa9arYWJce9JYSHvnP1MJVGTK52`, state `READY`, target production, serving `ddcd816` from `main`.
+
+The marker polled for was "the trades and suppliers each project needs" — the phrase that replaced "within verified delivery arrangements" in stage 5. It exists in no earlier build. The alias served the previous build for four polls and produced the new copy on the fifth, so the deployment was treated as live only then.
+
+**The full 32-check sweep was then run against the live site rather than a local build. All 32 passed on both the desktop and mobile projects.**
+
+That covers, against production: all 21 retained pages answering 200; all 20 retired addresses answering 308 to their exact fragment; every one of those fragments resolving **with JavaScript disabled**; all 13 legacy redirects resolving in one hop with destinations unchanged; no internal link pointing at a retired address; no horizontal overflow at 360, 390, 768, 1280 or 1440; every image carrying an alternative; outbound destinations confined to approved hosts with nothing sent; and every page canonical and `noindex`.
+
+**The website consolidation is complete and verified in production.**
