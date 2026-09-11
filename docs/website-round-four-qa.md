@@ -103,4 +103,14 @@ This is recorded rather than resolved. The behaviour works when observed; the te
 
 ## 7. Deployment verification
 
-Recorded in `docs/website-round-four-handoff.md` after the Stage D pull request merges. A merged pull request and a green build are not deployment verification.
+Verified on September 10, 2026, after PR #142 was squash-merged.
+
+| | |
+| --- | --- |
+| Production alias | `https://lifesupply-command-center-vidwads-projects.vercel.app` |
+| Deployment | `dpl_82SfKyFAq28oWjrbiB2RrRVCjDKm`, state READY, target production |
+| Commit served | `3c5f6265c443e1d59237f4e15749775f88b0c0f3` (`3c5f626`), branch `main` |
+
+The marker polled for was "is a project business for British Columbia", the sentence that corrects the claim that all four brands keep their own accounts, currency and prices. It exists in no earlier build, and it was confirmed **absent** from production before the merge. The alias kept serving the previous build for four polls afterwards and produced the corrected line on the fifth; only then was the deployment treated as live.
+
+The full acceptance sweep was then run **against the live site rather than the local build** — twenty routes at five widths, all nine acceptance conditions, the hero with JavaScript disabled, the preserved improvements including the GLP-1 answer expanded by click, keyboard, reduced motion, outbound links, sitemap and robots. **Result: clean.** Output in `evidence/round-four-2026-09-10/stage-d/qa-sweep-production.txt`.
