@@ -92,6 +92,6 @@ export const architecture = {
   },
   principle: {
     title: "How participation works",
-    text: "LifeSupply supplies products and delivers clinic projects. It does not diagnose, prescribe, dispense or treat, and it does not manufacture regulated products. Where a developing programme touches regulated care, LifeSupply's part is the supply side: the clinical or pharmacy provider holds the licence and makes every clinical decision.",
+    text: "LifeSupply supplies products and delivers clinic projects. It does not diagnose, prescribe, dispense or treat, and it does not manufacture regulated products. Where a developing program touches regulated care, LifeSupply's part is the supply side: the clinical or pharmacy provider holds the licence and makes every clinical decision.",
   },
 } as const;

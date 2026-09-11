@@ -96,7 +96,7 @@ export const homepage = {
     statement:
       "LifeSupply Health Inc. is the parent of Wellmart Health Supplies Ltd. in Canada, LifeSupply US, Inc. in the United States, and Balkowitsch Enterprises Inc., all wholly owned.",
     qualification:
-      "The four customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing. Each brand keeps its own site, accounts, currency, prices and support.",
+      "The four customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing. Three are online stores, each with its own site, accounts, currency, prices and support. LifeSupply Clinics is a project business for British Columbia, not a store.",
   },
 
   /**
