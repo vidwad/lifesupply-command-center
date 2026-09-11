@@ -80,6 +80,66 @@ const nextConfig: NextConfig = {
         destination: "/clinic-solutions#collaboration",
         permanent: true,
       },
+      // Website consolidation, stage 2 (2026-09-10): the pharmacy partner page
+      // became a Pharmacy Solutions section, and the care-kits hub, its eight
+      // pathway pages and refills became Metabolic Health sections. Each
+      // pathway keeps the anchor its slug used, so an address that was
+      // bookmarked or linked lands on the same material rather than on a hub.
+      {
+        source: "/partners/pharmacies",
+        destination: "/pharmacy-solutions#partner-program",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits",
+        destination: "/metabolic-health#pathways",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/glp-1-support",
+        destination: "/metabolic-health#glp-1-support",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/injection-safety",
+        destination: "/metabolic-health#injection-safety",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/sharps-supplies",
+        destination: "/metabolic-health#sharps-supplies",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/travel-support",
+        destination: "/metabolic-health#travel-support",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/home-monitoring",
+        destination: "/metabolic-health#home-monitoring",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/diabetes-supplies",
+        destination: "/metabolic-health#diabetes-supplies",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/clinic-injectable-supplies",
+        destination: "/metabolic-health#clinic-injectable-supplies",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/care-kits/pharmacy-patient-support",
+        destination: "/metabolic-health#pharmacy-patient-support",
+        permanent: true,
+      },
+      {
+        source: "/metabolic-health/refills",
+        destination: "/metabolic-health#replenishment",
+        permanent: true,
+      },
       // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
       // involved); the addresses go to the team page. The three directors
       // restored on 2026-09-09 are live profiles again. Keep in step with

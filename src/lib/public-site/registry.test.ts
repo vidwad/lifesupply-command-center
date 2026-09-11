@@ -29,6 +29,7 @@ import {
   LIFE_SUPPLY_ROUTES,
   LIVE_ROUTES,
   METABOLIC_ROUTES,
+  PHARMACY_ROUTES,
   ROUTES,
   SECTION_ANCHORS,
   STAGE_3_ROUTES,
@@ -194,6 +195,20 @@ describe("route registry", () => {
       expect(ROUTES.find((route) => route.path === from)?.status, from).toBe("redirect");
       expect(isLiveSection(to), to).toBe(true);
     }
+    // Stage 2's retired addresses, on the same rule.
+    const stageTwo: Record<string, string> = {
+      [CONSOLIDATED_ROUTES.partnerPharmacies]: sectionRoute(PHARMACY_ROUTES.hub, "partner-program"),
+      [CONSOLIDATED_ROUTES.careKits]: sectionRoute(METABOLIC_ROUTES.hub, "pathways"),
+      [CONSOLIDATED_ROUTES.refills]: sectionRoute(METABOLIC_ROUTES.hub, "replenishment"),
+      ...Object.fromEntries(
+        KIT_SLUGS.map((slug) => [kitRoute(slug), sectionRoute(METABOLIC_ROUTES.hub, slug)]),
+      ),
+    };
+    for (const [from, to] of Object.entries(stageTwo)) {
+      expect(isLiveRoute(from), from).toBe(false);
+      expect(ROUTES.find((route) => route.path === from)?.status, from).toBe("redirect");
+      expect(isLiveSection(to), to).toBe(true);
+    }
     // The `/partners` hazard: retiring the clinic child must never take its
     // siblings with it. Both are retained pages and must stay live.
     expect(isLiveRoute(STAGE_5_ROUTES.partnerSuppliers)).toBe(true);
@@ -259,17 +274,23 @@ describe("route registry", () => {
     }
   });
 
-  it("makes the Stage 4 pages live under the Metabolic Health group, kit pages out of the menu", () => {
-    for (const path of [...Object.values(METABOLIC_ROUTES), ...KIT_SLUGS.map(kitRoute)]) {
+  it("makes Metabolic Health one live page, its pathways sections of it", () => {
+    // The care-kits hub, its eight pathway pages and refills became sections
+    // on 2026-09-10, so the hub is the only live route left in this family.
+    for (const path of Object.values(METABOLIC_ROUTES)) {
       expect(isLiveRoute(path), path).toBe(true);
     }
     const group = buildPrimaryNavigation().find((entry) => entry.key === "metabolic")!;
     expect(group.href).toBe(METABOLIC_ROUTES.hub);
-    expect(group.links.map((link) => link.href)).toEqual([
-      METABOLIC_ROUTES.careKits,
-      METABOLIC_ROUTES.refills,
-    ]);
+    // Metabolic Health has no child pages since the consolidation: the
+    // pathways, replenishment and collaboration are sections of it.
+    expect(group.links).toEqual([]);
     expect(KIT_SLUGS).toHaveLength(8);
+    // Every pathway publishes an anchor, and it is the slug its page used.
+    for (const slug of KIT_SLUGS) {
+      expect(isLiveSection(sectionRoute(METABOLIC_ROUTES.hub, slug)), slug).toBe(true);
+      expect(isLiveRoute(kitRoute(slug)), slug).toBe(false);
+    }
   });
 
   it("makes the Stage 5 pages live: Partners with three children, Investors with five, three policy pages", () => {
@@ -278,7 +299,6 @@ describe("route registry", () => {
     // The clinic child left the group on 2026-09-10; it is a Clinic Solutions
     // section now, and the hub links to that section rather than to a page.
     expect(groups.find((g) => g.key === "partners")!.links.map((l) => l.href)).toEqual([
-      STAGE_5_ROUTES.partnerPharmacies,
       STAGE_5_ROUTES.partnerSuppliers,
       STAGE_5_ROUTES.partnerAcquisitions,
     ]);
@@ -474,7 +494,8 @@ describe("action registry", () => {
       ...metabolic.refills.actions,
       ...partners.hub.relationships.map((r) => r.action),
       partners.hub.procurement.action,
-      ...partners.pharmacies.actions,
+      ...LIFE_SUPPLY_CONTENT.pharmacy.partnerProgram.actions,
+      ...metabolic.collaboration.actions,
       ...partners.suppliers.actions,
       ...partners.acquisitions.actions,
       ...investorRelations.hub.actions,

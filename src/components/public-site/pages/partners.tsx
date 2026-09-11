@@ -12,17 +12,23 @@ import {
 import type { ActionKey } from "@/lib/public-site/actions";
 import { partners } from "@/lib/public-site/content/partners";
 import { iconForTitle } from "@/lib/public-site/icon-map";
-import { STAGE_3_ROUTES, STAGE_5_ROUTES, sectionRoute } from "@/lib/public-site/routes";
+import {
+  PHARMACY_ROUTES,
+  STAGE_3_ROUTES,
+  STAGE_5_ROUTES,
+  sectionRoute,
+} from "@/lib/public-site/routes";
 
 /**
- * Where each relationship is described. Clinic collaboration moved onto the
- * Clinic Solutions page as a section on 2026-09-10 (website consolidation,
- * stage 1), so the hub sends a visitor to that section rather than keeping a
- * page whose only job was to repeat the clinic context.
+ * Where each relationship is described. Clinic collaboration and the pharmacy
+ * partner programme each moved onto the page that already carried their
+ * subject, as sections, on 2026-09-10 (website consolidation, stages 1 and 2).
+ * The hub sends a visitor to those sections rather than keeping pages whose
+ * only job was to restate context the destination page had already set up.
  */
 const RELATIONSHIP_ROUTES = {
   clinics: sectionRoute(STAGE_3_ROUTES.clinicSolutions, "collaboration"),
-  pharmacies: STAGE_5_ROUTES.partnerPharmacies,
+  pharmacies: sectionRoute(PHARMACY_ROUTES.hub, "partner-program"),
   suppliers: STAGE_5_ROUTES.partnerSuppliers,
   acquisitions: STAGE_5_ROUTES.partnerAcquisitions,
 } as const;
@@ -110,41 +116,6 @@ export function PartnersPage() {
         <p className="lsh-display text-2xl leading-[1.1]">{hub.procurement.title}</p>
         <p className="mt-2 text-[var(--lsh-muted)]">{hub.procurement.text}</p>
       </Callout>
-    </LifeSupplyLayout>
-  );
-}
-
-/** `/partners/pharmacies/` */
-export function PartnerPharmaciesPage() {
-  const p = partners.pharmacies;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={p.eyebrow}
-        title={p.title}
-        description={p.intro}
-        actions={<ActionLink action="discuss_program" />}
-      />
-      <IconFeatureGrid
-        numbered
-        eyebrow={p.model.eyebrow}
-        title={p.model.title}
-        items={p.model.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          icon: iconForTitle(item.title),
-        }))}
-      />
-      <SplitSection
-        tone="onSurface"
-        eyebrow="Responsibilities"
-        title={p.responsibilities.title}
-        graphic="pharmacy"
-        side="left"
-      >
-        <RuleList items={p.responsibilities.items} />
-      </SplitSection>
-      <ActionsClose actions={p.actions} />
     </LifeSupplyLayout>
   );
 }

@@ -66,6 +66,23 @@ const ROLE_TEXT = {
 const MEDICATION_EXCLUDED = "Medication of any kind. These are non-drug supplies only.";
 
 export const metabolic = {
+  /**
+   * Section navigation for the consolidated page (website consolidation,
+   * stage 2, 2026-09-10). Metabolic Health absorbed the care-kits hub, all
+   * eight pathway pages and refills, so the page is long by necessity and a
+   * reader has to be able to see its shape and jump into it.
+   *
+   * Each pathway also publishes its own anchor, matching the slug its page
+   * used, so `/metabolic-health/care-kits/glp-1-support` still lands on the
+   * same material. Those anchors are registered in `routes.ts`; these four
+   * are the ones the navigation shows.
+   */
+  sections: [
+    { href: "#pathways", label: "Eight pathways" },
+    { href: "#replenishment", label: "Replenishment" },
+    { href: "#collaboration", label: "Collaboration" },
+  ],
+
   status: {
     label: "In development",
     sentence:
@@ -235,6 +252,10 @@ export const metabolic = {
     actions: ["explore_kits", "discuss_program"],
   },
 
+  /**
+   * The pathways section (`#pathways`), formerly `/metabolic-health/care-kits/`.
+   * The eight pathways follow it, each at its own anchor.
+   */
   kitsHub: {
     eyebrow: "Care kits",
     title: "Eight configurable supply pathways.",
@@ -251,8 +272,14 @@ export const metabolic = {
     actions: ["discuss_program", "refills_information"],
   },
 
+  /**
+   * Replenishment (`#replenishment`), formerly `/metabolic-health/refills/`.
+   * The distinction it exists to draw — a starter item is chosen once and is
+   * not refilled — is the reason it sits after the pathways rather than
+   * before them: it only means anything once the three item roles are known.
+   */
   refills: {
-    eyebrow: "Refills",
+    eyebrow: "Replenishment",
     title: "Starter items are not refills.",
     intro:
       "Only usage-driven consumables are refilled. Starter equipment is chosen once, and occasional items are bought when needed. This page states what refill service exists today and what does not.",
@@ -271,6 +298,51 @@ export const metabolic = {
     substitutions:
       "Substitutions for a prescribed device's consumables are never made by this site. Compatibility is confirmed with the clinician or pharmacist and the store.",
     actions: ["discuss_program", "explore_kits"],
+  },
+
+  /**
+   * Programme collaboration (`#collaboration`), added by the website
+   * consolidation, stage 2.
+   *
+   * Stage 1 moved clinic collaboration onto Clinic Solutions and left it
+   * pointing at this page for the fuller scope, because the supply programme
+   * a collaboration would configure is this one. This section is that scope:
+   * who can help define a programme, what a collaboration is and is not, and
+   * what has to be true before anything runs. Without it, the clinic section's
+   * link went to a page that never picked the subject up.
+   */
+  collaboration: {
+    eyebrow: "Collaboration",
+    title: "Helping define a program before it exists.",
+    intro:
+      "The pathways above are configurable entry points, not finished products. Clinics, pharmacies and other clinical partners can help define what a configuration should contain for the people they look after. That is a different relationship from buying supplies, and it is described here.",
+    who: {
+      title: "Who a collaboration is with",
+      items: [
+        "A clinic whose staff want a configuration shaped around a program they already run. The clinic's side of this is set out under Clinic Solutions.",
+        "A pharmacy whose pharmacist would select the non-drug supplies for its patients. The pharmacy's side of this is set out under Pharmacy Solutions.",
+        "A manufacturer or supplier whose products would sit inside a configuration, on the supplier terms published separately.",
+      ],
+    },
+    boundary: {
+      title: "What a collaboration is not",
+      items: [
+        "It is not an order, an account, or a commitment to buy or supply anything.",
+        "It is not a clinical partnership. LifeSupply configures supplies; clinical decisions stay with the clinician or pharmacist.",
+        "An expression of interest is not a pilot, and a pilot is not contracted revenue for either side until it is agreed in writing.",
+      ],
+    },
+    before: {
+      title: "What has to be confirmed first",
+      items: [
+        "The configuration itself: which items, in which roles, and which store carries them.",
+        "Compatibility, confirmed with the prescribing clinician or pharmacist where a device is involved.",
+        "Who holds stock, who ships, who invoices, and who the patient or practice contacts.",
+        "How complaints and recalls are handled, and by whom.",
+      ],
+    },
+    note: "None of this is operating today. The program is in development, and nothing above is available to start.",
+    actions: ["discuss_program", "clinic_solutions"],
   },
 
   kits: [

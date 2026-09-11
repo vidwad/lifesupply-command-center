@@ -1,13 +1,18 @@
-import Link from "next/link";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 import { Accordion } from "@/components/public-site/accordion";
 import { ActionLink } from "@/components/public-site/action-link";
 import { CommercialModel } from "@/components/public-site/commercial-model";
 import { PathwayComparison } from "@/components/public-site/pathway-comparison";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
+import {
+  Container,
+  Eyebrow,
+  PublicHero,
+  SectionHeading,
+} from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
 import {
   Callout,
   IconBadge,
@@ -26,7 +31,6 @@ import {
   type KitPathway,
 } from "@/lib/public-site/content/metabolic";
 import { iconForTitle } from "@/lib/public-site/icon-map";
-import { METABOLIC_ROUTES, kitRoute } from "@/lib/public-site/routes";
 
 /** The status line and the disclaimer every metabolic page carries. */
 function StatusBand() {
@@ -73,7 +77,17 @@ function BrowseLinks({ kit }: { kit: KitPathway }) {
   );
 }
 
-/** `/metabolic-health/` — the partner overview's model, with the status beside every claim. */
+/**
+ * `/metabolic-health/` — displayed as Metabolic Health Solutions, and since
+ * the website consolidation (stage 2, 2026-09-10) the whole programme on one
+ * page.
+ *
+ * The care-kits hub and its eight pathway pages made a reader open nine
+ * addresses to compare eight things that only make sense against each other,
+ * and refills was a tenth that could not be understood without the item roles
+ * the pathways define. Everything is sectioned here instead, each pathway
+ * keeping the anchor its page's slug used.
+ */
 export function MetabolicHealthPage() {
   const { hub } = metabolic;
   const [primary, secondary] = hub.actions as readonly ActionKey[];
@@ -90,6 +104,7 @@ export function MetabolicHealthPage() {
           </>
         }
       />
+      <OnThisPage items={metabolic.sections} />
       <StatusBand />
 
       {/*
@@ -227,29 +242,46 @@ export function MetabolicHealthPage() {
           </Reveal>
         </Container>
       </section>
+
+      <PathwaysSection />
+      <ReplenishmentSection />
+      <CollaborationSection />
     </LifeSupplyLayout>
   );
 }
 
-/** `/metabolic-health/care-kits/` */
-export function CareKitsPage() {
+/**
+ * The eight pathways (`#pathways`), absorbed from the care-kits hub and its
+ * eight pages on 2026-09-10.
+ *
+ * The comparison is the catalogue, as it has been since round three; each row
+ * now names an anchor on this page rather than a page of its own. The eight
+ * pathway sections follow it in the same order, each keeping the anchor its
+ * page's slug used, so an old address lands on the same material.
+ */
+function PathwaysSection() {
   const { kitsHub } = metabolic;
   return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={kitsHub.eyebrow}
-        title={kitsHub.title}
-        description={kitsHub.intro}
-        actions={<ActionLink action="discuss_program" />}
-      />
-      <StatusBand />
-      {/* The hub's single catalogue: every row opens that pathway's own page. */}
+    <AnchoredSection id="pathways">
+      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={kitsHub.eyebrow}
+              title={kitsHub.title}
+              description={kitsHub.intro}
+            />
+          </Reveal>
+        </Container>
+      </section>
+
+      {/* The single catalogue: every row opens that pathway's section below. */}
       <PathwayComparison
         comparison={pathwayComparison}
-        pathways={comparisonRows().map((row) => ({ ...row, href: kitRoute(row.slug) }))}
+        pathways={comparisonRows().map((row) => ({ ...row, href: `#${row.slug}` }))}
       />
 
-      <section className="px-5 pb-20 lg:px-8">
+      <section className="px-5 pb-16 lg:px-8">
         <Container>
           {/* The three item roles every pathway is described with. */}
           <Stagger className="grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
@@ -257,87 +289,88 @@ export function CareKitsPage() {
               <StaggerItem key={item.role} className="flex gap-4 bg-[var(--lsh-surface)] p-6">
                 <IconBadge icon={iconForTitle(item.role)} size={18} />
                 <div>
-                  <Eyebrow as="h2">{item.title}</Eyebrow>
+                  <Eyebrow as="h3">{item.title}</Eyebrow>
                   <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{item.text}</p>
                 </div>
               </StaggerItem>
             ))}
           </Stagger>
-
-          {/*
-           * The eight pathway cards that stood here repeated the comparison
-           * above them: same identifier, name, audience and status, twice on
-           * one page (round three, outcome 5). The comparison is now the single
-           * catalogue and every pathway name in it opens that pathway's page,
-           * so nothing is lost and nothing is read twice.
-           */}
-          <Reveal className="mt-10 flex flex-wrap gap-3">
-            {kitsHub.actions.map((action, index) => (
-              <ActionLink
-                key={action}
-                action={action as ActionKey}
-                variant={index === 0 ? "primary" : "onLight"}
-              />
-            ))}
-          </Reveal>
         </Container>
       </section>
-    </LifeSupplyLayout>
+
+      {metabolic.kits.map((kit) => (
+        <PathwaySection key={kit.slug} slug={kit.slug} />
+      ))}
+    </AnchoredSection>
   );
 }
 
-/** `/metabolic-health/care-kits/[kit]/` */
-export function CareKitPage({ slug }: { slug: string }) {
+/**
+ * One pathway, at the anchor its own page used to answer on.
+ *
+ * Everything its page carried is here: audience, the distinction that
+ * matters, the three item roles, compatibility, exclusions, the verified
+ * store categories or the honest reason there are none, and its own FAQs.
+ * The layout is denser than the page was, because eight of these now sit on
+ * one page, but nothing was dropped to achieve that — a canary checks each
+ * pathway still renders every one of those parts.
+ */
+function PathwaySection({ slug }: { slug: string }) {
   const kit = getKit(slug);
   if (!kit) return null;
   return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={`${kit.id} · ${metabolic.kitsHub.eyebrow}`}
-        title={kit.label}
-        description={kit.purpose}
-        actions={<ActionLink action="discuss_program" />}
-      />
-      <StatusBand />
+    <AnchoredSection id={kit.slug} className="border-t border-[var(--lsh-rule)] px-5 py-16 lg:px-8">
+      <Container>
+        <Reveal className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
+          <span className="lsh-display text-sm text-[var(--lsh-brand-red)]">{kit.id}</span>
+          <h3 className="lsh-display text-3xl leading-tight text-[var(--lsh-charcoal)]">
+            {kit.label}
+          </h3>
+        </Reveal>
+        <Reveal delay={0.05} className="mt-4 max-w-3xl leading-7 text-[var(--lsh-muted)]">
+          <p>{kit.purpose}</p>
+        </Reveal>
 
-      {/* Audience and the critical distinction. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
-          <Reveal className="flex gap-5">
-            <IconBadge icon="users" />
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          <Reveal className="flex gap-5 bg-[var(--lsh-surface)] p-6">
+            <IconBadge icon="users" size={18} />
             <div>
-              <Eyebrow as="h2">Who it is for</Eyebrow>
-              <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{kit.audience}</p>
+              <Eyebrow as="h4">Who it is for</Eyebrow>
+              <p className="mt-2 text-sm leading-6 text-[var(--lsh-charcoal)]">{kit.audience}</p>
             </div>
           </Reveal>
-          <Reveal className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] pl-6">
-            <IconBadge icon="shield" />
+          <Reveal
+            delay={0.05}
+            className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6"
+          >
+            <IconBadge icon="shield" size={18} />
             <div>
-              <Eyebrow as="h2">The distinction that matters</Eyebrow>
-              <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{kit.distinction}</p>
+              <Eyebrow as="h4">The distinction that matters</Eyebrow>
+              <p className="mt-2 text-sm leading-6 text-[var(--lsh-charcoal)]">{kit.distinction}</p>
             </div>
           </Reveal>
         </div>
-      </section>
 
-      {/* Item roles; no contents, quantities, or SKUs exist yet. */}
-      <IconFeatureGrid
-        eyebrow="Configuration"
-        title="What a configuration would cover."
-        description="Roles only. Approved contents, quantities, and a store configuration do not exist yet; when they do, they will be published here with their revision."
-        items={kit.roles.map((item) => ({
-          title: item.title,
-          text: item.text,
-          status: item.role,
-          icon: iconForTitle(item.role),
-        }))}
-      />
+        {/* Roles only. Approved contents, quantities and a store configuration do not exist yet. */}
+        <Stagger as="ul" className="mt-5 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
+          {kit.roles.map((item) => (
+            <StaggerItem as="li" key={item.role} className="bg-[var(--lsh-paper)] p-6">
+              <div className="flex items-start justify-between gap-3">
+                <IconBadge icon={iconForTitle(item.role)} size={18} />
+                <span className="lsh-display border border-[var(--lsh-rule-strong)] px-2 py-1 text-[10px] text-[var(--lsh-muted)]">
+                  {item.role}
+                </span>
+              </div>
+              <h4 className="lsh-display mt-4 text-lg text-[var(--lsh-charcoal)]">{item.title}</h4>
+              <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{item.text}</p>
+            </StaggerItem>
+          ))}
+        </Stagger>
 
-      <section className="px-5 pb-20 lg:px-8">
-        <Container className="grid gap-8 lg:grid-cols-2">
-          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
             <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h3">Compatibility</Eyebrow>
+              <Eyebrow as="h4">Compatibility</Eyebrow>
               <IconBadge icon="clipboardCheck" size={18} />
             </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
@@ -348,9 +381,12 @@ export function CareKitPage({ slug }: { slug: string }) {
               ))}
             </ul>
           </Reveal>
-          <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
+          <Reveal
+            delay={0.05}
+            className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-6"
+          >
             <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h3">Excluded</Eyebrow>
+              <Eyebrow as="h4">Excluded</Eyebrow>
               <IconBadge icon="shield" size={18} />
             </div>
             <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
@@ -361,15 +397,12 @@ export function CareKitPage({ slug }: { slug: string }) {
               ))}
             </ul>
           </Reveal>
-        </Container>
-      </section>
+        </div>
 
-      {/* Browse, questions, next step. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="mt-8 grid gap-10 border-t border-[var(--lsh-rule)] pt-8 lg:grid-cols-[0.8fr_1.2fr]">
           <Reveal>
             <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2">Browse related store categories</Eyebrow>
+              <Eyebrow as="h4">Browse related store categories</Eyebrow>
               <IconBadge icon="cart" size={18} />
             </div>
             <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
@@ -378,42 +411,39 @@ export function CareKitPage({ slug }: { slug: string }) {
             </p>
             <BrowseLinks kit={kit} />
           </Reveal>
-          <Reveal>
-            <Eyebrow as="h2">Questions</Eyebrow>
+          <Reveal delay={0.05}>
+            <Eyebrow as="h4">Questions</Eyebrow>
             <div className="mt-4">
               <Accordion items={kit.faqs} />
             </div>
           </Reveal>
-        </Container>
-        <Reveal className="mx-auto mt-12 flex max-w-7xl flex-wrap items-center justify-between gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6">
-          <p className="max-w-2xl leading-7 text-[var(--lsh-muted)]">{metabolic.status.sentence}</p>
-          <div className="flex flex-wrap gap-3">
-            <ActionLink action="discuss_program" />
-            <Link
-              href={METABOLIC_ROUTES.careKits}
-              className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-5 py-3 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
-            >
-              All pathways <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          </div>
-        </Reveal>
-      </section>
-    </LifeSupplyLayout>
+        </div>
+      </Container>
+    </AnchoredSection>
   );
 }
 
-/** `/metabolic-health/refills/` */
-export function RefillsPage() {
+/**
+ * Replenishment (`#replenishment`), absorbed from `/metabolic-health/refills/`
+ * on 2026-09-10. It sits after the pathways because the distinction it draws —
+ * a starter item is chosen once and is never refilled — only means anything
+ * once the three item roles have been read.
+ */
+function ReplenishmentSection() {
   const { refills } = metabolic;
   return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={refills.eyebrow}
-        title={refills.title}
-        description={refills.intro}
-        actions={<ActionLink action="discuss_program" />}
-      />
-      <StatusBand />
+    <AnchoredSection id="replenishment">
+      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={refills.eyebrow}
+              title={refills.title}
+              description={refills.intro}
+            />
+          </Reveal>
+        </Container>
+      </section>
       <SplitSection
         tone="onSurface"
         eyebrow={refills.eyebrow}
@@ -433,17 +463,76 @@ export function RefillsPage() {
         <p>{refills.later.text}</p>
         <p className="mt-3 text-[var(--lsh-muted)]">{refills.substitutions}</p>
       </Callout>
-      <section className="px-5 pb-20 lg:px-8">
-        <Reveal className="mx-auto flex max-w-7xl flex-wrap gap-3">
-          {refills.actions.map((action, index) => (
-            <ActionLink
-              key={action}
-              action={action as ActionKey}
-              variant={index === 0 ? "primary" : "onLight"}
+    </AnchoredSection>
+  );
+}
+
+/**
+ * Programme collaboration (`#collaboration`), added on 2026-09-10.
+ *
+ * Stage 1 moved clinic collaboration onto Clinic Solutions pointing here for
+ * the fuller scope, because the supply programme a collaboration would
+ * configure is this one. This section is that scope. Without it the clinic
+ * link went to a page that never picked the subject up.
+ */
+function CollaborationSection() {
+  const { collaboration } = metabolic;
+  const blocks = [collaboration.who, collaboration.boundary, collaboration.before] as const;
+  return (
+    <AnchoredSection id="collaboration">
+      <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={collaboration.eyebrow}
+              title={collaboration.title}
+              description={collaboration.intro}
             />
-          ))}
-        </Reveal>
+          </Reveal>
+          <Stagger as="ul" className="mt-10 grid gap-5 md:grid-cols-3">
+            {blocks.map((block, index) => (
+              <StaggerItem as="li" key={block.title} className="h-full">
+                <div
+                  className={`flex h-full flex-col border-t-4 bg-[var(--lsh-surface)] p-7 ${
+                    index === 1 ? "border-[var(--lsh-charcoal)]" : "border-[var(--lsh-brand-red)]"
+                  }`}
+                >
+                  <Eyebrow as="h3">{block.title}</Eyebrow>
+                  <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                    {block.items.map((item) => (
+                      <li
+                        key={item}
+                        className={`border-l-2 pl-3 ${
+                          index === 1
+                            ? "border-[var(--lsh-charcoal)]"
+                            : "border-[var(--lsh-brand-red)]"
+                        }`}
+                      >
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+          <Reveal
+            delay={0.1}
+            className="mt-8 flex flex-col gap-5 border-t border-[var(--lsh-rule)] pt-8 lg:flex-row lg:items-center lg:justify-between"
+          >
+            <p className="max-w-3xl leading-7 text-[var(--lsh-muted)]">{collaboration.note}</p>
+            <div className="flex shrink-0 flex-wrap gap-3">
+              {collaboration.actions.map((action, index) => (
+                <ActionLink
+                  key={action}
+                  action={action as ActionKey}
+                  variant={index === 0 ? "primary" : "onLight"}
+                />
+              ))}
+            </div>
+          </Reveal>
+        </Container>
       </section>
-    </LifeSupplyLayout>
+    </AnchoredSection>
   );
 }

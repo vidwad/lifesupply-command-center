@@ -42,6 +42,25 @@ export const STAGE_3_ROUTES = {
 } as const;
 
 /**
+ * Metabolic Health. The care-kits hub, its eight pathway pages and refills
+ * became sections of the hub on 2026-09-10 (website consolidation, stage 2),
+ * so only the hub remains a route.
+ */
+export const METABOLIC_ROUTES = {
+  hub: "/metabolic-health/",
+} as const;
+
+/** Pharmacy Solutions (2026-09-08): an information section with its status stated. */
+export const PHARMACY_ROUTES = {
+  hub: "/pharmacy-solutions/",
+} as const;
+
+/** The retired address of one pathway page, for the redirect map and tests. */
+export function kitRoute(slug: string): string {
+  return `${CONSOLIDATED_ROUTES.careKits}${slug}/`;
+}
+
+/**
  * Addresses retired by the website consolidation (stage 1, 2026-09-10).
  * Their content was moved first; each address then became a permanent
  * redirect to the section that now carries it (next.config.ts, and
@@ -54,6 +73,12 @@ export const CONSOLIDATED_ROUTES = {
   equipment: "/clinic-solutions/equipment/",
   ongoingSupplies: "/clinic-solutions/ongoing-supplies/",
   partnerClinics: "/partners/clinics/",
+  // Stage 2 (2026-09-10): the pharmacy partner page, the care-kits hub, its
+  // eight pathway pages and refills. Each pathway keeps the anchor its slug
+  // used, so an old pathway address lands on the same material.
+  partnerPharmacies: "/partners/pharmacies/",
+  careKits: "/metabolic-health/care-kits/",
+  refills: "/metabolic-health/refills/",
 } as const;
 
 /**
@@ -69,6 +94,10 @@ export const CONSOLIDATED_ROUTES = {
 export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
   [LIFE_SUPPLY_ROUTES.operations]: ["stores"],
   [STAGE_3_ROUTES.clinicSolutions]: ["planning", "equipment", "ongoing-supplies", "collaboration"],
+  [PHARMACY_ROUTES.hub]: ["partner-program"],
+  // The eight pathway anchors are the eight slugs, so a retired pathway
+  // address and its anchor can never drift apart.
+  [METABOLIC_ROUTES.hub]: ["pathways", ...KIT_SLUGS, "replenishment", "collaboration"],
 };
 
 /** `"/clinic-solutions/" + "equipment"` → `"/clinic-solutions/#equipment"`. */
@@ -109,26 +138,9 @@ export const WITHDRAWN_ROUTES = {
   shareholderServices: "/investor-relations/shareholder-services/",
 } as const;
 
-/** Stage 4 pages. Kit pages are a dynamic route; `kitRoute()` builds their paths. */
-export const METABOLIC_ROUTES = {
-  hub: "/metabolic-health/",
-  careKits: "/metabolic-health/care-kits/",
-  refills: "/metabolic-health/refills/",
-} as const;
-
-/** Pharmacy Solutions (2026-09-08): an information section with its status stated. */
-export const PHARMACY_ROUTES = {
-  hub: "/pharmacy-solutions/",
-} as const;
-
-export function kitRoute(slug: string): string {
-  return `${METABOLIC_ROUTES.careKits}${slug}/`;
-}
-
 /** Stage 5 pages. News items and resources are dynamic routes with no approved record yet. */
 export const STAGE_5_ROUTES = {
   partners: "/partners/",
-  partnerPharmacies: "/partners/pharmacies/",
   partnerSuppliers: "/partners/suppliers/",
   partnerAcquisitions: "/partners/acquisitions/",
   growthStrategy: "/investor-relations/growth-strategy/",
@@ -227,38 +239,7 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "live",
     navGroup: "metabolic",
   },
-  {
-    path: METABOLIC_ROUTES.careKits,
-    label: "Care kits",
-    stage: 4,
-    status: "live",
-    navGroup: "metabolic",
-  },
-  ...KIT_SLUGS.map(
-    (slug): RouteRecord => ({
-      path: kitRoute(slug),
-      label: slug,
-      stage: 4,
-      status: "live",
-      navGroup: null,
-      routeFile: "src/app/metabolic-health/care-kits/[kit]/page.tsx",
-    }),
-  ),
-  {
-    path: METABOLIC_ROUTES.refills,
-    label: "Refills",
-    stage: 4,
-    status: "live",
-    navGroup: "metabolic",
-  },
   { path: "/partners/", label: "Partners", stage: 5, status: "live", navGroup: "partners" },
-  {
-    path: "/partners/pharmacies/",
-    label: "Pharmacies",
-    stage: 5,
-    status: "live",
-    navGroup: "partners",
-  },
   {
     path: "/partners/suppliers/",
     label: "Suppliers",
@@ -310,7 +291,7 @@ export const ROUTES: readonly RouteRecord[] = [
   // Website consolidation, stage 1 (2026-09-10): Shop & Services merged into
   // the Medical Supplies stores section; Equipment, Ongoing supplies and the
   // Partners clinic page merged into Clinic Solutions as sections.
-  ...Object.values(CONSOLIDATED_ROUTES).map(
+  ...[...Object.values(CONSOLIDATED_ROUTES), ...KIT_SLUGS.map(kitRoute)].map(
     (path): RouteRecord => ({
       path,
       label: "Consolidated address (redirect)",

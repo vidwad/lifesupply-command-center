@@ -17,12 +17,7 @@ export { ClinicSolutionsPage } from "@/components/public-site/pages/clinic-solut
 export { PharmacySolutionsPage } from "@/components/public-site/pages/pharmacy";
 export { ContactPage } from "@/components/public-site/pages/contact";
 export { LifeSupplyHome } from "@/components/public-site/pages/home";
-export {
-  CareKitPage,
-  CareKitsPage,
-  MetabolicHealthPage,
-  RefillsPage,
-} from "@/components/public-site/pages/metabolic";
+export { MetabolicHealthPage } from "@/components/public-site/pages/metabolic";
 export {
   AdvancedTherapeuticsPage,
   DisclosuresPage,
@@ -38,7 +33,6 @@ export {
 export { MedicalSupplySolutionsPage } from "@/components/public-site/pages/operations";
 export {
   PartnerAcquisitionsPage,
-  PartnerPharmaciesPage,
   PartnersPage,
   PartnerSuppliersPage,
 } from "@/components/public-site/pages/partners";

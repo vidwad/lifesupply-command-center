@@ -48,12 +48,7 @@ test.describe("LifeSupply public site", () => {
       "/medical-supply-solutions/balkowitsch",
       "/clinic-solutions",
       "/metabolic-health",
-      "/metabolic-health/care-kits",
-      "/metabolic-health/care-kits/glp-1-support",
-      "/metabolic-health/care-kits/sharps-supplies",
-      "/metabolic-health/refills",
       "/partners",
-      "/partners/pharmacies",
       "/partners/suppliers",
       "/partners/acquisitions",
       "/investor-relations/growth-strategy",
@@ -368,15 +363,12 @@ test.describe("LifeSupply public site", () => {
     ]) {
       await expect(panel.getByRole("link", { name, exact: true })).toBeVisible();
     }
-    await expect(panel.getByRole("link", { name: "Care kits", exact: true })).toBeHidden();
+    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeHidden();
     for (const name of [
       "Medical Supplies",
       "Clinic Solutions",
       "Metabolic Health",
-      "Care kits",
-      "Refills",
       "Partners",
-      "Pharmacies",
       "Suppliers",
       "Acquisitions",
       "Growth strategy",
@@ -410,29 +402,31 @@ test.describe("LifeSupply public site", () => {
     isMobile,
   }) => {
     test.skip(!isMobile, "mobile navigation only");
-    await page.goto("/metabolic-health/refills");
+    await page.goto("/investor-relations/disclosures");
     await page.getByRole("button", { name: "Open navigation" }).click();
     const panel = page.locator("#lsh-mobile-menu");
-    await expect(panel.getByRole("button", { name: "Collapse Metabolic Health" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Collapse Investors" })).toBeVisible();
     // The expanded group opens with its own page, then its children.
     await expect(panel.getByRole("link", { name: "Overview", exact: true })).toHaveAttribute(
       "href",
-      /^\/metabolic-health\/?$/,
+      /^\/investor-relations\/?$/,
     );
-    await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeVisible();
-    await expect(panel.getByRole("link", { name: "Refills", exact: true })).toHaveAttribute(
+    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeVisible();
+    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    // Clinic Solutions has no child pages since the consolidation, so it is a
-    // plain link in the panel with nothing to expand.
-    await expect(panel.getByRole("button", { name: "Expand Clinic Solutions" })).toHaveCount(0);
-    await expect(panel.getByRole("link", { name: "Clinic Solutions", exact: true })).toBeVisible();
-    // One group open at a time: expanding Investors collapses Metabolic Health.
+    // Clinic Solutions and Metabolic Health have no child pages since the
+    // consolidation, so each is a plain link with nothing to expand.
+    for (const group of ["Clinic Solutions", "Metabolic Health"]) {
+      await expect(panel.getByRole("button", { name: `Expand ${group}` })).toHaveCount(0);
+      await expect(panel.getByRole("link", { name: group, exact: true })).toBeVisible();
+    }
+    // One group open at a time: expanding Partners collapses Investors.
+    await expect(panel.getByRole("link", { name: "Suppliers", exact: true })).toBeHidden();
+    await panel.getByRole("button", { name: "Expand Partners" }).click();
+    await expect(panel.getByRole("link", { name: "Suppliers", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeHidden();
-    await panel.getByRole("button", { name: "Expand Investors" }).click();
-    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeVisible();
-    await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeHidden();
   });
 
   test("loads nothing from YouTube until the About video is played, then embeds the privacy-enhanced player", async ({
@@ -717,20 +711,24 @@ test.describe("LifeSupply public site", () => {
   test("lists eight pathways, each an information page with no purchase and the program channel", async ({
     page,
   }) => {
-    await page.goto("/metabolic-health/care-kits");
+    await page.goto("/metabolic-health");
     const main = page.locator("main");
     // One catalogue, rendered as a table from `lg` up and as cards below it, so
     // every pathway has two link elements and eight distinct destinations
-    // (round three, outcome 5).
-    const kitLinks = main.locator('a[href^="/metabolic-health/care-kits/"]');
+    // (round three, outcome 5). Since 2026-09-10 those destinations are
+    // sections of this page rather than pages of their own.
+    const kitLinks = main.locator('a[href^="#"]').filter({ hasNotText: "On this page" });
     const allHrefs = await kitLinks.evaluateAll((links) =>
       links.map((link) => (link as HTMLAnchorElement).getAttribute("href")!),
     );
-    const hrefs = [...new Set(allHrefs)];
+    const hrefs = [...new Set(allHrefs)].filter(
+      (href) => !["#pathways", "#replenishment", "#collaboration"].includes(href),
+    );
     expect(hrefs).toHaveLength(8);
     for (const href of hrefs) {
-      const response = await page.request.get(href);
-      expect(response.ok(), href).toBe(true);
+      // Each one is a section on this page, present and visible.
+      await expect(page.locator(href), href).toHaveCount(1);
+      await expect(page.locator(href), href).toBeVisible();
     }
     await expect(main.getByText("In development").first()).toBeVisible();
     await expect(main.getByText(/add to cart|buy now/i)).toHaveCount(0);
@@ -742,36 +740,114 @@ test.describe("LifeSupply public site", () => {
   test("says K03 has no store destination and keeps browse links on registered store hosts", async ({
     page,
   }) => {
-    await page.goto("/metabolic-health/care-kits/sharps-supplies");
-    const main = page.locator("main");
+    await page.goto("/metabolic-health");
+    // K03 says plainly that no store carries the category, rather than
+    // offering a link that goes nowhere.
+    const sharps = page.locator("#sharps-supplies");
     await expect(
-      main.getByText(/No operating store publishes a sharps-container category/),
+      sharps.getByText(/No operating store publishes a sharps-container category/),
     ).toBeVisible();
-    await expect(main.locator('a[href^="https://"]')).toHaveCount(0);
+    await expect(sharps.locator('a[href^="https://"]')).toHaveCount(0);
 
-    await page.goto("/metabolic-health/care-kits/diabetes-supplies");
     const hosts = await page
-      .locator('main a[href^="https://"]')
+      .locator('#diabetes-supplies a[href^="https://"]')
       .evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).host));
     expect(hosts.length).toBeGreaterThan(0);
     for (const host of hosts)
       expect(["lifesupply.ca", "wellmartmedical.com", "balkowitsch.com"]).toContain(host);
   });
 
-  test("states on the refills page that no automatic shipment or subscription exists", async ({
+  test("states in the replenishment section that no automatic shipment or subscription exists", async ({
     page,
   }) => {
-    await page.goto("/metabolic-health/refills");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      /starter items are not refills/i,
-    );
+    await page.goto("/metabolic-health");
+    const replenishment = page.locator("#replenishment");
+    await expect(replenishment).toContainText(/starter items are not refills/i);
     await expect(
-      page
-        .locator("main")
-        .getByText(
-          /no automatic shipment, no reminder service, and no subscription on this site today/,
-        ),
+      replenishment.getByText(
+        /no automatic shipment, no reminder service, and no subscription on this site today/,
+      ),
     ).toBeVisible();
+  });
+
+  test("carries every stage 2 address to the section that replaced it", async ({ page }) => {
+    const KITS = [
+      "glp-1-support",
+      "injection-safety",
+      "sharps-supplies",
+      "travel-support",
+      "home-monitoring",
+      "diabetes-supplies",
+      "clinic-injectable-supplies",
+      "pharmacy-patient-support",
+    ];
+    const moves: [string, string, string][] = [
+      ["/partners/pharmacies", "/pharmacy-solutions", "partner-program"],
+      ["/metabolic-health/care-kits", "/metabolic-health", "pathways"],
+      ["/metabolic-health/refills", "/metabolic-health", "replenishment"],
+      ...KITS.map((slug): [string, string, string] => [
+        `/metabolic-health/care-kits/${slug}`,
+        "/metabolic-health",
+        slug,
+      ]),
+    ];
+    for (const [from, path, anchor] of moves) {
+      const response = await page.goto(from);
+      expect(response?.ok(), `${from} should resolve`).toBe(true);
+      const url = new URL(page.url());
+      expect(url.pathname.replace(/\/$/, ""), `${from} destination`).toBe(path);
+      expect(url.hash, `${from} fragment`).toBe(`#${anchor}`);
+      const target = page.locator(`#${anchor}`);
+      await expect(target, `${from} target`).toHaveCount(1);
+      await expect(target).toBeVisible();
+    }
+  });
+
+  test("keeps every pathway whole in its section", async ({ page }) => {
+    await page.goto("/metabolic-health");
+    // The eight pathway pages each carried an audience, a distinction, three
+    // item roles, compatibility, exclusions, store categories and FAQs.
+    // Consolidation must not have quietly dropped any of them.
+    for (const slug of ["glp-1-support", "diabetes-supplies", "pharmacy-patient-support"]) {
+      const section = page.locator(`#${slug}`);
+      await expect(section, slug).toBeVisible();
+      for (const label of [
+        "Who it is for",
+        "The distinction that matters",
+        "Compatibility",
+        "Excluded",
+        "Browse related store categories",
+        "Questions",
+      ]) {
+        await expect(
+          section.getByText(label, { exact: true }).first(),
+          `${slug}: ${label}`,
+        ).toBeVisible();
+      }
+      // Item roles, each labelled. A pathway declares the roles it actually
+      // has and no more: diabetes supplies has no occasional item, and
+      // pharmacy patient support has no starter one. The rule is that a
+      // pathway shows at least one role and that every role it shows is one
+      // of the three the legend defines — not that all three are present.
+      const VALID = ["starter", "consumable", "occasional"];
+      const roles = await section
+        .locator("li span")
+        .evaluateAll((els) => els.map((el) => el.textContent?.trim() ?? ""));
+      const shown = roles.filter((role) => VALID.includes(role));
+      expect(shown.length, `${slug} roles`).toBeGreaterThan(0);
+      expect(new Set(shown).size, `${slug} roles are distinct`).toBe(shown.length);
+    }
+    // Nothing on the page offers a purchase. Checked as affordances rather
+    // than as words: the replenishment section says there is "no subscription
+    // on this site today", which is a denial and must not read as an offer.
+    const main = page.locator("main");
+    await expect(
+      main.getByRole("button", { name: /add to cart|buy|subscribe|checkout/i }),
+    ).toHaveCount(0);
+    await expect(
+      main.getByRole("link", { name: /add to cart|buy now|subscribe|checkout/i }),
+    ).toHaveCount(0);
+    await expect(main.getByText(/add to cart|buy now/i)).toHaveCount(0);
   });
 
   test("routes the four partner relationships and separates them from procurement", async ({
@@ -779,14 +855,20 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/partners");
     const main = page.locator("main");
-    for (const path of ["/partners/pharmacies", "/partners/suppliers", "/partners/acquisitions"]) {
+    for (const path of ["/partners/suppliers", "/partners/acquisitions"]) {
       await expect(main.locator(`a[href="${path}"]`).first()).toBeVisible();
     }
-    // Clinic collaboration became a Clinic Solutions section on 2026-09-10,
-    // so the hub routes there rather than to a page of its own.
-    await expect(main.locator('a[href="/partners/clinics"]')).toHaveCount(0);
+    // Clinic collaboration and the pharmacy partner programme became sections
+    // of the pages that already carried their subject, so the hub routes to
+    // those sections rather than keeping pages of its own.
+    for (const gone of ["/partners/clinics", "/partners/pharmacies"]) {
+      await expect(main.locator(`a[href="${gone}"]`)).toHaveCount(0);
+    }
     await expect(
       main.locator('a[href^="/clinic-solutions"][href$="#collaboration"]').first(),
+    ).toBeVisible();
+    await expect(
+      main.locator('a[href^="/pharmacy-solutions"][href$="#partner-program"]').first(),
     ).toBeVisible();
     await expect(main.getByRole("link", { name: "Clinic Solutions" })).toHaveAttribute(
       "href",
@@ -1002,10 +1084,8 @@ test.describe("LifeSupply public site", () => {
     // Product owner, 2026-09-09: the "Related" rows are gone from every page.
     for (const route of [
       "/metabolic-health",
-      "/metabolic-health/care-kits/glp-1-support",
       "/medical-supply-solutions/lifesupply",
       "/clinic-solutions",
-      "/clinic-solutions/ongoing-supplies",
       "/pharmacy-solutions",
     ]) {
       await page.goto(route);
@@ -1054,14 +1134,19 @@ test.describe("LifeSupply public site", () => {
     expect(sitemap.ok()).toBe(true);
     const xml = await sitemap.text();
     const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
-    // 37 canonical URLs: 41 before the consolidation, less the four addresses
-    // stage 1 retired, which redirect and are therefore absent from the map.
-    expect(locs.length).toBe(37);
+    // 26 canonical URLs: 41 before the consolidation, less the four addresses
+    // stage 1 retired and the eleven stage 2 retired. Each redirects and is
+    // therefore absent from the map rather than dropped.
+    expect(locs.length).toBe(26);
     for (const retired of [
       "/shop",
       "/clinic-solutions/equipment",
       "/clinic-solutions/ongoing-supplies",
       "/partners/clinics",
+      "/partners/pharmacies",
+      "/metabolic-health/care-kits",
+      "/metabolic-health/care-kits/glp-1-support",
+      "/metabolic-health/refills",
     ]) {
       expect(locs, retired).not.toContain(`https://lifesupplyhealth.com${retired}`);
     }
@@ -1104,7 +1189,8 @@ test.describe("LifeSupply public site", () => {
       "/",
       "/about-us",
       "/clinic-solutions",
-      "/metabolic-health/care-kits",
+      "/metabolic-health",
+      "/pharmacy-solutions",
       "/investor-relations",
       "/contact",
       "/no-such-page",
