@@ -8,7 +8,7 @@ One row per stage. A stage is complete only when its production deployment has b
 | 1 | Shop → Medical Supplies; Equipment and Ongoing Supplies → Clinic Solutions | #145 | `0eab3b0` | `pending` |
 | 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | #146 | `923a2af` | `pending` |
 | 3 | Final five-item navigation; Partners retirement | #147 | `pending` | `pending` |
-| 4 | Team merge; About, Home, News, Contact refinement | — | — | — |
+| 4 | Team merge; About, Home, News, Contact refinement | #148 | `pending` | `pending` |
 | 5 | Design, Codex review, final verification | — | — | — |
 
 ## Stage 0 — baseline and plan
@@ -111,3 +111,31 @@ Its two remaining pages keep their addresses and lose their category:
 2. The 404 recovery page rendered Contact twice, because Contact joined `LIFE_SUPPLY_NAVIGATION` when it became a primary item and the page also appended its own emphasised Contact tile. The mapped list now filters it out, so the emphasis survives and the duplicate does not.
 
 Remaining: stages 4 and 5.
+
+## Stage 4 — the team merge and the duplication trim
+
+**Completed September 10, 2026.**
+
+The four retained biographies became sections of `/our-team`:
+
+| Retired | Now at |
+| --- | --- |
+| `/abdul-ladha` | `/our-team#abdul-ladha` |
+| `/keith-dolo-2` | `/our-team#keith-dolo` |
+| `/barrett-e-g-sleeman` | `/our-team#barrett-sleeman` |
+| `/david-vogt` | `/our-team#david-vogt` |
+
+Four addresses each held one person's record with the listing above them that a reader had to return to in order to compare one director with another. The cards now link to anchors on the same page, and each section carries the portrait, the dated title, the full preserved biography **and the note that says where the title came from** — that note is what keeps a legacy title from reading as a newly confirmed one, so it could not be left behind when the biography moved.
+
+The anchors are stated in the content rather than derived from the slugs, because two of the four slugs are legacy artefacts (`keith-dolo-2`, `barrett-e-g-sleeman`) and an anchor should read as the person's name, not as the accident of how the prior site numbered its URLs. **The ten withdrawn profile addresses still redirect to the listing, unchanged.**
+
+### Duplication removed rather than moved
+
+- **News & Resources** restated the whole company in six facts — group, brands, footprint, scale, reported figures, developing programs — each of which already had an owning page. Six copies of a figure is six places for it to drift. It now orients in one paragraph and links to About and Investor Relations. The canary that used to assert those figures *matched* now asserts they are **absent**, which is the stricter rule.
+- **The corporate structure** moved from Contact to About. About carries identity, history and footprint, so what the company legally is belongs with them. Contact keeps the entity names and the channel each answers on, which is what a visitor deciding who to write to actually needs. The basis — the consolidated statements for the year ended December 31, 2025 — is now stated once, and a canary asserts Contact states no basis of its own so the two cannot read as different vintages.
+
+### The count
+
+**The sitemap is now 21 canonical URLs** — the number the owner's instruction names. 41 before the consolidation, less four in stage 1, eleven in stage 2, the Partners hub in stage 3, and the four profiles here. All twenty retired addresses redirect; none was dropped.
+
+Remaining: stage 5 — design refinement, independent review, final verification.

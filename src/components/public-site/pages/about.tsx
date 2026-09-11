@@ -21,6 +21,7 @@ import { HeroBackdrop, ParallaxBand } from "@/components/public-site/parallax-ba
 import { ProgramArchitecture } from "@/components/public-site/program-architecture";
 import { IconBadge, SplitSection } from "@/components/public-site/sections";
 import { VideoEmbed } from "@/components/public-site/video-embed";
+import type { ActionKey } from "@/lib/public-site/actions";
 import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { orderedMilestones } from "@/lib/public-site/content/about";
@@ -108,6 +109,32 @@ export function AboutPage() {
         eyebrow={about.bands.desk.eyebrow}
         statement={about.bands.desk.statement}
       />
+
+      {/*
+       * The corporate structure, moved here from Contact on 2026-09-10. About
+       * carries identity, history and footprint, so what the company legally
+       * is belongs with them; Contact keeps the entity names and channels,
+       * which is what a visitor deciding who to write to needs.
+       */}
+      <section className="px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal className="grid gap-8 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[1.1fr_0.9fr] lg:pl-8">
+            <div>
+              <SectionHeading
+                eyebrow={about.structure.eyebrow}
+                title={about.structure.title}
+                description={about.structure.text}
+              />
+            </div>
+            <div className="flex flex-col justify-end gap-5">
+              <p className="text-sm leading-6 text-[var(--lsh-muted)]">{about.structure.note}</p>
+              <div>
+                <ActionLink action={about.structure.action as ActionKey} variant="onLight" />
+              </div>
+            </div>
+          </Reveal>
+        </Container>
+      </section>
 
       {/* Footprint and milestones. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">

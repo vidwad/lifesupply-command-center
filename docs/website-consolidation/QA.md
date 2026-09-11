@@ -189,3 +189,26 @@ Desktop and mobile both verified. The Solutions menu opens from the keyboard (fo
 ### Sitemap
 
 25 canonical URLs: 41 before the consolidation, less the four stage 1 retired, the eleven stage 2 retired and the Partners hub. None of the retired addresses appears.
+
+## Stage 4
+
+| Check | Result |
+| --- | --- |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | Pass |
+| `pnpm test` | Pass, 104 files, 1,329 tests |
+| `PUBLIC_SITE_MODE=true pnpm build` | Pass, 26 static pages |
+| Playwright, `--workers=1`, both projects | Pass, 90 passed, 6 project-specific skips |
+
+### Routes, verified against a live build
+
+All four profile addresses answer 308 to their exact anchor; all four anchors are present in the served HTML of `/our-team`, so each redirect lands on rendered content with JavaScript disabled. The ten withdrawn profile addresses still answer 308 to `/our-team`, their destinations unchanged.
+
+`/our-team` still renders exactly one `h1`: four pages became four sections, not four headings.
+
+### Content transfer
+
+Each section carries the portrait, the dated title, the full biography and the provenance note. Verified in the browser per person, not by pattern.
+
+### The count
+
+**21 canonical URLs in the sitemap**, the number the instruction names. Every one of the twenty retired addresses is absent from the map and answers a permanent redirect.

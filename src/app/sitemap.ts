@@ -1,14 +1,15 @@
 import type { MetadataRoute } from "next";
 
-import { team } from "@/lib/public-site/content/team";
-import { LIVE_ROUTES, profileRoute } from "@/lib/public-site/routes";
+import { LIVE_ROUTES } from "@/lib/public-site/routes";
 import { canonicalUrl } from "@/lib/public-site/seo";
 
 export const dynamic = "force-static";
 
 /**
- * Every live public route from the registry and the retained profile
- * addresses, as canonical (unslashed) URLs. Dynamic templates whose records
+ * Every live public route from the registry, as canonical (unslashed) URLs.
+ * The four leadership profile addresses were listed here until 2026-09-10;
+ * they are sections of `/our-team` now and their addresses redirect, so
+ * listing them would advertise four URLs that answer 308. Dynamic templates whose records
  * live in the publication model (`/news/[slug]/`, `/resources/[slug]/`) are
  * excluded here: the Vercel build has no database, and a published item is
  * discoverable from `/news/`.
@@ -24,10 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPaths = LIVE_ROUTES.filter((route) => !route.path.includes("[")).map(
     (route) => route.path,
   );
-  const paths = [
-    ...staticPaths,
-    ...team.legacyProfiles.map((profile) => profileRoute(profile.slug)),
-  ];
+  const paths = staticPaths;
   return Array.from(new Set(paths)).map((path) => ({
     url: canonicalUrl(path),
     lastModified,

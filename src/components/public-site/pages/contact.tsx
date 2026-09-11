@@ -214,6 +214,13 @@ export function ContactPage() {
               </StaggerItem>
             ))}
           </Stagger>
+          {/*
+           * The explanation of the structure moved to About on 2026-09-10; it
+           * was told in full on both pages before that.
+           */}
+          <Reveal className="mt-8">
+            <ActionLink action={contact.entities.action as ActionKey} variant="onLight" />
+          </Reveal>
         </div>
       </section>
     </LifeSupplyLayout>

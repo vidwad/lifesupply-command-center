@@ -45,10 +45,19 @@ export const contact = {
    * structure; the four customer-facing brands do not map one-to-one onto the
    * companies (round three, 2026-09-10).
    */
+  /**
+   * Contact keeps the entity names and the channel each one answers on,
+   * because a visitor here is deciding who to write to. The explanation of
+   * the structure — parent, subsidiaries, and why a brand name is not a
+   * company name — moved to About on 2026-09-10 (website consolidation,
+   * stage 4), which is the page that already carries identity and history.
+   * It was told in full in both places before that.
+   */
   entities: {
     eyebrow: "Corporate structure",
     title: "One parent company, three wholly-owned subsidiaries.",
-    note: "LifeSupply Health Inc. is the parent company, and it owns three operating subsidiaries outright. The customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing. The structure below is the one set out in the consolidated financial statements for the year ended December 31, 2025.",
+    note: "LifeSupply Health Inc. owns three operating subsidiaries outright. Each is listed below with the channel it answers on; About sets out how the structure and the customer-facing brands relate.",
+    action: "about_group",
   },
   subsidiaries: [
     {

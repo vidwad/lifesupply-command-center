@@ -26,6 +26,7 @@ import {
   STAGE_3_ROUTES,
 } from "@/lib/public-site/routes";
 import { KIT_SLUGS } from "@/lib/public-site/content/metabolic";
+import { PROFILE_ANCHORS } from "@/lib/public-site/content/team";
 
 const ROOT = join(__dirname, "..", "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
@@ -514,7 +515,6 @@ describe("routes and content governance", () => {
       "src/app/investor-relations/page.tsx",
       "src/app/news/page.tsx",
       "src/app/contact/page.tsx",
-      "src/app/[slug]/page.tsx",
       "src/app/medical-supply-solutions/lifesupply/page.tsx",
       "src/app/medical-supply-solutions/wellmart-medical/page.tsx",
       "src/app/medical-supply-solutions/balkowitsch/page.tsx",
@@ -906,20 +906,28 @@ describe("round three: architecture, placement and voice", () => {
     }
   });
 
-  it("states the company plainly where the governed sections are empty", () => {
-    // Rather than leave a visitor nothing or invent an announcement to fill the
-    // gap (round three, outcome 9). Every fact here appears in full elsewhere.
+  it("states the company plainly where the governed sections are empty, without restating it", () => {
+    // Rather than leave a visitor nothing or invent an announcement to fill
+    // the gap (round three, outcome 9).
+    //
+    // The rule changed shape on 2026-09-10 and got stricter. This block used
+    // to restate the group, brands, footprint, scale, reported figures and
+    // developing programs — six facts each of which already had an owning
+    // page. Six copies of a figure is six places for it to drift, so the
+    // block now orients and links, and the figures are asserted absent here
+    // rather than asserted to match.
     const newsContent = stripComments(read("src/lib/public-site/content/news.ts"));
     expect(newsContent).toContain("overview:");
     expect(newsContent).toContain("LifeSupply Health Inc. is a Canadian parent company");
-    // The figures match the investor pages exactly, currency and all.
     for (const figure of ["C$6.75M", "C$2.20M", "C$284K"]) {
-      expect(newsContent).toContain(figure);
+      expect(newsContent, figure).not.toContain(figure);
     }
-    // Developing programs stay unpurchasable here too.
-    expect(newsContent).toContain("Neither is available today");
+    // And it routes to the pages that do own those facts.
     const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
-    expect(page).toContain("overview.facts.map");
+    expect(page).not.toContain("overview.facts.map");
+    expect(page).toContain("overview.action");
+    expect(page).toContain('<ActionLink action="investor_information"');
+    expect(newsContent).toContain('action: "about_group"');
   });
 
   it("carries no document or leadership provenance note in public copy", () => {
@@ -1170,21 +1178,35 @@ describe("round two: cross-page factual consistency", () => {
     expect(investors).toContain("no result is attributable to any single brand");
   });
 
-  it("publishes the verified corporate structure and keeps brands distinct from it", () => {
+  it("publishes the verified corporate structure once, and keeps brands distinct from it", () => {
     const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
+    const about = stripComments(read("src/lib/public-site/content/about.ts"));
     const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
     expect(page).not.toContain("LifeSupply public subsidiaries");
-    // The three subsidiaries the consolidated statements set out.
+    // The three subsidiaries the consolidated statements set out. Contact
+    // still names them, because a visitor here is deciding who to write to.
     for (const entity of [
       "Wellmart Health Supplies Ltd.",
       "LifeSupply US, Inc.",
       "Balkowitsch Enterprises Inc.",
     ]) {
-      expect(contact).toContain(entity);
+      expect(contact, entity).toContain(entity);
+      expect(about, entity).toContain(entity);
     }
-    // Brand architecture is never equated with legal structure.
-    expect(contact).toContain("a brand name and a company name are not the same thing");
-    expect(contact).not.toMatch(/four (brands|businesses) are (the )?(subsidiaries|companies)/i);
+    // The explanation of the structure moved to About on 2026-09-10 and is
+    // told once. Brand architecture is never equated with legal structure,
+    // wherever it is told.
+    expect(about).toContain("a brand name and a company name are not the same thing");
+    expect(contact).not.toContain("a brand name and a company name are not the same thing");
+    expect(contact).toContain("About sets out how the structure");
+    for (const source of [contact, about]) {
+      expect(source).not.toMatch(/four (brands|businesses) are (the )?(subsidiaries|companies)/i);
+    }
+    // The basis is stated once, on the page that tells the structure. Contact
+    // states no basis of its own, so the two cannot be read as different
+    // vintages of the same fact.
+    expect(about).toContain("consolidated financial statements for the year ended");
+    expect(contact).not.toContain("consolidated financial statements for the year ended");
   });
 
   it("publishes nothing from the confidential financing materials", () => {
@@ -2086,6 +2108,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
     [PHARMACY_ROUTES.hub]: `${PUBLIC_DIR}/pages/pharmacy.tsx`,
     [METABOLIC_ROUTES.hub]: `${PUBLIC_DIR}/pages/metabolic.tsx`,
     [LIFE_SUPPLY_ROUTES.contact]: `${PUBLIC_DIR}/pages/contact.tsx`,
+    [LIFE_SUPPLY_ROUTES.team]: `${PUBLIC_DIR}/pages/team.tsx`,
   };
 
   it("renders every section anchor the registry declares", () => {
@@ -2102,9 +2125,13 @@ describe("website consolidation: sections, redirects and deep links", () => {
         // than eight literals, so that form counts too.
         const literal = source.includes(`<AnchoredSection id="${anchor}"`);
         const mapped =
-          (KIT_SLUGS as readonly string[]).includes(anchor) &&
-          source.includes("id={kit.slug}") &&
-          source.includes("metabolic.kits.map");
+          ((KIT_SLUGS as readonly string[]).includes(anchor) &&
+            source.includes("id={kit.slug}") &&
+            source.includes("metabolic.kits.map")) ||
+          // The four profile anchors likewise come from one mapped component.
+          ((PROFILE_ANCHORS as readonly string[]).includes(anchor) &&
+            source.includes("id={profile.anchor}") &&
+            source.includes("team.legacyProfiles.map"));
         expect(literal || mapped, `${route}#${anchor}`).toBe(true);
       }
     }
@@ -2149,6 +2176,10 @@ describe("website consolidation: sections, redirects and deep links", () => {
       "/metabolic-health/care-kits": "/metabolic-health#pathways",
       "/metabolic-health/refills": "/metabolic-health#replenishment",
       "/partners": "/contact#business-inquiries",
+      "/abdul-ladha": "/our-team#abdul-ladha",
+      "/keith-dolo-2": "/our-team#keith-dolo",
+      "/barrett-e-g-sleeman": "/our-team#barrett-sleeman",
+      "/david-vogt": "/our-team#david-vogt",
       // Every pathway address keeps its slug as its anchor.
       ...Object.fromEntries(
         KIT_SLUGS.map((slug) => [
@@ -2182,6 +2213,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
       "src/app/metabolic-health/care-kits/[kit]/page.tsx",
       "src/app/metabolic-health/refills/page.tsx",
       "src/app/partners/page.tsx",
+      "src/app/[slug]/page.tsx",
     ]) {
       expect(existsSync(join(ROOT, gone)), gone).toBe(false);
     }

@@ -44,39 +44,25 @@ export const news = {
    * or invent an announcement to fill the gap, the page states what the group
    * is. Every figure here appears on the investor pages with its full scope.
    */
+  /**
+   * A short orientation for anyone who arrives here first, and a link to the
+   * page that explains the company.
+   *
+   * This block carried the whole company summary until 2026-09-10 — group,
+   * brands, footprint, scale, reported results and what is in development,
+   * six facts restating what About, Medical Supplies and Investor Relations
+   * each already said (website consolidation, stage 4). Six copies of a fact
+   * is six places for it to drift out of date. The figures in particular now
+   * have exactly one home, Disclosures, which every other page reads from.
+   */
   overview: {
-    eyebrow: "The company at a glance",
+    eyebrow: "New here?",
     title: "What LifeSupply is, in one place.",
     intro:
-      "For anyone arriving here first: the group, its businesses, and the figures it has reported.",
-    facts: [
-      {
-        label: "The group",
-        text: "LifeSupply Health Inc. is a Canadian parent company with three wholly-owned subsidiaries: Wellmart Health Supplies Ltd. in Canada, LifeSupply US, Inc. in the United States, and Balkowitsch Enterprises Inc.",
-      },
-      {
-        label: "What it sells",
-        text: "Health, safety, medical and industrial products online, through LifeSupply.ca and Wellmart Medical in Canada and Balkowitsch Worldwide in the United States. LifeSupply Clinics is a project business, not a store.",
-      },
-      {
-        label: "Where it operates",
-        text: "Online commerce across Canada and the United States. Clinic planning, design, construction, fit-out and equipment for projects in British Columbia.",
-      },
-      {
-        label: "Scale",
-        text: "More than 25 years of operations, more than 50,000 products, and over 1,000,000 customers served since inception.",
-      },
-      {
-        label: "Reported results",
-        text: "For the year ended December 31, 2025: consolidated net sales of C$6.75M, gross profit of C$2.20M, and net income of C$284K, in Canadian dollars, unaudited.",
-      },
-      {
-        label: "In development",
-        text: "Metabolic-health supply and services, and non-drug supply programs for pharmacies. Neither is available today.",
-      },
-    ],
-    action: "investor_materials",
+      "LifeSupply Health Inc. is a Canadian parent company with three wholly-owned subsidiaries, selling health, safety, medical and industrial products online in Canada and the United States, and planning, building and equipping clinics in British Columbia. About sets out the group, its history and its footprint; Investor Relations carries the reported figures with their basis.",
+    action: "about_group",
   },
+
   sections: {
     current: {
       title: "Company news",
