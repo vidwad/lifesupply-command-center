@@ -11,7 +11,7 @@ import {
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { SiteScreen } from "@/components/public-site/site-screen";
-import { Callout, IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
+import { IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand } from "@/lib/public-site/brands";
 import { BRAND_GRAPHICS } from "@/lib/public-site/graphics";
@@ -333,6 +333,13 @@ function EquipmentSection() {
  * boundary that qualifies its own content and does not repeat the
  * construction attribution or the project-sequence qualification. Those sit
  * earlier on the page, which is what the project pointer refers to.
+ *
+ * A "Discussed case by case" note listed four things the site does not offer —
+ * approved substitutions, par-level restocking, automatic replenishment,
+ * contracted procurement — which introduced four terms a reader may not know
+ * in order to say they are unavailable. "Available today" above it already
+ * bounds the offer, and the supply review already invites the conversation
+ * (product owner, 2026-09-11).
  */
 function OngoingSuppliesSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
@@ -387,9 +394,6 @@ function OngoingSuppliesSection() {
           ))}
         </div>
       </SplitSection>
-      <Callout icon="shield" eyebrow={page.conditional.title} tone="onLight">
-        <p>{page.conditional.text}</p>
-      </Callout>
     </AnchoredSection>
   );
 }

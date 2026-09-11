@@ -1712,17 +1712,25 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
 
   it("treats post-opening supply as conditional on every clinic page", () => {
     expect(clinicsContent()).toContain("creates no obligation to buy supplies");
-    // One closing band, carrying the sequence qualification. The
-    // ongoing-supplies section keeps its own conditional block, which states
-    // what is not offered to a clinic that is already buying (round four,
-    // change 5).
+    // One closing band, carrying the sequence qualification.
+    //
+    // The ongoing-supplies section used to carry a "Discussed case by case"
+    // note listing four services the site does not offer. What matters is not
+    // that the absence is announced but that nothing beyond the published
+    // scope is ever claimed, so that is what this asserts (product owner,
+    // 2026-09-11).
     expect((clinicPages().match(/<ClosingBand \/>/g) ?? []).length).toBe(1);
     expect(clinicPages()).toContain("{close.qualification}");
     expect(clinicsContent()).toContain("a quote is not an order");
-    expect(clinicsContent()).toContain("are not offered on this site today");
-    expect(sectionBody(clinicPages(), "OngoingSuppliesSection")).toContain(
-      "{page.conditional.text}",
-    );
+    expect(clinicsContent()).toContain('title: "Available today"');
+    for (const unclaimed of [
+      /par-level/i,
+      /automatic replenishment/i,
+      /contracted procurement/i,
+      /approved substitution/i,
+    ]) {
+      expect(clinicsContent(), String(unclaimed)).not.toMatch(unclaimed);
+    }
     // And the supplies page points at the project service rather than
     // explaining it, so a buying clinic is not made to read project terms.
     expect(clinicsContent()).toContain("are a separate service, for British Columbia projects");
@@ -2292,7 +2300,6 @@ describe("website consolidation: sections, redirects and deep links", () => {
     expect(clinics).toContain("priced by quote rather than listed");
     // Ongoing supplies: what is available and what is only discussed.
     expect(clinics).toContain("Available today");
-    expect(clinics).toContain("Discussed case by case");
     // Collaboration: the three ways, with their statuses intact.
     for (const status of ["Proposed", "Available through LifeSupply Clinics"]) {
       expect(clinics, status).toContain(status);
