@@ -53,7 +53,8 @@ In Stage D it caught **a real error this round introduced**: the homepage said a
 | A — baseline, reconciliation and plan | #139 | `29090a6` |
 | B — content and business clarity | #140 | `2212152` |
 | C — hero visibility, readable model, contact order | #141 | `e9d34e8` |
-| D — QA, independent review, corrections | recorded on merge | recorded on merge |
+| D — QA, independent review, corrections | #142 | `3c5f626` |
+| Deployment record | #143 | this pull request |
 
 ## 7. Tests actually performed
 
@@ -73,7 +74,9 @@ The failure is the header scroll-hide test. It passed five of five in isolation 
 
 ## 8. Deployment verification
 
-Recorded below after the Stage D pull request merges, against a marker unique to this round.
+**Verified September 10, 2026.** Production alias `https://lifesupply-command-center-vidwads-projects.vercel.app`, deployment `dpl_82SfKyFAq28oWjrbiB2RrRVCjDKm`, state READY, serving commit `3c5f6265c443e1d59237f4e15749775f88b0c0f3` from `main`.
+
+The marker was "is a project business for British Columbia", confirmed absent from production before the merge and present after. The alias kept serving the previous build for four polls and produced the corrected line on the fifth. The full acceptance sweep was then run against the live site, including the hero with JavaScript disabled: **clean**. Details in `docs/website-round-four-qa.md` section 7.
 
 ## 9. Remaining genuine blockers
 
