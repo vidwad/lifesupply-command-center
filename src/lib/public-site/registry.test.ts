@@ -235,6 +235,7 @@ describe("route registry", () => {
     }
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
+      "Home",
       "About",
       "Medical Supplies",
       "Solutions",
@@ -266,17 +267,23 @@ describe("route registry", () => {
     }
   });
 
-  it("builds the five-item navigation the owner set, with Solutions as a menu and no page", () => {
-    // `About | Medical Supplies | Solutions | Investors | Contact`
-    // (website consolidation, stage 3, 2026-09-10).
+  it("builds the navigation the owner set, with Solutions as a menu and no page", () => {
+    // `Home | About | Medical Supplies | Solutions | Investors | Contact`
+    // (website consolidation stage 3, 2026-09-10; Home restored 2026-09-11 at
+    // the owner's direction, alongside the logo rather than instead of it).
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
+      "Home",
       "About",
       "Medical Supplies",
       "Solutions",
       "Investors",
       "Contact",
     ]);
+    // Home is a direct link with no dropdown.
+    const home = groups[0]!;
+    expect(home.href).toBe(LIFE_SUPPLY_ROUTES.home);
+    expect(home.links).toEqual([]);
 
     // Solutions is a menu of exactly three, and no `/solutions` page exists.
     const solutions = groups.find((group) => group.key === "solutions")!;
@@ -300,7 +307,7 @@ describe("route registry", () => {
     expect(contact.links).toEqual([]);
 
     // Clinic, Pharmacy and Metabolic are no longer top-level categories.
-    for (const key of ["clinic", "pharmacy", "metabolic", "partners", "home"]) {
+    for (const key of ["clinic", "pharmacy", "metabolic", "partners"]) {
       expect(
         groups.some((group) => group.key === key),
         key,

@@ -177,7 +177,14 @@ export function resourceRoute(slug: string): string {
   return `/resources/${slug}/`;
 }
 
-export type NavGroupKey = "businesses" | "solutions" | "investors" | "about" | "utility" | "legal";
+export type NavGroupKey =
+  | "home"
+  | "businesses"
+  | "solutions"
+  | "investors"
+  | "about"
+  | "utility"
+  | "legal";
 
 export interface RouteRecord {
   path: string;
@@ -377,17 +384,16 @@ export interface NavGroup {
 }
 
 /**
- * Primary navigation, as the owner set it on 2026-09-10:
+ * Primary navigation:
  *
- *   About | Medical Supplies | Solutions | Investors | Contact
+ *   Home | About | Medical Supplies | Solutions | Investors | Contact
  *
- * Five items. Clinic, Pharmacy and Metabolic stopped being top-level
- * categories and became the three entries under Solutions; Partners was
- * retired as a category and its hub with it. Contact is last, a direct link,
- * with no dropdown — so it leaves the utility strip, where it was a duplicate.
- *
- * The logo still links Home, which is why Home is no longer a menu item: two
- * controls in the same header going to the same place is one too many.
+ * Set by the owner on 2026-09-10 and amended on 2026-09-11 to put Home back
+ * as a menu item alongside the logo. Clinic, Pharmacy and Metabolic stopped
+ * being top-level categories and became the three entries under Solutions;
+ * Partners was retired as a category and its hub with it. Contact is last, a
+ * direct link, with no dropdown — so it leaves the utility strip, where it
+ * was a duplicate.
  *
  * A group appears only when its hub route is live, or, for a group with no
  * hub, when it has at least one live child. A child appears only when it is a
@@ -395,6 +401,7 @@ export interface NavGroup {
  * dead link.
  */
 const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string | null }[] = [
+  { key: "home", label: "Home", hub: LIFE_SUPPLY_ROUTES.home },
   { key: "about", label: "About", hub: "/about-us/" },
   { key: "businesses", label: "Medical Supplies", hub: LIFE_SUPPLY_ROUTES.operations },
   // No `/solutions` page exists; this is a menu only.

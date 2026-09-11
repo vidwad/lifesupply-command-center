@@ -400,31 +400,23 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               {PRIMARY_NAV.map((group) => (
                 <div key={group.key} className="grid gap-1">
                   <div className="flex items-center justify-between gap-4">
+                    {/*
+                     * Solutions has no page of its own, so its label is a
+                     * button that opens the group rather than a link that
+                     * goes nowhere. It is styled as the other labels are, and
+                     * it keeps the same bordered chevron beside it, so every
+                     * row in the panel reads the same way (product owner,
+                     * 2026-09-11).
+                     */}
                     {group.href === null ? (
-                      /*
-                       * Solutions has no page of its own, so its label opens
-                       * the group rather than pretending to be a destination.
-                       * One control, not two: the chevron sits inside this
-                       * button rather than beside it, because a label and a
-                       * chevron that both toggle the same list are two
-                       * controls for one disclosure.
-                       */
                       <button
                         type="button"
                         onClick={() => toggleGroup(group.key)}
                         aria-expanded={expandedGroup === group.key}
                         aria-controls={`lsh-mobile-group-${group.key}`}
-                        aria-label={`${expandedGroup === group.key ? "Collapse" : "Expand"} ${group.label}`}
-                        className="lsh-display flex w-full items-center justify-between gap-4 text-left text-xs text-white/75 transition-colors hover:text-white"
+                        className="lsh-display text-left text-xs text-white/75 transition-colors hover:text-white"
                       >
                         {group.label}
-                        <ChevronDown
-                          size={16}
-                          aria-hidden="true"
-                          className={`shrink-0 transition-transform duration-300 motion-reduce:transition-none ${
-                            expandedGroup === group.key ? "rotate-180" : ""
-                          }`}
-                        />
                       </button>
                     ) : (
                       <NavItem
@@ -434,7 +426,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                         className="text-xs"
                       />
                     )}
-                    {group.href !== null && group.links.length > 0 ? (
+                    {group.links.length > 0 ? (
                       <button
                         type="button"
                         onClick={() => toggleGroup(group.key)}
