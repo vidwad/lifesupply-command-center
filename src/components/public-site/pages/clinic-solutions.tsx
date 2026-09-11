@@ -161,10 +161,14 @@ function PlanningSection() {
             </Reveal>
           </div>
 
-          {/* The four service groups, flush with the heading. */}
+          {/* The four service groups, under the brand's own line about their span. */}
+          <Reveal delay={0.1} className="mt-14 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+            <Eyebrow as="h3">{hub.servicesHeading.eyebrow}</Eyebrow>
+            <p className="text-lg text-[var(--lsh-charcoal)]">{hub.servicesHeading.title}</p>
+          </Reveal>
           <Stagger
             as="ul"
-            className="-mx-5 mt-14 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2 lg:-mx-8 lg:grid-cols-4"
+            className="-mx-5 mt-6 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2 lg:-mx-8 lg:grid-cols-4"
           >
             {clinics.services.map((service) => (
               <StaggerItem
@@ -173,9 +177,7 @@ function PlanningSection() {
                 className="h-full bg-[var(--lsh-paper)] p-5 lg:p-8"
               >
                 <IconBadge icon={iconForTitle(service.title)} size={18} />
-                <h3 className="lsh-display mt-4 text-xl text-[var(--lsh-charcoal)]">
-                  {service.title}
-                </h3>
+                <h3 className="mt-4 text-xl text-[var(--lsh-charcoal)]">{service.title}</h3>
                 <ul className="mt-3 grid gap-1 text-sm leading-6 text-[var(--lsh-muted)]">
                   {service.items.map((item) => (
                     <li key={item} className="lsh-bullet">
@@ -292,7 +294,7 @@ function ProjectsSection() {
                     <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
                       {project.type} · {project.place}
                     </p>
-                    <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)] transition-colors group-hover:text-[var(--lsh-brand-red)] lg:text-2xl">
+                    <h3 className="text-xl leading-tight text-[var(--lsh-charcoal)] transition-colors group-hover:text-[var(--lsh-brand-red)] lg:text-2xl">
                       {project.title}
                     </h3>
                     <dl className="mt-auto flex flex-wrap gap-x-8 gap-y-2 border-t border-[var(--lsh-rule)] pt-4 text-sm">
@@ -340,7 +342,7 @@ function ProjectsSection() {
                 <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
                   {project.type} · {project.place}
                 </p>
-                <h3 className="lsh-display flex items-start gap-3 text-lg leading-tight text-[var(--lsh-charcoal)] transition-colors group-hover:text-[var(--lsh-brand-red)]">
+                <h3 className="flex items-start gap-3 text-lg leading-tight text-[var(--lsh-charcoal)] transition-colors group-hover:text-[var(--lsh-brand-red)]">
                   <span className="flex-1">{project.title}</span>
                   <ExternalLink
                     size={16}
@@ -447,7 +449,7 @@ function OngoingSuppliesSection() {
                   rel="noreferrer"
                   className="group flex h-full flex-col gap-3 p-5 transition-colors hover:bg-[var(--lsh-surface)] lg:p-8"
                 >
-                  <h3 className="lsh-display flex items-start gap-3 text-lg leading-tight text-[var(--lsh-charcoal)] transition-colors group-hover:text-[var(--lsh-brand-red)]">
+                  <h3 className="flex items-start gap-3 text-lg leading-tight text-[var(--lsh-charcoal)] transition-colors group-hover:text-[var(--lsh-brand-red)]">
                     <span className="flex-1">{item.label}</span>
                     <ExternalLink
                       size={16}
