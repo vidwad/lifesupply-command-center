@@ -161,3 +161,31 @@ All eleven Metabolic Health anchors and `#partner-program` are present in the se
 | K03's absent store category | Pass — states plainly that no store carries it, offers no link |
 
 No enquiry or order was sent.
+
+## Stage 3
+
+| Check | Result |
+| --- | --- |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | Pass |
+| `pnpm test` | Pass, 104 files, 1,329 tests |
+| `PUBLIC_SITE_MODE=true pnpm build` | Pass, 30 static pages |
+| Playwright, `--workers=1`, both projects | Pass, 90 passed, 6 project-specific skips |
+
+### The `/partners` hazard, verified against a live build
+
+| Address | Result |
+| --- | --- |
+| `/partners` | 308 → `/contact#business-inquiries` |
+| `/partners/suppliers` | **200** |
+| `/partners/acquisitions` | **200** |
+| `/solutions` | 404 — no page was created for a menu that is only a menu |
+
+`#business-inquiries` is present in the served HTML of `/contact`, so the redirect lands on rendered content with JavaScript disabled.
+
+### Navigation
+
+Desktop and mobile both verified. The Solutions menu opens from the keyboard (focus, Enter), closes on Escape, exposes `aria-expanded` and `aria-controls`, and never depends on hover. Its three entries are Clinic Solutions, Pharmacy Solutions and Metabolic Health Solutions, in that order, with no "Overview" row. Contact is last with no dropdown. The mobile panel keeps one group open at a time.
+
+### Sitemap
+
+25 canonical URLs: 41 before the consolidation, less the four stage 1 retired, the eleven stage 2 retired and the Partners hub. None of the retired addresses appears.

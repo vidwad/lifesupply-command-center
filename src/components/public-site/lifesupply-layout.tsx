@@ -123,28 +123,27 @@ function NavItem({
  * hover, on keyboard focus inside the group (so Tab reaches every row), and
  * on the chevron button for touch and assistive technology; Escape closes
  * it. No destination in a menu is ever a planned route (routes.ts).
+ *
+ * A group with no hub — Solutions since 2026-09-10 — has no page to link to,
+ * so the label itself becomes the disclosure button rather than a link that
+ * goes nowhere, and the panel has no "Overview" row. It is still reachable by
+ * keyboard and by touch, and still never depends on hover.
  */
 function NavGroupMenu({ group }: { group: NavGroup }) {
   const pathname = usePathname();
   // The menu ends at the page's right edge, so the last group's panel opens
-  // leftward; every other panel is left-aligned under its trigger.
-  // Investors, the last group, always opens leftward. Partners, the second
-  // last, opens leftward only at xl widths (1280-1535px), where a panel under
-  // its trigger would run past the viewport edge; from 2xl it opens under its
-  // trigger like every other group.
-  const panelAlign =
-    group.key === "investors"
-      ? "right-0"
-      : group.key === "partners"
-        ? "right-0 2xl:left-0 2xl:right-auto"
-        : "left-0";
+  // leftward; every other panel is left-aligned under its trigger. Investors
+  // is the last group with a dropdown, so its panel opens leftward.
+  const panelAlign = group.key === "investors" ? "right-0" : "left-0";
   const [open, setOpen] = useState(false);
   const childActive = group.links.some(
     (link) => !link.external && isActiveRoute(pathname, link.href),
   );
 
   if (group.links.length === 0) {
-    return <NavItem href={group.href} label={group.label} />;
+    // A group with neither children nor a hub cannot render anything; the
+    // registry does not produce one, and this keeps that true by construction.
+    return group.href === null ? null : <NavItem href={group.href} label={group.label} />;
   }
 
   return (
@@ -155,15 +154,28 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
         if (event.key === "Escape") setOpen(false);
       }}
     >
-      <NavItem href={group.href} label={group.label} forceActive={childActive} />
+      {group.href === null ? null : (
+        <NavItem href={group.href} label={group.label} forceActive={childActive} />
+      )}
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={`lsh-menu-${group.key}`}
-        aria-label={`${open ? "Close" : "Open"} ${group.label} menu`}
-        className="-mr-1 grid h-6 w-5 place-items-center text-white/75 transition-colors hover:text-white"
+        aria-label={
+          group.href === null
+            ? `${open ? "Close" : "Open"} ${group.label} menu`
+            : `${open ? "Close" : "Open"} ${group.label} menu`
+        }
+        className={
+          group.href === null
+            ? `lsh-display inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] transition-colors ${
+                childActive ? "text-white" : "text-white/75 hover:text-white"
+              }`
+            : "-mr-1 grid h-6 w-5 place-items-center text-white/75 transition-colors hover:text-white"
+        }
       >
+        {group.href === null ? group.label : null}
         <ChevronDown
           size={13}
           aria-hidden="true"
@@ -178,15 +190,17 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
       >
         <ul className="border border-white/15 bg-[var(--lsh-charcoal)] p-2 shadow-xl shadow-black/40">
           {/* The group's own page, so a visitor who goes straight to the dropdown does not miss it. */}
-          <li>
-            <NavItem
-              href={group.href}
-              label="Overview"
-              variant="menu"
-              neverCurrent
-              onNavigate={() => setOpen(false)}
-            />
-          </li>
+          {group.href === null ? null : (
+            <li>
+              <NavItem
+                href={group.href}
+                label="Overview"
+                variant="menu"
+                neverCurrent
+                onNavigate={() => setOpen(false)}
+              />
+            </li>
+          )}
           {group.links.map((link) => (
             <li key={link.href}>
               <NavItem
@@ -242,7 +256,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
   // that holds the current page.
   const activeGroup = PRIMARY_NAV.find(
     (group) =>
-      isActiveRoute(pathname, group.href) ||
+      (group.href !== null && isActiveRoute(pathname, group.href)) ||
       group.links.some((link) => !link.external && isActiveRoute(pathname, link.href)),
   );
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
@@ -386,13 +400,41 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               {PRIMARY_NAV.map((group) => (
                 <div key={group.key} className="grid gap-1">
                   <div className="flex items-center justify-between gap-4">
-                    <NavItem
-                      href={group.href}
-                      label={group.label}
-                      onNavigate={closeMenu}
-                      className="text-xs"
-                    />
-                    {group.links.length > 0 ? (
+                    {group.href === null ? (
+                      /*
+                       * Solutions has no page of its own, so its label opens
+                       * the group rather than pretending to be a destination.
+                       * One control, not two: the chevron sits inside this
+                       * button rather than beside it, because a label and a
+                       * chevron that both toggle the same list are two
+                       * controls for one disclosure.
+                       */
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.key)}
+                        aria-expanded={expandedGroup === group.key}
+                        aria-controls={`lsh-mobile-group-${group.key}`}
+                        aria-label={`${expandedGroup === group.key ? "Collapse" : "Expand"} ${group.label}`}
+                        className="lsh-display flex w-full items-center justify-between gap-4 text-left text-xs text-white/75 transition-colors hover:text-white"
+                      >
+                        {group.label}
+                        <ChevronDown
+                          size={16}
+                          aria-hidden="true"
+                          className={`shrink-0 transition-transform duration-300 motion-reduce:transition-none ${
+                            expandedGroup === group.key ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                    ) : (
+                      <NavItem
+                        href={group.href}
+                        label={group.label}
+                        onNavigate={closeMenu}
+                        className="text-xs"
+                      />
+                    )}
+                    {group.href !== null && group.links.length > 0 ? (
                       <button
                         type="button"
                         onClick={() => toggleGroup(group.key)}
@@ -420,15 +462,17 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                           : "hidden"
                       }
                     >
-                      <li>
-                        <NavItem
-                          href={group.href}
-                          label="Overview"
-                          variant="menu"
-                          neverCurrent
-                          onNavigate={closeMenu}
-                        />
-                      </li>
+                      {group.href === null ? null : (
+                        <li>
+                          <NavItem
+                            href={group.href}
+                            label="Overview"
+                            variant="menu"
+                            neverCurrent
+                            onNavigate={closeMenu}
+                          />
+                        </li>
+                      )}
                       {group.links.map((link) => (
                         <li key={link.href}>
                           <NavItem

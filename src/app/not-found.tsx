@@ -37,16 +37,24 @@ export default async function NotFound() {
       />
       <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {LIFE_SUPPLY_NAVIGATION.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className="lsh-display block border border-[var(--lsh-rule)] px-5 py-4 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {/*
+           * Contact is rendered once, below, with the emphasis that says "if
+           * none of these fits". It joined LIFE_SUPPLY_NAVIGATION on
+           * 2026-09-10 when it became a primary item, so it is filtered out
+           * here rather than shown twice.
+           */}
+          {LIFE_SUPPLY_NAVIGATION.filter((item) => item.href !== LIFE_SUPPLY_ROUTES.contact).map(
+            (item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="lsh-display block border border-[var(--lsh-rule)] px-5 py-4 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ),
+          )}
           <li>
             <Link
               href={LIFE_SUPPLY_ROUTES.contact}

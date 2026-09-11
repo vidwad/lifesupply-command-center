@@ -140,6 +140,15 @@ const nextConfig: NextConfig = {
         destination: "/metabolic-health#replenishment",
         permanent: true,
       },
+      // Website consolidation, stage 3 (2026-09-10): Partners stopped being a
+      // primary category and its hub went with it. The hub only routed by
+      // relationship, and routing an enquiry by intent is what Contact does.
+      //
+      // EXACT PATH, NEVER A PREFIX. `/partners/suppliers` and
+      // `/partners/acquisitions` are retained pages that must keep answering
+      // 200 (docs/website-consolidation/REDIRECTS.md). A wildcard here would
+      // take both of them out, and a canary forbids that form.
+      { source: "/partners", destination: "/contact#business-inquiries", permanent: true },
       // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
       // involved); the addresses go to the team page. The three directors
       // restored on 2026-09-09 are live profiles again. Keep in step with

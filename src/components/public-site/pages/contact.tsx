@@ -9,6 +9,7 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { IconBadge } from "@/components/public-site/sections";
 import { actionBehaviour, type ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS } from "@/lib/public-site/brands";
@@ -33,8 +34,12 @@ export function ContactPage() {
         description="Every route below reaches a named person or team, with a subject line already set. Choose the one that matches the conversation you want to have."
       />
 
-      {/* Intent routing. */}
-      <section className="px-5 py-20 lg:px-8">
+      {/*
+       * Intent routing, at `#business-inquiries`. The Partners hub redirected
+       * here on 2026-09-10: routing an enquiry by intent is what that hub did,
+       * and this does it with the destination named on every choice.
+       */}
+      <AnchoredSection id="business-inquiries" className="px-5 py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
             <SectionHeading
@@ -137,7 +142,7 @@ export function ContactPage() {
             </div>
           </Reveal>
         </div>
-      </section>
+      </AnchoredSection>
 
       {/* The verified directory. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">

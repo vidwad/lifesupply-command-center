@@ -6,8 +6,8 @@ One row per stage. A stage is complete only when its production deployment has b
 | --- | --- | --- | --- | --- |
 | 0 | Baseline, inventory, redirect map, documents | #144 | `bf0bda3` | Documentation only |
 | 1 | Shop → Medical Supplies; Equipment and Ongoing Supplies → Clinic Solutions | #145 | `0eab3b0` | `pending` |
-| 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | #146 | `pending` | `pending` |
-| 3 | Final five-item navigation; Partners retirement | — | — | — |
+| 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | #146 | `923a2af` | `pending` |
+| 3 | Final five-item navigation; Partners retirement | #147 | `pending` | `pending` |
 | 4 | Team merge; About, Home, News, Contact refinement | — | — | — |
 | 5 | Design, Codex review, final verification | — | — | — |
 
@@ -83,3 +83,31 @@ Pharmacy Solutions absorbed the partner programme at `#partner-program`, with it
 3. A purchase canary matched the replenishment section's own denial, "no subscription on this site today", as though it were an offer. It now checks purchase affordances rather than words.
 
 Remaining: stages 3 to 5.
+
+## Stage 3 — the five-item navigation
+
+**Completed September 10, 2026.**
+
+The navigation is now the owner's architecture:
+
+`About | Medical Supplies | Solutions | Investors | Contact`
+
+**Solutions is a menu with no page behind it.** No `/solutions` route was created, because a page listing three links to three pages is a step, not a destination. Its trigger is therefore a button that opens the menu rather than a link that goes nowhere, and its panel has no "Overview" row. It carries exactly three entries: Clinic Solutions, Pharmacy Solutions, Metabolic Health Solutions.
+
+Clinic, Pharmacy and Metabolic stopped being top-level categories. Contact became the last primary item, a direct link with no dropdown, and left the utility strip where it had been a second control to the same destination. Shop Stores is now the only utility link, jumping to `/medical-supply-solutions#stores`. Home left the menu: the logo already goes there, and two controls in one header for one destination is one too many.
+
+**Partners was retired as a category and its hub with it.** `/partners` redirects to `/contact#business-inquiries`. The hub only routed by relationship; two of its four relationships had already become sections of the pages that carry their subject, and routing an enquiry by intent is what Contact does — with the destination named on every choice, which the hub never did.
+
+Its two remaining pages keep their addresses and lose their category:
+
+- **Suppliers & Manufacturers** is linked from a Medical Supplies call-out and from the footer. A supplier arrives through the stores, so that is where the link belongs.
+- **Acquisitions & Strategic Transactions** moved into the Investors menu, where a reader who wants it already is.
+
+**The `/partners` hazard was handled as the plan required.** The rule is exact-path, never a prefix. Both children were confirmed to still answer 200 afterwards by live request and by test, and a canary forbids the wildcard form.
+
+**Two defects found in verification, fixed rather than shipped.**
+
+1. On mobile, the Solutions label and its chevron were two separate buttons controlling the same list — two controls for one disclosure. The chevron now sits inside the label button, which carries `aria-label="Expand Solutions"` so its accessible name still contains its visible text.
+2. The 404 recovery page rendered Contact twice, because Contact joined `LIFE_SUPPLY_NAVIGATION` when it became a primary item and the page also appended its own emphasised Contact tile. The mapped list now filters it out, so the emphasis survives and the duplicate does not.
+
+Remaining: stages 4 and 5.

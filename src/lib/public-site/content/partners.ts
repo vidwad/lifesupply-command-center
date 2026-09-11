@@ -1,8 +1,13 @@
 /**
  * Partners copy for Stage 5 (guide §3: `/partners/` and its four children).
  *
- * The hub routes by relationship. Each one distinguishes itself from ordinary
- * procurement (a clinic that buys supplies is a customer, not a program
+ * The hub was retired on 2026-09-10 (website consolidation, stage 3): it only
+ * routed by relationship, two of its four relationships had already moved to
+ * the pages that carry their subject, and routing an enquiry by intent is
+ * what Contact does. Two pages remain, each reached from the page or the
+ * footer that carries its subject rather than from a menu.
+ *
+ * Each one distinguishes itself from ordinary procurement (a clinic that buys supplies is a customer, not a program
  * partner) and ends on an approved directory channel, because no inquiry
  * intake exists before Stage 7 (WEB-07). Clinic collaboration and the
  * pharmacy partner programme left this file on 2026-09-10: each is a section
@@ -15,49 +20,6 @@
  * conversation, not that a program is operating.
  */
 export const partners = {
-  hub: {
-    eyebrow: "Partners",
-    title: "Four relationships, each on its own terms.",
-    intro:
-      "LifeSupply works with clinics, pharmacies, suppliers and manufacturers, and acquisition or strategic counterparties. Each relationship is set out in its own place, with its own boundaries and its own starting conversation. Buying from one of the operating stores does not require any of them.",
-    relationships: [
-      {
-        key: "clinics",
-        route: "clinics",
-        title: "Clinics",
-        text: "Program and design collaboration, distinct from ordinary procurement. Set out on Clinic Solutions, with the rest of the clinic relationship.",
-        action: "clinic_collaboration",
-      },
-      {
-        key: "pharmacies",
-        route: "pharmacies",
-        title: "Pharmacies",
-        text: "Non-drug supply programs with pharmacist-selected configurations and stated responsibilities.",
-        action: "pharmacy_program_inquiry",
-      },
-      {
-        key: "suppliers",
-        route: "suppliers",
-        title: "Suppliers and manufacturers",
-        text: "Categories, regions, product data, and the onboarding process.",
-        action: "supplier_inquiry",
-      },
-      {
-        key: "acquisitions",
-        route: "acquisitions",
-        title: "Acquisitions and strategic transactions",
-        text: "Fit criteria, general structures, and a confidential process.",
-        action: "acquisition_inquiry",
-      },
-    ],
-    procurement: {
-      eyebrow: "Not a partnership",
-      title: "Ordinary purchasing needs no partner conversation.",
-      text: "Clinics and other professional buyers purchase through the operating stores' own accounts today. A supply review for an existing clinic is a customer conversation, handled on the Clinic Solutions pages.",
-      action: "clinic_solutions",
-    },
-  },
-
   suppliers: {
     eyebrow: "Partners · Suppliers and manufacturers",
     title: "Supplying the operating stores.",

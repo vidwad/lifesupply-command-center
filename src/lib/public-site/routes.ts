@@ -79,6 +79,12 @@ export const CONSOLIDATED_ROUTES = {
   partnerPharmacies: "/partners/pharmacies/",
   careKits: "/metabolic-health/care-kits/",
   refills: "/metabolic-health/refills/",
+  // Stage 3 (2026-09-10): Partners stopped being a primary category, and its
+  // hub went with it. The hub only routed by relationship; two of its four
+  // relationships had already become sections of the pages that carried their
+  // subject, and the enquiry routing it offered is what Contact does. Its
+  // two remaining children stay live at their own addresses.
+  partners: "/partners/",
 } as const;
 
 /**
@@ -98,6 +104,7 @@ export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
   // The eight pathway anchors are the eight slugs, so a retired pathway
   // address and its anchor can never drift apart.
   [METABOLIC_ROUTES.hub]: ["pathways", ...KIT_SLUGS, "replenishment", "collaboration"],
+  [LIFE_SUPPLY_ROUTES.contact]: ["business-inquiries"],
 };
 
 /** `"/clinic-solutions/" + "equipment"` → `"/clinic-solutions/#equipment"`. */
@@ -140,7 +147,6 @@ export const WITHDRAWN_ROUTES = {
 
 /** Stage 5 pages. News items and resources are dynamic routes with no approved record yet. */
 export const STAGE_5_ROUTES = {
-  partners: "/partners/",
   partnerSuppliers: "/partners/suppliers/",
   partnerAcquisitions: "/partners/acquisitions/",
   growthStrategy: "/investor-relations/growth-strategy/",
@@ -164,17 +170,7 @@ export function resourceRoute(slug: string): string {
   return `/resources/${slug}/`;
 }
 
-export type NavGroupKey =
-  | "home"
-  | "businesses"
-  | "clinic"
-  | "metabolic"
-  | "pharmacy"
-  | "partners"
-  | "investors"
-  | "about"
-  | "utility"
-  | "legal";
+export type NavGroupKey = "businesses" | "solutions" | "investors" | "about" | "utility" | "legal";
 
 export interface RouteRecord {
   path: string;
@@ -223,36 +219,32 @@ export const ROUTES: readonly RouteRecord[] = [
     label: "Clinic Solutions",
     stage: 3,
     status: "live",
-    navGroup: "clinic",
+    navGroup: "solutions",
   },
   {
     path: PHARMACY_ROUTES.hub,
     label: "Pharmacy Solutions",
     stage: 5,
     status: "live",
-    navGroup: "pharmacy",
+    navGroup: "solutions",
   },
   {
     path: METABOLIC_ROUTES.hub,
-    label: "Metabolic Health",
+    // Displayed as "Metabolic Health Solutions" in the Solutions menu, which
+    // is where the owner's architecture names it.
+    label: "Metabolic Health Solutions",
     stage: 4,
     status: "live",
-    navGroup: "metabolic",
+    navGroup: "solutions",
   },
-  { path: "/partners/", label: "Partners", stage: 5, status: "live", navGroup: "partners" },
   {
+    // Suppliers & Manufacturers keeps its page and loses its category: it is
+    // linked from Medical Supplies and the footer rather than from a menu.
     path: "/partners/suppliers/",
-    label: "Suppliers",
+    label: "Suppliers & Manufacturers",
     stage: 5,
     status: "live",
-    navGroup: "partners",
-  },
-  {
-    path: "/partners/acquisitions/",
-    label: "Acquisitions",
-    stage: 5,
-    status: "live",
-    navGroup: "partners",
+    navGroup: null,
   },
   {
     path: "/investor-relations/",
@@ -285,8 +277,19 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "live",
     navGroup: "investors",
   },
+  {
+    // Acquisitions moved into the Investors group, where the reader who wants
+    // it already is.
+    path: "/partners/acquisitions/",
+    label: "Acquisitions & Strategic Transactions",
+    stage: 5,
+    status: "live",
+    navGroup: "investors",
+  },
   { path: "/our-team/", label: "Our team", stage: 5, status: "live", navGroup: "about" },
-  { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: "utility" },
+  // Contact is the last primary item since 2026-09-10; it is added by
+  // `buildPrimaryNavigation()` rather than derived from a group.
+  { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: null },
   { path: "/contact-2/", label: "Contact (legacy)", stage: 9, status: "redirect", navGroup: null },
   // Website consolidation, stage 1 (2026-09-10): Shop & Services merged into
   // the Medical Supplies stores section; Equipment, Ongoing supplies and the
@@ -352,54 +355,86 @@ export interface NavLink {
 export interface NavGroup {
   key: NavGroupKey;
   label: string;
-  /** The group's own live destination; the trigger link. */
-  href: string;
+  /**
+   * The group's own live destination, or `null` when the group is a menu
+   * with no page behind it.
+   *
+   * Solutions is the only such group (2026-09-10). The owner's instruction
+   * creates no `/solutions` landing page, because a page listing three links
+   * to three pages is a step, not a destination. Its trigger is therefore a
+   * button that opens the menu rather than a link that goes somewhere.
+   */
+  href: string | null;
   /** Further destinations, excluding the trigger's own href. */
   links: NavLink[];
 }
 
 /**
- * Primary navigation contract (guide §3, restructured 2026-09-08): Medical
- * Supply Solutions / Clinic Solutions / Metabolic Health / Partners /
- * Investors / About. A group appears only when its hub route is live; a
- * child appears only when it is a live route. The three stores have their
- * own pages under Medical Supply Solutions, so the store links themselves
- * live on those pages and in the footer; LifeSupply Clinics is the Clinic
- * Solutions section.
+ * Primary navigation, as the owner set it on 2026-09-10:
+ *
+ *   About | Medical Supplies | Solutions | Investors | Contact
+ *
+ * Five items. Clinic, Pharmacy and Metabolic stopped being top-level
+ * categories and became the three entries under Solutions; Partners was
+ * retired as a category and its hub with it. Contact is last, a direct link,
+ * with no dropdown — so it leaves the utility strip, where it was a duplicate.
+ *
+ * The logo still links Home, which is why Home is no longer a menu item: two
+ * controls in the same header going to the same place is one too many.
+ *
+ * A group appears only when its hub route is live, or, for a group with no
+ * hub, when it has at least one live child. A child appears only when it is a
+ * live route, so a planned page can sit in the registry without producing a
+ * dead link.
  */
-const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string }[] = [
-  // "Home" as a menu item (product owner, 2026-09-09); the logo still links home.
-  { key: "home", label: "Home", hub: LIFE_SUPPLY_ROUTES.home },
+const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string | null }[] = [
   { key: "about", label: "About", hub: "/about-us/" },
   { key: "businesses", label: "Medical Supplies", hub: LIFE_SUPPLY_ROUTES.operations },
-  { key: "clinic", label: "Clinic Solutions", hub: STAGE_3_ROUTES.clinicSolutions },
-  { key: "pharmacy", label: "Pharmacy Solutions", hub: PHARMACY_ROUTES.hub },
-  { key: "metabolic", label: "Metabolic Health", hub: METABOLIC_ROUTES.hub },
-  { key: "partners", label: "Partners", hub: "/partners/" },
+  // No `/solutions` page exists; this is a menu only.
+  { key: "solutions", label: "Solutions", hub: null },
   { key: "investors", label: "Investors", hub: "/investor-relations/" },
 ];
 
-function liveChildren(group: NavGroupKey, hub: string): NavLink[] {
+function liveChildren(group: NavGroupKey, hub: string | null): NavLink[] {
   return LIVE_ROUTES.filter((route) => route.navGroup === group && route.path !== hub).map(
     (route) => ({ label: route.label, href: route.path }),
   );
 }
 
+/**
+ * The five primary items. Contact is appended rather than declared as a
+ * group, because it is a direct link with no dropdown and no children — the
+ * group shape would only invite one to be added later.
+ */
 export function buildPrimaryNavigation(): NavGroup[] {
-  return PRIMARY_GROUPS.filter((group) => isLiveRoute(group.hub)).map((group) => ({
+  const groups = PRIMARY_GROUPS.filter((group) =>
+    group.hub === null ? liveChildren(group.key, null).length > 0 : isLiveRoute(group.hub),
+  ).map((group) => ({
     key: group.key,
     label: group.label,
     href: group.hub,
     links: liveChildren(group.key, group.hub),
   }));
+  if (!isLiveRoute(LIFE_SUPPLY_ROUTES.contact)) return groups;
+  return [
+    ...groups,
+    {
+      key: "utility" as NavGroupKey,
+      label: "Contact",
+      href: LIFE_SUPPLY_ROUTES.contact,
+      links: [],
+    },
+  ];
 }
 
-/** Utility links: Shop & Services and Contact. The login is rendered by CommandCenterLoginLink. */
+/**
+ * Utility links beside the primary menu. One since 2026-09-10: Shop Stores,
+ * which jumps to the stores section of Medical Supplies. Contact left the
+ * strip when it became the last primary item, where it was a duplicate of
+ * the same destination. The login is rendered by `CommandCenterLoginLink`.
+ */
 export function buildUtilityNavigation(): NavLink[] {
-  return LIVE_ROUTES.filter((route) => route.navGroup === "utility").map((route) => ({
-    label: route.label,
-    href: route.path,
-  }));
+  return [{ label: "Shop Stores", href: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores") }];
 }
 
 /** Policy links for the footer: privacy, terms, accessibility, once each page is live. */
@@ -416,10 +451,12 @@ export function buildLegalNavigation(): NavLink[] {
  */
 export const LIFE_SUPPLY_NAVIGATION: readonly NavLink[] = LIVE_ROUTES.filter(
   (route) =>
-    route.navGroup !== null &&
-    route.navGroup !== "utility" &&
-    (PRIMARY_GROUPS.some((group) => group.hub === route.path) ||
-      route.navGroup === "about" ||
-      // A top-level legacy address; it stays in the footer after moving to the Investors group.
-      route.path === LIFE_SUPPLY_ROUTES.news),
+    PRIMARY_GROUPS.some((group) => group.hub !== null && group.hub === route.path) ||
+    route.navGroup === "about" ||
+    route.navGroup === "solutions" ||
+    // Top-level pages that are no longer in a menu but must stay reachable:
+    // the suppliers page, Contact, and the legacy news address.
+    route.path === "/partners/suppliers/" ||
+    route.path === LIFE_SUPPLY_ROUTES.contact ||
+    route.path === LIFE_SUPPLY_ROUTES.news,
 ).map((route) => ({ label: route.label, href: route.path }));
