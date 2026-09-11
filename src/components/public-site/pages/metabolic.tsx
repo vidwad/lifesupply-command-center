@@ -62,11 +62,15 @@ export function MetabolicHealthPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
-        media={<GraphicBackdrop graphic="metabolicSupplies" position="80% 50%" />}
+        media={
+          <>
+            <GraphicBackdrop graphic="metabolicSupplies" position="80% 50%" />
+            <MetabolicHeroVisual />
+          </>
+        }
         eyebrow={hub.eyebrow}
         title={hub.title}
         description={hub.intro}
-        media={<MetabolicHeroVisual />}
         actions={
           <>
             {/* The status on its own line, separate from the proposition it qualifies. */}

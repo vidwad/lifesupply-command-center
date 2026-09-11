@@ -259,6 +259,8 @@
     position: absolute;
     inset: 0;
     overflow: hidden;
+    opacity: 0.74;
+    mix-blend-mode: screen;
   }
 
   .lsh-metabolic-hero-media img {
