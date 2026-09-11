@@ -738,9 +738,12 @@ test.describe("LifeSupply public site", () => {
     await expect(page.getByRole("navigation", { name: "On this page" })).toHaveCount(0);
     // The reader who is already open must recognise themselves in the router.
     await expect(nav).toContainText("Already seeing patients");
-    // The collaboration section states what it is not, with its statuses.
-    await expect(page.locator("#collaboration")).toContainText("Collaboration is not procurement");
-    await expect(page.locator("#collaboration")).toContainText("Proposed");
+    // The collaboration section says buying needs none of it, and every item
+    // shows whether it is proposed or available.
+    const collaboration = page.locator("#collaboration");
+    await expect(collaboration).toContainText("Neither is needed to order supplies");
+    await expect(collaboration).toContainText("Proposed");
+    await expect(collaboration).toContainText("None is running today.");
   });
 
   test("stays readable on Clinic Solutions with JavaScript disabled", async ({ browser }) => {

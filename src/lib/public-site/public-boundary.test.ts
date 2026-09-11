@@ -1970,12 +1970,21 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
 
   it("keeps clinic collaboration distinct from procurement and pharmacy programs non-drug", () => {
     const c = stripComments(read("src/lib/public-site/content/partners.ts"));
-    // Clinic collaboration moved to the Clinic Solutions page on 2026-09-10.
-    // The distinction it exists to draw travelled with it rather than being
-    // dropped, and it is not left behind in the partners model as dead copy.
+    // Clinic collaboration moved to the Clinic Solutions page on 2026-09-10,
+    // and it is not left behind in the partners model as dead copy.
+    //
+    // What is asserted is the rule, not a heading. A "Collaboration is not
+    // procurement" box stated it until 2026-09-11; it repeated the section
+    // introduction and the Pilots item beside it, and defined the subject by
+    // what it is not, which is how a compliance file reads rather than a page.
+    // The introduction now says buying needs none of it, and every item
+    // carries its own status.
     const clinics = stripComments(read("src/lib/public-site/content/clinics.ts"));
-    expect(clinics).toContain("Collaboration is not procurement");
-    expect(clinics).toContain("No collaboration is required.");
+    expect(clinics).toContain("Neither is needed to order supplies");
+    expect(clinics).toContain('status: "Proposed"');
+    // Nothing proposed may read as a service that is running.
+    expect(clinics).toContain("None is running today.");
+    expect(clinics).toContain("in development and not yet running");
     expect(c).not.toContain("Collaboration is not procurement");
     // The pharmacy partner programme moved to Pharmacy Solutions on
     // 2026-09-10. Its non-drug rule travelled with it and is not left behind.

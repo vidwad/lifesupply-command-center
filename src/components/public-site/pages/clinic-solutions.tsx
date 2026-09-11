@@ -396,10 +396,11 @@ function OngoingSuppliesSection() {
 
 /**
  * Collaboration (`#collaboration`), absorbed from `/partners/clinics/` on
- * 2026-09-10. It leads with the distinction it exists to draw — a clinic that
- * buys supplies is a customer, not a partner — because nothing after it means
- * anything until that is settled. The statuses are the section's own and stay
- * visible on each item.
+ * 2026-09-10.
+ *
+ * Each item leads with its status, because whether a thing is proposed or
+ * available is the first thing a reader needs to know about it, and two of
+ * the three are proposals rather than services.
  */
 function CollaborationSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
@@ -416,43 +417,30 @@ function CollaborationSection() {
             />
           </Reveal>
           {/*
-           * The distinction box sizes to its own content and the column is
-           * narrow, so its text runs longer and the two columns end close
-           * together. Stretching it instead left a void inside a filled box,
-           * which reads as missing content rather than as whitespace.
+           * Three items across, flush with the heading, in the shape the
+           * router uses. A "Collaboration is not procurement" box stood to the
+           * left of them until 2026-09-11; it restated the introduction above
+           * it and the Pilots card beside it, and defined the subject by what
+           * it is not.
            */}
-          <div className="mt-12 grid items-start gap-5 lg:grid-cols-[0.78fr_1.22fr]">
-            <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
-              <IconBadge icon="shield" />
-              <div>
-                <Eyebrow as="h3">{section.distinction.title}</Eyebrow>
-                <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                  {section.distinction.items.map((item) => (
-                    <li key={item} className="lsh-bullet">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Reveal>
-            <Stagger as="ul" className="grid gap-px bg-[var(--lsh-rule)]">
-              {section.items.map((item) => (
-                <StaggerItem as="li" key={item.title} className="bg-[var(--lsh-paper)]">
-                  <article className="flex h-full flex-col p-7">
-                    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-                      <h3 className="lsh-display min-w-0 text-xl leading-tight text-[var(--lsh-charcoal)]">
-                        {item.title}
-                      </h3>
-                      <span className="lsh-display border border-[var(--lsh-rule-strong)] px-2 py-1 text-[10px] text-[var(--lsh-muted)]">
-                        {item.status}
-                      </span>
-                    </div>
-                    <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-                  </article>
-                </StaggerItem>
-              ))}
-            </Stagger>
-          </div>
+          <Stagger
+            as="ul"
+            className="-mx-5 mt-12 grid gap-px bg-[var(--lsh-rule)] lg:-mx-8 lg:grid-cols-3"
+          >
+            {section.items.map((item) => (
+              <StaggerItem as="li" key={item.title} className="h-full bg-[var(--lsh-paper)]">
+                <article className="flex h-full flex-col gap-4 p-5 lg:p-8">
+                  <span className="lsh-display self-start border border-[var(--lsh-rule-strong)] px-2 py-1 text-[10px] text-[var(--lsh-muted)]">
+                    {item.status}
+                  </span>
+                  <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
+                    {item.title}
+                  </h3>
+                  <p className="leading-7 text-[var(--lsh-muted)]">{item.text}</p>
+                </article>
+              </StaggerItem>
+            ))}
+          </Stagger>
           <Reveal
             delay={0.1}
             className="mt-8 flex flex-col gap-5 border-t border-[var(--lsh-rule)] pt-8 lg:flex-row lg:items-center lg:justify-between"
