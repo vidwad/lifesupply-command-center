@@ -227,14 +227,7 @@ export const clinics = {
     eyebrow: "Collaboration",
     title: "Help shape a supply program, or a clinic design.",
     intro:
-      "Two things are open to a clinic beyond buying: helping configure the metabolic-health supply program, which is in development and not yet running, or a design partnership on a British Columbia clinic project. Both are a different relationship from purchasing.",
-    distinction: {
-      title: "Collaboration is not procurement",
-      items: [
-        "A clinic that purchases supplies is a customer of the operating store, with that store's account, prices, and support. No collaboration is required.",
-        "An expression of interest is not a pilot. A pilot begins when both sides have signed an agreement for it, and not before.",
-      ],
-    },
+      "Two things are open to a clinic beyond buying: helping configure the metabolic-health supply program, which is in development and not yet running, or a design partnership on a British Columbia clinic project. Neither is needed to order supplies; a clinic that simply wants to buy is a customer of the store, on that store's own terms.",
     items: [
       {
         title: "Program configuration",
