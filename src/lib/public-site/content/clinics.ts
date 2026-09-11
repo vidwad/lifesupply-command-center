@@ -293,6 +293,7 @@ export const clinics = {
     projectPointerLink: { href: "#planning", label: "See clinic projects" },
     boundary:
       "This section covers supplies. LifeSupply does not operate patient-care clinics and takes no part in clinical decisions.",
+    /** The scope of what can be ordered today. Nothing beyond it is claimed. */
     available: {
       title: "Available today",
       items: [
@@ -301,10 +302,6 @@ export const clinics = {
         "Home medical equipment and supply categories on Wellmart Medical",
         "Customer service by phone and email during published hours",
       ],
-    },
-    conditional: {
-      title: "Discussed case by case",
-      text: "Approved substitutions, par-level restocking, automatic replenishment, and contracted procurement services are not offered on this site today. Where a clinic needs them, they are discussed and agreed separately.",
     },
     actions: ["clinic_supply_review", "shop_lifesupply"],
   },
