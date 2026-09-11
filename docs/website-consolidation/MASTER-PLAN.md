@@ -34,9 +34,11 @@ Counts exclude legacy redirects already in place, authenticated Command Center s
 
 ## 4. Final navigation
 
-`About | Medical Supplies | Solutions | Investors | Contact`
+`Home | About | Medical Supplies | Solutions | Investors | Contact`
 
-- The logo links to Home.
+**Amended September 11, 2026 (product owner): Home is a menu item again.** Stage 3 had removed it on the reasoning that the logo already goes there. The owner's direction is that it appears in the menu as well, so the header carries both.
+
+- The logo links to Home, and so does the first menu item.
 - **Shop Stores** stays a separate utility action to `/medical-supply-solutions#stores`.
 - The duplicate Contact link leaves the utility strip; Contact becomes the last primary item, a direct link to `/contact`, with no dropdown.
 - **Solutions** is a menu of exactly three: Clinic Solutions, Pharmacy Solutions, Metabolic Health Solutions. **No `/solutions` landing page is created.**

@@ -413,15 +413,24 @@ test.describe("LifeSupply public site", () => {
     // Groups are collapsed so the panel fits the screen; a child appears once its group is expanded.
     // The five primary items. Solutions has no page of its own, so its label
     // is a button that opens the group rather than a link.
-    for (const name of ["About", "Medical Supplies", "Investors", "Contact"]) {
+    for (const name of ["Home", "About", "Medical Supplies", "Investors", "Contact"]) {
       await expect(panel.getByRole("link", { name, exact: true })).toBeVisible();
     }
-    // Solutions is one control: its visible label is the disclosure button,
-    // named "Expand Solutions" so the accessible name still contains the
-    // visible text (WCAG 2.5.3), and it is not a link to anywhere.
-    await expect(panel.getByRole("button", { name: "Expand Solutions" })).toBeVisible();
-    await expect(panel.getByRole("button", { name: "Expand Solutions" })).toHaveText("Solutions");
+    // Solutions has no page, so its label is a button rather than a link. It
+    // keeps the same bordered chevron beside it as every other group, so the
+    // rows all read the same way (product owner, 2026-09-11).
+    await expect(panel.getByRole("button", { name: "Solutions", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Solutions", exact: true })).toHaveCount(0);
+    const chevrons = panel.locator('button[aria-label^="Expand"], button[aria-label^="Collapse"]');
+    // One per group that has children: About, Medical Supplies, Solutions, Investors.
+    await expect(chevrons).toHaveCount(4);
+    const sizes = await chevrons.evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.getBoundingClientRect();
+        return `${Math.round(r.width)}x${Math.round(r.height)}:${getComputedStyle(el).borderTopWidth}`;
+      }),
+    );
+    expect(new Set(sizes).size, sizes.join(" ")).toBe(1);
     await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeHidden();
     for (const name of [
       "Medical Supplies",
@@ -446,7 +455,9 @@ test.describe("LifeSupply public site", () => {
       if (await link.isHidden()) {
         // Expand the group that owns it through the button that controls its list.
         const id = await link.evaluate((el) => el.closest("ul")?.id ?? "");
-        await panel.locator(`button[aria-controls="${id}"]`).click();
+        // Two controls open a group whose label is itself a button, so the
+        // chevron is targeted by its label rather than by the list it controls.
+        await panel.locator(`button[aria-controls="${id}"][aria-label]`).click();
       }
       await expect(link, name).toBeVisible();
     }
