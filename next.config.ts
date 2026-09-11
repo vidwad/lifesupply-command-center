@@ -3,6 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "files.manuscdn.com",
+        pathname: "/user_upload_by_module/session_file/**",
+      },
+    ],
+  },
   // typedRoutes disabled while we rely on string literals in redirect()/Link.
   // Re-enable once we adopt the generated Route type or Pathnames helper.
   typedRoutes: false,

@@ -248,6 +248,258 @@
     animation-delay: var(--lsh-enter-delay, 0s);
   }
 
+  /*
+   * Metabolic Health visual layer. The page is about a proposed, non-drug
+   * supply-planning service, so its new imagery remains a neutral still life
+   * and an abstract pathway graphic—not a clinician, a treatment, a product
+   * configuration, or a health claim. Motion is atmospheric and transform-only
+   * where possible; both treatments become static for reduced-motion visitors.
+   */
+  .lsh-metabolic-hero-media {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0.74;
+    mix-blend-mode: screen;
+  }
+
+  .lsh-metabolic-hero-media img {
+    filter: saturate(0.82) contrast(1.08);
+  }
+
+  .lsh-metabolic-hero-halo {
+    position: absolute;
+    display: block;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+
+  .lsh-metabolic-hero-halo--one {
+    right: 8%;
+    top: 15%;
+    width: 24rem;
+    height: 24rem;
+  }
+
+  .lsh-metabolic-hero-halo--two {
+    right: 17%;
+    top: 30%;
+    width: 15rem;
+    height: 15rem;
+    border-color: rgb(222 0 0 / 48%);
+  }
+
+  .lsh-metabolic-orbit {
+    position: relative;
+    overflow: hidden;
+    border-top: 3px solid var(--lsh-brand-red);
+    background:
+      radial-gradient(circle at 50% 50%, rgb(222 0 0 / 5%), transparent 44%), var(--lsh-surface);
+  }
+
+  .lsh-metabolic-orbit::before,
+  .lsh-metabolic-orbit::after {
+    position: absolute;
+    z-index: 1;
+    content: "";
+    display: block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 9999px;
+    background: var(--lsh-brand-red);
+    box-shadow: 0 0 0 5px rgb(222 0 0 / 10%);
+  }
+
+  .lsh-metabolic-orbit::before {
+    left: 17%;
+    top: 50%;
+  }
+
+  .lsh-metabolic-orbit::after {
+    right: 20%;
+    top: 26%;
+  }
+
+  .lsh-metabolic-orbit svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .lsh-metabolic-orbit-ring {
+    stroke: var(--lsh-charcoal);
+    stroke-opacity: 0.22;
+    stroke-width: 1;
+  }
+
+  .lsh-metabolic-orbit-ring--middle {
+    stroke: var(--lsh-brand-red);
+    stroke-opacity: 0.52;
+  }
+
+  .lsh-metabolic-orbit-ring--inner {
+    stroke: var(--lsh-brand-red);
+    stroke-opacity: 0.65;
+  }
+
+  .lsh-metabolic-orbit-node {
+    fill: var(--lsh-paper);
+    stroke: var(--lsh-brand-red);
+    stroke-width: 2;
+  }
+
+  .lsh-metabolic-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lsh-metabolic-card::after {
+    position: absolute;
+    right: -5rem;
+    top: -5rem;
+    content: "";
+    width: 10rem;
+    height: 10rem;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgb(222 0 0 / 12%), transparent 68%);
+    pointer-events: none;
+  }
+
+  /* Additional image-led editorial moments for the Metabolic Health page. */
+  .lsh-metabolic-editorial {
+    position: relative;
+    min-height: 20rem;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--lsh-ink);
+  }
+
+  .lsh-metabolic-editorial::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    content: "";
+    background: linear-gradient(105deg, rgb(0 0 0 / 72%), rgb(0 0 0 / 10%) 70%);
+    pointer-events: none;
+  }
+
+  .lsh-metabolic-editorial img {
+    filter: saturate(0.78) contrast(1.1);
+  }
+
+  .lsh-metabolic-editorial--pathways img {
+    object-position: 72% center;
+  }
+
+  .lsh-metabolic-editorial--replenishment img {
+    object-position: 68% center;
+  }
+
+  .lsh-metabolic-editorial--collaboration img {
+    object-position: 42% center;
+  }
+
+  .lsh-metabolic-editorial-line {
+    position: absolute;
+    z-index: 2;
+    bottom: 14%;
+    left: 0;
+    width: 38%;
+    height: 2px;
+    background: var(--lsh-brand-red);
+    box-shadow: 0 0 22px rgb(222 0 0 / 50%);
+  }
+
+  .lsh-metabolic-rhythm {
+    position: relative;
+    width: 100%;
+    padding: 2rem 0;
+  }
+
+  .lsh-metabolic-rhythm::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    content: "";
+    background: var(--lsh-rule-strong);
+  }
+
+  .lsh-metabolic-rhythm-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    align-items: center;
+  }
+
+  .lsh-metabolic-rhythm-unit {
+    position: relative;
+    display: block;
+    justify-self: center;
+    width: 3.7rem;
+    height: 3.7rem;
+    border: 1px solid var(--lsh-rule-strong);
+    background: var(--lsh-paper);
+    box-shadow: 0 12px 24px rgb(0 0 0 / 8%);
+  }
+
+  .lsh-metabolic-rhythm-unit::before {
+    position: absolute;
+    inset: 0.75rem;
+    content: "";
+    border: 2px solid var(--lsh-brand-red);
+  }
+
+  .lsh-metabolic-rhythm-unit--two {
+    width: 5.4rem;
+    height: 5.4rem;
+    border-color: var(--lsh-brand-red);
+    background: var(--lsh-ink);
+  }
+
+  .lsh-metabolic-rhythm-unit--two::before {
+    border-color: var(--lsh-paper);
+  }
+
+  .lsh-metabolic-rhythm-unit--three {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .lsh-metabolic-collaboration-stage {
+    position: relative;
+    overflow: hidden;
+    border-top: 3px solid var(--lsh-brand-red);
+  }
+
+  .lsh-metabolic-collaboration-stage .lsh-metabolic-editorial {
+    min-height: 22rem;
+  }
+
+  .lsh-metabolic-coordinates {
+    position: absolute;
+    z-index: 3;
+    right: 6%;
+    bottom: 11%;
+    width: min(48%, 24rem);
+    overflow: visible;
+  }
+
+  .lsh-metabolic-coordinates path {
+    stroke: var(--lsh-paper);
+    stroke-opacity: 0.48;
+    stroke-width: 1;
+  }
+
+  .lsh-metabolic-coordinates circle {
+    fill: var(--lsh-brand-red);
+    stroke: var(--lsh-paper);
+    stroke-width: 1.5;
+  }
+
   @keyframes lsh-enter-rise {
     from {
       transform: translateY(12px);
@@ -361,6 +613,47 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    .lsh-metabolic-hero-halo--one {
+      animation: lsh-metabolic-drift 14s ease-in-out infinite alternate;
+    }
+
+    .lsh-metabolic-hero-halo--two {
+      animation: lsh-metabolic-drift 10s ease-in-out infinite alternate-reverse;
+    }
+
+    .lsh-metabolic-orbit svg {
+      animation: lsh-metabolic-orbit-turn 34s linear infinite;
+    }
+
+    .lsh-metabolic-orbit::before,
+    .lsh-metabolic-orbit::after {
+      animation: lsh-metabolic-pulse 2.8s ease-in-out infinite alternate;
+    }
+
+    .lsh-metabolic-editorial img {
+      animation: lsh-metabolic-image-breathe 16s ease-in-out infinite alternate;
+    }
+
+    .lsh-metabolic-editorial-line {
+      animation: lsh-metabolic-line-travel 6s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
+    }
+
+    .lsh-metabolic-rhythm-unit {
+      animation: lsh-metabolic-rhythm-rise 2.7s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
+    }
+
+    .lsh-metabolic-rhythm-unit--two {
+      animation-delay: 250ms;
+    }
+
+    .lsh-metabolic-rhythm-unit--three {
+      animation-delay: 500ms;
+    }
+
+    .lsh-metabolic-coordinates {
+      animation: lsh-metabolic-coordinates-float 11s ease-in-out infinite alternate;
+    }
+
     .lsh-lift {
       transition:
         transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
@@ -370,6 +663,71 @@
 
     .lsh-lift:hover {
       transform: translateY(-4px);
+    }
+  }
+
+  @keyframes lsh-metabolic-drift {
+    from {
+      transform: translate3d(-8px, 7px, 0) scale(0.98);
+    }
+    to {
+      transform: translate3d(10px, -6px, 0) scale(1.02);
+    }
+  }
+
+  @keyframes lsh-metabolic-orbit-turn {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes lsh-metabolic-pulse {
+    from {
+      transform: scale(0.85);
+    }
+    to {
+      transform: scale(1.15);
+    }
+  }
+
+  @keyframes lsh-metabolic-image-breathe {
+    from {
+      transform: scale(1.02);
+    }
+    to {
+      transform: scale(1.08);
+    }
+  }
+
+  @keyframes lsh-metabolic-line-travel {
+    from {
+      transform: scaleX(0.58);
+      transform-origin: left;
+    }
+    to {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+  }
+
+  @keyframes lsh-metabolic-rhythm-rise {
+    from {
+      transform: translateY(4px);
+    }
+    to {
+      transform: translateY(-7px);
+    }
+  }
+
+  @keyframes lsh-metabolic-coordinates-float {
+    from {
+      transform: translate3d(-4px, 5px, 0);
+    }
+    to {
+      transform: translate3d(5px, -5px, 0);
     }
   }
 

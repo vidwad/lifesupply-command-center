@@ -11,6 +11,13 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
+import {
+  MetabolicCoordinationGrid,
+  MetabolicEditorialVisual,
+  MetabolicHeroVisual,
+  MetabolicReplenishmentRhythm,
+  MetabolicSupplyOrbit,
+} from "@/components/public-site/metabolic-visuals";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
 import { IconBadge } from "@/components/public-site/sections";
@@ -55,7 +62,12 @@ export function MetabolicHealthPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
-        media={<GraphicBackdrop graphic="metabolicSupplies" position="80% 50%" />}
+        media={
+          <>
+            <GraphicBackdrop graphic="metabolicSupplies" position="80% 50%" />
+            <MetabolicHeroVisual />
+          </>
+        }
         eyebrow={hub.eyebrow}
         title={hub.title}
         description={hub.intro}
@@ -90,9 +102,14 @@ function ValueSection() {
   return (
     <section className="px-5 py-20 lg:px-8">
       <Container>
-        <Reveal className="max-w-3xl">
-          <SectionHeading eyebrow={value.eyebrow} title={value.title} description={value.intro} />
-        </Reveal>
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
+          <Reveal className="max-w-3xl">
+            <SectionHeading eyebrow={value.eyebrow} title={value.title} description={value.intro} />
+          </Reveal>
+          <Reveal delay={0.08} className="mx-auto w-full max-w-sm lg:max-w-none">
+            <MetabolicSupplyOrbit />
+          </Reveal>
+        </div>
         <Stagger
           as="ul"
           className="-mx-5 mt-12 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3 lg:-mx-8"
@@ -101,7 +118,7 @@ function ValueSection() {
             <StaggerItem
               as="li"
               key={item.title}
-              className="h-full bg-[var(--lsh-paper)] p-5 lg:p-8"
+              className="lsh-lift h-full bg-[var(--lsh-paper)] p-5 lg:p-8"
             >
               <IconBadge icon={VALUE_ICONS[index] ?? "users"} size={18} />
               <h3 className="mt-4 text-xl text-[var(--lsh-charcoal)]">{item.title}</h3>
@@ -137,30 +154,32 @@ function PathwaysSection() {
             />
           </Reveal>
 
-          {/* The compact overview: every pathway, by kind, one link each. */}
-          <Reveal
-            delay={0.05}
-            className="mt-10 grid gap-6 border-y border-[var(--lsh-rule)] py-6 lg:grid-cols-3"
-          >
-            {kitsHub.groups.map((group) => (
-              <div key={group.key}>
-                <Eyebrow as="h3">{group.title}</Eyebrow>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {byGroup(group.key).map((kit) => (
-                    <li key={kit.slug}>
-                      <a
-                        href={`#${kit.slug}`}
-                        className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-3 py-2 text-[10px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
-                      >
-                        <span className="text-[var(--lsh-brand-red)]">{kit.id}</span>
-                        {kit.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </Reveal>
+          <div className="mt-10 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-[0.85fr_1.15fr]">
+            <Reveal className="bg-[var(--lsh-ink)]">
+              <MetabolicEditorialVisual visual="pathways" />
+            </Reveal>
+            {/* The compact overview: every pathway, by kind, one link each. */}
+            <Reveal delay={0.05} className="grid gap-6 bg-[var(--lsh-paper)] p-6 lg:p-8">
+              {kitsHub.groups.map((group) => (
+                <div key={group.key}>
+                  <Eyebrow as="h3">{group.title}</Eyebrow>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {byGroup(group.key).map((kit) => (
+                      <li key={kit.slug}>
+                        <a
+                          href={`#${kit.slug}`}
+                          className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-3 py-2 text-[10px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
+                        >
+                          <span className="text-[var(--lsh-brand-red)]">{kit.id}</span>
+                          {kit.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </Reveal>
+          </div>
 
           {kitsHub.groups.map((group) => (
             <div key={group.key} className="mt-16">
@@ -204,7 +223,7 @@ function PathwaysSection() {
 function PathwayCard({ kit }: { kit: KitPathway }) {
   const { kitsHub } = metabolic;
   return (
-    <StaggerItem as="li" className="h-full bg-[var(--lsh-paper)]">
+    <StaggerItem as="li" className="lsh-lift lsh-metabolic-card h-full bg-[var(--lsh-paper)]">
       <article id={kit.slug} className="flex h-full scroll-mt-28 flex-col p-5 lg:p-8">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <span className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">{kit.id}</span>
@@ -332,6 +351,17 @@ function ReplenishmentSection() {
           <Reveal delay={0.05} className="mt-12">
             <SupplyRolesDiagram roles={refills.roles} />
           </Reveal>
+          <div className="mt-10 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-2">
+            <Reveal className="bg-[var(--lsh-ink)]">
+              <MetabolicEditorialVisual visual="replenishment" />
+            </Reveal>
+            <Reveal
+              delay={0.05}
+              className="flex min-h-72 items-center bg-[var(--lsh-paper)] p-6 lg:p-10"
+            >
+              <MetabolicReplenishmentRhythm />
+            </Reveal>
+          </div>
           <div className="mt-12 grid gap-8 border-t border-[var(--lsh-rule-strong)] pt-8 lg:grid-cols-2 lg:gap-16">
             <Reveal>
               <Eyebrow as="h3">{refills.today.title}</Eyebrow>
@@ -372,6 +402,11 @@ function CollaborationSection() {
               {collaboration.title}
             </h2>
             <p className="mt-5 leading-7 text-[var(--lsh-muted)]">{collaboration.intro}</p>
+          </Reveal>
+
+          <Reveal delay={0.05} className="lsh-metabolic-collaboration-stage mt-10">
+            <MetabolicEditorialVisual visual="collaboration" />
+            <MetabolicCoordinationGrid />
           </Reveal>
 
           <Stagger
