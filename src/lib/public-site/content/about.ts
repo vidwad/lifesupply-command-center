@@ -86,7 +86,7 @@ export const about = {
   milestones: {
     eyebrow: "Milestones",
     title: "A dated public record.",
-    note: "Oldest first. The 2022 releases link to the sources that carried them.",
+    note: "Oldest first.",
     items: [
       {
         date: "2020",
@@ -131,9 +131,9 @@ export const about = {
         href: null,
       },
       {
-        date: "2025 annual report",
+        date: "2025",
         sortKey: "2025-00-01",
-        text: "Cites more than 25 years of operations, more than 50,000 products, and more than 1 million customers served since inception. The customer figure is cumulative since inception, not a count of current customers.",
+        text: "More than 25 years of operations, more than 50,000 products, and more than 1 million customers served cumulatively since inception, not a count of current customers.",
         source: "2025 annual report",
         href: null,
       },

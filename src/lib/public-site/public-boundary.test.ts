@@ -738,7 +738,7 @@ describe("round four: consolidation, precision and available actions", () => {
     const keys = about.match(/sortKey: "/g) ?? [];
     expect(keys.length).toBe(entries.length);
     // Cumulative is never presented as a current customer count.
-    expect(about).toContain("cumulative since inception, not a count of current customers");
+    expect(about).toContain("cumulatively since inception, not a count of current customers");
     expect(about).not.toMatch(/\b1 million (active|current) customers\b/i);
   });
 
