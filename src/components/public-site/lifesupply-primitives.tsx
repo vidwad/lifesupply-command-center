@@ -19,7 +19,6 @@
 import Link from "next/link";
 import { ArrowRight, ExternalLink, LogIn } from "lucide-react";
 
-import { Enter, HeroTitle } from "@/components/public-site/motion";
 import { getCommandCenterLoginUrl } from "@/lib/public-site/command-center";
 
 type Tone = "onLight" | "onDark";
@@ -127,31 +126,43 @@ export function PublicHero({
             isHome ? "max-w-5xl" : "max-w-4xl"
           }`}
         >
-          <Enter>
+          {/*
+           * Round four, change 2. The eyebrow, the heading, the sentence and
+           * the actions are plain elements that are legible at the first
+           * frame. `lsh-enter` slides them up by a few pixels in CSS and never
+           * touches opacity, so nothing here waits for JavaScript, an
+           * observer or an animation to finish before it can be read. The
+           * staggered delays are decoration and collapse under reduced motion.
+           */}
+          <div className="lsh-enter">
             <Eyebrow tone="onDark">{eyebrow}</Eyebrow>
-          </Enter>
-          {/* The single h1 for the route, entering word by word (motion.tsx). */}
-          <HeroTitle
-            text={title}
-            className={`lsh-display mt-5 ${
+          </div>
+          {/* The single h1 for the route. */}
+          <h1
+            className={`lsh-display lsh-enter mt-5 ${
               isHome
                 ? "text-[clamp(2.25rem,5.4vw,4.25rem)] leading-[0.98]"
                 : "text-[clamp(1.875rem,4.2vw,3.25rem)] leading-[1.04]"
             }`}
-          />
+            style={{ "--lsh-enter-delay": "0.08s" } as React.CSSProperties}
+          >
+            {title}
+          </h1>
           {description ? (
-            <Enter delay={0.45}>
-              <p
-                className={`mt-6 max-w-2xl leading-8 text-white/80 ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
-              >
-                {description}
-              </p>
-            </Enter>
+            <p
+              className={`lsh-enter mt-6 max-w-2xl leading-8 text-white/80 ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
+              style={{ "--lsh-enter-delay": "0.16s" } as React.CSSProperties}
+            >
+              {description}
+            </p>
           ) : null}
           {actions ? (
-            <Enter delay={0.6}>
-              <div className="mt-9 flex flex-wrap gap-3">{actions}</div>
-            </Enter>
+            <div
+              className="lsh-enter mt-9 flex flex-wrap gap-3"
+              style={{ "--lsh-enter-delay": "0.24s" } as React.CSSProperties}
+            >
+              {actions}
+            </div>
           ) : null}
         </div>
       </div>

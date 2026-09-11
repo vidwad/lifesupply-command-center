@@ -80,7 +80,7 @@ export const contact = {
   routing: {
     eyebrow: "Start with what you need",
     title: "Routed to the right conversation.",
-    text: "Choose the route that matches your inquiry. Each one leads to the relevant LifeSupply page or email address.",
+    text: "Choose the route that matches the inquiry. Most open an email with the subject already set; two open a consultation page on the Clinics site. Each one says which below it.",
     guide: {
       title: "What to include",
       intro:

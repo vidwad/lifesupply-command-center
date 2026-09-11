@@ -9,7 +9,6 @@
  * way to reach content.
  *
  *   Reveal / Stagger / StaggerItem   ibelick "In view" (motion useInView)
- *   HeroTitle                        tom_ui "Words Stagger"
  *   CountUp                          danielpetho "Number Ticker"
  *   SpotlightCard                    preetsuthar17 "Spotlight Card"
  *   ScrollBeam                       Aceternity "Timeline" beam
@@ -91,29 +90,15 @@ export function Reveal({
   );
 }
 
-/** Fade and rise on mount, for hero copy that is on screen before any scroll. */
-export function Enter({
-  children,
-  delay = 0,
-  className,
-}: {
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
-}) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      className={className}
-      variants={rise}
-      initial="hidden"
-      animate="visible"
-      transition={reduce ? INSTANT : { duration: 0.7, ease: EASE, delay }}
-    >
-      {children}
-    </motion.div>
-  );
-}
+/*
+ * `Enter` and `HeroTitle` were removed in round four, change 2.
+ *
+ * Both gave their content an initial opacity of zero, and framer-motion writes
+ * an initial style into the server-rendered HTML, so the hero headline, its
+ * supporting sentence and both actions were invisible until JavaScript ran.
+ * The hero entrance is now `.lsh-enter` in globals.css: transform only, no
+ * opacity, no JavaScript, and nothing to finish before the page can be read.
+ */
 
 const staggerParent: Variants = {
   hidden: {},
@@ -171,46 +156,6 @@ export function StaggerItem({
     >
       {children}
     </Tag>
-  );
-}
-
-/**
- * The route's h1, entering word by word. The words stay real text inside a
- * single heading element, so the accessible name and the one-h1 rule are
- * unchanged; only the presentation is staggered.
- */
-export function HeroTitle({ text, className }: { text: string; className?: string }) {
-  const reduce = useReducedMotion();
-  const words = text.split(" ");
-  const word: Variants = {
-    hidden: { opacity: 0, y: 14 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: reduce ? INSTANT : { duration: 0.55, ease: EASE },
-    },
-  };
-  const parent: Variants = {
-    hidden: {},
-    visible: {
-      transition: reduce
-        ? { staggerChildren: 0, delayChildren: 0 }
-        : { staggerChildren: 0.06, delayChildren: 0.15 },
-    },
-  };
-  return (
-    <motion.h1 className={className} variants={parent} initial="hidden" animate="visible">
-      {words.map((item, index) => (
-        // The separating space must be a text node OUTSIDE the inline-block:
-        // trailing whitespace inside an inline-block collapses to nothing.
-        <span key={`${item}-${index}`}>
-          <motion.span className="inline-block" variants={word}>
-            {item}
-          </motion.span>
-          {index < words.length - 1 ? " " : null}
-        </span>
-      ))}
-    </motion.h1>
   );
 }
 
