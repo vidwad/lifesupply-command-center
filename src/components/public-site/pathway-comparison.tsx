@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Container, Eyebrow, SectionHeading } from "@/components/public-site/lifesupply-primitives";
+import { Eyebrow } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 
 /**
@@ -12,6 +12,10 @@ import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
  * below it, from the same data, so the comparison survives a phone. Each
  * row names its status, and the closing note says the pathways overlap on
  * purpose and that starter equipment is chosen once rather than replenished.
+ *
+ * It had a heading of its own until 2026-09-11, which restated the heading of
+ * the section it sits in. The caller now supplies the heading and the vertical
+ * rhythm; this renders the comparison and nothing else.
  */
 type Pathway = {
   id: string;
@@ -26,9 +30,6 @@ type Pathway = {
 };
 
 type Comparison = {
-  eyebrow: string;
-  title: string;
-  intro: string;
   labels: { audience: string; purpose: string; role: string; status: string };
   note: string;
 };
@@ -49,17 +50,9 @@ export function PathwayComparison({
     ] as const;
 
   return (
-    <section className="px-5 py-20 lg:px-8">
-      <Container className="min-w-0">
-        <Reveal>
-          <SectionHeading
-            eyebrow={comparison.eyebrow}
-            title={comparison.title}
-            description={comparison.intro}
-          />
-        </Reveal>
-
-        <Stagger as="ul" className="mt-10 grid gap-4 sm:grid-cols-2 lg:hidden">
+    <div className="min-w-0">
+      <div>
+        <Stagger as="ul" className="grid gap-4 sm:grid-cols-2 lg:hidden">
           {pathways.map((p) => (
             <StaggerItem
               as="li"
@@ -84,7 +77,7 @@ export function PathwayComparison({
           ))}
         </Stagger>
 
-        <Reveal className="mt-10 hidden min-w-0 overflow-x-auto lg:block">
+        <Reveal className="hidden min-w-0 overflow-x-auto lg:block">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="lsh-display align-bottom text-[10px] text-[var(--lsh-brand-red)]">
@@ -137,7 +130,7 @@ export function PathwayComparison({
           <Eyebrow as="h3">How to read this</Eyebrow>
           <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{comparison.note}</p>
         </Reveal>
-      </Container>
-    </section>
+      </div>
+    </div>
   );
 }

@@ -16,7 +16,7 @@
  * information, with the development status kept beside every claim.
  *
  * Model (IMPLEMENTATION_BACKLOG.md §13): each pathway records its audience,
- * purpose, the critical distinction from the guide's kit table, the three
+ * purpose, the three
  * item roles (starter equipment, usage-driven consumables, occasional
  * items) as roles only, compatibility rules, exclusions, availability, and
  * verified "browse" categories resolved through the brand registry. No SKU,
@@ -42,8 +42,6 @@ export interface KitPathway {
   label: string;
   audience: string;
   purpose: string;
-  /** The guide's critical distinction, stated plainly. */
-  distinction: string;
   /** Item roles described as roles; no product, quantity, or SKU. */
   roles: { role: ItemRole; title: string; text: string }[];
   compatibility: string[];
@@ -83,184 +81,74 @@ export const metabolic = {
     { href: "#collaboration", label: "Collaboration" },
   ],
 
-  status: {
-    label: "In development",
-    sentence:
-      "The metabolic-health supply service is in development. No pathway is purchasable on this site, no configuration has been published, and availability will be announced when it is confirmed.",
+  /**
+   * The two boundaries that qualify everything on the page, stated once and
+   * early. They were previously spread across a status band, a disclaimer, an
+   * "Important information" list of four and several section notes.
+   */
+  boundaries: {
+    clinical:
+      "This site does not diagnose, prescribe, or recommend any medication or dose, and supply fulfilment is not drug dispensing. Product questions belong with your clinician, pharmacist, or the store that supplies you.",
+    guidance:
+      "Supplies and program materials support product instructions and a healthcare professional's guidance. They do not replace either.",
   },
-  disclaimer:
-    "This site does not diagnose, prescribe, or recommend any medication or dose, and supply fulfilment is not drug dispensing. Product questions belong with your clinician, pharmacist, or the store that supplies you.",
 
   hub: {
-    eyebrow: "Metabolic Care Supply & Services",
-    title: "Support that stays with the patient.",
+    eyebrow: "Metabolic Health Solutions",
+    title: "A supply program shaped around a care pathway.",
     intro:
-      "Patient supplies, clinic procurement, partner-ready fulfilment, and workflow support for modern care pathways. LifeSupply is developing those four to work together around a care pathway, and they stay separate arrangements: not one contract, not one account, and not a connection between anyone's systems. This page explains the model and its status.",
-    experience: {
-      eyebrow: "A connected supply experience",
-      title: "Start well. Stay supplied. Keep care moving.",
-      intro:
-        "LifeSupply is developing a service that connects non-drug patient supplies with clinic procurement, coordinated fulfilment, and practical workflow support around a care pathway. The parts are coordinated, not combined into a single agreement, and none of it is available today.",
-      steps: [
-        {
-          index: "01",
-          title: "Start",
-          text: "A practical starter configuration brings together the selected equipment, accessories, and initial consumables.",
-        },
-        {
-          index: "02",
-          title: "Continue",
-          text: "Consumables can be replenished around the approved care pathway without resending durable products.",
-        },
-        {
-          index: "03",
-          title: "Support",
-          text: "Clear ordering, partner materials, and a defined service route help keep the experience consistent.",
-        },
-      ],
-      result:
-        "A better patient supply experience, and a broader procurement and fulfilment relationship for partners.",
-    },
-    streams: {
-      eyebrow: "Integrated offer",
-      title: "Four ways the relationship creates value.",
-      intro:
-        "The eight supply configurations open the conversation. Recurring patient supplies, clinic purchasing, and contracted operational services build the durable account.",
+      "LifeSupply is developing a non-drug supply service for clinics, pharmacies, and care programs, bringing patient supplies and day-to-day clinic purchasing into one coordinated plan. The service is in development: no pathway and no program can be ordered yet.",
+
+    /**
+     * The offer, once. Four parts, each said one way.
+     */
+    offer: {
+      eyebrow: "The proposed service",
+      title: "From patient supplies to clinic purchasing.",
       items: [
         {
-          title: "Patient supply pathways",
-          text: "Configurable starter products, usage-driven consumables, monitoring accessories, sharps, and travel support.",
+          title: "Patient supplies",
+          text: "Eight configurable pathways would bring together the starter equipment, consumables, and occasional items a care program uses, selected around the devices already in use. Medication and prescriptions are excluded.",
         },
         {
-          title: "Clinic procurement",
-          text: "Routine injection, monitoring, exam-room, infection-control, and minor wound-care supplies.",
-        },
-        {
-          title: "Fulfilment & administration",
-          text: "Kitting, direct shipment, replenishment administration, inventory support, and exception handling.",
-        },
-        {
-          title: "Workflow & reporting",
-          // Round four, change 4: this promised reporting while the commercial
-          // model said reporting scope was undefined. One statement now.
-          text: "Non-clinical administrative support for the supply side of a program, under a scope agreed in advance. In development, and not available today.",
-        },
-      ],
-      note: "One portfolio, several ways in. Starter equipment is chosen once, not subscribed to. What recurs are the consumables a pathway uses up, the clinic's own ordinary purchasing, and any contracted service.",
-    },
-    audiences: {
-      eyebrow: "For care partners",
-      title: "A program designed around your pathway.",
-      intro:
-        "LifeSupply can support pharmacies, clinics, and coordinated care programs with a supply experience that reflects their patients, workflow, and service model.",
-      items: [
-        {
-          title: "Pharmacies",
-          text: "Extend onboarding and refill support with an approved, pharmacy-supported supply pathway.",
-        },
-        {
-          title: "Clinics",
-          text: "Organize recurring supplies around patient volumes, defined procedures, and clinic operations.",
-        },
-        {
-          title: "Care programs",
-          text: "Connect selected products, patient materials, and fulfilment into a consistent program experience.",
-        },
-      ],
-      support: {
-        title: "Program support",
-        items: [
-          "Selected starter contents",
-          "Usage-driven replenishment",
-          "Clinic supply account",
-          "Coordinated fulfilment",
-          // Round four, change 4: this listed reporting as program support
-          // while the commercial model said reporting scope was undefined.
-          "Non-clinical workflow support, under an agreed scope",
-        ],
-      },
-      principle: {
-        title: "Partner principle",
-        text: "The final program is shaped with the partner before launch, so products, materials, responsibilities, and fulfilment work together.",
-      },
-    },
-    configure: {
-      eyebrow: "Flexible by design",
-      title: "Configure the experience, not just the box.",
-      intro:
-        "The strongest partner relationships align the physical kit with clinic purchasing, patient replenishment, fulfilment responsibilities, and service reporting.",
-      items: [
-        {
-          title: "Contents",
-          text: "Starter, refill, and durable-product options selected for the pathway.",
-        },
-        {
-          title: "Cadence",
-          text: "Replenishment shaped around expected use and the approved program.",
-        },
-        {
-          title: "Materials",
-          text: "Partner-ready information and ordering guidance for the intended audience.",
-        },
-        {
-          title: "Presentation",
-          text: "LifeSupply, co-branded, or partner-specific presentation where approved.",
+          title: "Clinic purchasing",
+          text: "The same conversation would cover a practice's routine buying: injection, monitoring, exam-room, infection-control, and minor wound-care supplies, through the store that carries them.",
         },
         {
           title: "Fulfilment",
-          text: "A defined route from configuration through direct-to-patient and clinic replenishment.",
+          text: "A plan would set out how items are assembled and shipped, how replenishment is handled, and who deals with a stock or delivery problem when one arises.",
         },
         {
-          title: "Support",
-          text: "Ordering status, exception handling, reporting, and a defined escalation pathway.",
+          title: "Workflow support",
+          text: "Administrative support for ordering, patient materials, and supply enquiries, under a scope agreed in advance. Clinical decisions stay with the clinician or pharmacist.",
         },
       ],
-      note: "Final contents, pricing, branding, and service scope are confirmed with the partner before release.",
+      /**
+       * The four are coordinated, never combined. Round four added this after
+       * the page had implied a single integrated arrangement, and it survives
+       * the 2026-09-11 rewrite because dropping it would let the four read as
+       * one platform.
+       */
+      note: "The four are coordinated, not combined. They would stay separate arrangements: not one contract, not one account, and not a connection between anyone's systems.",
     },
-    process: {
+
+    actions: ["discuss_program", "explore_kits"],
+
+    /** The closing band: what a first conversation covers, and what it is not. */
+    close: {
       eyebrow: "Next step",
-      title: "Build a supply and service program that fits.",
-      intro:
-        "Start with patient needs, clinic purchasing, and the partner workflow. LifeSupply can then shape the supply configuration, replenishment, fulfilment, and reporting approach.",
-      items: [
-        {
-          index: "01",
-          title: "Discuss",
-          text: "A conversation about the program, the devices in use, the audience, and the region.",
-        },
-        {
-          index: "02",
-          title: "Configure",
-          text: "A configuration is drafted per pathway: starter, consumable, and occasional roles, compatibility, and exclusions.",
-        },
-        {
-          index: "03",
-          title: "Confirm availability",
-          text: "A configuration becomes orderable only when its contents, store, and fulfilment are confirmed and published. Until then it is information.",
-        },
-      ],
+      title: "Start a supply conversation.",
+      text: "A first conversation covers the patients or the practice, the devices and supplies involved, the region, and how ordering and delivery would need to work.",
+      qualification:
+        "It commits no one to buying or supplying anything. A configuration becomes orderable only once its contents, its store, and its fulfilment are confirmed and published, and any pilot would need its own signed agreement.",
     },
-    important: {
-      title: "Important information",
-      items: [
-        "Programs provide non-drug supplies and non-clinical operational support; medication and prescriptions are not included.",
-        "Final contents, device compatibility, sizes, refill quantities, and patient materials are confirmed for the approved pathway.",
-        "Product availability, pricing, taxes, freight, and service scope are subject to confirmation.",
-        "Programs do not replace product instructions, healthcare-provider guidance, or individualized clinical advice.",
-      ],
-    },
-    actions: ["explore_kits", "discuss_program"],
   },
 
-  /**
-   * The pathways section (`#pathways`), formerly `/metabolic-health/care-kits/`.
-   * The eight pathways follow it, each at its own anchor.
-   */
   kitsHub: {
-    eyebrow: "Care kits",
-    title: "Eight configurable supply pathways.",
+    eyebrow: "Supply pathways",
+    title: "Eight starting points for a supply plan.",
     intro:
-      "Each pathway is a configurable entry point, not a product. It names its audience, what starter, consumable, and occasional roles would cover, the compatibility rules that apply, and what is excluded. None is purchasable yet.",
+      "Each pathway is a configurable starting point rather than a product: who it is for, what the starter, consumable, and occasional items would cover, which compatibility rules apply, and what is excluded. They overlap on purpose, so a program can draw on more than one.",
     legend: {
       title: "Item roles",
       items: [
@@ -282,7 +170,7 @@ export const metabolic = {
     eyebrow: "Replenishment",
     title: "Starter items are not refills.",
     intro:
-      "Only usage-driven consumables are refilled. Starter equipment is chosen once, and occasional items are bought when needed. This page states what refill service exists today and what does not.",
+      "Only the consumables a pathway uses up are replenished. Starter equipment is chosen once, and occasional items are bought when they are needed.",
     today: {
       title: "Today",
       items: [
@@ -313,9 +201,9 @@ export const metabolic = {
    */
   collaboration: {
     eyebrow: "Collaboration",
-    title: "Helping define a program before it exists.",
+    title: "Help shape the program before it exists.",
     intro:
-      "The pathways above are configurable entry points, not finished products. Clinics, pharmacies and other clinical partners can help define what a configuration should contain for the people they look after. That is a different relationship from buying supplies, and it is described here.",
+      "The pathways are starting points, not finished products. Clinics, pharmacies, manufacturers and suppliers can help define what a configuration should contain for the people they look after. Clinical decisions stay with the clinician or pharmacist throughout.",
     who: {
       title: "Who a collaboration is with",
       items: [
@@ -324,24 +212,22 @@ export const metabolic = {
         "A manufacturer or supplier whose products would sit inside a configuration, on the supplier terms published separately.",
       ],
     },
-    boundary: {
-      title: "What a collaboration is not",
+    /**
+     * What a plan would settle. This absorbed the six "Configure the
+     * experience" dimensions, which asked the same question from the other
+     * direction, and the "Partner principle" note that followed them.
+     */
+    planning: {
+      title: "What a supply plan would settle",
       items: [
-        "It is not an order, an account, or a commitment to buy or supply anything.",
-        "It is not a clinical partnership. In the proposed program LifeSupply would configure supplies; clinical decisions stay with the clinician or pharmacist.",
-        "An expression of interest is not a pilot. A pilot begins when both sides have signed an agreement for it, and not before.",
-      ],
-    },
-    before: {
-      title: "Agreed before a program runs",
-      items: [
-        "The configuration itself: which items, in which roles, and which store carries them.",
-        "Compatibility, confirmed with the prescribing clinician or pharmacist where a device is involved.",
-        "Who holds stock, who ships, who invoices, and who the patient or practice contacts.",
+        "The configuration: which items, in which roles, and which store carries them.",
+        "Compatibility with the devices in use, confirmed with the prescribing clinician or pharmacist.",
+        "Replenishment quantities and the expected pattern of use.",
+        "Patient materials, ordering guidance, and how the program is presented.",
+        "Who holds stock, who ships, who invoices, and who a patient or practice contacts.",
         "How complaints and recalls are handled, and by whom.",
       ],
     },
-    note: "The program is in development and nothing above can be ordered or started today. A conversation about how a configuration should work is welcome now; fulfilment follows when the program is ready.",
     actions: ["discuss_program", "clinic_solutions"],
   },
 
@@ -354,8 +240,6 @@ export const metabolic = {
         "People on a clinician-managed GLP-1 program, and the clinics and pharmacies that support them.",
       purpose:
         "Non-drug accessories for injection routines, sharps handling, and travel, configured to the prescribed device.",
-      distinction:
-        "Non-drug accessories only. Every item is device-specific: the prescribed pen or device determines which accessories fit. The medication itself is excluded.",
       roles: [
         {
           role: "starter",
@@ -404,8 +288,6 @@ export const metabolic = {
         "Anyone injecting at home under clinical direction, and the clinics that supply them.",
       purpose:
         "Compatible injection supplies, skin preparation, and disposal, configured to the prescribed medication and device.",
-      distinction:
-        "Compatible configurations only. An insulin syringe is not universal injectable equipment; needle gauge, length, and syringe volume follow the prescription.",
       roles: [
         { role: "starter", title: "Starter equipment", text: "Home sharps disposal, chosen once." },
         {
@@ -442,8 +324,6 @@ export const metabolic = {
         "Anyone disposing of sharps at home or while travelling, and clinics managing sharps at par levels.",
       purpose:
         "Sharps containers in home and travel sizes and the usage-driven replacement of full containers.",
-      distinction:
-        "Container size follows the setting, and replacement is usage-driven. Disposal guidance must fit the region and the service scope, so none is given here until it is sourced for the region.",
       roles: [
         {
           role: "starter",
@@ -479,8 +359,6 @@ export const metabolic = {
       audience: "People who need to carry supplies away from home for days or weeks.",
       purpose:
         "Organisation for travelling with supplies: carrying, separating, and keeping a first-aid basic set to hand.",
-      distinction:
-        "An occasional purchase, not a refill. Any temperature or storage claim would follow the exact supported product, so none is made here.",
       roles: [
         {
           role: "occasional",
@@ -514,8 +392,6 @@ export const metabolic = {
         "People monitoring at home under a clinician's direction, and the clinics that set them up.",
       purpose:
         "Monitoring equipment and its accessories, sized and matched to the person and the device.",
-      distinction:
-        "Equipment and accessory sizing and compatibility matter; nothing here interprets a reading or a treatment.",
       roles: [
         {
           role: "starter",
@@ -554,8 +430,6 @@ export const metabolic = {
         "People managing diabetes under clinical direction, and the clinics and pharmacies that supply them.",
       purpose:
         "Meter, strip, and lancing supplies matched to the meter in use, with actual refill requirements stated.",
-      distinction:
-        "Meter and strip compatibility, and lancing-device compatibility, are specific. Refill requirements follow actual usage, not a preset schedule.",
       roles: [
         {
           role: "starter",
@@ -591,8 +465,6 @@ export const metabolic = {
       label: "Clinic Injectable Supplies",
       audience: "Clinics purchasing injectable supplies for their own use.",
       purpose: "Clinic purchasing configurations and par-level restocking, set up per clinic.",
-      distinction:
-        "Clinic purchasing configurations and par-level restocking, not one repeated standard pack. Each clinic's configuration is its own.",
       roles: [
         {
           role: "starter",
@@ -630,8 +502,6 @@ export const metabolic = {
       audience: "Pharmacies supporting their patients with non-drug supplies.",
       purpose:
         "Pharmacist-selected non-drug supplies, with fulfilment responsibilities stated explicitly.",
-      distinction:
-        "The pharmacist selects; the supply service fulfils. Who holds stock, who ships, and who handles complaints and recalls is stated per program before anything is fulfilled.",
       roles: [
         {
           role: "consumable",
@@ -676,17 +546,13 @@ export const metabolic = {
  * points, not exclusive choices, and the note says so.
  */
 export const pathwayComparison = {
-  eyebrow: "Compare the pathways",
-  title: "Eight starting points, side by side.",
-  intro:
-    "Each pathway is a configurable starting point for a supply conversation, not a product. They overlap on purpose: a program can draw on more than one, and none of them excludes another.",
   labels: {
     audience: "Intended for",
     purpose: "Supply purpose",
     role: "Durable and consumable roles",
     status: "Status",
   },
-  note: "All eight are in development. Nothing is purchasable on this site, no configuration has been published, and starter equipment is chosen once rather than replenished on a cycle.",
+  note: "Starter equipment is chosen once rather than replenished on a cycle, so a pathway's Status describes the configuration rather than a subscription.",
 } as const;
 
 export const commercialModel = {
@@ -761,7 +627,9 @@ export function comparisonRows() {
     audience: kit.audience,
     purpose: kit.purpose,
     roles: kit.roles.map((role) => role.title).join(", "),
-    status: metabolic.status.label,
+    // Every pathway carries the same status, so the comparison states it
+    // once per row from one place rather than eight times in the data.
+    status: "In development",
   }));
 }
 

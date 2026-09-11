@@ -835,12 +835,14 @@ describe("round three: architecture, placement and voice", () => {
   it("puts the commercial explanation before the pathway detail it explains", () => {
     // It used to sit below the page's closing actions and disclosures.
     const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
-    const model = page.indexOf("<CommercialModel");
-    const experience = page.indexOf("hub.experience.eyebrow");
-    const important = page.indexOf("hub.important.title");
+    const body = page.slice(page.indexOf("export function MetabolicHealthPage("));
+    const model = body.indexOf("<CommercialModel");
     expect(model).toBeGreaterThan(-1);
-    expect(model).toBeLessThan(experience);
-    expect(model).toBeLessThan(important);
+    // It explains who buys what, so it comes before the pathways and before
+    // the closing, and after the description of the offer it prices.
+    expect(body.indexOf("<OfferSection />")).toBeLessThan(model);
+    expect(model).toBeLessThan(body.indexOf("<PathwaysSection />"));
+    expect(model).toBeLessThan(body.indexOf("<ClosingBand />"));
   });
 
   it("gives the investor pages a planned sequence with no date, count or target", () => {
@@ -1069,8 +1071,9 @@ describe("round two: comparison, replenishment and motion", () => {
     const c = stripComments(read("src/lib/public-site/content/metabolic.ts"));
     expect(c).toContain("pathwayComparison");
     expect(c).toContain("comparisonRows");
-    // Pathways overlap on purpose; the note must not present them as exclusive.
-    expect(c).toContain("none of them excludes another");
+    // Pathways overlap on purpose; nothing may present them as exclusive.
+    expect(c).toMatch(/overlap on purpose/);
+    expect(c).not.toMatch(/excludes? (?:any )?other pathway|mutually exclusive/i);
     const page = stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
     expect(page).toContain("<PathwayComparison");
     const table = stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`));
@@ -1773,18 +1776,25 @@ describe("Stage 4 Metabolic Health and the eight pathways", () => {
   const metabolicPage = () => stripComments(read(`${PUBLIC_DIR}/pages/metabolic.tsx`));
   const metabolicContent = () => stripComments(read("src/lib/public-site/content/metabolic.ts"));
 
-  it("states the in-development status and the disclaimer once, above everything it qualifies", () => {
+  it("states the availability and the clinical boundary once, above everything they qualify", () => {
     const page = metabolicPage();
     // Metabolic Health is one page since 2026-09-10, so the band renders once
     // — but it must render before any pathway, or a reader reaches a pathway
     // without the status that qualifies it.
-    expect((page.match(/<StatusBand \/>/g) ?? []).length).toBe(1);
+    // The availability statement is in the hero, and the two boundaries that
+    // qualify the page are in one band beneath it. A status band, a separate
+    // disclaimer and an "Important information" list of four carried these
+    // between them before 2026-09-11, saying "not available" five times.
+    expect((page.match(/<BoundariesBand \/>/g) ?? []).length).toBe(1);
     const body = page.slice(page.indexOf("export function MetabolicHealthPage("));
-    expect(body.indexOf("<StatusBand />")).toBeGreaterThan(-1);
-    expect(body.indexOf("<StatusBand />")).toBeLessThan(body.indexOf("<PathwaysSection />"));
+    expect(body.indexOf("<BoundariesBand />")).toBeLessThan(body.indexOf("<PathwaysSection />"));
+    expect(metabolicContent()).toContain("no pathway and no program can be ordered yet");
     // And every pathway still carries its own status in the catalogue row.
     expect(stripComments(read(`${PUBLIC_DIR}/pathway-comparison.tsx`))).toContain("p.status");
-    expect(metabolicContent()).toContain("No pathway is purchasable on this site");
+    expect(
+      (metabolicContent().match(/can be ordered yet/g) ?? []).length,
+      "the availability statement is made once, in the hero",
+    ).toBe(1);
     expect(metabolicContent()).toContain("does not diagnose, prescribe, or recommend");
   });
 
@@ -2318,7 +2328,6 @@ describe("website consolidation: sections, redirects and deep links", () => {
     // only existed on a page that no longer answers.
     for (const part of [
       "{kit.audience}",
-      "{kit.distinction}",
       "kit.roles.map",
       "kit.compatibility.map",
       "kit.exclusions.map",
@@ -2333,9 +2342,9 @@ describe("website consolidation: sections, redirects and deep links", () => {
     const pharmacyPage = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
     expect(pharmacyPage).toContain("partnerProgram.model.items.map");
     expect(pharmacyPage).toContain("partnerProgram.responsibilities.items.map");
-    // And a pathway is still never sold.
+    // And a pathway is still never sold: it is a configurable starting point.
     const content = stripComments(read("src/lib/public-site/content/metabolic.ts"));
-    expect(content).toContain("not a product");
+    expect(content).toMatch(/configurable starting point rather than a product/);
     expect(page).not.toMatch(/add to cart|buy now|subscribe/i);
   });
 });
