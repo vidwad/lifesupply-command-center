@@ -33,7 +33,6 @@ export {
 export { MedicalSupplySolutionsPage } from "@/components/public-site/pages/operations";
 export {
   PartnerAcquisitionsPage,
-  PartnersPage,
   PartnerSuppliersPage,
 } from "@/components/public-site/pages/partners";
 export { PolicyPage } from "@/components/public-site/pages/policies";

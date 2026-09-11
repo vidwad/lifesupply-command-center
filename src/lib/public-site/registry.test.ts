@@ -235,14 +235,11 @@ describe("route registry", () => {
     }
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
-      "Home",
       "About",
       "Medical Supplies",
-      "Clinic Solutions",
-      "Pharmacy Solutions",
-      "Metabolic Health",
-      "Partners",
+      "Solutions",
       "Investors",
+      "Contact",
     ]);
     const businesses = groups.find((group) => group.key === "businesses")!;
     expect(businesses.links.map((link) => link.href)).toEqual([
@@ -253,11 +250,6 @@ describe("route registry", () => {
     expect(businesses.links.every((link) => !link.external)).toBe(true);
     // The LifeSupply Clinics brand is the Clinic Solutions section itself.
     expect(BRAND_ROUTES.clinics).toBe(STAGE_3_ROUTES.clinicSolutions);
-    const clinic = groups.find((group) => group.key === "clinic")!;
-    expect(clinic.href).toBe(STAGE_3_ROUTES.clinicSolutions);
-    // Clinic Solutions has no child pages since the consolidation: Equipment
-    // and Ongoing supplies are sections of it, reached by fragment.
-    expect(clinic.links).toEqual([]);
     expect(SECTION_ANCHORS[STAGE_3_ROUTES.clinicSolutions]).toEqual([
       "planning",
       "equipment",
@@ -274,17 +266,90 @@ describe("route registry", () => {
     }
   });
 
+  it("builds the five-item navigation the owner set, with Solutions as a menu and no page", () => {
+    // `About | Medical Supplies | Solutions | Investors | Contact`
+    // (website consolidation, stage 3, 2026-09-10).
+    const groups = buildPrimaryNavigation();
+    expect(groups.map((group) => group.label)).toEqual([
+      "About",
+      "Medical Supplies",
+      "Solutions",
+      "Investors",
+      "Contact",
+    ]);
+
+    // Solutions is a menu of exactly three, and no `/solutions` page exists.
+    const solutions = groups.find((group) => group.key === "solutions")!;
+    expect(solutions.href).toBeNull();
+    expect(solutions.links.map((link) => link.href)).toEqual([
+      STAGE_3_ROUTES.clinicSolutions,
+      PHARMACY_ROUTES.hub,
+      METABOLIC_ROUTES.hub,
+    ]);
+    expect(solutions.links.map((link) => link.label)).toEqual([
+      "Clinic Solutions",
+      "Pharmacy Solutions",
+      "Metabolic Health Solutions",
+    ]);
+    expect(isLiveRoute("/solutions/")).toBe(false);
+    expect(ROUTES.some((route) => route.path.startsWith("/solutions"))).toBe(false);
+
+    // Contact is last, a direct link, and has no dropdown to grow one later.
+    const contact = groups.at(-1)!;
+    expect(contact.href).toBe(LIFE_SUPPLY_ROUTES.contact);
+    expect(contact.links).toEqual([]);
+
+    // Clinic, Pharmacy and Metabolic are no longer top-level categories.
+    for (const key of ["clinic", "pharmacy", "metabolic", "partners", "home"]) {
+      expect(
+        groups.some((group) => group.key === key),
+        key,
+      ).toBe(false);
+    }
+
+    // Shop Stores is the only utility link; Contact left the strip, where it
+    // was a second control to the same destination.
+    expect(buildUtilityNavigation()).toEqual([
+      { label: "Shop Stores", href: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores") },
+    ]);
+    expect(isLiveSection(buildUtilityNavigation()[0]!.href)).toBe(true);
+  });
+
+  it("retires the Partners hub while its two retained children stay live", () => {
+    expect(isLiveRoute(CONSOLIDATED_ROUTES.partners)).toBe(false);
+    expect(ROUTES.find((route) => route.path === CONSOLIDATED_ROUTES.partners)?.status).toBe(
+      "redirect",
+    );
+    expect(isLiveSection(sectionRoute(LIFE_SUPPLY_ROUTES.contact, "business-inquiries"))).toBe(
+      true,
+    );
+    // The hazard the plan names: retiring the hub must not take its children.
+    for (const path of [STAGE_5_ROUTES.partnerSuppliers, STAGE_5_ROUTES.partnerAcquisitions]) {
+      expect(isLiveRoute(path), path).toBe(true);
+    }
+    // Suppliers keeps its page and loses its category; Acquisitions moved to
+    // the Investors menu, where a reader who wants it already is.
+    expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerSuppliers)?.navGroup).toBeNull();
+    expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerAcquisitions)?.navGroup).toBe(
+      "investors",
+    );
+    // And Suppliers stays reachable without a menu: the footer carries it.
+    expect(LIFE_SUPPLY_NAVIGATION.map((link) => link.href)).toContain(
+      STAGE_5_ROUTES.partnerSuppliers,
+    );
+  });
+
   it("makes Metabolic Health one live page, its pathways sections of it", () => {
     // The care-kits hub, its eight pathway pages and refills became sections
     // on 2026-09-10, so the hub is the only live route left in this family.
     for (const path of Object.values(METABOLIC_ROUTES)) {
       expect(isLiveRoute(path), path).toBe(true);
     }
-    const group = buildPrimaryNavigation().find((entry) => entry.key === "metabolic")!;
-    expect(group.href).toBe(METABOLIC_ROUTES.hub);
-    // Metabolic Health has no child pages since the consolidation: the
-    // pathways, replenishment and collaboration are sections of it.
-    expect(group.links).toEqual([]);
+    // Metabolic Health is an entry in the Solutions menu since stage 3, not a
+    // group of its own, and it has no child pages: the pathways,
+    // replenishment and collaboration are sections of it.
+    const solutions = buildPrimaryNavigation().find((entry) => entry.key === "solutions")!;
+    expect(solutions.links.map((link) => link.href)).toContain(METABOLIC_ROUTES.hub);
     expect(KIT_SLUGS).toHaveLength(8);
     // Every pathway publishes an anchor, and it is the slug its page used.
     for (const slug of KIT_SLUGS) {
@@ -293,20 +358,16 @@ describe("route registry", () => {
     }
   });
 
-  it("makes the Stage 5 pages live: Partners with three children, Investors with five, three policy pages", () => {
+  it("makes the Stage 5 pages live: Investors with five entries, three policy pages", () => {
     for (const path of Object.values(STAGE_5_ROUTES)) expect(isLiveRoute(path), path).toBe(true);
     const groups = buildPrimaryNavigation();
-    // The clinic child left the group on 2026-09-10; it is a Clinic Solutions
-    // section now, and the hub links to that section rather than to a page.
-    expect(groups.find((g) => g.key === "partners")!.links.map((l) => l.href)).toEqual([
-      STAGE_5_ROUTES.partnerSuppliers,
-      STAGE_5_ROUTES.partnerAcquisitions,
-    ]);
+    // Acquisitions joined the Investors menu when Partners was retired.
     expect(groups.find((g) => g.key === "investors")!.links.map((l) => l.href)).toEqual([
       STAGE_5_ROUTES.growthStrategy,
       STAGE_5_ROUTES.advancedTherapeutics,
       LIFE_SUPPLY_ROUTES.news,
       STAGE_5_ROUTES.disclosures,
+      STAGE_5_ROUTES.partnerAcquisitions,
     ]);
     // 2026-09-09: News & resources moved from the About group into Investors, replacing the
     // documents index; Shareholder services withdrawn. Both old addresses are redirect rows.
@@ -383,8 +444,11 @@ describe("route registry", () => {
     }
   });
 
-  it("leaves Contact as the only utility link once Shop & Services is consolidated", () => {
-    expect(buildUtilityNavigation().map((link) => link.href)).toEqual(["/contact/"]);
+  it("leaves Shop Stores as the only utility link once Contact becomes primary", () => {
+    // Contact moved into the primary menu as its last item on 2026-09-10, so
+    // keeping it in the utility strip would be a second control to the same
+    // destination.
+    expect(buildUtilityNavigation().map((link) => link.label)).toEqual(["Shop Stores"]);
   });
 
   it("uses trailing-slash paths throughout", () => {
@@ -484,6 +548,7 @@ describe("action registry", () => {
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[0],
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[1],
       LIFE_SUPPLY_CONTENT.businesses.hub.clinics.action,
+      LIFE_SUPPLY_CONTENT.businesses.hub.suppliers.action,
       ...LIFE_SUPPLY_CONTENT.businesses.hub.procurement.actions,
       ...clinics.equipment.actions,
       ...clinics.ongoingSupplies.actions,
@@ -492,8 +557,6 @@ describe("action registry", () => {
       ...metabolic.hub.actions,
       ...metabolic.kitsHub.actions,
       ...metabolic.refills.actions,
-      ...partners.hub.relationships.map((r) => r.action),
-      partners.hub.procurement.action,
       ...LIFE_SUPPLY_CONTENT.pharmacy.partnerProgram.actions,
       ...metabolic.collaboration.actions,
       ...partners.suppliers.actions,

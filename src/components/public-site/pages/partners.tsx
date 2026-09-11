@@ -2,36 +2,10 @@ import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal } from "@/components/public-site/motion";
-import {
-  BentoGrid,
-  Callout,
-  IconFeatureGrid,
-  ProcessSteps,
-  SplitSection,
-} from "@/components/public-site/sections";
+import { IconFeatureGrid, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { partners } from "@/lib/public-site/content/partners";
 import { iconForTitle } from "@/lib/public-site/icon-map";
-import {
-  PHARMACY_ROUTES,
-  STAGE_3_ROUTES,
-  STAGE_5_ROUTES,
-  sectionRoute,
-} from "@/lib/public-site/routes";
-
-/**
- * Where each relationship is described. Clinic collaboration and the pharmacy
- * partner programme each moved onto the page that already carried their
- * subject, as sections, on 2026-09-10 (website consolidation, stages 1 and 2).
- * The hub sends a visitor to those sections rather than keeping pages whose
- * only job was to restate context the destination page had already set up.
- */
-const RELATIONSHIP_ROUTES = {
-  clinics: sectionRoute(STAGE_3_ROUTES.clinicSolutions, "collaboration"),
-  pharmacies: sectionRoute(PHARMACY_ROUTES.hub, "partner-program"),
-  suppliers: STAGE_5_ROUTES.partnerSuppliers,
-  acquisitions: STAGE_5_ROUTES.partnerAcquisitions,
-} as const;
 
 /** Bulleted rules in the house style. */
 function RuleList({ items, tone = "red" }: { items: readonly string[]; tone?: "red" | "ink" }) {
@@ -87,36 +61,6 @@ function ActionsClose({ actions }: { actions: readonly string[] }) {
         </Reveal>
       </Container>
     </section>
-  );
-}
-
-/** `/partners/` */
-export function PartnersPage() {
-  const { hub } = partners;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero eyebrow={hub.eyebrow} title={hub.title} description={hub.intro} />
-      <BentoGrid
-        tiles={[
-          { eyebrow: hub.eyebrow, graphic: "boardroom", span: "tall" },
-          ...hub.relationships.map((relationship) => ({
-            title: relationship.title,
-            text: relationship.text,
-            icon: iconForTitle(relationship.title),
-            href: RELATIONSHIP_ROUTES[relationship.route],
-            linkLabel: "How it works",
-          })),
-        ]}
-      />
-      <Callout
-        icon="cart"
-        eyebrow={hub.procurement.eyebrow}
-        action={<ActionLink action={hub.procurement.action as ActionKey} variant="onLight" />}
-      >
-        <p className="lsh-display text-2xl leading-[1.1]">{hub.procurement.title}</p>
-        <p className="mt-2 text-[var(--lsh-muted)]">{hub.procurement.text}</p>
-      </Callout>
-    </LifeSupplyLayout>
   );
 }
 

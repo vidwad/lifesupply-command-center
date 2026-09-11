@@ -520,7 +520,6 @@ describe("routes and content governance", () => {
       "src/app/medical-supply-solutions/balkowitsch/page.tsx",
       "src/app/clinic-solutions/page.tsx",
       "src/app/metabolic-health/page.tsx",
-      "src/app/partners/page.tsx",
       "src/app/partners/suppliers/page.tsx",
       "src/app/partners/acquisitions/page.tsx",
       "src/app/investor-relations/growth-strategy/page.tsx",
@@ -2023,11 +2022,7 @@ describe("Stage 7 inquiry capture stays unpublished until its decisions are reco
       expect(source).not.toContain("InquiryForm");
       expect(source).not.toContain("inquiry-form");
     }
-    for (const route of [
-      "src/app/contact/page.tsx",
-      "src/app/partners/page.tsx",
-      "src/app/investor-relations/page.tsx",
-    ]) {
+    for (const route of ["src/app/contact/page.tsx", "src/app/investor-relations/page.tsx"]) {
       expect(read(route), route).not.toContain("inquiry-form");
     }
     const contactContent = stripComments(read("src/lib/public-site/content/contact.ts"));
@@ -2090,6 +2085,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
     [STAGE_3_ROUTES.clinicSolutions]: `${PUBLIC_DIR}/pages/clinic-solutions.tsx`,
     [PHARMACY_ROUTES.hub]: `${PUBLIC_DIR}/pages/pharmacy.tsx`,
     [METABOLIC_ROUTES.hub]: `${PUBLIC_DIR}/pages/metabolic.tsx`,
+    [LIFE_SUPPLY_ROUTES.contact]: `${PUBLIC_DIR}/pages/contact.tsx`,
   };
 
   it("renders every section anchor the registry declares", () => {
@@ -2152,6 +2148,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
       "/partners/pharmacies": "/pharmacy-solutions#partner-program",
       "/metabolic-health/care-kits": "/metabolic-health#pathways",
       "/metabolic-health/refills": "/metabolic-health#replenishment",
+      "/partners": "/contact#business-inquiries",
       // Every pathway address keeps its slug as its anchor.
       ...Object.fromEntries(
         KIT_SLUGS.map((slug) => [
@@ -2184,9 +2181,26 @@ describe("website consolidation: sections, redirects and deep links", () => {
       "src/app/metabolic-health/care-kits/page.tsx",
       "src/app/metabolic-health/care-kits/[kit]/page.tsx",
       "src/app/metabolic-health/refills/page.tsx",
+      "src/app/partners/page.tsx",
     ]) {
       expect(existsSync(join(ROOT, gone)), gone).toBe(false);
     }
+  });
+
+  it("renders the Solutions menu without a page behind it, reachable without hover", () => {
+    const layout = stripComments(read(LAYOUT));
+    // A group with no hub renders its label as the disclosure button rather
+    // than as a link that goes nowhere, and its panel has no "Overview" row.
+    expect(layout).toContain("group.href === null");
+    // The menu never depends on hover: a real button with aria-expanded and
+    // aria-controls drives it, on desktop and in the mobile panel alike.
+    expect((layout.match(/aria-expanded=\{/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect(layout).toContain("aria-controls={`lsh-menu-${group.key}`}");
+    expect(layout).toContain("aria-controls={`lsh-mobile-group-${group.key}`}");
+    // Escape closes the desktop panel.
+    expect(layout).toContain('if (event.key === "Escape") setOpen(false)');
+    // No `/solutions` route file was created for a menu that is only a menu.
+    expect(existsSync(join(ROOT, "src/app/solutions"))).toBe(false);
   });
 
   it("carries the content of every retired page into the section that replaced it", () => {

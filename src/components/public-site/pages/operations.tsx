@@ -233,6 +233,16 @@ export function MedicalSupplySolutionsPage() {
         <p className="lsh-display text-2xl leading-[1.1]">{hub.clinics.title}</p>
         <p className="mt-2 text-[var(--lsh-muted)]">{hub.clinics.text}</p>
       </Callout>
+      {/* Selling to LifeSupply: the suppliers page, which has no menu category. */}
+      <Callout
+        icon="truck"
+        eyebrow={hub.suppliers.eyebrow}
+        tone="onLight"
+        action={<ActionLink action={hub.suppliers.action as ActionKey} variant="onLight" />}
+      >
+        <p className="lsh-display text-2xl leading-[1.1]">{hub.suppliers.title}</p>
+        <p className="mt-2 text-[var(--lsh-muted)]">{hub.suppliers.text}</p>
+      </Callout>
     </LifeSupplyLayout>
   );
 }

@@ -115,7 +115,7 @@ export const homepage = {
       {
         title: "Partnership opportunities",
         text: "Clinics, pharmacies, suppliers, and strategic counterparties, each with the conversation that fits.",
-        action: "partners_hub",
+        action: "business_inquiries",
       },
       {
         title: "Investor information",
@@ -197,13 +197,15 @@ export const homepage = {
     actionLabel: "Metabolic Health",
   },
 
-  // Stage 2 draft; Stage 5 reconciled the partner path to the Partners hub.
+  // Stage 2 draft; Stage 5 reconciled the partner path to the Partners hub,
+  // and the website consolidation retired that hub on 2026-09-10. The path
+  // now goes where the conversation actually starts.
   paths: [
     {
       eyebrow: "Partners",
       title: "Clinics, pharmacies, suppliers, and acquisition counterparties.",
       text: "Program and design collaboration, non-drug supply programs, supplier onboarding, and acquisition discussions each start with a conversation.",
-      action: "partners_hub",
+      action: "business_inquiries",
       actionLabel: "Explore partner relationships",
     },
     {

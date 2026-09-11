@@ -80,6 +80,18 @@ export const businesses = {
         "A clinic that is already open has more to work through than a store account: categories, repeat ordering, and what is and is not offered. That is set out in full under Clinic Solutions.",
       actions: ["clinic_supply_review", "clinic_ongoing_supplies"],
     },
+    /**
+     * Suppliers & Manufacturers lost its menu category on 2026-09-10 (website
+     * consolidation, stage 3) and keeps its page. A supplier arrives through
+     * the stores, so the link belongs here and in the footer rather than in a
+     * primary menu most visitors are not looking through.
+     */
+    suppliers: {
+      eyebrow: "Selling to LifeSupply",
+      title: "Suppliers and manufacturers.",
+      text: "Categories, regions, product data, and how onboarding works are set out on their own page.",
+      action: "supplier_page",
+    },
     clinics: {
       eyebrow: "Clinic projects and clinic supply",
       title: "Clinic planning, equipment, and ongoing supply have their own section.",

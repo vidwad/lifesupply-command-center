@@ -41,7 +41,7 @@ export type ActionKey =
   | "explore_kits"
   | "refills_information"
   | "partner_inquiry"
-  | "partners_hub"
+  | "business_inquiries"
   | "partner_clinics"
   | "partner_pharmacies"
   | "clinic_collaboration"
@@ -49,6 +49,7 @@ export type ActionKey =
   | "advanced_therapeutics"
   | "news_resources"
   | "supplier_inquiry"
+  | "supplier_page"
   | "us_business_inquiry"
   | "acquisition_inquiry"
   | "general_inquiry"
@@ -236,11 +237,16 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     ownerChannel: null,
     verifiedAt: null,
   },
-  partners_hub: {
-    key: "partners_hub",
-    label: "Explore partner relationships",
+  /**
+   * Replaces `partners_hub`: the Partners hub was retired on 2026-09-10 and
+   * the enquiry routing it offered is what Contact does, with the destination
+   * named on every choice.
+   */
+  business_inquiries: {
+    key: "business_inquiries",
+    label: "Start a business conversation",
     intent: "navigation",
-    destination: internal(STAGE_5_ROUTES.partners),
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.contact, "business-inquiries")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -266,6 +272,18 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     intent: "partner",
     destination: mail("info@lifesupply.com", "Clinic collaboration"),
     ownerChannel: "info@lifesupply.com",
+    verifiedAt: null,
+  },
+  /**
+   * Suppliers & Manufacturers keeps its page after losing its menu category
+   * on 2026-09-10; this is how Medical Supplies reaches it.
+   */
+  supplier_page: {
+    key: "supplier_page",
+    label: "Supplier information",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.partnerSuppliers),
+    ownerChannel: null,
     verifiedAt: null,
   },
   growth_strategy: {
