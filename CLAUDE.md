@@ -34,6 +34,18 @@ A third round opened on September 10, 2026. **It changes how public copy is writ
 - `docs/website-round-three-acceptance.md` — the route-level acceptance matrix.
 - `docs/website-round-three-qa.md` and `docs/website-round-three-handoff.md` — checks, deployment verification and the final handoff.
 
+### Public website consolidation (opened September 10, 2026) — READ BEFORE EDITING PUBLIC PAGES
+
+The owner's consolidated instruction reduces the public site from 41 content pages to 21, retiring 20 with permanent redirects, and sets the final navigation as **About | Medical Supplies | Solutions | Investors | Contact**. It supersedes every earlier recommendation about the public page count and preserves the work rounds two to four delivered.
+
+- `docs/website-consolidation/MASTER-PLAN.md` — the approved direction, the baseline, the stages and the standing constraints.
+- `docs/website-consolidation/INVENTORY.md` — every public route, its treatment, and the reconciliation to 41 and 21.
+- `docs/website-consolidation/REDIRECTS.md` — the 20 redirects, the legacy rules preserved, and the `/partners` hazard.
+- `docs/website-consolidation/CONTENT-OWNERSHIP.md` — where each retired page's content moved.
+- `docs/website-consolidation/STATUS.md` and `QA.md` — delivery record and verification.
+
+**Two rules that are easy to break.** `/partners/suppliers` and `/partners/acquisitions` stay live while `/partners` redirects, so the `/partners` rule must be exact-path and never a wildcard. And transfer a page's content before retiring it, recording the destination in `CONTENT-OWNERSHIP.md`.
+
 A fourth round, a targeted refinement, opened on September 10, 2026:
 
 - `docs/website-round-four-plan.md` — the baseline record, the findings retired against the deployed site, the nine changes and their acceptance conditions.
