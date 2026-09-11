@@ -32,6 +32,7 @@
 - [x] Validate the refined Metabolic Health page at desktop and mobile sizes, including reduced-motion, keyboard, contrast, and public-route checks.
 - [x] Add three additional conceptual image-led moments and two richer motion-safe narrative graphics to `/metabolic-health/`, preserving the approved non-drug and in-development boundaries.
 - [x] Revalidate the expanded Metabolic Health editorial experience on desktop, mobile, and reduced-motion settings, then update PR #160 for design review.
+- [x] Squash-merge the owner-approved Metabolic Health visual-storytelling PR #160 into `main` and verify the resulting public deployment.
 
 ## Public front end — first refinement pass (shell, `/`, `/about-us/`)
 
