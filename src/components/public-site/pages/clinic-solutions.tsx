@@ -43,12 +43,15 @@ function Router() {
         <Reveal>
           <SectionHeading eyebrow={router.eyebrow} title={router.title} />
         </Reveal>
-        <Stagger as="ol" className="mt-12 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-3">
+        <Stagger
+          as="ol"
+          className="-mx-5 mt-12 grid gap-px bg-[var(--lsh-rule)] lg:-mx-8 lg:grid-cols-3"
+        >
           {router.routes.map((route) => (
             <StaggerItem as="li" key={route.href} className="h-full bg-[var(--lsh-paper)]">
               <a
                 href={route.href}
-                className="group flex h-full flex-col gap-5 p-7 transition-colors hover:bg-[var(--lsh-surface)] lg:p-9"
+                className="group flex h-full flex-col gap-5 p-5 transition-colors hover:bg-[var(--lsh-surface)] lg:p-8"
               >
                 <span
                   aria-hidden="true"
@@ -161,6 +164,7 @@ function PlanningSection() {
         title={hub.servicesHeading.title}
         graphic={BRAND_GRAPHICS.clinics}
         side="left"
+        fill
       >
         <ul className="grid gap-4 sm:grid-cols-2">
           {clinics.services.map((service) => (
@@ -208,7 +212,10 @@ function PlanningSection() {
 
       {/* What a first conversation covers, and where it happens. */}
       <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
-        <Container className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        {/* Stretched, not top-aligned: the two boxes are a pair and ended at
+            different heights, which read as a misalignment rather than as two
+            blocks of different length. */}
+        <Container className="grid gap-8 lg:grid-cols-2">
           <Checklist
             title={hub.consultation.title}
             text={hub.consultation.text}
@@ -238,7 +245,7 @@ function PlanningSection() {
 function ProjectsSection() {
   const { projects, attribution } = LIFE_SUPPLY_CONTENT.clinics;
   return (
-    <section className="border-y border-[var(--lsh-rule)] px-5 py-24 lg:px-8">
+    <section className="border-b border-[var(--lsh-rule)] px-5 py-24 lg:px-8">
       <Container>
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
           <Reveal>
@@ -256,14 +263,17 @@ function ProjectsSection() {
           </Reveal>
         </div>
 
-        <Stagger as="ol" className="mt-14 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2">
+        <Stagger
+          as="ol"
+          className="-mx-5 mt-14 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2 lg:-mx-8"
+        >
           {projects.items.map((project, index) => (
             <StaggerItem key={project.href} as="li" className="bg-[var(--lsh-paper)]">
               <a
                 href={project.href}
                 target="_blank"
                 rel="noreferrer"
-                className="group flex h-full items-start gap-5 p-8 transition-colors hover:bg-[var(--lsh-surface)] lg:p-9"
+                className="group flex h-full items-start gap-5 p-5 transition-colors hover:bg-[var(--lsh-surface)] lg:p-8"
               >
                 <span
                   aria-hidden="true"
@@ -304,9 +314,9 @@ function EquipmentSection() {
   const clinicCategories = store.categories.filter((category) => /clinic/i.test(category.label));
   return (
     <AnchoredSection id="equipment">
-      <section className="px-5 pt-20 lg:px-8">
+      <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
         <Container>
-          <Reveal className="max-w-3xl">
+          <Reveal className="max-w-2xl">
             <SectionHeading eyebrow={page.eyebrow} title={page.title} description={page.intro} />
           </Reveal>
         </Container>
@@ -330,15 +340,22 @@ function EquipmentSection() {
         </div>
       </SplitSection>
       <section className="px-5 py-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+        {/*
+         * The category column sizes to its two chips rather than taking a
+         * fixed 1.2fr, which left roughly five hundred pixels of it empty
+         * beside them.
+         */}
+        <Container className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-start">
           <Reveal className="flex gap-5">
             <IconBadge icon="layout" />
             <div>
               <Eyebrow as="h3">{page.catalogue.title}</Eyebrow>
-              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{page.catalogue.text}</p>
+              <p className="mt-3 max-w-xl leading-7 text-[var(--lsh-muted)]">
+                {page.catalogue.text}
+              </p>
             </div>
           </Reveal>
-          <Stagger as="ul" className="flex flex-wrap gap-2">
+          <Stagger as="ul" className="flex flex-wrap gap-2 lg:justify-end">
             {clinicCategories.map((category) => (
               <StaggerItem key={category.url} as="li">
                 <a
@@ -372,7 +389,7 @@ function OngoingSuppliesSection() {
   const page = clinics.ongoingSupplies;
   return (
     <AnchoredSection id="ongoing-supplies">
-      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
+      <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
             <Reveal>
@@ -439,16 +456,22 @@ function CollaborationSection() {
   const section = clinics.collaboration;
   return (
     <AnchoredSection id="collaboration">
-      <section className="px-5 py-20 lg:px-8">
+      <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
         <Container>
-          <Reveal className="max-w-3xl">
+          <Reveal className="max-w-2xl">
             <SectionHeading
               eyebrow={section.eyebrow}
               title={section.title}
               description={section.intro}
             />
           </Reveal>
-          <div className="mt-12 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          {/*
+           * The distinction box sizes to its own content and the column is
+           * narrow, so its text runs longer and the two columns end close
+           * together. Stretching it instead left a void inside a filled box,
+           * which reads as missing content rather than as whitespace.
+           */}
+          <div className="mt-12 grid items-start gap-5 lg:grid-cols-[0.78fr_1.22fr]">
             <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
               <IconBadge icon="shield" />
               <div>
@@ -511,7 +534,7 @@ function ClosingBand() {
   return (
     <section className="bg-[var(--lsh-ink)] px-5 py-24 text-white lg:px-8">
       <Container>
-        <Reveal className="grid gap-10 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:pl-10">
+        <Reveal className="grid gap-10 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-end lg:pl-10">
           <div>
             <Eyebrow tone="onDark" as="h2">
               {close.eyebrow}

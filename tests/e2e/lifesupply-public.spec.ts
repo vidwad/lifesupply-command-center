@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { clinics } from "@/lib/public-site/content/clinics";
+
 const RENDER_ORIGIN = "https://lifesupply-cc-web.onrender.com";
 
 /** The registered operating hosts. Nothing outbound may leave this set. */
@@ -738,13 +740,18 @@ test.describe("LifeSupply public site", () => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/clinic-solutions");
+    // The probes come from the content model rather than being copied into
+    // this file. A hardcoded copy of a heading silently stops matching when
+    // the heading is edited, and CI does not run Playwright, so nothing
+    // catches it — which is exactly what happened to this test once.
     for (const probe of [
-      "What does your clinic need?",
-      "Bring a clinic plan into focus.",
-      "Six clinics built across British Columbia.",
-      "Plan the equipment each room needs.",
-      "Keep an open clinic supplied.",
-      "Start with what the clinic needs.",
+      clinics.hub.router.title,
+      clinics.hub.planning.title,
+      clinics.projects.title,
+      clinics.equipment.title,
+      clinics.ongoingSupplies.title,
+      clinics.collaboration.title,
+      clinics.hub.close.title,
     ]) {
       await expect(page.getByText(probe).first(), probe).toBeVisible();
     }
