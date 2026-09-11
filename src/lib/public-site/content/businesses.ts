@@ -48,7 +48,7 @@ export const businesses = {
       },
       support: {
         title: "Support boundary",
-        text: "For an existing order, contact the store that took it. This site cannot see or change store orders. For clinic projects, equipment quotes, and supply programs, use the Contact page's intent routing.",
+        text: "For an existing order, contact the store that took it: this site cannot see or change store orders. For a clinic project, an equipment quote or a supply program, write to us on the Contact page, where each kind of enquiry has its own address.",
       },
     },
     /**

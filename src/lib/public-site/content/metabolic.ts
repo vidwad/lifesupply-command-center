@@ -328,12 +328,12 @@ export const metabolic = {
       title: "What a collaboration is not",
       items: [
         "It is not an order, an account, or a commitment to buy or supply anything.",
-        "It is not a clinical partnership. LifeSupply configures supplies; clinical decisions stay with the clinician or pharmacist.",
-        "An expression of interest is not a pilot, and a pilot is not contracted revenue for either side until it is agreed in writing.",
+        "It is not a clinical partnership. In the proposed program LifeSupply would configure supplies; clinical decisions stay with the clinician or pharmacist.",
+        "An expression of interest is not a pilot. A pilot begins when both sides have signed an agreement for it, and not before.",
       ],
     },
     before: {
-      title: "What has to be confirmed first",
+      title: "Agreed before a program runs",
       items: [
         "The configuration itself: which items, in which roles, and which store carries them.",
         "Compatibility, confirmed with the prescribing clinician or pharmacist where a device is involved.",
@@ -341,7 +341,7 @@ export const metabolic = {
         "How complaints and recalls are handled, and by whom.",
       ],
     },
-    note: "None of this is operating today. The program is in development, and nothing above is available to start.",
+    note: "The program is in development and nothing above can be ordered or started today. A conversation about how a configuration should work is welcome now; fulfilment follows when the program is ready.",
     actions: ["discuss_program", "clinic_solutions"],
   },
 

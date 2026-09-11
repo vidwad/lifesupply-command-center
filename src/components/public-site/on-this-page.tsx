@@ -49,15 +49,35 @@ export function OnThisPage({
 export function AnchoredSection({
   id,
   className = "",
+  backTo,
   children,
 }: {
   id: string;
   className?: string;
+  /**
+   * A way back to the index this section belongs to.
+   *
+   * Added for the eight pathway sections (consolidation stage 5): a reader
+   * who follows a redirect lands in the middle of a long reference page with
+   * no indication that a catalogue exists above them. A plain anchor, so it
+   * works with JavaScript disabled like everything else here.
+   */
+  backTo?: { href: string; label: string };
   children: React.ReactNode;
 }) {
   return (
     <section id={id} className={`scroll-mt-24 ${className}`.trim()}>
       {children}
+      {backTo ? (
+        <p className="mx-auto mt-10 max-w-7xl">
+          <a
+            href={backTo.href}
+            className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors hover:text-[var(--lsh-brand-red)]"
+          >
+            <span aria-hidden="true">↑</span> {backTo.label}
+          </a>
+        </p>
+      ) : null}
     </section>
   );
 }

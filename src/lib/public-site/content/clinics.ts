@@ -5,7 +5,8 @@
  *
  * Rules applied throughout:
  *   - LifeSupply Clinics is clinic development, construction and fit-out,
- *     and equipment services within verified delivery arrangements. Nothing
+ *     and equipment services delivered with the trades and suppliers each
+ *     project needs. Nothing
  *     here describes a company-operated patient-care clinic.
  *   - Services, specialties, process, and projects are as the Clinics site
  *     publishes them (SOURCE_REGISTER.md S-70 to S-75). Delivery roles are
@@ -140,7 +141,7 @@ export const clinics = {
     eyebrow: "Clinic Solutions · LifeSupply Clinics",
     title: "Plan it, equip it, or keep it supplied.",
     intro:
-      "LifeSupply Clinics plans, designs, builds, and fits out medical, dental, and wellness clinics in British Columbia, and handles equipment inquiries for them, within verified delivery arrangements. An existing clinic can start at supply without a construction project.",
+      "LifeSupply Clinics plans, designs, builds, and fits out medical, dental, and wellness clinics in British Columbia, and handles equipment inquiries for them, working with the trades and suppliers each project needs. An existing clinic can start at supply without a construction project.",
     /**
      * The two ways into Clinic Solutions, stated before the three needs
      * (website improvement program, 2026-09-09, on a Codex recommendation):
@@ -243,23 +244,23 @@ export const clinics = {
         "A clinic that purchases supplies is a customer of the operating store, with that store's account, prices, and support. No collaboration is required.",
         "A program collaboration means the clinic helps define a supply configuration, a workflow, or a pilot, agreed in writing before anything is fulfilled.",
         "A design partnership relates to a clinic project delivered through LifeSupply Clinics and its delivery partners, on the terms of that project.",
-        "An expression of interest is not a pilot, and a pilot is not contracted revenue for either side until it is agreed.",
+        "An expression of interest is not a pilot. A pilot begins when both sides have signed an agreement for it, and not before.",
       ],
     },
     items: [
       {
         title: "Program configuration",
-        text: "Clinical staff define what a supply configuration must contain for their program; LifeSupply models it as starter, consumable, and occasional roles and states compatibility. Nothing is fulfilled until the configuration and its store are confirmed.",
+        text: "Clinical staff define what a supply configuration has to contain for their program. LifeSupply would then set out what is needed to start, what is used up and reordered, and what is bought occasionally, and confirm that each item fits the devices in use. Nothing is fulfilled until the configuration and the store that carries it are agreed.",
         status: "Proposed",
       },
       {
         title: "Pilots",
-        text: "A limited, written pilot of a program's supply or workflow support, with its scope, duration, responsibilities, and exit stated up front.",
+        text: "A limited, written pilot of a program's supply or workflow support. Any pilot would need its own written agreement covering scope, duration, responsibilities, commercial terms, and how it ends.",
         status: "Proposed",
       },
       {
         title: "Design partnership",
-        text: "Early involvement in a clinic project's planning, layout, and equipment choices, delivered through LifeSupply Clinics within its verified delivery arrangements.",
+        text: "Early involvement in a clinic project's planning, layout, and equipment choices, delivered through LifeSupply Clinics and the trades and suppliers it works with.",
         status: "Available through LifeSupply Clinics",
       },
     ],

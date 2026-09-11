@@ -80,7 +80,7 @@ export const about = {
     eyebrow: "Corporate structure",
     title: "One parent company, three wholly-owned subsidiaries.",
     text: "LifeSupply Health Inc. is the parent company, and it owns three operating subsidiaries outright: Wellmart Health Supplies Ltd. in Canada, LifeSupply US, Inc. in the United States, and Balkowitsch Enterprises Inc. The customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing.",
-    note: "The structure is the one set out in the consolidated financial statements for the year ended December 31, 2025. Each company's contact channel is listed on the Contact page.",
+    note: "The structure is as at December 31, 2025. Each company's contact channel is listed on the Contact page.",
     action: "contact_directory",
   },
 
