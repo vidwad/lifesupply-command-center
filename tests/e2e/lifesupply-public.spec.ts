@@ -56,7 +56,6 @@ test.describe("LifeSupply public site", () => {
       "/privacy",
       "/terms",
       "/accessibility",
-      "/abdul-ladha",
     ]) {
       const response = await page.goto(route);
       expect(response?.ok(), `${route} should return a successful response`).toBe(true);
@@ -975,7 +974,7 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
   });
 
-  test("shows the confirmed leader and the board with portraits, keeps their profiles, and redirects the withdrawn ones", async ({
+  test("shows the leader and the board with portraits, their full profiles below, and redirects the withdrawn ones", async ({
     page,
   }) => {
     await page.goto("/our-team");
@@ -984,22 +983,45 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByText(/as published on the prior LifeSupply website/)).toHaveCount(0);
     await expect(main.getByText("Chairman & CEO", { exact: true }).first()).toBeVisible();
     await expect(main.getByRole("heading", { name: "Our Board of Directors" })).toBeVisible();
-    for (const [name, href] of [
-      ["Abdul Ladha", /^\/abdul-ladha\/?$/],
-      ["Keith Dolo", /^\/keith-dolo-2\/?$/],
-      ["Barrett Sleeman", /^\/barrett-e-g-sleeman\/?$/],
-      ["Dr. David Vogt", /^\/david-vogt\/?$/],
+    // The four biographies became sections of this page on 2026-09-10, so a
+    // card links to an anchor and the full record is already on the page.
+    // The board cards use the short name; the biography keeps the full legacy
+    // name it was published under ("Barrett E.G. Sleeman, P.Eng."), so each
+    // person is matched on a pattern rather than on one exact string.
+    for (const [name, anchor, full] of [
+      ["Abdul Ladha", "abdul-ladha", /Abdul Ladha/],
+      ["Keith Dolo", "keith-dolo", /Keith Dolo/],
+      ["Barrett Sleeman", "barrett-sleeman", /Sleeman/],
+      ["Dr. David Vogt", "david-vogt", /David Vogt/],
     ] as const) {
       const card = main.getByRole("link", { name: new RegExp(name) }).last();
-      await expect(card, name).toHaveAttribute("href", href);
+      await expect(card, name).toHaveAttribute("href", `#${anchor}`);
       await expect(card.getByRole("img", { name }), name).toBeVisible();
+      const section = page.locator(`#${anchor}`);
+      await expect(section, anchor).toBeVisible();
+      await expect(section.getByRole("heading", { name: full }), anchor).toBeVisible();
+      // The portrait and the note that dates the title travelled with the
+      // biography; a legacy title must never read as a newly confirmed one.
+      await expect(section.getByRole("img", { name: full }), anchor).toBeVisible();
+      await expect(section).toContainText("Current roles are confirmed through the company");
     }
+    // The biography itself is here, not only the summary card.
+    await expect(page.locator("#keith-dolo")).toContainText("Robert Half International");
     await expect(main.getByText(/Ben Hastibakhsh|Margaret Clarke|John Anderson/)).toHaveCount(0);
-    const profile = await page.goto("/keith-dolo-2");
-    expect(profile?.status()).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Keith Dolo");
-    await expect(page.locator("main").getByText(/Robert Half International/)).toBeVisible();
-    await expect(page.locator("main").getByRole("img", { name: "Keith Dolo" })).toBeVisible();
+    // One h1 still, because four pages became four sections rather than four headings.
+    await expect(page.locator("h1")).toHaveCount(1);
+
+    for (const [slug, anchor] of [
+      ["/abdul-ladha", "abdul-ladha"],
+      ["/keith-dolo-2", "keith-dolo"],
+      ["/barrett-e-g-sleeman", "barrett-sleeman"],
+      ["/david-vogt", "david-vogt"],
+    ] as const) {
+      const moved = await page.request.get(slug, { maxRedirects: 0 });
+      expect(moved.status(), slug).toBe(308);
+      expect(moved.headers()["location"], slug).toBe(`/our-team#${anchor}`);
+    }
+    // The ten withdrawn addresses still land on the listing, unchanged.
     for (const slug of ["/john-anderson-2", "/ben-hastibakhsh", "/ross-jelveh"]) {
       const withdrawn = await page.request.get(slug, { maxRedirects: 0 });
       expect(withdrawn.status(), slug).toBe(308);
@@ -1178,11 +1200,11 @@ test.describe("LifeSupply public site", () => {
     expect(sitemap.ok()).toBe(true);
     const xml = await sitemap.text();
     const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
-    // 25 canonical URLs: 41 before the consolidation, less the four addresses
-    // stage 1 retired, the eleven stage 2 retired and the Partners hub stage 3
-    // retired. Each redirects and is therefore absent from the map rather
-    // than dropped.
-    expect(locs.length).toBe(25);
+    // 21 canonical URLs, the number the owner's instruction names: 41 before
+    // the consolidation, less four in stage 1, eleven in stage 2, the Partners
+    // hub in stage 3 and the four leadership profiles in stage 4. Each
+    // redirects and is therefore absent from the map rather than dropped.
+    expect(locs.length).toBe(21);
     for (const retired of [
       "/shop",
       "/clinic-solutions/equipment",
@@ -1193,6 +1215,10 @@ test.describe("LifeSupply public site", () => {
       "/metabolic-health/care-kits/glp-1-support",
       "/metabolic-health/refills",
       "/partners",
+      "/abdul-ladha",
+      "/keith-dolo-2",
+      "/barrett-e-g-sleeman",
+      "/david-vogt",
     ]) {
       expect(locs, retired).not.toContain(`https://lifesupplyhealth.com${retired}`);
     }

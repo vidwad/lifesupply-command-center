@@ -36,4 +36,4 @@ export {
   PartnerSuppliersPage,
 } from "@/components/public-site/pages/partners";
 export { PolicyPage } from "@/components/public-site/pages/policies";
-export { LegacyProfilePage, TeamPage } from "@/components/public-site/pages/team";
+export { TeamPage } from "@/components/public-site/pages/team";

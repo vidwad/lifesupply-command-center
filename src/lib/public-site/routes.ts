@@ -10,6 +10,7 @@
  */
 import type { OperatingBrandKey } from "@/lib/public-site/brands";
 import { KIT_SLUGS } from "@/lib/public-site/content/metabolic";
+import { PROFILE_ANCHORS, team } from "@/lib/public-site/content/team";
 
 export const LIFE_SUPPLY_ROUTES = {
   home: "/",
@@ -85,6 +86,11 @@ export const CONSOLIDATED_ROUTES = {
   // subject, and the enquiry routing it offered is what Contact does. Its
   // two remaining children stay live at their own addresses.
   partners: "/partners/",
+  // Stage 4 (2026-09-10): the four retained leadership profiles. Each is a
+  // section of `/our-team` now, at the anchor `PROFILE_ANCHORS` names.
+  ...Object.fromEntries(
+    team.legacyProfiles.map((profile) => [`profile_${profile.anchor}`, `/${profile.slug}/`]),
+  ),
 } as const;
 
 /**
@@ -105,6 +111,7 @@ export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
   // address and its anchor can never drift apart.
   [METABOLIC_ROUTES.hub]: ["pathways", ...KIT_SLUGS, "replenishment", "collaboration"],
   [LIFE_SUPPLY_ROUTES.contact]: ["business-inquiries"],
+  [LIFE_SUPPLY_ROUTES.team]: PROFILE_ANCHORS,
 };
 
 /** `"/clinic-solutions/" + "equipment"` → `"/clinic-solutions/#equipment"`. */
@@ -157,7 +164,7 @@ export const STAGE_5_ROUTES = {
   accessibility: "/accessibility/",
 } as const;
 
-/** Retained legacy profile addresses: `/{slug}/`. */
+/** A retired legacy profile address, for the redirect map and for tests. */
 export function profileRoute(slug: string): string {
   return `/${slug}/`;
 }

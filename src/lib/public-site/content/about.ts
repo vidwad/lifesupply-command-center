@@ -64,6 +64,26 @@ export const about = {
    * S-80–S-88). No office, warehouse, or entity claim beyond what is
    * published elsewhere on this site.
    */
+  /**
+   * The corporate structure, moved here from Contact on 2026-09-10 (website
+   * consolidation, stage 4). About is the page that carries identity, history
+   * and footprint, so the explanation of what the company legally is belongs
+   * with them; Contact keeps the entity names and their channels, which is
+   * what a visitor deciding who to write to actually needs.
+   *
+   * Set out as in the consolidated financial statements for the year ended
+   * December 31, 2025. Brand architecture is kept separate from legal
+   * structure: the four customer-facing brands do not map one-to-one onto the
+   * companies.
+   */
+  structure: {
+    eyebrow: "Corporate structure",
+    title: "One parent company, three wholly-owned subsidiaries.",
+    text: "LifeSupply Health Inc. is the parent company, and it owns three operating subsidiaries outright: Wellmart Health Supplies Ltd. in Canada, LifeSupply US, Inc. in the United States, and Balkowitsch Enterprises Inc. The customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing.",
+    note: "The structure is the one set out in the consolidated financial statements for the year ended December 31, 2025. Each company's contact channel is listed on the Contact page.",
+    action: "contact_directory",
+  },
+
   footprint: {
     eyebrow: "Footprint",
     title: "Canada and the United States.",

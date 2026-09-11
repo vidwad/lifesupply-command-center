@@ -149,9 +149,19 @@ const nextConfig: NextConfig = {
       // 200 (docs/website-consolidation/REDIRECTS.md). A wildcard here would
       // take both of them out, and a canary forbids that form.
       { source: "/partners", destination: "/contact#business-inquiries", permanent: true },
+      // Website consolidation, stage 4 (2026-09-10): the four retained
+      // biographies became sections of the team page, so their addresses go
+      // to the person rather than to the top of a listing.
+      { source: "/abdul-ladha", destination: "/our-team#abdul-ladha", permanent: true },
+      { source: "/keith-dolo-2", destination: "/our-team#keith-dolo", permanent: true },
+      {
+        source: "/barrett-e-g-sleeman",
+        destination: "/our-team#barrett-sleeman",
+        permanent: true,
+      },
+      { source: "/david-vogt", destination: "/our-team#david-vogt", permanent: true },
       // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
-      // involved); the addresses go to the team page. The three directors
-      // restored on 2026-09-09 are live profiles again. Keep in step with
+      // involved); the addresses go to the team page. Keep in step with
       // `team.withdrawnProfileSlugs` (content/team.ts).
       ...[
         "ross-jelveh",

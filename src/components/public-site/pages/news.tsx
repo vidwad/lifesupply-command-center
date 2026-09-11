@@ -258,32 +258,26 @@ export function NewsPage({
       <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
 
       {/*
-       * The company at a glance (round three, outcome 9). The news and
-       * resources sections below are legitimately empty; this states what the
-       * group is from facts already published elsewhere on the site, rather
-       * than leaving a visitor with nothing or inventing an announcement.
+       * A short orientation for anyone who arrives here first (round three,
+       * outcome 9, shortened by the website consolidation on 2026-09-10).
+       *
+       * This block restated the whole company in six facts that About,
+       * Medical Supplies and Investor Relations each already carried. Six
+       * copies of a fact is six places for it to drift, so it points at the
+       * pages that own each one instead.
        */}
       <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
         <Container className="min-w-0">
-          <Reveal>
+          <Reveal className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <SectionHeading
               eyebrow={overview.eyebrow}
               title={overview.title}
               description={overview.intro}
             />
-          </Reveal>
-          <Stagger as="dl" className="mt-8 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2">
-            {overview.facts.map((fact) => (
-              <StaggerItem key={fact.label} className="bg-[var(--lsh-paper)] p-6">
-                <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                  {fact.label}
-                </dt>
-                <dd className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{fact.text}</dd>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <Reveal className="mt-8">
-            <ActionLink action={overview.action as ActionKey} />
+            <div className="flex flex-wrap gap-3 lg:justify-end">
+              <ActionLink action={overview.action as ActionKey} />
+              <ActionLink action="investor_information" variant="onLight" />
+            </div>
           </Reveal>
         </Container>
       </section>

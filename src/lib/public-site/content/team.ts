@@ -26,6 +26,7 @@ export const team = {
   labels: {
     management: "Leadership",
     board: "Our Board of Directors",
+    profiles: "Full profiles",
   },
   management: [
     {
@@ -69,8 +70,21 @@ export const team = {
       image: "/lsh/david-vogt.jpg",
     },
   ],
+  /**
+   * The four retained biographies. Each was a page of its own until
+   * 2026-09-10, when the website consolidation merged them into `/our-team`
+   * as sections: four addresses that each held one person's biography, with
+   * the board listing above them that a reader had to come back to.
+   *
+   * `anchor` is the section each address now redirects to. It is stated
+   * rather than derived from the slug because two of the four slugs are
+   * legacy artefacts — `keith-dolo-2` and `barrett-e-g-sleeman` — and an
+   * anchor should read as the person's name, not as the accident of how the
+   * prior site numbered its URLs.
+   */
   legacyProfiles: [
     {
+      anchor: "abdul-ladha",
       slug: "abdul-ladha",
       name: "Abdul Ladha",
       role: "Chairman & CEO",
@@ -82,6 +96,7 @@ export const team = {
       ],
     },
     {
+      anchor: "keith-dolo",
       slug: "keith-dolo-2",
       name: "Keith Dolo",
       role: "Director",
@@ -91,6 +106,7 @@ export const team = {
       ],
     },
     {
+      anchor: "barrett-sleeman",
       slug: "barrett-e-g-sleeman",
       name: "Barrett E.G. Sleeman, P.Eng.",
       role: "Director",
@@ -100,6 +116,7 @@ export const team = {
       ],
     },
     {
+      anchor: "david-vogt",
       slug: "david-vogt",
       name: "Dr. David Vogt",
       role: "Director",
@@ -132,7 +149,20 @@ export type LegacyProfile = (typeof team.legacyProfiles)[number];
 
 /** The dated legacy title for a slug; every card and board entry resolves through here. */
 export function legacyTitle(slug: string): string {
+  return legacyProfile(slug).role;
+}
+
+/** The full preserved record for a slug. Throws rather than render a blank card. */
+export function legacyProfile(slug: string): LegacyProfile {
   const profile = team.legacyProfiles.find((entry) => entry.slug === slug);
   if (!profile) throw new Error(`No legacy profile for ${slug}`);
-  return profile.role;
+  return profile;
 }
+
+/** The anchor a person's section answers on, for links and for the redirect map. */
+export function profileAnchor(slug: string): string {
+  return legacyProfile(slug).anchor;
+}
+
+/** Every anchor the team page publishes, in the order the page renders them. */
+export const PROFILE_ANCHORS = team.legacyProfiles.map((profile) => profile.anchor);
