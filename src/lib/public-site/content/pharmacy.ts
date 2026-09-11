@@ -131,7 +131,7 @@ export const pharmacy = {
       "A pharmacy can support its patients with non-drug supplies that the pharmacist selects. LifeSupply proposes to configure and fulfil those supplies, with every responsibility stated before a program starts. The service is in development; no pharmacy program is operating.",
     model: {
       eyebrow: "The model",
-      title: "The pharmacist selects; the supply service fulfils.",
+      title: "A proposed model: the pharmacist selects, the supply service fulfils.",
       items: [
         {
           title: "Pharmacist-selected configurations",
@@ -139,7 +139,7 @@ export const pharmacy = {
         },
         {
           title: "Non-drug only",
-          text: "Medication is excluded from every configuration. Supply fulfilment is not dispensing, and nothing in the program touches a prescription.",
+          text: "Medication is excluded from every configuration. LifeSupply would supply non-drug items only; it would not dispense, and it would not handle or alter a prescription.",
         },
         {
           title: "Fulfilment responsibilities stated per program",
@@ -152,7 +152,7 @@ export const pharmacy = {
       items: [
         "Product complaints are routed to the party stated in the program agreement and to the manufacturer as required.",
         "Recall handling follows the manufacturer's and the regulator's instructions; the program agreement names who notifies patients and who retrieves product.",
-        "Nothing is assumed by default. If a responsibility is not written into the program, it has not been agreed.",
+        "Each program agreement names who is responsible for what. A responsibility that is not written into the agreement has not been agreed.",
       ],
     },
     actions: ["discuss_program", "metabolic_hub"],

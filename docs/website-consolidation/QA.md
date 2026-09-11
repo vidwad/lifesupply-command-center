@@ -212,3 +212,26 @@ Each section carries the portrait, the dated title, the full biography and the p
 ### The count
 
 **21 canonical URLs in the sitemap**, the number the instruction names. Every one of the twenty retired addresses is absent from the map and answers a permanent redirect.
+
+## Stage 5 — the final sweep
+
+`tests/e2e/consolidation-sweep.spec.ts` is the standing check list, run against a production build on both the desktop and mobile projects. **32 checks, all passing.**
+
+| Group | Checks |
+| --- | --- |
+| A. Routes | 21 retained pages answer 200; the count is asserted, not assumed. All 20 retired addresses answer 308 to their exact fragment. All 13 legacy redirects resolve in one hop with destinations unchanged. An unknown slug returns the recovery page |
+| C. Fragments | Every declared fragment resolves to exactly one visible section. **Every one of the 20 also resolves with JavaScript disabled.** Query strings survive a redirect; an inbound fragment is overridden by the destination's; the sticky header covers no landing section, measured after layout settles; back and reload keep the reader in place; every landing section carries its own heading and enough context to stand alone; no target sits inside a closed disclosure |
+| D. Responsive and accessibility | No retained page scrolls sideways at 360, 390, 768, 1280 or 1440. Every image declares an alternative. Heading outline audited separately: one `h1` per page, no skipped levels |
+| E. Journeys | Outbound destinations stay on the four operating hosts, the three dated public-record hosts, or the login and video infrastructure. **Nothing was sent** |
+| F. SEO and links | Every retained page carries a canonical URL and stays `noindex`. No internal link on any retained page points at a retired address |
+| G. Gates | format, typecheck, lint, 1,329 vitest tests, the production build, and the confidentiality canaries |
+
+### Standing limitation, restated
+
+**CI does not run Playwright.** It runs typecheck, lint, format, vitest and the production build. The sweep above is a local gate with no independent confirmation. This was discovered in round four and still applies.
+
+### Open items for the owner
+
+- The acquisitions page does not distinguish a business owner exploring a sale to LifeSupply from a party seeking to acquire LifeSupply. Raised by the independent review; outside consolidation scope.
+- The header scroll-hide test remains intermittent on this machine, unchanged by this work and unrelated to it.
+- Carried from earlier rounds: 2024 comparatives, current titles for the three non-executive directors, which investor materials are available on request, and how a British Columbia clinic project is initiated.

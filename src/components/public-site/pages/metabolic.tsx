@@ -319,7 +319,11 @@ function PathwaySection({ slug }: { slug: string }) {
   const kit = getKit(slug);
   if (!kit) return null;
   return (
-    <AnchoredSection id={kit.slug} className="border-t border-[var(--lsh-rule)] px-5 py-16 lg:px-8">
+    <AnchoredSection
+      id={kit.slug}
+      className="border-t border-[var(--lsh-rule)] px-5 py-16 lg:px-8"
+      backTo={{ href: "#pathways", label: "All eight pathways" }}
+    >
       <Container>
         <Reveal className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
           <span className="lsh-display text-sm text-[var(--lsh-brand-red)]">{kit.id}</span>

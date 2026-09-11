@@ -1205,8 +1205,14 @@ describe("round two: cross-page factual consistency", () => {
     // The basis is stated once, on the page that tells the structure. Contact
     // states no basis of its own, so the two cannot be read as different
     // vintages of the same fact.
-    expect(about).toContain("consolidated financial statements for the year ended");
-    expect(contact).not.toContain("consolidated financial statements for the year ended");
+    // The structure carries its date so a reader knows how current it is.
+    // It no longer cites the document it came from: that is provenance, and
+    // provenance lives in the claim register, not on a page (owner's standing
+    // voice instruction; independent review, 2026-09-10).
+    expect(about).toContain("as at December 31, 2025");
+    for (const source of [about, contact]) {
+      expect(source).not.toContain("consolidated financial statements for the year ended");
+    }
   });
 
   it("publishes nothing from the confidential financing materials", () => {
@@ -1944,7 +1950,10 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     // 2026-09-10. Its non-drug rule travelled with it and is not left behind.
     const pharmacyContent = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
     expect(pharmacyContent).toContain("Medication is excluded from every configuration");
-    expect(pharmacyContent).toContain("Supply fulfilment is not dispensing");
+    // The boundary is stated as what LifeSupply would and would not do,
+    // rather than as a claim about what a prescription is touched by.
+    expect(pharmacyContent).toContain("it would not dispense");
+    expect(pharmacyContent).toContain("non-drug items only");
     expect(c).not.toContain("Medication is excluded from every configuration");
     expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
   });
@@ -2251,7 +2260,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
     // Shop & Services: geography, currency, and the support boundary.
     expect(businesses).toContain("Geography and currency");
     expect(businesses).toContain("Support boundary");
-    expect(businesses).toContain("This site cannot see or change store orders.");
+    expect(businesses).toContain("this site cannot see or change store orders");
     expect(businesses).toContain("This corporate site does not sell products or take orders.");
   });
 

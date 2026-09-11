@@ -59,7 +59,7 @@ export const news = {
     eyebrow: "New here?",
     title: "What LifeSupply is, in one place.",
     intro:
-      "LifeSupply Health Inc. is a Canadian parent company with three wholly-owned subsidiaries, selling health, safety, medical and industrial products online in Canada and the United States, and planning, building and equipping clinics in British Columbia. About sets out the group, its history and its footprint; Investor Relations carries the reported figures with their basis.",
+      "LifeSupply Health Inc. is a Canadian parent company with three wholly-owned subsidiaries, selling health, safety, medical and industrial products online in Canada and the United States. LifeSupply Clinics plans, builds and equips clinics in British Columbia. About sets out the group, its history and its footprint; Investor Relations carries the reported figures with their basis.",
     action: "about_group",
   },
 

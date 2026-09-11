@@ -8,8 +8,8 @@ One row per stage. A stage is complete only when its production deployment has b
 | 1 | Shop → Medical Supplies; Equipment and Ongoing Supplies → Clinic Solutions | #145 | `0eab3b0` | `pending` |
 | 2 | Pharmacy Partnerships → Pharmacy Solutions; Care Kits, eight pathways, Refills → Metabolic Health | #146 | `923a2af` | `pending` |
 | 3 | Final five-item navigation; Partners retirement | #147 | `pending` | `pending` |
-| 4 | Team merge; About, Home, News, Contact refinement | #148 | `pending` | `pending` |
-| 5 | Design, Codex review, final verification | — | — | — |
+| 4 | Team merge; About, Home, News, Contact refinement | #148 | `92bc4e1` | `pending` |
+| 5 | Design, Codex review, final verification | #149 | `pending` | `pending` |
 
 ## Stage 0 — baseline and plan
 
@@ -139,3 +139,50 @@ The anchors are stated in the content rather than derived from the slugs, becaus
 **The sitemap is now 21 canonical URLs** — the number the owner's instruction names. 41 before the consolidation, less four in stage 1, eleven in stage 2, the Partners hub in stage 3, and the four profiles here. All twenty retired addresses redirect; none was dropped.
 
 Remaining: stage 5 — design refinement, independent review, final verification.
+
+## Stage 5 — design, independent review, final verification
+
+**Completed September 10, 2026.**
+
+### The design change
+
+A reader who follows one of the eleven metabolic redirects lands in the middle of a long reference page with no sign that a catalogue exists above them. Each pathway section now ends with a plain anchor back to `#pathways`. `AnchoredSection` gained an optional `backTo` for it — an anchor, so it works with JavaScript disabled like the rest of the navigation.
+
+The heading outline of all 21 pages was audited: **exactly one `h1` each, and no skipped level anywhere.** Merging four pages into one is the usual way that breaks, and it did not.
+
+### The independent review
+
+Codex reviewed the seven absorbed blocks and the navigation against seven specific questions, with the standing constraints supplied. It found the consolidation structurally sound and directed most of its objections at copy. **Eleven findings adopted, two declined with reasons, two checked and found already satisfied.**
+
+Adopted — proposed capability written in the present tense:
+
+- "LifeSupply models it as starter, consumable, and occasional roles and states compatibility" asserted a running capability inside a block labelled *Proposed*. Rewritten conditionally, and in ordinary buying language rather than an internal role taxonomy.
+- "The pharmacist selects; the supply service fulfils" reads as operational when a heading is read on its own. Now "A proposed model: …".
+- "LifeSupply configures supplies; clinical decisions stay with the clinician or pharmacist" — the first clause asserted an operating service. Now conditional; the clinical boundary is unchanged.
+
+Adopted — voice, against the owner's standing instruction that a page is not a compliance file:
+
+- **"within verified delivery arrangements."** "Verified" exposes the publication-review process rather than describing the service. Now "the trades and suppliers each project needs". This phrase predated the consolidation and appeared in two places.
+- **"The structure is the one set out in the consolidated financial statements for the year ended December 31, 2025."** Explicit provenance on a page. Now "as at December 31, 2025" — the date a reader benefits from, without the citation. The canary was rewritten to assert the date is present **and the citation absent**, on both About and Contact.
+- **"Use the Contact page's intent routing"** described the website's implementation rather than telling a customer what to do.
+- **"Nothing is assumed by default. If a responsibility is not written into the program, it has not been agreed."** The protection is kept; the agreement-review phrasing is not.
+- **"A pilot is not contracted revenue for either side"** put an investor-facing concept into customer copy, in two blocks.
+- **"nothing above is available to start"** told a reader what they could not do without telling them what they could. It now says a conversation is welcome now and fulfilment follows.
+- **"nothing in the program touches a prescription"** claimed more than the actual boundary. Now states what LifeSupply would and would not do.
+- The News orientation attributed clinic construction to the parent company; it now attributes it to LifeSupply Clinics, matching every other page.
+
+**Declined, with reasons:**
+
+- *"About should say which company operates which brand."* The brands deliberately do not map one-to-one onto the companies, and the evidence register says so. Asserting a mapping is exactly what is prohibited.
+- *"Rename the acquisitions relationship to distinguish selling to LifeSupply from acquiring it."* A fair observation about approved M&A copy, but outside a consolidation's scope. **Recorded as an open question for the owner.**
+
+**Checked rather than taken on trust** — Codex could not see the running site, and flagged both as evidence gaps rather than defects:
+
+- *"`/contact#business-inquiries` only replaces the Partners hub if that section visibly routes clinic, pharmacy, supplier and acquisition enquiries."* It does: nine intents, including all four.
+- *"Acquisitions discovery is not specified."* It is in the Investors menu and linked from the homepage.
+
+### The verification sweep
+
+A standing sweep now lives at `tests/e2e/consolidation-sweep.spec.ts`: **32 checks across both projects, all passing.** Three of them came from the review asking what a status code cannot tell you — a retired address keeps its query string and resolves its fragment; the sticky header does not cover a section a redirect lands on, measured after layout settles; no target sits inside a closed disclosure.
+
+**The consolidation is complete: 41 pages to 21, twenty permanent redirects, none dropped.**
