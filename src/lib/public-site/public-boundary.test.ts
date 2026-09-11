@@ -311,9 +311,15 @@ describe("motion", () => {
     // CountUp reads the preference through the hydration-safe store instead
     // (its markup depends on the value, so the server and client must agree).
     const consulted = code.match(/(?<!function )use(Hydrated)?ReducedMotion\(\)/g) ?? [];
-    expect(exported.length).toBeGreaterThanOrEqual(7);
+    expect(exported.length).toBeGreaterThanOrEqual(5);
     // SpotlightCard is pointer-only decoration with no animation of its own.
     expect(consulted.length).toBe(exported.length - 1);
+    // The hero entrance moved to CSS in round four, so it must collapse there
+    // too rather than escaping this rule by leaving the library.
+    const css = read("src/styles/globals.css");
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,120}\.lsh-enter\s*\{\s*animation: none/,
+    );
   });
 
   it("counts figures up to exactly the approved text", () => {
@@ -324,11 +330,22 @@ describe("motion", () => {
     expect(code).toMatch(/if \(!parsed \|\| reduce\)[\s\S]*?\{value\}/);
   });
 
-  it("keeps the hero title a single real heading", () => {
-    // Words are spans inside one motion.h1, not separate elements, so the
-    // accessible name is the full sentence and the one-h1 rule holds.
-    const code = motionPrimitives();
-    expect(code).toMatch(/<motion\.h1[\s\S]*?words\.map[\s\S]*?<\/motion\.h1>/);
+  it("keeps the hero readable before any animation runs", () => {
+    // Round four, change 2. The headline used to be a motion.h1 whose words
+    // each began at opacity 0, and the description and actions sat in wrappers
+    // that did the same. Framer-motion writes those initial styles into the
+    // server-rendered HTML, so the hero was invisible until JavaScript ran.
+    const code = primitives();
+    // The heading is a plain h1 holding the whole title.
+    expect(code).toMatch(/<h1[\s\S]{0,400}\{title\}[\s\S]{0,40}<\/h1>/);
+    // Nothing in the hero is animated by the library any more.
+    expect(code).not.toMatch(/<Enter\b|<HeroTitle\b/);
+    expect(motionPrimitives()).not.toMatch(/export function (Enter|HeroTitle)\b/);
+    // The entrance that replaced it moves the content and never hides it.
+    const css = read("src/styles/globals.css");
+    const entrance = css.slice(css.indexOf("@keyframes lsh-enter-rise"));
+    expect(entrance.slice(0, 200)).toMatch(/transform: translateY/);
+    expect(entrance.slice(0, 200)).not.toMatch(/opacity/);
   });
 });
 
@@ -460,10 +477,10 @@ describe("document structure", () => {
     expect(heroes).toBe(exportedPages);
     expect(pageSource).not.toContain("<h1");
     expect(layout()).not.toContain("<h1");
-    expect(primitives()).not.toContain("<h1");
-    // The heading element itself is HeroTitle's motion.h1, rendered once, by PublicHero.
-    expect((primitives().match(/<HeroTitle\b/g) ?? []).length).toBe(1);
-    expect((motionPrimitives().match(/<motion\.h1\b/g) ?? []).length).toBe(1);
+    // The heading element lives in PublicHero, written once, as a plain h1
+    // (round four, change 2). No page and no other primitive may render one.
+    expect((primitives().match(/<h1\b/g) ?? []).length).toBe(1);
+    expect(motionPrimitives()).not.toContain("<motion.h1");
   });
 
   it("wraps every page in the shared layout", () => {
@@ -734,6 +751,48 @@ describe("round four: consolidation, precision and available actions", () => {
     // Every record still shows where it stands.
     for (const category of ["Restricted, on request", "Historical"]) {
       expect(news).toContain(category);
+    }
+  });
+});
+
+describe("round four: presentation and interaction", () => {
+  it("puts the contact choices above the preparation guidance", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
+    const choices = page.indexOf("contact.intents.map");
+    const guide = page.indexOf("contact.routing.guide.title");
+    expect(choices).toBeGreaterThan(-1);
+    expect(guide).toBeGreaterThan(choices);
+  });
+
+  it("labels every contact action with what it actually does", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
+    expect(page).toContain("actionBehaviour(");
+    const actions = stripComments(read("src/lib/public-site/actions.ts"));
+    // A mail route says a mail window opens; an external route names the host.
+    expect(actions).toContain("Opens an email, subject prepared");
+    expect(actions).toContain("Opens ${new URL(destination.url).hostname");
+    // The opening no longer implies every route is an email.
+    const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
+    expect(contact).not.toMatch(/Each one leads to the relevant LifeSupply page or email address/);
+    expect(contact).toContain("two open a consultation page on the Clinics site");
+  });
+
+  it("never reports a copy that did not happen, and always shows the address", () => {
+    const copy = stripComments(read(`${PUBLIC_DIR}/copy-email.tsx`));
+    // A failed clipboard write says so rather than showing success.
+    expect(copy).toMatch(/catch\s*\{[\s\S]{0,80}setState\("failed"\)/);
+    expect(copy).toContain("Copy failed");
+    expect(copy).toContain('role="status"');
+    // The control is an addition; the address is rendered as text beside it.
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
+    expect(page).toMatch(/\{behaviour\.address\}[\s\S]{0,120}<CopyEmail/);
+  });
+
+  it("still renders no form and promises no delivery", () => {
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
+    expect(page).not.toMatch(/<form\b/);
+    for (const banned of [/message sent/i, /we('ll| will) get back/i, /thank you for/i]) {
+      expect(page, String(banned)).not.toMatch(banned);
     }
   });
 });
@@ -1023,8 +1082,19 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
     expect(c).toContain("It is not an offer, it establishes no contract");
     const model = stripComments(read(`${PUBLIC_DIR}/commercial-model.tsx`));
     expect(model).not.toMatch(/\$\s?\d|\b\d{1,3}\s?%/);
+    // Round four, change 3: two layers. The summary answers who contracts,
+    // what they get and whether it exists; the rest sits behind a native
+    // disclosure that needs no JavaScript, with a semantic table from md up
+    // and labelled stacked entries below it.
+    expect(model).toContain("<details");
+    expect(model).toContain("<summary");
     expect(model).toContain("<table");
-    expect(model).toContain("lg:hidden");
+    expect(model).toContain("md:hidden");
+    expect(model).toContain("<caption");
+    // Each detail field appears once, so there is no second copy to drift.
+    for (const field of ["row.revenue", "row.frequency", "row.retained"]) {
+      expect((model.match(new RegExp(field.replace(".", "\\."), "g")) ?? []).length).toBe(1);
+    }
   });
 
   it("carries no internal editorial voice in the public copy", () => {

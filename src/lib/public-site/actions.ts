@@ -454,3 +454,27 @@ export function actionHref(key: ActionKey): string {
 export function isExternalAction(key: ActionKey): boolean {
   return ACTIONS[key].destination.kind !== "internal";
 }
+
+/**
+ * What an action actually does, said plainly, so a visitor knows before
+ * clicking whether a mail window opens or another site does (round four,
+ * change 7). The contact page previously implied every route was an email
+ * with a prepared subject, while two of the nine open a consultation page on
+ * lifesupplyclinics.com.
+ */
+export function actionBehaviour(key: ActionKey): { label: string; address: string | null } {
+  const destination = ACTIONS[key].destination;
+  switch (destination.kind) {
+    case "mailto":
+      return { label: "Opens an email, subject prepared", address: destination.value };
+    case "tel":
+      return { label: "Calls this number", address: destination.value };
+    case "external":
+      return {
+        label: `Opens ${new URL(destination.url).hostname.replace(/^www\./, "")}`,
+        address: null,
+      };
+    case "internal":
+      return { label: "Goes to a page on this site", address: null };
+  }
+}

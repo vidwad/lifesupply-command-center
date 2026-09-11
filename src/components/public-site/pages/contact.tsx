@@ -1,6 +1,7 @@
 import { ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
+import { CopyEmail } from "@/components/public-site/copy-email";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Eyebrow,
@@ -9,7 +10,7 @@ import {
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge } from "@/components/public-site/sections";
-import type { ActionKey } from "@/lib/public-site/actions";
+import { actionBehaviour, type ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS } from "@/lib/public-site/brands";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
@@ -42,7 +43,51 @@ export function ContactPage() {
               description={contact.routing.text}
             />
           </Reveal>
-          <Reveal delay={0.05} className="mt-8 grid gap-5 lg:grid-cols-2">
+          {/*
+           * Round four, change 7. The preparation guidance used to sit above
+           * the choices, so a visitor read about what to include before seeing
+           * anything to act on. The choices come first now, each saying what
+           * its action actually does: two of the nine open a consultation page
+           * on lifesupplyclinics.com rather than an email, which the previous
+           * wording implied they did not.
+           */}
+          <Stagger
+            as="ul"
+            className="mt-10 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2 xl:grid-cols-5"
+          >
+            {contact.intents.map((intent) => {
+              const behaviour = actionBehaviour(intent.action as ActionKey);
+              return (
+                <StaggerItem
+                  key={intent.label}
+                  as="li"
+                  className="flex flex-col bg-[var(--lsh-paper)] p-6 transition-colors hover:bg-[var(--lsh-surface)]"
+                >
+                  <IconBadge icon={iconForTitle(intent.label)} size={20} />
+                  <h3 className="lsh-display mt-5 text-lg leading-tight text-[var(--lsh-charcoal)]">
+                    {intent.label}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{intent.text}</p>
+                  <div className="mt-auto pt-4">
+                    <ActionLink action={intent.action as ActionKey} variant="text" />
+                    <p className="mt-2 text-xs leading-5 text-[var(--lsh-muted)]">
+                      {behaviour.label}
+                      {behaviour.address ? (
+                        <>
+                          {" · "}
+                          <span className="break-all">{behaviour.address}</span>{" "}
+                          <CopyEmail address={behaviour.address} />
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                </StaggerItem>
+              );
+            })}
+          </Stagger>
+
+          {/* The preparation guidance, below the choices it prepares for. */}
+          <Reveal delay={0.05} className="mt-10 grid gap-5 lg:grid-cols-2">
             <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
               <Eyebrow as="h3">{contact.routing.guide.title}</Eyebrow>
               <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
@@ -68,27 +113,6 @@ export function ContactPage() {
               </p>
             </div>
           </Reveal>
-          <Stagger
-            as="ul"
-            className="mt-10 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2 xl:grid-cols-5"
-          >
-            {contact.intents.map((intent) => (
-              <StaggerItem
-                key={intent.label}
-                as="li"
-                className="flex flex-col bg-[var(--lsh-paper)] p-6 transition-colors hover:bg-[var(--lsh-surface)]"
-              >
-                <IconBadge icon={iconForTitle(intent.label)} size={20} />
-                <h3 className="lsh-display mt-5 text-lg leading-tight text-[var(--lsh-charcoal)]">
-                  {intent.label}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{intent.text}</p>
-                <div className="mt-auto pt-4">
-                  <ActionLink action={intent.action as ActionKey} variant="text" />
-                </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
           <Reveal className="mt-8 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
             <IconBadge icon={iconForTitle(contact.existingOrder.title)} />
             <div>

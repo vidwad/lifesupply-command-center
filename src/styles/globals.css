@@ -228,6 +228,42 @@
   }
 
   /*
+   * The hero entrance (round four, change 2).
+   *
+   * It animates transform only, never opacity, and it runs in CSS rather than
+   * through the animation library. The previous entrance gave each word and
+   * each block an initial opacity of zero through framer-motion, and
+   * framer-motion writes that initial style into the server-rendered HTML: if
+   * JavaScript was slow, blocked or disabled, the headline, the supporting
+   * sentence and both actions were invisible while the background and the
+   * navigation were already painted.
+   *
+   * Reading the page must never wait for an animation, so the content is
+   * legible at the first frame and the motion is decoration on top of it. A
+   * CSS animation also needs no JavaScript at all, so it cannot leave content
+   * stranded the way a cancelled script can.
+   */
+  .lsh-enter {
+    animation: lsh-enter-rise 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+    animation-delay: var(--lsh-enter-delay, 0s);
+  }
+
+  @keyframes lsh-enter-rise {
+    from {
+      transform: translateY(12px);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lsh-enter {
+      animation: none;
+    }
+  }
+
+  /*
    * A rule that draws itself across a row on hover, replacing the bordered
    * card as the way a list signals it is interactive. Collapses to a static
    * rule for reduced motion, handled in the media query below.
