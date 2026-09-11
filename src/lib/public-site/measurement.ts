@@ -76,6 +76,7 @@ export const DEFAULT_CONSENT: ConsentState = { necessary: "granted", analytics: 
 export function eventForAction(action: ActionKey): MeasurementEvent | null {
   switch (action) {
     case "shop_lifesupply":
+    case "browse_clinic_supplies":
     case "shop_wellmart":
     case "shop_clinics":
     case "shop_balkowitsch":
@@ -96,6 +97,7 @@ export function eventForAction(action: ActionKey): MeasurementEvent | null {
 export function brandForAction(action: ActionKey): BrandKey | undefined {
   switch (action) {
     case "shop_lifesupply":
+    case "browse_clinic_supplies":
       return "lifesupply";
     case "shop_wellmart":
       return "wellmart";

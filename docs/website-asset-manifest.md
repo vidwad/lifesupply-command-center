@@ -2,7 +2,9 @@
 
 Every image, diagram and media file the public site serves, with where it is used, how it may be described, and where it came from. Registries in `src/lib/public-site/` are the authority for size and alt text; this manifest is the human-readable index. Provenance identifiers `S-xx` refer to `docs/website-development/SOURCE_REGISTER.md`.
 
-**Illustrative status.** Generated and stock imagery is never evidence of actual staff, facilities, patients, projects, equipment ownership or operational capability. Only the leadership portraits, the store screenshots, the hero footage and the company video show something real, and each says what it is.
+**Illustrative status.** Generated and stock imagery is never evidence of actual staff, facilities, patients, projects, equipment ownership or operational capability. Only the leadership portraits, the store screenshots, the hero footage, the company video and the clinic project photographs show something real, and each says what it is.
+
+**Two registries, opposite rules.** `graphics.ts` holds conceptual imagery: every alt begins "Conceptual", every entry is labelled "not operational photography", and a test enforces both. `project-photography.ts` holds photographs of completed clinic projects, each naming the published project page it came from, and its test asserts the inverse — nothing there may be described as conceptual, no person may appear, and no brand name may appear in the alt text. Neither registry's files may be used through the other.
 
 ## Diagrams (code, not raster)
 
@@ -23,6 +25,7 @@ Every image, diagram and media file the public site serves, with where it is use
 | `hero/hero-loop.webm`, `hero-loop.mp4`, `hero-poster.jpg` | `content/home.ts` `heroMedia` | Homepage hero | Decorative; hidden from assistive technology | The 2021 legacy hero video re-cut to caption-free scenes, desaturated, looped (S-132). No audio, no on-screen control, pauses off screen |
 | `hero/stills/*.jpg` | Held, not served | — | — | Frames from the same footage, retained for future use |
 | `video/about-abdul-ladha-poster.jpg` | `video.ts` | About page video | Names the speaker and the video | The company video's own title frame, greyscale, held locally so nothing loads from YouTube before play (S-156) |
+| `graphics/projects/clinic-burnaby.jpg`, `clinic-abbotsford.jpg`, `clinic-vancouver-medical.jpg` | `project-photography.ts` | Clinic Solutions: the hero backdrop and the three featured projects | Registry alt describing the room | **Real photography, not conceptual.** Photographs of completed projects published by LifeSupply Clinics on the project pages named in the registry; copied 2026-09-11, neutral greyscale, 1600×900 (S-161 to S-163). Kept in a separate registry from the conceptual set, with a test asserting the inverse rules: never called conceptual, no person, no brand name in the alt text. They replaced a laptop screenshot of the LifeSupply Clinics home page, which illustrated six clinic projects with a picture of another website (product owner) |
 | `lifesupply-mark.png` | Layout | Header and footer | Company name | Official mark, product owner, 2026-09-08 (S-130). Dark field only |
 | `og-default.jpg` | `seo.ts` | Social preview | — | Site-wide default card |
 | `investor-presentation-preview.png` | Held, not served | — | — | Retained; not published |
