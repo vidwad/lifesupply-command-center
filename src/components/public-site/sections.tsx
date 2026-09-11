@@ -181,6 +181,7 @@ export function SplitSection({
   graphic,
   side = "right",
   tone = "onLight",
+  fill = false,
 }: {
   eyebrow: string;
   title: string;
@@ -188,12 +189,24 @@ export function SplitSection({
   graphic: GraphicKey;
   side?: "left" | "right";
   tone?: Tone;
+  /**
+   * Let the image fill the column instead of sitting centred at its natural
+   * height. Use it where the text column is much the taller of the two, which
+   * otherwise leaves the image floating in a deep band of empty background.
+   *
+   * Off by default: most split sections on the site have a text column close
+   * to the image's own height, and covering would re-crop images that read
+   * correctly as they are.
+   */
+  fill?: boolean;
 }) {
   const g = getGraphic(graphic);
   const dark = tone === "onDark";
   return (
     <section className={`${SECTION_BG[tone]} px-5 py-20 lg:px-8`}>
-      <Container className={`grid items-center gap-10 lg:grid-cols-2 lg:gap-16`}>
+      <Container
+        className={`grid gap-10 lg:grid-cols-2 lg:gap-16 ${fill ? "items-stretch" : "items-center"}`}
+      >
         <Reveal className={side === "left" ? "lg:order-2" : ""}>
           <Eyebrow tone={dark ? "onDark" : "red"}>{eyebrow}</Eyebrow>
           <h2
@@ -207,15 +220,22 @@ export function SplitSection({
             {children}
           </div>
         </Reveal>
-        <Reveal delay={0.1} className={`group relative ${side === "left" ? "lg:order-1" : ""}`}>
-          <figure className="relative overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-ink)]">
+        <Reveal
+          delay={0.1}
+          className={`group relative ${fill ? "min-h-[20rem]" : ""} ${side === "left" ? "lg:order-1" : ""}`}
+        >
+          <figure
+            className={`relative overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-ink)] ${fill ? "h-full" : ""}`}
+          >
             <Image
               src={g.src}
               alt={g.alt}
               width={g.width}
               height={g.height}
               sizes="(min-width: 1024px) 600px, 100vw"
-              className="h-auto w-full transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              className={`w-full transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${
+                fill ? "h-full object-cover" : "h-auto"
+              }`}
             />
           </figure>
         </Reveal>
