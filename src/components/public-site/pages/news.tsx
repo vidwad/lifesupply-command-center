@@ -12,6 +12,7 @@ import {
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge } from "@/components/public-site/sections";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { ACTIONS, type ActionKey } from "@/lib/public-site/actions";
 import { news } from "@/lib/public-site/content/news";
 import { measurementAttributes } from "@/lib/public-site/measurement";
@@ -255,7 +256,12 @@ export function NewsPage({
   const { hero, sections, historical, overview } = news;
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={hero.eyebrow} title={hero.title} description={hero.description} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="newsDesk" position="75% 50%" />}
+        eyebrow={hero.eyebrow}
+        title={hero.title}
+        description={hero.description}
+      />
 
       {/*
        * A short orientation for anyone who arrives here first (round three,
@@ -402,7 +408,12 @@ export function PublishedUnavailablePage() {
   const copy = news.itemUnavailable;
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={copy.eyebrow} title={copy.title} description={copy.text} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="newsDesk" position="75% 50%" />}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.text}
+      />
       <section className="mx-auto max-w-3xl px-5 py-20 lg:px-8">
         <PrimaryAction href={LIFE_SUPPLY_ROUTES.news}>Back to news</PrimaryAction>
       </section>
@@ -415,6 +426,7 @@ export function NewsItemView({ item }: { item: PublicNewsItemDto }) {
   return (
     <LifeSupplyLayout>
       <PublicHero
+        media={<GraphicBackdrop graphic="newsDesk" position="75% 50%" />}
         eyebrow={`Company news · ${displayDate(item.date)}`}
         title={item.title}
         description={item.summary}
@@ -448,7 +460,12 @@ export function ResourceView({ item }: { item: PublicResourceDto }) {
   const action: ActionKey = item.action in ACTIONS ? (item.action as ActionKey) : "general_inquiry";
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow="Resource" title={item.title} description={item.summary} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="newsDesk" position="75% 50%" />}
+        eyebrow="Resource"
+        title={item.title}
+        description={item.summary}
+      />
       <section className="mx-auto max-w-3xl px-5 py-20 lg:px-8">
         <Reveal className="mb-8 grid gap-1 border-l-4 border-[var(--lsh-brand-red)] pl-4 text-xs text-[var(--lsh-muted)]">
           <span>Author: {item.author}</span>

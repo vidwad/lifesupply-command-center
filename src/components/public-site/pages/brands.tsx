@@ -6,6 +6,7 @@ import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesup
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { IconBadge, SplitSection } from "@/components/public-site/sections";
 import { SiteScreen } from "@/components/public-site/site-screen";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { brandGeography, getBrand, type BrandRecord } from "@/lib/public-site/brands";
 import { BRAND_GRAPHICS, type GraphicKey } from "@/lib/public-site/graphics";
@@ -117,6 +118,17 @@ export function ServiceChannels({
  * geography, categories, and service channels come from the brand registry;
  * actions from the action registry. Store terms are never restated.
  */
+/**
+ * The conceptual image behind each store's hero. Balkowitsch's brand image
+ * shows a synthetic person, who must never stand behind a page as if staff,
+ * so that store takes the fulfilment aisle instead.
+ */
+const STORE_BACKDROP = {
+  lifesupply: "brandLifeSupply",
+  wellmart: "brandWellmart",
+  balkowitsch: "warehouse",
+} as const;
+
 export function StoreBrandPage({
   brandKey,
 }: {
@@ -131,6 +143,13 @@ export function StoreBrandPage({
         eyebrow={page.eyebrow}
         title={page.title}
         description={page.intro}
+        media={
+          <GraphicBackdrop
+            graphic={STORE_BACKDROP[brandKey]}
+            position="65% 55%"
+            dim={brandKey !== "balkowitsch"}
+          />
+        }
         actions={
           <>
             {primary ? <ActionLink action={primary} /> : null}

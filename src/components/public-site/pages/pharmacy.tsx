@@ -10,6 +10,7 @@ import {
 import { Reveal } from "@/components/public-site/motion";
 import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
 import { IconBadge, IconFeatureGrid, SplitSection } from "@/components/public-site/sections";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
@@ -33,6 +34,7 @@ export function PharmacySolutionsPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
+        media={<GraphicBackdrop graphic="pharmacy" position="75% 60%" />}
         eyebrow={hub.eyebrow}
         title={hub.title}
         description={hub.intro}

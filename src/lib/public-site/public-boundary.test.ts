@@ -592,6 +592,51 @@ describe("routes and content governance", () => {
 });
 
 describe("design-pass graphics and section primitives", () => {
+  it("puts a registry backdrop behind every page hero, never a raw path and never the person", () => {
+    // Clinic Solutions set the pattern on 2026-09-11 with a real project
+    // photograph; every other hero was a black field and a red glow. Each
+    // `<PublicHero` now carries a `media` layer, and a backdrop resolves only
+    // through a registry: the conceptual graphics, the project photographs,
+    // the legacy About bands, or the hero footage.
+    for (const name of [
+      "operations",
+      "brands",
+      "pharmacy",
+      "metabolic",
+      "partners",
+      "investors",
+      "team",
+      "news",
+      "contact",
+      "policies",
+      "clinic-solutions",
+      "about",
+      "home",
+    ]) {
+      const page = stripComments(read(`${PUBLIC_DIR}/pages/${name}.tsx`));
+      const heroes = page.match(/<PublicHero\b/g) ?? [];
+      expect(heroes.length, `${name} has a hero`).toBeGreaterThan(0);
+      for (const block of page.split(/<PublicHero\b/).slice(1)) {
+        // The opening tag ends at the hero's own `/>` on its line, or at
+        // `</PublicHero>`; a backdrop's `/>` is followed by `}` and does not count.
+        const end = block.search(/\n\s*\/>|\/>\s*\n|<\/PublicHero>/);
+        const open = end === -1 ? block : block.slice(0, end);
+        expect(open, `${name}: a hero without a backdrop`).toContain("media={");
+      }
+    }
+    const backdrop = stripComments(read(`${PUBLIC_DIR}/graphic-backdrop.tsx`));
+    expect(backdrop).toContain("getGraphic(graphic)");
+    expect(backdrop).toContain('aria-hidden="true"');
+    expect(backdrop).not.toContain("/lsh/graphics/");
+    // The Balkowitsch brand image shows a synthetic person and never stands
+    // behind a page as if staff.
+    for (const source of publicComponents()) {
+      expect(source).not.toMatch(/GraphicBackdrop graphic="brandBalkowitsch"/);
+    }
+    const brands = stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
+    expect(brands).toContain('balkowitsch: "warehouse"');
+  });
+
   it("renders conceptual graphics only through the registry, labelled conceptual, never as a raw file path", () => {
     // The registry (graphics.ts) declares every conceptual image with its
     // real size and provenance; a page that types a /lsh/graphics/ path by

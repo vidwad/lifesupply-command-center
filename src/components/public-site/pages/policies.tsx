@@ -3,6 +3,7 @@ import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal } from "@/components/public-site/motion";
 import { IconBadge } from "@/components/public-site/sections";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { policies, type PolicyKey } from "@/lib/public-site/content/policies";
 
@@ -20,7 +21,12 @@ export function PolicyPage({ policy }: { policy: PolicyKey }) {
   const p = policies[policy];
   return (
     <LifeSupplyLayout>
-      <PublicHero eyebrow={p.eyebrow} title={p.title} description={p.intro} />
+      <PublicHero
+        media={<GraphicBackdrop graphic="facade" position="70% 40%" />}
+        eyebrow={p.eyebrow}
+        title={p.title}
+        description={p.intro}
+      />
       <section className="py-20">
         <Container className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
           {/* In-page contents, sticky on wide screens. */}

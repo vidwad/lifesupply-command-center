@@ -13,6 +13,7 @@ import {
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { Callout, IconBadge } from "@/components/public-site/sections";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
@@ -40,6 +41,7 @@ export function MedicalSupplySolutionsPage() {
   return (
     <LifeSupplyLayout>
       <PublicHero
+        media={<GraphicBackdrop graphic="suppliesFlatlay" position="80% 50%" />}
         eyebrow={hub.eyebrow}
         title={hub.title}
         description={hub.description}
