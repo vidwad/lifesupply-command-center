@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
@@ -8,8 +8,8 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
+import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { ServiceChannels } from "@/components/public-site/pages/brands";
 import { SiteScreen } from "@/components/public-site/site-screen";
 import { Callout, IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
@@ -19,17 +19,74 @@ import { BRAND_GRAPHICS } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
-/** The two sentences the clinic project material leads with. */
-function ClinicDistinction() {
-  const { clinics } = LIFE_SUPPLY_CONTENT;
+/**
+ * The one router, and the page's section navigation (redesign, 2026-09-10).
+ *
+ * Three routes, because the page serves three people: someone building a
+ * clinic, someone equipping one, and someone who already has one open and
+ * only wants supplies. That third reader was the one most easily lost, so the
+ * route that serves them says "already seeing patients" in its first words.
+ *
+ * A named navigation landmark rather than a card grid: it is the control that
+ * routes the whole page, and the four fragments it names are the same four a
+ * redirect can arrive at. Numerals set in the brand's condensed face carry
+ * the hierarchy, so the routes need no boxes around them.
+ */
+function Router() {
+  const { router } = LIFE_SUPPLY_CONTENT.clinics.hub;
   return (
-    <section className="px-5 py-12 lg:px-8">
-      <Reveal className="mx-auto grid max-w-7xl gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[auto_1fr_1fr] lg:pl-8">
-        <IconBadge icon="shield" />
-        <p className="leading-7 text-[var(--lsh-charcoal)]">{clinics.distinction}</p>
-        <p className="leading-7 text-[var(--lsh-muted)]">{clinics.attribution}</p>
-      </Reveal>
-    </section>
+    <nav
+      aria-label="Choose a starting point"
+      className="border-b border-[var(--lsh-rule)] px-5 py-20 lg:px-8"
+    >
+      <Container>
+        <Reveal>
+          <SectionHeading eyebrow={router.eyebrow} title={router.title} />
+        </Reveal>
+        <Stagger as="ol" className="mt-12 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-3">
+          {router.routes.map((route) => (
+            <StaggerItem as="li" key={route.href} className="h-full bg-[var(--lsh-paper)]">
+              <a
+                href={route.href}
+                className="group flex h-full flex-col gap-5 p-7 transition-colors hover:bg-[var(--lsh-surface)] lg:p-9"
+              >
+                <span
+                  aria-hidden="true"
+                  className="lsh-display text-[var(--lsh-charcoal)]/25 text-5xl leading-none transition-colors group-hover:text-[var(--lsh-brand-red)] lg:text-6xl"
+                >
+                  {route.index}
+                </span>
+                <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                  {route.title}
+                </h3>
+                <p className="leading-7 text-[var(--lsh-muted)]">{route.text}</p>
+                <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-2 text-[11px] text-[var(--lsh-brand-red)]">
+                  {route.label}
+                  <ArrowRight
+                    size={15}
+                    aria-hidden="true"
+                    className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
+                  />
+                </span>
+              </a>
+            </StaggerItem>
+          ))}
+        </Stagger>
+        <Reveal
+          delay={0.1}
+          className="mt-8 flex flex-wrap items-baseline gap-x-4 gap-y-2 border-t border-[var(--lsh-rule)] pt-8"
+        >
+          <p className="text-[var(--lsh-muted)]">{router.collaboration.text}</p>
+          <a
+            href={router.collaboration.href}
+            className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)] underline decoration-[var(--lsh-rule-strong)] underline-offset-4 transition-colors hover:decoration-[var(--lsh-brand-red)]"
+          >
+            {router.collaboration.label}
+            <ArrowRight size={14} aria-hidden="true" />
+          </a>
+        </Reveal>
+      </Container>
+    </nav>
   );
 }
 
@@ -46,7 +103,7 @@ function Checklist({
   icon?: string;
 }) {
   return (
-    <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
+    <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
       <div className="flex items-start justify-between gap-4">
         <Eyebrow as="h3">{title}</Eyebrow>
         <IconBadge icon={icon} size={18} />
@@ -63,30 +120,13 @@ function Checklist({
   );
 }
 
-/** Closing band: the conditional post-opening statement plus the page's actions. */
-function ConditionalClose({ actions }: { actions: readonly ActionKey[] }) {
-  const { clinics } = LIFE_SUPPLY_CONTENT;
-  return (
-    <section className="bg-[var(--lsh-ink)] px-5 py-16 text-white lg:px-8">
-      <Reveal className="mx-auto flex max-w-7xl flex-col justify-between gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:flex-row lg:items-center lg:pl-8">
-        <div className="flex items-start gap-5">
-          <IconBadge icon="workflow" tone="onDark" />
-          <p className="max-w-2xl leading-7 text-white/80">{clinics.postOpening}</p>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-3">
-          {actions.map((action, index) => (
-            <ActionLink key={action} action={action} variant={index === 0 ? "primary" : "onDark"} />
-          ))}
-        </div>
-      </Reveal>
-    </section>
-  );
-}
-
 /**
- * Planning and building (`#planning`): the three needs that route the page,
- * the brand's services and specialties, its process, its published projects,
- * and what a consultation covers.
+ * Planning, design and construction (`#planning`).
+ *
+ * Opens with what the service is and the two qualifications that bound it,
+ * as ordinary body copy set beside the introduction rather than boxed off
+ * ahead of it. Then services, process, the built projects, and what a first
+ * conversation covers — the order a reader considering a build asks in.
  */
 function PlanningSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
@@ -94,32 +134,24 @@ function PlanningSection() {
   const record = getBrand("clinics");
   return (
     <AnchoredSection id="planning">
-      {/* The three needs, each with its verified destination. */}
-      <section className="px-5 pb-20 lg:px-8">
-        <Stagger className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
-          {hub.needs.map((need) => (
-            <StaggerItem key={need.index} className="h-full">
-              <SpotlightCard
-                as="article"
-                className="lsh-lift flex h-full flex-col border-t-2 border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] p-7 transition-colors hover:border-[var(--lsh-brand-red)]"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <IconBadge icon={iconForTitle(need.title)} />
-                  <span className="lsh-display text-sm text-[var(--lsh-brand-red)]">
-                    {need.index}
-                  </span>
-                </div>
-                <h2 className="lsh-display mt-6 text-xl leading-tight text-[var(--lsh-charcoal)]">
-                  {need.title}
-                </h2>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{need.text}</p>
-                <div className="mt-auto pt-6">
-                  <ActionLink action={need.action as ActionKey} variant="text" />
-                </div>
-              </SpotlightCard>
-            </StaggerItem>
-          ))}
-        </Stagger>
+      <section className="px-5 py-20 lg:px-8">
+        <Container>
+          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+            <Reveal>
+              <SectionHeading
+                eyebrow={hub.planning.eyebrow}
+                title={hub.planning.title}
+                description={hub.planning.intro}
+              />
+            </Reveal>
+            <Reveal
+              delay={0.08}
+              className="self-end border-l-2 border-[var(--lsh-rule-strong)] pl-6"
+            >
+              <p className="text-sm leading-6 text-[var(--lsh-muted)]">{hub.planning.boundary}</p>
+            </Reveal>
+          </div>
+        </Container>
       </section>
 
       {/* Services and specialties, beside the clinic photograph. */}
@@ -160,7 +192,7 @@ function PlanningSection() {
         </div>
       </SplitSection>
 
-      {/* Process. */}
+      {/* Process, on ink: the one dark band in the section, and the turn from what to how. */}
       <ProcessSteps
         eyebrow={hub.processHeading.eyebrow}
         title={hub.processHeading.title}
@@ -172,55 +204,10 @@ function PlanningSection() {
         }))}
       />
 
-      {/* Published projects, as the Clinics site presents them, beside its actual home page. */}
-      <section className="px-5 py-20 lg:px-8">
-        <Container>
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <Reveal>
-              <SectionHeading
-                eyebrow={clinics.projects.eyebrow}
-                title={clinics.projects.title}
-                description={clinics.geography}
-              />
-              <p className="mt-6 leading-7 text-[var(--lsh-muted)]">{clinics.attribution}</p>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <SiteScreen site="clinics" className="border border-[var(--lsh-rule)]" />
-            </Reveal>
-          </div>
-          <Stagger
-            as="ul"
-            className="mt-12 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-3"
-          >
-            {clinics.projects.items.map((project) => (
-              <StaggerItem key={project.href} as="li" className="bg-[var(--lsh-paper)]">
-                <a
-                  href={project.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex h-full items-center gap-4 p-6 transition-colors hover:bg-[var(--lsh-surface)]"
-                >
-                  <IconBadge icon="building" size={18} />
-                  <span className="lsh-display flex-1 text-lg leading-tight text-[var(--lsh-charcoal)]">
-                    {project.title}
-                  </span>
-                  <ExternalLink
-                    size={16}
-                    aria-hidden="true"
-                    className="shrink-0 text-[var(--lsh-brand-red)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
-                  />
-                </a>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <div className="mt-8">
-            <ActionLink action="view_clinic_projects" variant="text" />
-          </div>
-        </Container>
-      </section>
+      <ProjectsSection />
 
-      {/* The consultation, and the Clinics site's own channels. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
+      {/* What a first conversation covers, and where it happens. */}
+      <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
         <Container className="grid gap-8 lg:grid-cols-2 lg:items-start">
           <Checklist
             title={hub.consultation.title}
@@ -240,6 +227,72 @@ function PlanningSection() {
 }
 
 /**
+ * The six built clinics: the page's only proof, and previously a flat row of
+ * bordered boxes competing with three other card grids.
+ *
+ * It is now the page's widest moment — the project list set against the
+ * Clinics site's own home page, with the geography stated as a figure rather
+ * than buried in a sentence. No project photography exists that this site may
+ * publish, and none is invented, so the typography carries it.
+ */
+function ProjectsSection() {
+  const { projects, attribution } = LIFE_SUPPLY_CONTENT.clinics;
+  return (
+    <section className="border-y border-[var(--lsh-rule)] px-5 py-24 lg:px-8">
+      <Container>
+        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
+          <Reveal>
+            <SectionHeading
+              eyebrow={projects.eyebrow}
+              title={projects.title}
+              description={projects.intro}
+            />
+            <p className="mt-8 border-t border-[var(--lsh-rule)] pt-6 text-sm leading-6 text-[var(--lsh-muted)]">
+              {attribution}
+            </p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <SiteScreen site="clinics" className="border border-[var(--lsh-rule)]" />
+          </Reveal>
+        </div>
+
+        <Stagger as="ol" className="mt-14 grid gap-px bg-[var(--lsh-rule)] sm:grid-cols-2">
+          {projects.items.map((project, index) => (
+            <StaggerItem key={project.href} as="li" className="bg-[var(--lsh-paper)]">
+              <a
+                href={project.href}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex h-full items-start gap-5 p-8 transition-colors hover:bg-[var(--lsh-surface)] lg:p-9"
+              >
+                <span
+                  aria-hidden="true"
+                  className="lsh-display pt-1 text-[11px] text-[var(--lsh-brand-red)]"
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="lsh-display flex-1 text-xl leading-tight text-[var(--lsh-charcoal)] transition-colors group-hover:text-[var(--lsh-brand-red)] lg:text-2xl">
+                  {project.title}
+                </span>
+                <ExternalLink
+                  size={18}
+                  aria-hidden="true"
+                  className="mt-1 shrink-0 text-[var(--lsh-brand-red)] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                />
+              </a>
+            </StaggerItem>
+          ))}
+        </Stagger>
+
+        <Reveal className="mt-10 border-t border-[var(--lsh-rule)] pt-8">
+          <ActionLink action="view_clinic_projects" variant="onLight" />
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
+
+/**
  * Equipment (`#equipment`), absorbed from `/clinic-solutions/equipment/` on
  * 2026-09-10: what a quote request needs, and where the opening-supply
  * categories are published. Equipment pricing is quoted, never listed here.
@@ -251,9 +304,9 @@ function EquipmentSection() {
   const clinicCategories = store.categories.filter((category) => /clinic/i.test(category.label));
   return (
     <AnchoredSection id="equipment">
-      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
+      <section className="px-5 pt-20 lg:px-8">
         <Container>
-          <Reveal>
+          <Reveal className="max-w-3xl">
             <SectionHeading eyebrow={page.eyebrow} title={page.title} description={page.intro} />
           </Reveal>
         </Container>
@@ -306,33 +359,42 @@ function EquipmentSection() {
 }
 
 /**
- * Ongoing supplies (`#ongoing-supplies`), absorbed from
- * `/clinic-solutions/ongoing-supplies/` on 2026-09-10.
+ * Ongoing supplies (`#ongoing-supplies`).
  *
  * Round four, change 5 still governs what belongs here: this is read by a
  * clinic that is already open and wants to buy, so it keeps the non-clinical
  * boundary that qualifies its own content and does not repeat the
- * construction attribution or the project-sequence qualification. Those now
- * sit a few sections above on the same page, which is what the project
- * pointer refers to.
+ * construction attribution or the project-sequence qualification. Those sit
+ * earlier on the page, which is what the project pointer refers to.
  */
 function OngoingSuppliesSection() {
   const { clinics } = LIFE_SUPPLY_CONTENT;
   const page = clinics.ongoingSupplies;
   return (
     <AnchoredSection id="ongoing-supplies">
-      <section className="px-5 pt-20 lg:px-8">
+      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
         <Container>
-          <Reveal>
-            <SectionHeading eyebrow={page.eyebrow} title={page.title} description={page.intro} />
-          </Reveal>
-          <Reveal
-            delay={0.05}
-            className="mt-10 grid gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-2 lg:pl-8"
-          >
-            <p className="leading-7 text-[var(--lsh-charcoal)]">{page.boundary}</p>
-            <p className="leading-7 text-[var(--lsh-muted)]">{page.projectPointer}</p>
-          </Reveal>
+          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+            <Reveal>
+              <SectionHeading eyebrow={page.eyebrow} title={page.title} description={page.intro} />
+            </Reveal>
+            <Reveal
+              delay={0.08}
+              className="self-end border-l-2 border-[var(--lsh-rule-strong)] pl-6"
+            >
+              <p className="text-sm leading-6 text-[var(--lsh-charcoal)]">{page.boundary}</p>
+              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+                {page.projectPointer}{" "}
+                <a
+                  href={page.projectPointerLink.href}
+                  className="text-[var(--lsh-brand-red)] underline decoration-[var(--lsh-rule-strong)] underline-offset-4 transition-colors hover:decoration-[var(--lsh-brand-red)]"
+                >
+                  {page.projectPointerLink.label}
+                </a>
+                .
+              </p>
+            </Reveal>
+          </div>
         </Container>
       </section>
       <SplitSection
@@ -379,14 +441,14 @@ function CollaborationSection() {
     <AnchoredSection id="collaboration">
       <section className="px-5 py-20 lg:px-8">
         <Container>
-          <Reveal>
+          <Reveal className="max-w-3xl">
             <SectionHeading
               eyebrow={section.eyebrow}
               title={section.title}
               description={section.intro}
             />
           </Reveal>
-          <div className="mt-10 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div className="mt-12 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
               <IconBadge icon="shield" />
               <div>
@@ -400,16 +462,10 @@ function CollaborationSection() {
                 </ul>
               </div>
             </Reveal>
-            <Stagger as="ul" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+            <Stagger as="ul" className="grid gap-px bg-[var(--lsh-rule)]">
               {section.items.map((item) => (
-                <StaggerItem as="li" key={item.title} className="h-full">
-                  <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7">
-                    {/*
-                     * The status wraps onto its own line rather than being
-                     * held beside the title: "Available through LifeSupply
-                     * Clinics" is longer than a 320 px card can hold, and a
-                     * status that cannot shrink pushes the page sideways.
-                     */}
+                <StaggerItem as="li" key={item.title} className="bg-[var(--lsh-paper)]">
+                  <article className="flex h-full flex-col p-7">
                     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
                       <h3 className="lsh-display min-w-0 text-xl leading-tight text-[var(--lsh-charcoal)]">
                         {item.title}
@@ -446,25 +502,60 @@ function CollaborationSection() {
 }
 
 /**
- * `/clinic-solutions/` — the whole clinic relationship on one page (website
- * consolidation, stage 1, 2026-09-10).
+ * The closing band: the three things a reader can start, and what none of
+ * them commits them to. Three destinations rather than one, because the page
+ * serves three audiences and the band is where each of them decides.
+ */
+function ClosingBand() {
+  const { close, actions } = LIFE_SUPPLY_CONTENT.clinics.hub;
+  return (
+    <section className="bg-[var(--lsh-ink)] px-5 py-24 text-white lg:px-8">
+      <Container>
+        <Reveal className="grid gap-10 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:pl-10">
+          <div>
+            <Eyebrow tone="onDark" as="h2">
+              {close.eyebrow}
+            </Eyebrow>
+            <p className="lsh-display mt-4 text-4xl leading-[1.05] lg:text-5xl">{close.title}</p>
+            <p className="mt-5 max-w-xl leading-7 text-white/75">{close.text}</p>
+          </div>
+          <div>
+            <div className="flex flex-wrap gap-3">
+              {(actions as readonly ActionKey[]).map((action, index) => (
+                <ActionLink
+                  key={action}
+                  action={action}
+                  variant={index === 0 ? "primary" : "onDark"}
+                />
+              ))}
+            </div>
+            <p className="mt-8 border-t border-white/15 pt-6 text-sm leading-6 text-white/60">
+              {close.qualification}
+            </p>
+          </div>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
+
+/**
+ * `/clinic-solutions/` — the whole clinic relationship on one page.
  *
- * Equipment, Ongoing supplies and the Partners clinic page were separate
- * addresses until now. They made a visitor guess which of four pages
- * described their situation, and each one had to re-establish the same
- * context before it could say anything. The page is sectioned instead: plan
- * and build, equip, keep supplied, collaborate. `OnThisPage` shows that shape
- * before the reader scrolls, and the three retired addresses redirect to
- * their section.
+ * Redesigned on 2026-09-10. The page had asked its routing question three
+ * times before saying anything — a section-navigation strip, a two-card
+ * "which do you need", and a three-card "plan / equip / supply" — and had put
+ * a grey qualification box at position two, ahead of everything it qualified.
+ * There is now one router, and the qualifications sit beside the copy they
+ * bound.
  *
- * Every section is an `AnchoredSection`, so a redirect or a link that names a
- * fragment lands on the whole block with the sticky header cleared — and it
- * does so with JavaScript disabled, because these are plain anchors rather
- * than scripted scrolling.
+ * The consolidation's four anchors are unchanged: `#planning`, `#equipment`,
+ * `#ongoing-supplies` and `#collaboration` are each the target of retired
+ * addresses, and each section still opens with enough context to be read by
+ * someone who arrives at it directly and has read nothing above it.
  */
 export function ClinicSolutionsPage() {
-  const { clinics } = LIFE_SUPPLY_CONTENT;
-  const { hub } = clinics;
+  const { hub } = LIFE_SUPPLY_CONTENT.clinics;
   const [primary, secondary] = hub.actions as readonly ActionKey[];
   return (
     <LifeSupplyLayout>
@@ -479,51 +570,12 @@ export function ClinicSolutionsPage() {
           </>
         }
       />
-      <OnThisPage items={clinics.sections} />
-      <ClinicDistinction />
-
-      {/* The two ways in, before the three needs: a project, or supplies for an open clinic. */}
-      <section className="border-b border-[var(--lsh-rule)] px-5 py-16 lg:px-8">
-        <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow={hub.entry.eyebrow}
-              title={hub.entry.title}
-              description={hub.entry.note}
-            />
-          </Reveal>
-          <Stagger as="ul" className="mt-10 grid gap-5 md:grid-cols-2">
-            {hub.entry.options.map((option) => (
-              <StaggerItem as="li" key={option.title} className="h-full">
-                <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7 lg:p-8">
-                  <div className="flex items-start justify-between gap-4">
-                    <h2 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
-                      {option.title}
-                    </h2>
-                    <IconBadge icon={iconForTitle(option.title)} />
-                  </div>
-                  <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{option.text}</p>
-                  <div className="mt-auto pt-6">
-                    <ActionLink action={option.action as ActionKey} />
-                  </div>
-                </article>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </section>
-
+      <Router />
       <PlanningSection />
       <EquipmentSection />
-
-      {/* After opening: conditional. */}
-      <Callout icon="truck" eyebrow={hub.supplyHeading.eyebrow} tone="onLight">
-        <p className="lsh-display text-2xl leading-[1.1]">{hub.supplyHeading.title}</p>
-      </Callout>
-
       <OngoingSuppliesSection />
       <CollaborationSection />
-      <ConditionalClose actions={hub.actions as readonly ActionKey[]} />
+      <ClosingBand />
     </LifeSupplyLayout>
   );
 }

@@ -650,20 +650,21 @@ test.describe("LifeSupply public site", () => {
       "href",
       "https://www.lifesupplyclinics.com/contact-us/",
     );
-    // Equip it and keep it supplied are sections of this page since the
-    // consolidation, so the two needs link to fragments rather than pages.
+    // The router sends each of the three audiences to its section (page
+    // redesign, 2026-09-10).
     for (const [name, anchor] of [
-      ["Equipment planning and quotes", "#equipment"],
-      ["Ongoing supplies", "#ongoing-supplies"],
+      ["Plan or renovate a clinic", "#planning"],
+      ["Plan and quote equipment", "#equipment"],
+      ["Keep a clinic supplied", "#ongoing-supplies"],
     ] as const) {
-      const link = main.getByRole("link", { name, exact: true }).first();
-      await expect(link).toHaveAttribute("href", new RegExp(`${anchor}$`));
-      await expect(page.locator(anchor)).toHaveCount(1);
+      const link = main.getByRole("link", { name }).first();
+      await expect(link, name).toHaveAttribute("href", anchor);
+      await expect(page.locator(anchor), anchor).toHaveCount(1);
     }
-    // Stated twice on the consolidated page and deliberately so: once in the
-    // project distinction near the top, and again in the supplies section in
-    // its own words, because that section is read by a clinic that is buying
-    // rather than building (round four, change 5).
+    // Stated twice and deliberately so: once where a reader has just learned
+    // what the service is, and again in the supplies section in its own
+    // words, because that reader is buying rather than building (round four,
+    // change 5).
     const boundary = main.getByText("does not operate patient-care clinics");
     await expect(boundary).toHaveCount(2);
     await expect(boundary.first()).toBeVisible();
@@ -705,11 +706,13 @@ test.describe("LifeSupply public site", () => {
     }
   });
 
-  test("shows the Clinic Solutions section navigation and every target it names", async ({
-    page,
-  }) => {
+  test("routes Clinic Solutions from one control that names every section", async ({ page }) => {
+    // The page asked its routing question three times before the redesign of
+    // 2026-09-10: a section-navigation strip, a two-card "which do you need",
+    // and a three-card "plan / equip / supply". One named landmark does it
+    // now, and it still reaches all four sections.
     await page.goto("/clinic-solutions");
-    const nav = page.getByRole("navigation", { name: "On this page" });
+    const nav = page.getByRole("navigation", { name: "Choose a starting point" });
     await expect(nav).toBeVisible();
     const hrefs = await nav
       .getByRole("link")
@@ -718,9 +721,34 @@ test.describe("LifeSupply public site", () => {
     for (const href of hrefs) {
       await expect(page.locator(href!), href!).toHaveCount(1);
     }
+    // And there is only one such control on the page.
+    await expect(page.getByRole("navigation", { name: "On this page" })).toHaveCount(0);
+    // The reader who is already open must recognise themselves in the router.
+    await expect(nav).toContainText("Already seeing patients");
     // The collaboration section states what it is not, with its statuses.
     await expect(page.locator("#collaboration")).toContainText("Collaboration is not procurement");
     await expect(page.locator("#collaboration")).toContainText("Proposed");
+  });
+
+  test("stays readable on Clinic Solutions with JavaScript disabled", async ({ browser }) => {
+    // Scroll-revealed sections used to start at opacity 0, and framer-motion
+    // writes the initial variant into the server-rendered HTML, so the whole
+    // page body was invisible until a script ran. Entrances animate transform
+    // only now (page redesign, 2026-09-10).
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/clinic-solutions");
+    for (const probe of [
+      "What does your clinic need?",
+      "Bring a clinic plan into focus.",
+      "Six clinics built across British Columbia.",
+      "Plan the equipment each room needs.",
+      "Keep an open clinic supplied.",
+      "Start with what the clinic needs.",
+    ]) {
+      await expect(page.getByText(probe).first(), probe).toBeVisible();
+    }
+    await context.close();
   });
 
   test("names geography, currency and support in the stores section, and sells nothing", async ({

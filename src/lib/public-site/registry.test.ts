@@ -544,7 +544,6 @@ describe("action registry", () => {
       ...homepage.paths.map((path) => path.action),
       ...Object.values(businesses.pages).flatMap((page) => [...page.actions]),
       ...clinics.hub.actions,
-      ...clinics.hub.needs.map((need) => need.action),
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[0],
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[1],
       LIFE_SUPPLY_CONTENT.businesses.hub.clinics.action,
