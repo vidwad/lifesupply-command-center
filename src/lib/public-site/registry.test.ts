@@ -544,11 +544,8 @@ describe("action registry", () => {
   });
 
   it("backs every action the content model declares", () => {
-    const { clinics, businesses, contact, homepage } = LIFE_SUPPLY_CONTENT;
+    const { clinics, businesses, contact } = LIFE_SUPPLY_CONTENT;
     const declared: string[] = [
-      ...homepage.clinicLifecycle.steps.map((step) => step.action),
-      homepage.metabolic.action,
-      ...homepage.paths.map((path) => path.action),
       ...Object.values(businesses.pages).flatMap((page) => [...page.actions]),
       ...clinics.hub.actions,
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[0],

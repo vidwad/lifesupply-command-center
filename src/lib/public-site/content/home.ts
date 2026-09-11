@@ -1,8 +1,9 @@
 /**
- * Homepage copy for the Stage 2 page contract (docs/website-development/
- * CLAUDE.md §3, `/`): group introduction, verified proof, four brands, clinic
- * lifecycle, metabolic opportunity, partner and investor paths, current
- * news, closing contact.
+ * Homepage copy. Since 2026-09-11 the page is: hero, experience and
+ * direction, the program architecture, the operating-context band, the
+ * reported figures, footprint and milestones, the operating base, the
+ * brands, growth direction, the developing opportunities, and contact. The
+ * About sections come from `about.ts`; this file holds the rest.
  *
  * Provenance is recorded beside each block. "Approved" blocks were already
  * published before Stage 2. Blocks marked "Stage 2 draft" are new sentences
@@ -75,56 +76,6 @@ export const homepage = {
     ],
   },
 
-  /**
-   * Group introduction. Stage 2 draft from the guide's proposed positioning
-   * (S-120). The first sentence is the guide's wording; the second states
-   * the expansion direction conditionally, in the qualification pattern the
-   * approved About copy already uses. Pending product-owner approval.
-   */
-  /**
-   * Round four, change 1. This section used to restate the operating scope
-   * and the growth direction, which the panels above it and the brand cards
-   * below it already carry. It now does the one job nothing else on the page
-   * does: it says how the group is put together. The growth direction is
-   * stated once, in the "Growing" panel above; the brands are shown once, in
-   * the cards below; the full structure with acquisition years is on Contact.
-   * Drafted with Codex against the verified facts and edited before use.
-   */
-  introduction: {
-    eyebrow: "The LifeSupply group",
-    title: "One parent company, three wholly-owned subsidiaries.",
-    statement:
-      "LifeSupply Health Inc. is the parent of Wellmart Health Supplies Ltd. in Canada, LifeSupply US, Inc. in the United States, and Balkowitsch Enterprises Inc., all wholly owned.",
-    qualification:
-      "The four customer-facing brands sit on top of that structure rather than mirroring it, so a brand name and a company name are not the same thing. Three are online stores, each with its own site, accounts, currency, prices and support. LifeSupply Clinics is a project business for British Columbia, not a store.",
-  },
-
-  /**
-   * Audience routes, directly under the hero (website improvement program,
-   * 2026-09-09): the three journeys the site serves, each to a page that
-   * already exists. Destinations are registry action keys, never literals.
-   */
-  audiences: {
-    eyebrow: "Where to start",
-    items: [
-      {
-        title: "Operating businesses",
-        text: "Four operating websites for medical, health, and home-care supplies, and for clinic planning, design, and equipment.",
-        action: "explore_businesses",
-      },
-      {
-        title: "Partnership opportunities",
-        text: "Clinics, pharmacies, suppliers, and strategic counterparties, each with the conversation that fits.",
-        action: "business_inquiries",
-      },
-      {
-        title: "Investor information",
-        text: "Reported figures with their basis, the growth strategy, and the dated public record.",
-        action: "investor_information",
-      },
-    ],
-  },
-
   // Approved (moved from JSX in PR #61). Verified proof, with source context.
   glance: {
     eyebrow: "LifeSupply at a glance",
@@ -144,84 +95,6 @@ export const homepage = {
     title: "Four operating businesses, each with its own customers.",
     description:
       "Each brand keeps its own storefront or service site, accounts, currency, and customer support. LifeSupply Health is the corporate hub, not a store.",
-  },
-
-  /**
-   * Clinic lifecycle. Stage 2 draft from the guide's operating model: a
-   * clinic project can introduce equipment and supply needs, and an existing
-   * clinic can become a supply customer without a construction project. The
-   * services named are those the LifeSupply Clinics site describes (S-70);
-   * both external actions are that site's verified pages (S-73).
-   */
-  clinicLifecycle: {
-    eyebrow: "Clinic solutions",
-    title: "A clinic project can start at any stage.",
-    intro:
-      "LifeSupply Clinics offers clinic planning, design, construction and fit-out, project coordination, and equipment services. An existing clinic can become a supply customer without a construction project.",
-    steps: [
-      {
-        index: "01",
-        title: "Plan or renovate a clinic",
-        text: "Site evaluation, layout, compliance, budgeting, and build coordination, delivered within verified arrangements.",
-        action: "plan_clinic",
-        actionLabel: "Book a consultation",
-      },
-      {
-        index: "02",
-        title: "Equip it",
-        text: "Room-by-room equipment planning, quotes, and opening supplies for a new or expanding practice.",
-        action: "equipment_quote",
-        actionLabel: "Request an equipment quote",
-      },
-      {
-        index: "03",
-        title: "Keep it supplied",
-        text: "Routine procurement and repeat ordering for clinics that are already open.",
-        action: "clinic_supply_review",
-        actionLabel: "Request a supply review",
-      },
-    ],
-    note: "A consultation is not a contracted project, and a quote is not an order. Each step is confirmed on its own terms.",
-  },
-
-  /**
-   * Metabolic opportunity. Stage 2 draft. Status is "in development" because
-   * no store carries a kit collection and no availability has been confirmed
-   * (S-89, S-90, WEB-04). No product, price, clinical, or regulatory claim.
-   */
-  metabolic: {
-    eyebrow: "In development",
-    title: "Metabolic-health supply services.",
-    text: "LifeSupply is developing a supply-services offer for metabolic-health programs: non-drug supplies, clinic procurement, kitting and fulfilment, and contracted workflow support. Availability will be published when it is confirmed; nothing on this site is a purchasable program yet.",
-    action: "metabolic_hub",
-    actionLabel: "Metabolic Health",
-  },
-
-  // Stage 2 draft; Stage 5 reconciled the partner path to the Partners hub,
-  // and the website consolidation retired that hub on 2026-09-10. The path
-  // now goes where the conversation actually starts.
-  paths: [
-    {
-      eyebrow: "Partners",
-      title: "Clinics, pharmacies, suppliers, and acquisition counterparties.",
-      text: "Program and design collaboration, non-drug supply programs, supplier onboarding, and acquisition discussions each start with a conversation.",
-      action: "business_inquiries",
-      actionLabel: "Explore partner relationships",
-    },
-    {
-      eyebrow: "Investors",
-      title: "Investor information, presented with context.",
-      text: "Current annual-report context, historical materials, and a direct investor-relations contact.",
-      action: "investor_information",
-      actionLabel: "Investor relations",
-    },
-  ],
-
-  // Stage 2 draft heading; the items are the approved historical news records.
-  newsroom: {
-    eyebrow: "Historical company news",
-    title: "Announcements from the public record.",
-    note: "Dated releases from 2022. No later company news has been published.",
   },
 
   // Stage 2 draft heading; the channels are the approved directory.
