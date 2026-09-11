@@ -1675,14 +1675,15 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     // the Clinics brand page render it. Nothing anywhere describes owned
     // clinics or patient care as a company service.
     expect(clinicsContent()).toContain("does not operate patient-care clinics");
-    // The project material carries the shared distinction block once, near
-    // the top of the page, where every reader passes it. The ongoing-supplies
-    // section states the same boundary in its own words, because the shared
-    // block also carries construction attribution that belongs to a project
-    // (round four, change 5). What matters is that both state it.
-    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(1);
-    expect(clinicPages()).toContain("{clinics.distinction}");
+    // Two statements of the boundary, each in the section it bounds (page
+    // redesign, 2026-09-10). It used to sit in a grey box at position two,
+    // ahead of everything it qualified; the planning section now carries it
+    // where a reader has just learned what the service is, and the
+    // ongoing-supplies section states it in its own words because that reader
+    // is buying rather than building (round four, change 5).
+    expect(sectionBody(clinicPages(), "PlanningSection")).toContain("{hub.planning.boundary}");
     expect(sectionBody(clinicPages(), "OngoingSuppliesSection")).toContain("{page.boundary}");
+    expect(clinicsContent()).toContain("It does not operate patient-care clinics");
     expect(clinicsContent()).toContain(
       "LifeSupply does not operate patient-care clinics and takes no part in clinical decisions",
     );
@@ -1694,25 +1695,40 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   });
 
   it("attributes delivery roles only as the Clinics site states them", () => {
+    // The work is attributed to LifeSupply Clinics and its core partners,
+    // and no further. The sentence that used to follow explained the site's
+    // own editorial rule, which is a note to a reviewer rather than anything
+    // a client needs (independent review, 2026-09-10).
     expect(clinicsContent()).toContain("core partners");
-    expect(clinicsContent()).toContain("attributes no construction work to LifeSupply beyond");
-    expect(clinicPages()).toContain("{clinics.attribution}");
+    expect(clinicsContent()).toContain("are not published");
+    expect(clinicsContent()).not.toContain("this site attributes no construction work");
+    // And the projects are claimed as projects, not as six completed builds:
+    // what is published is six project pages, one of which does not describe
+    // construction at all.
+    expect(clinicsContent()).toContain("Six clinic projects across British Columbia");
+    expect(clinicsContent()).not.toMatch(/clinics built/i);
+    // It renders beside the built projects, which is the claim it qualifies.
+    expect(sectionBody(clinicPages(), "ProjectsSection")).toContain("{attribution}");
+    // And the planning section says whose work the construction is.
+    expect(clinicsContent()).toContain("the clients behind each project, are not published");
   });
 
   it("treats post-opening supply as conditional on every clinic page", () => {
-    expect(clinicsContent()).toContain("creates no supply commitment");
-    // The project-sequence note closes the page once. The ongoing-supplies
-    // section keeps its own conditional block, which states what is not
-    // offered to a clinic that is already buying (round four, change 5).
-    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(1);
-    expect(clinicPages()).toContain("{clinics.postOpening}");
+    expect(clinicsContent()).toContain("creates no obligation to buy supplies");
+    // One closing band, carrying the sequence qualification. The
+    // ongoing-supplies section keeps its own conditional block, which states
+    // what is not offered to a clinic that is already buying (round four,
+    // change 5).
+    expect((clinicPages().match(/<ClosingBand \/>/g) ?? []).length).toBe(1);
+    expect(clinicPages()).toContain("{close.qualification}");
+    expect(clinicsContent()).toContain("a quote is not an order");
     expect(clinicsContent()).toContain("are not offered on this site today");
     expect(sectionBody(clinicPages(), "OngoingSuppliesSection")).toContain(
       "{page.conditional.text}",
     );
     // And the supplies page points at the project service rather than
     // explaining it, so a buying clinic is not made to read project terms.
-    expect(clinicsContent()).toContain("are a separate service for British Columbia projects");
+    expect(clinicsContent()).toContain("are a separate service, for British Columbia projects");
   });
 
   it("never restates store terms: thresholds, delivery times, or prices", () => {
@@ -1727,7 +1743,7 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   it("reads categories, support channels, and project links from the registries and content", () => {
     expect(brandPages()).toContain("record.categories.map");
     expect(brandPages()).toContain("record.storeLinks.map");
-    expect(clinicPages()).toContain("clinics.projects.items.map");
+    expect(clinicPages()).toContain("projects.items.map");
     expect(contactPage()).toContain("contact.intents.map");
     expect(contactPage()).toContain("contact.existingOrder");
     // The stores section renders the registry, not a hand-written list, and
@@ -1916,25 +1932,43 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(layout()).not.toMatch(/document\.cookie/);
   });
 
-  it("offers the two clinic entries as independent choices, with supply needing no project", () => {
+  it("routes the three clinic audiences once, with supply needing no project", () => {
+    // The page asked the same routing question three times before saying
+    // anything: a section-navigation strip, a two-card "which do you need",
+    // and a three-card "plan / equip / supply", all pointing at the same
+    // places. One router replaced them on 2026-09-10, and this asserts there
+    // is exactly one.
     const c = stripComments(read("src/lib/public-site/content/clinics.ts"));
-    expect(c).toContain("Opening or renovating a clinic");
-    expect(c).toContain("Supplying a clinic that is already open");
-    // Supply must never be described as depending on a project.
-    expect(c).toContain("No construction project is involved.");
-    expect(c).not.toMatch(/supply (requires|needs) a (project|build)/i);
     const page = stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
-    expect(page).toContain("hub.entry.options.map");
-    // The choice is stated before the three needs. Since the consolidation
-    // the needs render inside `PlanningSection`, so the order that matters is
-    // the order in the page component — not the order the helpers happen to
-    // be declared in the file.
+
+    // Three routes, each naming the section it goes to.
+    for (const href of ["#planning", "#equipment", "#ongoing-supplies"]) {
+      expect(c, href).toContain(`href: "${href}"`);
+    }
+    expect(c).toContain('href: "#collaboration"');
+    expect((page.match(/router\.routes\.map/g) ?? []).length).toBe(1);
+
+    // A clinic already open must recognise itself immediately, and supply
+    // must never be described as depending on a project.
+    expect(c).toContain("Already seeing patients");
+    expect(c).toContain("with no construction project involved");
+    expect(c).not.toMatch(/supply (requires|needs) a (project|build)/i);
+
+    // The router comes before every section it routes to.
     const body = page.slice(page.indexOf("export function ClinicSolutionsPage("));
-    expect(body.indexOf("hub.entry")).toBeGreaterThan(-1);
-    expect(body.indexOf("hub.entry")).toBeLessThan(body.indexOf("<PlanningSection />"));
-    // And the three needs are in the planning section, not loose on the page.
-    expect(body).not.toContain("hub.needs");
-    expect(page.slice(page.indexOf("function PlanningSection("))).toContain("hub.needs.map");
+    expect(body.indexOf("<Router />")).toBeGreaterThan(-1);
+    for (const section of [
+      "<PlanningSection />",
+      "<EquipmentSection />",
+      "<OngoingSuppliesSection />",
+      "<CollaborationSection />",
+    ]) {
+      expect(body.indexOf("<Router />"), section).toBeLessThan(body.indexOf(section));
+    }
+    // And it is one control, not three: no second router survives.
+    expect(page).not.toContain("hub.entry");
+    expect(page).not.toContain("hub.needs");
+    expect(page).not.toContain("<OnThisPage");
   });
 
   it("keeps clinic collaboration distinct from procurement and pharmacy programs non-drug", () => {
@@ -2249,7 +2283,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
     const businesses = stripComments(read("src/lib/public-site/content/businesses.ts"));
     // Equipment: the quote request and the catalogue boundary.
     expect(clinics).toContain("What a quote request needs");
-    expect(clinics).toContain("Equipment pricing is quoted, not listed on this corporate site.");
+    expect(clinics).toContain("priced by quote rather than listed");
     // Ongoing supplies: what is available and what is only discussed.
     expect(clinics).toContain("Available today");
     expect(clinics).toContain("Discussed case by case");

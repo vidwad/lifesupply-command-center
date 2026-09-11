@@ -54,13 +54,23 @@ const IN_VIEW_STAGGER = {
 } as const;
 
 /**
- * Entrances fade and rise. They never blur: a heading or a sentence must be
- * readable the instant it is painted, and a blur filter makes meaningful
- * text depend on an animation finishing (round two, 2026-09-10).
+ * Entrances rise. They never fade and never blur.
+ *
+ * They used to fade. framer-motion writes the `initial` variant into the
+ * server-rendered HTML, so an entrance that starts at `opacity: 0` ships a
+ * page whose body is invisible until JavaScript runs — which is what round
+ * four found in the hero and fixed there with a CSS entrance. The same defect
+ * was still in every scroll-revealed section on every page: with JavaScript
+ * disabled, `/clinic-solutions` rendered a header, a hero and nothing else
+ * (page redesign, 2026-09-10).
+ *
+ * Animating transform only leaves the content legible at the first frame and
+ * makes the motion decoration on top of it, so nothing on the site now
+ * depends on a script finishing in order to be read.
  */
 const rise: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { y: 24 },
+  visible: { y: 0 },
 };
 
 /** Fade and rise once, when the element scrolls into view. */

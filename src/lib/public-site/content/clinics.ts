@@ -17,14 +17,15 @@
  * External destinations come from the action and brand registries.
  */
 export const clinics = {
-  distinction:
-    "LifeSupply Clinics is a clinic-development, construction and fit-out, and equipment service. It does not operate patient-care clinics, and nothing on this site refers to a company-operated clinic network.",
+  /**
+   * How the projects are attributed. LifeSupply Clinics presents them as
+   * delivered with its core partners and names none of them, so this says who
+   * the work is done with and stops there. It used to end by explaining the
+   * site's own editorial rule, which is a note to a reviewer rather than
+   * anything a client needs (independent review, 2026-09-10).
+   */
   attribution:
-    "LifeSupply Clinics presents its projects as delivered together with its core partners. Individual partner roles and project clients are not published, and this site attributes no construction work to LifeSupply beyond what the Clinics site states.",
-  geography:
-    "Published projects are in British Columbia: Burnaby, Squamish, White Rock, Abbotsford, and Vancouver.",
-  postOpening:
-    "A clinic project can lead to an equipment order and, after opening, to ongoing supply. Each step is agreed separately: a consultation is not a contracted project, a quote is not an order, and a completed project creates no supply commitment.",
+    "LifeSupply Clinics delivers its projects together with its core partners. Individual partner roles, and the clients behind each project, are not published.",
 
   services: [
     {
@@ -100,8 +101,10 @@ export const clinics = {
 
   /** Published project pages on the Clinics site; verified 2026-09-08. Titles as published. */
   projects: {
-    eyebrow: "Published projects",
-    title: "As presented by LifeSupply Clinics.",
+    eyebrow: "Clinic projects",
+    title: "Six clinic projects across British Columbia.",
+    intro:
+      "Medical, oral surgery, ENT, and physiotherapy clinics in Burnaby, Squamish, White Rock, Abbotsford, and Vancouver. Each one opens on the LifeSupply Clinics site, where the project is presented in full.",
     items: [
       {
         title: "Medical clinic construction in Burnaby",
@@ -141,59 +144,75 @@ export const clinics = {
     eyebrow: "Clinic Solutions · LifeSupply Clinics",
     title: "Plan it, equip it, or keep it supplied.",
     intro:
-      "LifeSupply Clinics plans, designs, builds, and fits out medical, dental, and wellness clinics in British Columbia, and handles equipment inquiries for them, working with the trades and suppliers each project needs. An existing clinic can start at supply without a construction project.",
+      "LifeSupply Clinics plans, designs, builds, and fits out medical, dental, and wellness clinics in British Columbia, and handles equipment enquiries for them. A clinic that is already open can start at supply instead: that needs no construction project at all.",
+
     /**
-     * The two ways into Clinic Solutions, stated before the three needs
-     * (website improvement program, 2026-09-09, on a Codex recommendation):
-     * a visitor with an open clinic should not have to read a construction
-     * page to find out that supply needs no project. The two are
-     * independent choices, not steps, and neither implies the other.
+     * One router (page redesign, 2026-09-10).
+     *
+     * The page asked the same question three times before saying anything: a
+     * section-navigation strip, then a two-card "which do you need", then a
+     * three-card "plan / equip / supply". They routed to the same places. This
+     * is the one control that does that job, and it is a named navigation
+     * landmark, so it also serves as the page's section navigation.
+     *
+     * Collaboration sits below the three as a quieter line, because it is a
+     * different kind of relationship and far fewer readers want it.
      */
-    entry: {
-      eyebrow: "Which do you need?",
-      title: "A clinic project, or supplies for a clinic already open.",
-      note: "The two are separate. Ordering supplies needs no project, and a project does not create a store account.",
-      options: [
+    router: {
+      eyebrow: "Start here",
+      title: "What does your clinic need?",
+      routes: [
         {
-          title: "Opening or renovating a clinic",
-          text: "Planning, design, construction, fit-out, and equipment for clinic projects in British Columbia.",
-          action: "plan_clinic",
+          index: "01",
+          title: "A clinic project",
+          text: "Opening, renovating, or expanding a practice in British Columbia. Planning, design, construction, fit-out, and the equipment that goes with it.",
+          href: "#planning",
+          label: "Plan or renovate a clinic",
         },
         {
-          title: "Supplying a clinic that is already open",
-          text: "Routine procurement and repeat ordering through the operating stores, on their own accounts and terms. No construction project is involved.",
-          action: "clinic_ongoing_supplies",
+          index: "02",
+          title: "Equipment for a clinic",
+          text: "Rooms to equip or specific devices in mind, for a new practice or an expanding one. Planned room by room and priced by quote.",
+          href: "#equipment",
+          label: "Plan and quote equipment",
+        },
+        {
+          index: "03",
+          title: "Supplies for an open clinic",
+          text: "Already seeing patients. Everyday supplies and repeat ordering through the operating stores, with no construction project involved.",
+          href: "#ongoing-supplies",
+          label: "Keep a clinic supplied",
         },
       ],
+      collaboration: {
+        text: "Interested in shaping a supply programme, or in working together on a clinic design?",
+        href: "#collaboration",
+        label: "Collaboration",
+      },
     },
-    needs: [
-      {
-        index: "01",
-        title: "Plan or renovate a clinic",
-        text: "Feasibility, design, construction and fit-out, and project coordination, delivered within verified arrangements. The consultation happens on the Clinics site.",
-        action: "plan_clinic",
-      },
-      {
-        index: "02",
-        title: "Equip a clinic",
-        text: "Room-by-room equipment planning, quotes, and opening supplies for a new or expanding practice.",
-        action: "clinic_equipment",
-      },
-      {
-        index: "03",
-        title: "Supply an existing clinic",
-        text: "Routine procurement and repeat ordering through the stores, with a supply review to match categories to the practice.",
-        action: "clinic_ongoing_supplies",
-      },
-    ],
+
+    planning: {
+      eyebrow: "Planning, design, and construction",
+      title: "Bring a clinic plan into focus.",
+      intro:
+        "Whether a practice is opening, renovating, or expanding, the first conversation covers the space, the workflow, the equipment it has to hold, the budget, and the target opening date.",
+      /**
+       * The two qualifications that matter, as body copy where the reader has
+       * just learned what the service is. They sat in a grey box at position
+       * two before this redesign, ahead of anything they qualified.
+       */
+      boundary:
+        "LifeSupply Clinics develops clinic spaces, and delivers the construction with its core partners. It does not operate patient-care clinics and takes no part in clinical decisions.",
+    },
+
     servicesHeading: { eyebrow: "Services", title: "From feasibility to hand-over." },
     specialtiesHeading: { eyebrow: "Specialties", title: "Clinic types served." },
     processHeading: {
       eyebrow: "Process",
-      title: "Four stages, as the Clinics site describes them.",
+      title: "Four stages, from first conversation to hand-over.",
     },
     consultation: {
-      title: "What a consultation covers",
+      title: "Start with the practice and the space",
       text: "A first conversation is easier with a few facts to hand. None of them is a commitment.",
       items: [
         "Practice type and specialty",
@@ -205,23 +224,19 @@ export const clinics = {
     },
     channelsHeading: {
       title: "Service channels",
-      text: "Consultations and equipment quotes are handled on the Clinics site; its published contact channels are below.",
+      text: "Consultations and equipment quotes are handled by LifeSupply Clinics on its own site. Its published channels are below.",
     },
-    supplyHeading: { eyebrow: "After opening", title: "A conditional supply opportunity." },
     actions: ["plan_clinic", "equipment_quote", "clinic_supply_review"],
-  },
 
-  /**
-   * Section navigation for the consolidated page (consolidation stage 1).
-   * Clinic Solutions is now one page covering the whole relationship, so a
-   * reader needs to see its shape before scrolling into it.
-   */
-  sections: [
-    { href: "#planning", label: "Plan and build" },
-    { href: "#equipment", label: "Equip" },
-    { href: "#ongoing-supplies", label: "Keep supplied" },
-    { href: "#collaboration", label: "Collaboration" },
-  ],
+    /** The closing band: one call to action, and what each step does not commit anyone to. */
+    close: {
+      eyebrow: "Next step",
+      title: "Start with what the clinic needs.",
+      text: "Book a consultation to discuss a project in British Columbia, request an equipment quote, or arrange a supply review for a clinic that is already open.",
+      qualification:
+        "Projects, equipment orders, and ongoing supplies are agreed separately. A consultation does not commit anyone to a project, a quote is not an order, and completing a project creates no obligation to buy supplies.",
+    },
+  },
 
   /**
    * Clinic collaboration, moved here from `/partners/clinics` when that page
@@ -235,14 +250,14 @@ export const clinics = {
    */
   collaboration: {
     eyebrow: "Collaboration",
-    title: "Working with LifeSupply beyond purchasing.",
+    title: "Help shape a supply program, or a clinic design.",
     intro:
-      "Some clinics want more than a supply account: a say in how a program's supplies are configured, or a design partnership on a project. That is a different relationship from buying, and it is described here.",
+      "Two things are open to a clinic beyond buying: helping configure the metabolic-health supply program, which is in development and not yet running, or a design partnership on a British Columbia clinic project. Both are a different relationship from purchasing.",
     distinction: {
       title: "Collaboration is not procurement",
       items: [
         "A clinic that purchases supplies is a customer of the operating store, with that store's account, prices, and support. No collaboration is required.",
-        "A program collaboration means the clinic helps define a supply configuration, a workflow, or a pilot, agreed in writing before anything is fulfilled.",
+        "A program collaboration would mean the clinic helping define a supply configuration, a workflow, or a pilot, agreed in writing before anything is fulfilled.",
         "A design partnership relates to a clinic project delivered through LifeSupply Clinics and its delivery partners, on the terms of that project.",
         "An expression of interest is not a pilot. A pilot begins when both sides have signed an agreement for it, and not before.",
       ],
@@ -255,7 +270,7 @@ export const clinics = {
       },
       {
         title: "Pilots",
-        text: "A limited, written pilot of a program's supply or workflow support. Any pilot would need its own written agreement covering scope, duration, responsibilities, commercial terms, and how it ends.",
+        text: "A limited pilot of a program's supply or workflow support, discussed before it is designed. Any pilot would need its own written agreement covering scope, duration, responsibilities, commercial terms, and how it ends. None is running today.",
         status: "Proposed",
       },
       {
@@ -265,27 +280,27 @@ export const clinics = {
       },
     ],
     metabolicNote:
-      "The supply program a collaboration would configure is the metabolic-health service, which is in development. Its scope, its eight pathways, and what has to be confirmed before anything runs are set out on Metabolic Health.",
+      "Metabolic Health sets out that program in full: who it would serve, the eight supply pathways it covers, and what has to be agreed before any of it starts.",
     actions: ["clinic_collaboration", "metabolic_hub"],
   },
 
   equipment: {
-    eyebrow: "Equipment",
-    title: "Room-by-room equipment planning and quotes.",
+    eyebrow: "Clinic equipment",
+    title: "Plan the equipment each room needs.",
     intro:
-      "Equipment is planned by room and function, from the exam room to the sterilization area. Quotes are prepared from a request on the Clinics site; opening supplies can be planned alongside.",
+      "LifeSupply Clinics plans equipment room by room, from the exam room to the sterilization area, for medical, dental, and wellness clinics in British Columbia. That covers a practice fitting out for the first time, one expanding, and one replacing or adding a device in rooms already in use. Equipment is priced by quote rather than listed.",
     quote: {
       title: "What a quote request needs",
       items: [
         "Rooms and functions to equip",
         "Specialty procedures and any specific devices",
-        "Timeline to opening",
+        "Timeline to opening, or the date delivery is needed",
         "Delivery address and access",
       ],
     },
     catalogue: {
       title: "Opening supplies and consumables",
-      text: "Clinic and dental clinic supply categories are published on LifeSupply.ca. Equipment pricing is quoted, not listed on this corporate site.",
+      text: "Clinic and dental clinic supply categories are published on LifeSupply.ca, and can be ordered there directly.",
     },
     actions: ["equipment_quote"],
   },
@@ -301,15 +316,17 @@ export const clinics = {
    * stays because it qualifies what is on this page.
    */
   ongoingSupplies: {
-    eyebrow: "Ongoing supplies",
+    eyebrow: "Supplies for an open clinic",
     title: "Keep an open clinic supplied.",
     intro:
-      "Routine procurement runs through the operating stores, with their accounts, published prices, and repeat ordering as each store provides them. A supply review matches the practice to the right categories and channel.",
+      "Ordering runs through the LifeSupply Health stores: LifeSupply.ca for clinic and dental clinic supplies, and Wellmart Medical for home medical equipment. Each has its own accounts, published prices, and repeat ordering. A supply review matches a practice to the right categories and the store that carries them, so a buyer does not have to work out which store stocks what.",
     /** The one line about projects on a page that is not about projects. */
     projectPointer:
-      "Planning, design, construction and fit-out are a separate service for British Columbia projects, set out under Clinic Solutions.",
+      "Planning, design, construction, and fit-out are a separate service, for British Columbia projects.",
+    /** The link that follows the pointer, so the reader is not left hunting. */
+    projectPointerLink: { href: "#planning", label: "See clinic projects" },
     boundary:
-      "LifeSupply does not operate patient-care clinics and takes no part in clinical decisions. What is on this page is supply.",
+      "This section covers supplies. LifeSupply does not operate patient-care clinics and takes no part in clinical decisions.",
     available: {
       title: "Available today",
       items: [
