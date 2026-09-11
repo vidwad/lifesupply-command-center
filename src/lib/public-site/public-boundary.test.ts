@@ -17,6 +17,13 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import {
+  CONSOLIDATED_ROUTES,
+  LIFE_SUPPLY_ROUTES,
+  SECTION_ANCHORS,
+  STAGE_3_ROUTES,
+} from "@/lib/public-site/routes";
+
 const ROOT = join(__dirname, "..", "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
 const stripComments = (source: string): string =>
@@ -34,24 +41,35 @@ function publicContentFiles() {
 
 const LAYOUT = `${PUBLIC_DIR}/lifesupply-layout.tsx`;
 const PAGES = `${PUBLIC_DIR}/lifesupply-pages.tsx`;
-// Stage 2 split the Home and About pages into their own files, still exported
-// through the barrel above; the canaries read all of them as one source.
-const PAGE_FAMILIES = [
-  "home",
-  "about",
-  "operations",
-  "brands",
-  "clinic-solutions",
-  "shop",
-  "contact",
-  "metabolic",
-  "partners",
-  "pharmacy",
-  "investors",
-  "team",
-  "news",
-  "policies",
-].map((name) => `${PUBLIC_DIR}/pages/${name}.tsx`);
+/**
+ * Every page family under `pages/`, still exported through the barrel above;
+ * the canaries read all of them as one source.
+ *
+ * Derived from the directory since 2026-09-10 rather than listed by hand. A
+ * hand-written list silently stops covering a page family that is added, and
+ * breaks on one that is consolidated away — neither of which should be able
+ * to happen to a confidentiality sweep.
+ */
+function publicComponentFiles() {
+  const walk = (dir: string): string[] =>
+    readdirSync(join(ROOT, dir), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory()
+        ? walk(`${dir}/${entry.name}`)
+        : entry.name.endsWith(".tsx")
+          ? [`${dir}/${entry.name}`]
+          : [],
+    );
+  return walk(PUBLIC_DIR).sort();
+}
+
+function publicPageFiles() {
+  const dir = `${PUBLIC_DIR}/pages`;
+  return readdirSync(join(ROOT, dir))
+    .filter((file) => file.endsWith(".tsx"))
+    .sort()
+    .map((file) => `${dir}/${file}`);
+}
+const PAGE_FAMILIES = publicPageFiles();
 const BRAND_GRID = `${PUBLIC_DIR}/brand-grid.tsx`;
 const ACTION_LINK = `${PUBLIC_DIR}/action-link.tsx`;
 const PRIMITIVES = `${PUBLIC_DIR}/lifesupply-primitives.tsx`;
@@ -65,26 +83,12 @@ const SITE_SCREEN = `${PUBLIC_DIR}/site-screen.tsx`;
 const VIDEO_EMBED = `${PUBLIC_DIR}/video-embed.tsx`;
 const PARALLAX_BAND = `${PUBLIC_DIR}/parallax-band.tsx`;
 const CARE_PATHWAY = `${PUBLIC_DIR}/care-pathway-diagram.tsx`;
+const ON_THIS_PAGE = `${PUBLIC_DIR}/on-this-page.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
-// carries the legacy-compatible route table.
-const CONTENT_MODULES = [
-  "brand",
-  "home",
-  "about",
-  "operations",
-  "businesses",
-  "clinics",
-  "shop",
-  "metabolic",
-  "team",
-  "investors",
-  "partners",
-  "pharmacy",
-  "news",
-  "policies",
-  "contact",
-].map((name) => `src/lib/public-site/content/${name}.ts`);
+// carries the legacy-compatible route table. The module list is derived for
+// the same reason the page list is.
+const CONTENT_MODULES = publicContentFiles();
 const ROUTES_FILE = "src/lib/public-site/routes.ts";
 const PROXY = "src/proxy.ts";
 const CSS = "src/styles/globals.css";
@@ -104,6 +108,7 @@ const siteScreen = () => stripComments(read(SITE_SCREEN));
 const videoEmbed = () => stripComments(read(VIDEO_EMBED));
 const parallaxBand = () => stripComments(read(PARALLAX_BAND));
 const carePathway = () => stripComments(read(CARE_PATHWAY));
+const onThisPage = () => stripComments(read(ON_THIS_PAGE));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
 const publicComponents = () => [
@@ -122,6 +127,7 @@ const publicComponents = () => [
   videoEmbed(),
   parallaxBand(),
   carePathway(),
+  onThisPage(),
 ];
 
 /** Width and height from a PNG's IHDR chunk. */
@@ -505,20 +511,16 @@ describe("routes and content governance", () => {
       "src/app/investor-relations/page.tsx",
       "src/app/news/page.tsx",
       "src/app/contact/page.tsx",
-      "src/app/shop/page.tsx",
       "src/app/[slug]/page.tsx",
       "src/app/medical-supply-solutions/lifesupply/page.tsx",
       "src/app/medical-supply-solutions/wellmart-medical/page.tsx",
       "src/app/medical-supply-solutions/balkowitsch/page.tsx",
       "src/app/clinic-solutions/page.tsx",
-      "src/app/clinic-solutions/equipment/page.tsx",
-      "src/app/clinic-solutions/ongoing-supplies/page.tsx",
       "src/app/metabolic-health/page.tsx",
       "src/app/metabolic-health/care-kits/page.tsx",
       "src/app/metabolic-health/care-kits/[kit]/page.tsx",
       "src/app/metabolic-health/refills/page.tsx",
       "src/app/partners/page.tsx",
-      "src/app/partners/clinics/page.tsx",
       "src/app/partners/pharmacies/page.tsx",
       "src/app/partners/suppliers/page.tsx",
       "src/app/partners/acquisitions/page.tsx",
@@ -547,7 +549,12 @@ describe("routes and content governance", () => {
       '"/news/"',
       '"/contact/"',
       '"/contact-2/"',
+      // Retired addresses stay in the table as redirect rows, so the sitemap
+      // and the menus keep being derived and no address is simply dropped.
       '"/shop/"',
+      '"/clinic-solutions/equipment/"',
+      '"/clinic-solutions/ongoing-supplies/"',
+      '"/partners/clinics/"',
     ]) {
       expect(c, path).toContain(path);
     }
@@ -720,14 +727,22 @@ describe("round four: consolidation, precision and available actions", () => {
     expect(opening).not.toMatch(/disclosed information, forward-looking statements/i);
   });
 
-  it("keeps project qualifications off the ongoing-supplies page", () => {
+  it("keeps project qualifications out of the ongoing-supplies section", () => {
     const page = stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
-    const supplies = page.slice(page.indexOf("export function OngoingSuppliesPage"));
-    // The construction attribution and the project-sequence note belong to a
-    // project the reader of this page is not undertaking.
+    const start = page.indexOf("function OngoingSuppliesSection(");
+    expect(start).toBeGreaterThan(-1);
+    const rest = page.slice(start);
+    const next = rest.slice(1).search(/\n(export )?function /);
+    const supplies = next === -1 ? rest : rest.slice(0, next + 1);
+    // Round four, change 5. The construction attribution and the
+    // project-sequence note belong to a project this reader is not
+    // undertaking, and consolidating the pages does not change that: they
+    // stay in the planning section, and this one points at them.
     expect(supplies).not.toContain("<ClinicDistinction />");
     expect(supplies).not.toContain("<ConditionalClose ");
+    expect(supplies).not.toContain("{clinics.postOpening}");
     expect(supplies).toContain("{page.projectPointer}");
+    expect(supplies).toContain("{page.boundary}");
   });
 
   it("orders the milestones oldest first and marks the cumulative figure", () => {
@@ -1334,11 +1349,13 @@ describe("Stage 2 registries and navigation", () => {
     expect(graphics).not.toMatch(/brands\/[a-z-]+\.png/);
     // Every brand photograph declares a registered crop rather than being left
     // to the source aspect. The homepage columns use the portrait crop added
-    // in the 2026-09-10 design pass; the other two stay square.
-    for (const page of ["brand-grid", "pages/shop", "pages/operations"]) {
-      expect(read(`${PUBLIC_DIR}/${page}.tsx`), page).toMatch(
-        /presentation="(square|portrait|landscape)"/,
-      );
+    // in the 2026-09-10 design pass; the others stay square. Swept across
+    // every public component that renders one, so a new placement cannot skip
+    // the crop by not being on a hand-written list.
+    const placements = publicComponentFiles().filter((file) => read(file).includes("<BrandImage"));
+    expect(placements.length).toBeGreaterThan(0);
+    for (const file of placements) {
+      expect(read(file), file).toMatch(/presentation="(square|portrait|landscape)"/);
     }
     expect(brandImage()).toContain('presentation === "portrait"');
   });
@@ -1598,8 +1615,24 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
 
 describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   const clinicPages = () => stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
+  /**
+   * The body of one function in a source file, up to the next top-level
+   * function. Clinic Solutions became one page with four sections on
+   * 2026-09-10, so a rule that used to be "this page does not contain X" is
+   * now "this section does not contain X" — the same rule, read at the
+   * granularity the page now has.
+   */
+  const sectionBody = (source: string, name: string): string => {
+    const start = source.indexOf(`function ${name}(`);
+    expect(start, name).toBeGreaterThan(-1);
+    const rest = source.slice(start);
+    const next = rest.slice(1).search(/\n(export )?function /);
+    return next === -1 ? rest : rest.slice(0, next + 1);
+  };
   const brandPages = () => stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
-  const shopPage = () => stripComments(read(`${PUBLIC_DIR}/pages/shop.tsx`));
+  // Shop & Services merged into the Medical Supplies stores section on
+  // 2026-09-10, so the rules that were about that page now read this one.
+  const storesPage = () => stripComments(read(`${PUBLIC_DIR}/pages/operations.tsx`));
   const contactPage = () => stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
   const clinicsContent = () => stripComments(read("src/lib/public-site/content/clinics.ts"));
 
@@ -1608,12 +1641,14 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     // the Clinics brand page render it. Nothing anywhere describes owned
     // clinics or patient care as a company service.
     expect(clinicsContent()).toContain("does not operate patient-care clinics");
-    // Two project pages carry the shared distinction block. The ongoing-supplies
-    // page carries the same boundary in its own words, because the shared block
-    // also carries construction attribution that belongs to a project (round
-    // four, change 5). What matters is that every clinic page states it.
-    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(2);
+    // The project material carries the shared distinction block once, near
+    // the top of the page, where every reader passes it. The ongoing-supplies
+    // section states the same boundary in its own words, because the shared
+    // block also carries construction attribution that belongs to a project
+    // (round four, change 5). What matters is that both state it.
+    expect((clinicPages().match(/<ClinicDistinction \/>/g) ?? []).length).toBe(1);
     expect(clinicPages()).toContain("{clinics.distinction}");
+    expect(sectionBody(clinicPages(), "OngoingSuppliesSection")).toContain("{page.boundary}");
     expect(clinicsContent()).toContain(
       "LifeSupply does not operate patient-care clinics and takes no part in clinical decisions",
     );
@@ -1632,13 +1667,15 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
 
   it("treats post-opening supply as conditional on every clinic page", () => {
     expect(clinicsContent()).toContain("creates no supply commitment");
-    // The project-sequence note closes the two project pages. The ongoing-
-    // supplies page keeps its own conditional block, which states what is not
+    // The project-sequence note closes the page once. The ongoing-supplies
+    // section keeps its own conditional block, which states what is not
     // offered to a clinic that is already buying (round four, change 5).
-    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(2);
+    expect((clinicPages().match(/<ConditionalClose /g) ?? []).length).toBe(1);
     expect(clinicPages()).toContain("{clinics.postOpening}");
     expect(clinicsContent()).toContain("are not offered on this site today");
-    expect(clinicPages()).toContain("{page.conditional.text}");
+    expect(sectionBody(clinicPages(), "OngoingSuppliesSection")).toContain(
+      "{page.conditional.text}",
+    );
     // And the supplies page points at the project service rather than
     // explaining it, so a buying clinic is not made to read project terms.
     expect(clinicsContent()).toContain("are a separate service for British Columbia projects");
@@ -1650,7 +1687,7 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
       expect(source).not.toMatch(/business days/i);
       expect(source).not.toMatch(/free shipping (on|over|in) /i);
     }
-    expect(shopPage()).not.toMatch(/add to cart|checkout|\bprice\b/i);
+    expect(storesPage()).not.toMatch(/add to cart|checkout|\bprice\b/i);
   });
 
   it("reads categories, support channels, and project links from the registries and content", () => {
@@ -1659,12 +1696,16 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     expect(clinicPages()).toContain("clinics.projects.items.map");
     expect(contactPage()).toContain("contact.intents.map");
     expect(contactPage()).toContain("contact.existingOrder");
-    expect(shopPage()).toContain("shop.choices.map");
-    expect(shopPage()).toContain("brandGeography(record)");
+    // The stores section renders the registry, not a hand-written list, and
+    // still states each store's geography and its own support channel.
+    expect(storesPage()).toContain("stores.map");
+    expect(storesPage()).toContain("brandGeography(record)");
+    expect(storesPage()).toContain("record.supportEmail");
+    expect(storesPage()).toContain("{hub.stores.support.text}");
   });
 
   it("gives every Stage 3 page one PublicHero and the shared layout", () => {
-    for (const source of [clinicPages(), brandPages(), shopPage(), contactPage()]) {
+    for (const source of [clinicPages(), brandPages(), storesPage(), contactPage()]) {
       const exported = (source.match(/^export function \w+Page\b/gm) ?? []).length;
       expect(exported).toBeGreaterThan(0);
       expect((source.match(/<PublicHero\b/g) ?? []).length).toBe(exported);
@@ -1842,13 +1883,27 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(c).not.toMatch(/supply (requires|needs) a (project|build)/i);
     const page = stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`));
     expect(page).toContain("hub.entry.options.map");
-    // The choice is stated before the three needs.
-    expect(page.indexOf("hub.entry")).toBeLessThan(page.indexOf("hub.needs"));
+    // The choice is stated before the three needs. Since the consolidation
+    // the needs render inside `PlanningSection`, so the order that matters is
+    // the order in the page component — not the order the helpers happen to
+    // be declared in the file.
+    const body = page.slice(page.indexOf("export function ClinicSolutionsPage("));
+    expect(body.indexOf("hub.entry")).toBeGreaterThan(-1);
+    expect(body.indexOf("hub.entry")).toBeLessThan(body.indexOf("<PlanningSection />"));
+    // And the three needs are in the planning section, not loose on the page.
+    expect(body).not.toContain("hub.needs");
+    expect(page.slice(page.indexOf("function PlanningSection("))).toContain("hub.needs.map");
   });
 
   it("keeps clinic collaboration distinct from procurement and pharmacy programs non-drug", () => {
     const c = stripComments(read("src/lib/public-site/content/partners.ts"));
-    expect(c).toContain("Collaboration is not procurement");
+    // Clinic collaboration moved to the Clinic Solutions page on 2026-09-10.
+    // The distinction it exists to draw travelled with it rather than being
+    // dropped, and it is not left behind in the partners model as dead copy.
+    const clinics = stripComments(read("src/lib/public-site/content/clinics.ts"));
+    expect(clinics).toContain("Collaboration is not procurement");
+    expect(clinics).toContain("No collaboration is required.");
+    expect(c).not.toContain("Collaboration is not procurement");
     expect(c).toContain("Medication is excluded from every configuration");
     expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
   });
@@ -1996,5 +2051,118 @@ describe("Stage 7 inquiry capture stays unpublished until its decisions are reco
     expect(privacy).toContain(
       "There is no form, no account, no newsletter sign-up, and no inquiry intake on this site.",
     );
+  });
+});
+
+/**
+ * Website consolidation, stage 1 (2026-09-10).
+ *
+ * Four addresses were retired into sections of two pages. The failure modes
+ * that matters here are silent: a redirect that lands on a fragment nothing
+ * renders, an internal link still pointing at a retired address, or a
+ * section that only reveals itself once JavaScript runs. None of the three
+ * shows up in a type check, and the first two look fine until someone
+ * follows the link.
+ */
+describe("website consolidation: sections, redirects and deep links", () => {
+  const PAGES_BY_ROUTE: Record<string, string> = {
+    [LIFE_SUPPLY_ROUTES.operations]: `${PUBLIC_DIR}/pages/operations.tsx`,
+    [STAGE_3_ROUTES.clinicSolutions]: `${PUBLIC_DIR}/pages/clinic-solutions.tsx`,
+  };
+
+  it("renders every section anchor the registry declares", () => {
+    for (const [route, anchors] of Object.entries(SECTION_ANCHORS)) {
+      const file = PAGES_BY_ROUTE[route];
+      // A page that declares anchors but has no component here would sail
+      // through the loop silently, so the mapping is asserted, not assumed.
+      expect(file, route).toBeTruthy();
+      const source = stripComments(read(file!));
+      for (const anchor of anchors) {
+        // The whole section is the target, not a heading floating above its
+        // own content, so a reader who follows a redirect lands on the block.
+        expect(source, `${route}#${anchor}`).toContain(`<AnchoredSection id="${anchor}"`);
+      }
+    }
+  });
+
+  it("clears the sticky header on every anchor target and needs no JavaScript to do it", () => {
+    const code = onThisPage();
+    // `scroll-mt` is what keeps a jumped-to heading from sitting under the
+    // sticky header. It belongs on the target, not on the navigation.
+    expect(code).toContain("scroll-mt-24");
+    // Plain anchors: real text for a screen reader, and the browser's own
+    // fragment handling does the scrolling. No scripted scroll, no handler,
+    // and nothing that makes the section a client component.
+    expect(code).toContain("href={item.href}");
+    expect(code).not.toMatch(/onClick|scrollIntoView|useEffect|"use client"/);
+    expect(code).toContain("aria-label={label}");
+  });
+
+  it("links to the destination directly, never to an address that now redirects", () => {
+    const retired = Object.values(CONSOLIDATED_ROUTES);
+    for (const file of [...publicComponentFiles(), ...publicContentFiles()]) {
+      const source = stripComments(read(file));
+      for (const path of retired) {
+        // The unslashed form too, since that is the canonical shape a
+        // hand-written href would most plausibly take.
+        for (const form of [path, path.replace(/\/$/, "")]) {
+          expect(source, `${file} → ${form}`).not.toContain(`"${form}"`);
+          expect(source, `${file} → ${form}`).not.toContain(`href="${form}`);
+        }
+      }
+    }
+  });
+
+  it("redirects every retired address permanently, by exact path, to a real fragment", () => {
+    const config = stripComments(read("next.config.ts"));
+    const destinations: Record<string, string> = {
+      "/shop": "/medical-supply-solutions#stores",
+      "/clinic-solutions/equipment": "/clinic-solutions#equipment",
+      "/clinic-solutions/ongoing-supplies": "/clinic-solutions#ongoing-supplies",
+      "/partners/clinics": "/clinic-solutions#collaboration",
+    };
+    for (const [from, to] of Object.entries(destinations)) {
+      expect(config, from).toContain(`source: "${from}"`);
+      expect(config, to).toContain(`destination: "${to}"`);
+    }
+    // The `/partners` hazard, asserted rather than trusted: retiring the
+    // clinic child must never be written as a prefix match, because
+    // `/partners/suppliers` and `/partners/acquisitions` are retained pages.
+    expect(config).not.toMatch(/source: "\/partners\/?(:path\*|\*)/);
+    expect(config).not.toContain('source: "/clinic-solutions/:path*"');
+    for (const retained of ["suppliers", "acquisitions"]) {
+      expect(config, retained).not.toContain(`source: "/partners/${retained}"`);
+      expect(existsSync(join(ROOT, `src/app/partners/${retained}/page.tsx`)), retained).toBe(true);
+    }
+    // And the retired route files are actually gone, so nothing serves a 200
+    // at an address that is supposed to redirect.
+    for (const gone of [
+      "src/app/shop/page.tsx",
+      "src/app/clinic-solutions/equipment/page.tsx",
+      "src/app/clinic-solutions/ongoing-supplies/page.tsx",
+      "src/app/partners/clinics/page.tsx",
+    ]) {
+      expect(existsSync(join(ROOT, gone)), gone).toBe(false);
+    }
+  });
+
+  it("carries the content of every retired page into the section that replaced it", () => {
+    const clinics = stripComments(read("src/lib/public-site/content/clinics.ts"));
+    const businesses = stripComments(read("src/lib/public-site/content/businesses.ts"));
+    // Equipment: the quote request and the catalogue boundary.
+    expect(clinics).toContain("What a quote request needs");
+    expect(clinics).toContain("Equipment pricing is quoted, not listed on this corporate site.");
+    // Ongoing supplies: what is available and what is only discussed.
+    expect(clinics).toContain("Available today");
+    expect(clinics).toContain("Discussed case by case");
+    // Collaboration: the three ways, with their statuses intact.
+    for (const status of ["Proposed", "Available through LifeSupply Clinics"]) {
+      expect(clinics, status).toContain(status);
+    }
+    // Shop & Services: geography, currency, and the support boundary.
+    expect(businesses).toContain("Geography and currency");
+    expect(businesses).toContain("Support boundary");
+    expect(businesses).toContain("This site cannot see or change store orders.");
+    expect(businesses).toContain("This corporate site does not sell products or take orders.");
   });
 });

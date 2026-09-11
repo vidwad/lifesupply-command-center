@@ -21,6 +21,7 @@ import {
   PHARMACY_ROUTES,
   STAGE_3_ROUTES,
   STAGE_5_ROUTES,
+  sectionRoute,
 } from "@/lib/public-site/routes";
 
 export type ActionKey =
@@ -57,7 +58,7 @@ export type ActionKey =
   | "shop_wellmart"
   | "shop_clinics"
   | "shop_balkowitsch"
-  | "shop_services"
+  | "medical_supply_stores"
   | "brand_lifesupply"
   | "brand_wellmart"
   | "brand_clinics"
@@ -159,7 +160,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "clinic_equipment",
     label: "Equipment planning and quotes",
     intent: "navigation",
-    destination: internal(STAGE_3_ROUTES.equipment),
+    destination: internal(sectionRoute(STAGE_3_ROUTES.clinicSolutions, "equipment")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -167,7 +168,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "clinic_ongoing_supplies",
     label: "Ongoing supplies",
     intent: "navigation",
-    destination: internal(STAGE_3_ROUTES.ongoingSupplies),
+    destination: internal(sectionRoute(STAGE_3_ROUTES.clinicSolutions, "ongoing-supplies")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -247,7 +248,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "partner_clinics",
     label: "Clinic collaboration",
     intent: "navigation",
-    destination: internal(STAGE_5_ROUTES.partnerClinics),
+    destination: internal(sectionRoute(STAGE_3_ROUTES.clinicSolutions, "collaboration")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -379,11 +380,16 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     ownerChannel: null,
     verifiedAt: VERIFIED,
   },
-  shop_services: {
-    key: "shop_services",
-    label: "Shop & Services",
+  /**
+   * Replaces the former `shop_services` action: Shop & Services merged into
+   * the Medical Supplies stores section on 2026-09-10, so the action names
+   * that section rather than a page of its own.
+   */
+  medical_supply_stores: {
+    key: "medical_supply_stores",
+    label: "Compare the stores",
     intent: "navigation",
-    destination: internal(LIFE_SUPPLY_ROUTES.shop),
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores")),
     ownerChannel: null,
     verifiedAt: null,
   },

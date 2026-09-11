@@ -2,6 +2,14 @@ import { expect, test } from "@playwright/test";
 
 const RENDER_ORIGIN = "https://lifesupply-cc-web.onrender.com";
 
+/** The registered operating hosts. Nothing outbound may leave this set. */
+const STORE_HOSTS = [
+  "lifesupply.ca",
+  "wellmartmedical.com",
+  "www.lifesupplyclinics.com",
+  "balkowitsch.com",
+];
+
 test.describe("LifeSupply public site", () => {
   test("renders a corporate homepage with a separate Command Center login boundary", async ({
     page,
@@ -35,20 +43,16 @@ test.describe("LifeSupply public site", () => {
       "/investor-relations",
       "/news",
       "/contact",
-      "/shop",
       "/medical-supply-solutions/lifesupply",
       "/medical-supply-solutions/wellmart-medical",
       "/medical-supply-solutions/balkowitsch",
       "/clinic-solutions",
-      "/clinic-solutions/equipment",
-      "/clinic-solutions/ongoing-supplies",
       "/metabolic-health",
       "/metabolic-health/care-kits",
       "/metabolic-health/care-kits/glp-1-support",
       "/metabolic-health/care-kits/sharps-supplies",
       "/metabolic-health/refills",
       "/partners",
-      "/partners/clinics",
       "/partners/pharmacies",
       "/partners/suppliers",
       "/partners/acquisitions",
@@ -372,20 +376,16 @@ test.describe("LifeSupply public site", () => {
       "Care kits",
       "Refills",
       "Partners",
-      "Clinics",
       "Pharmacies",
       "Suppliers",
       "Acquisitions",
       "Growth strategy",
       "Advanced therapeutics",
       "Disclosures",
-      "Equipment",
-      "Ongoing supplies",
       "Investors",
       "About",
       "Our team",
       "News & resources",
-      "Shop & Services",
       "Contact",
       "LifeSupply",
       "Wellmart Medical",
@@ -424,9 +424,14 @@ test.describe("LifeSupply public site", () => {
       "aria-current",
       "page",
     );
-    await expect(panel.getByRole("link", { name: "Equipment", exact: true })).toBeHidden();
-    await panel.getByRole("button", { name: "Expand Clinic Solutions" }).click();
-    await expect(panel.getByRole("link", { name: "Equipment", exact: true })).toBeVisible();
+    // Clinic Solutions has no child pages since the consolidation, so it is a
+    // plain link in the panel with nothing to expand.
+    await expect(panel.getByRole("button", { name: "Expand Clinic Solutions" })).toHaveCount(0);
+    await expect(panel.getByRole("link", { name: "Clinic Solutions", exact: true })).toBeVisible();
+    // One group open at a time: expanding Investors collapses Metabolic Health.
+    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeHidden();
+    await panel.getByRole("button", { name: "Expand Investors" }).click();
+    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Refills", exact: true })).toBeHidden();
   });
 
@@ -564,7 +569,18 @@ test.describe("LifeSupply public site", () => {
         .evaluateAll((links) =>
           links.map((link) => new URL((link as HTMLAnchorElement).href).host),
         );
-      expect(new Set(hosts), route).toEqual(new Set([host]));
+      if (route === "/clinic-solutions") {
+        // The equipment section absorbed the catalogue links on 2026-09-10,
+        // and the clinic-supply categories are published on LifeSupply.ca.
+        // Every host must still be a registered store, not an arbitrary one.
+        expect(
+          hosts.every((h) => STORE_HOSTS.includes(h)),
+          route,
+        ).toBe(true);
+        expect(new Set(hosts), route).toContain(host);
+      } else {
+        expect(new Set(hosts), route).toEqual(new Set([host]));
+      }
     }
   });
 
@@ -578,45 +594,103 @@ test.describe("LifeSupply public site", () => {
       "href",
       "https://www.lifesupplyclinics.com/contact-us/",
     );
-    for (const [name, path] of [
-      ["Equipment planning and quotes", "/clinic-solutions/equipment"],
-      ["Ongoing supplies", "/clinic-solutions/ongoing-supplies"],
+    // Equip it and keep it supplied are sections of this page since the
+    // consolidation, so the two needs link to fragments rather than pages.
+    for (const [name, anchor] of [
+      ["Equipment planning and quotes", "#equipment"],
+      ["Ongoing supplies", "#ongoing-supplies"],
     ] as const) {
       const link = main.getByRole("link", { name, exact: true }).first();
-      await expect(link).toHaveAttribute("href", new RegExp(`^${path}/?$`));
-      const response = await page.request.get(path);
-      expect(response.ok(), path).toBe(true);
+      await expect(link).toHaveAttribute("href", new RegExp(`${anchor}$`));
+      await expect(page.locator(anchor)).toHaveCount(1);
     }
-    await expect(main.getByText("does not operate patient-care clinics")).toBeVisible();
-    // The brand content lives on the same page now.
+    // Stated twice on the consolidated page and deliberately so: once in the
+    // project distinction near the top, and again in the supplies section in
+    // its own words, because that section is read by a clinic that is buying
+    // rather than building (round four, change 5).
+    const boundary = main.getByText("does not operate patient-care clinics");
+    await expect(boundary).toHaveCount(2);
+    await expect(boundary.first()).toBeVisible();
+    await expect(page.locator("#ongoing-supplies")).toContainText(
+      "takes no part in clinical decisions",
+    );
+    // The brand content lives on the same page.
     await expect(main.getByText("From feasibility to hand-over.")).toBeVisible();
-    await page.goto("/clinic-solutions/ongoing-supplies");
-    // The action appears in the hero and again in the closing band; it reaches the corporate office.
+    // The supply review reaches the corporate office from the supplies section.
     await expect(
-      page.locator("main").getByRole("link", { name: "Request a supply review" }).first(),
+      main.getByRole("link", { name: "Request a supply review" }).first(),
     ).toHaveAttribute("href", /^mailto:info@lifesupply\.com\?subject=/);
   });
 
-  test("names geography and currency for the four choices on Shop & Services, and sells nothing", async ({
+  test("carries every consolidated address to the section that replaced it", async ({ page }) => {
+    // Website consolidation, stage 1. Each retired address must arrive at a
+    // section that exists, and the section must be there in the served HTML
+    // rather than appearing only once JavaScript has run.
+    for (const [from, path, anchor] of [
+      ["/shop", "/medical-supply-solutions", "stores"],
+      ["/clinic-solutions/equipment", "/clinic-solutions", "equipment"],
+      ["/clinic-solutions/ongoing-supplies", "/clinic-solutions", "ongoing-supplies"],
+      ["/partners/clinics", "/clinic-solutions", "collaboration"],
+    ] as const) {
+      const response = await page.goto(from);
+      expect(response?.ok(), `${from} should resolve`).toBe(true);
+      const url = new URL(page.url());
+      expect(url.pathname.replace(/\/$/, ""), `${from} destination`).toBe(path);
+      expect(url.hash, `${from} fragment`).toBe(`#${anchor}`);
+      const target = page.locator(`#${anchor}`);
+      await expect(target, `${from} target`).toHaveCount(1);
+      await expect(target).toBeVisible();
+    }
+    // The `/partners` hazard: the retired child must not take its siblings.
+    for (const retained of ["/partners/suppliers", "/partners/acquisitions"]) {
+      const response = await page.goto(retained);
+      expect(response?.ok(), retained).toBe(true);
+      expect(new URL(page.url()).pathname.replace(/\/$/, ""), retained).toBe(retained);
+    }
+  });
+
+  test("shows the Clinic Solutions section navigation and every target it names", async ({
     page,
   }) => {
-    await page.goto("/shop");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/store or service/i);
-    const main = page.locator("main");
-    await expect(main.getByText("Canada · CAD")).toHaveCount(3);
-    await expect(main.getByText("United States · USD")).toHaveCount(1);
-    await expect(main.getByText(/add to cart/i)).toHaveCount(0);
-    const hosts = await main
+    await page.goto("/clinic-solutions");
+    const nav = page.getByRole("navigation", { name: "On this page" });
+    await expect(nav).toBeVisible();
+    const hrefs = await nav
+      .getByRole("link")
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+    expect(hrefs).toEqual(["#planning", "#equipment", "#ongoing-supplies", "#collaboration"]);
+    for (const href of hrefs) {
+      await expect(page.locator(href!), href!).toHaveCount(1);
+    }
+    // The collaboration section states what it is not, with its statuses.
+    await expect(page.locator("#collaboration")).toContainText("Collaboration is not procurement");
+    await expect(page.locator("#collaboration")).toContainText("Proposed");
+  });
+
+  test("names geography, currency and support in the stores section, and sells nothing", async ({
+    page,
+  }) => {
+    // Shop & Services merged into this section on 2026-09-10; what it said
+    // about geography, currency and the support boundary has to still be here.
+    await page.goto("/medical-supply-solutions");
+    const stores = page.locator("#stores");
+    await expect(stores).toBeVisible();
+    await expect(stores.getByText("Canada · CAD")).toHaveCount(2);
+    await expect(stores.getByText("United States · USD")).toHaveCount(1);
+    await expect(stores).toContainText("does not sell products or take orders");
+    await expect(stores).toContainText("Geography and currency");
+    await expect(stores).toContainText("cannot see or change store orders");
+    await expect(page.locator("main").getByText(/add to cart/i)).toHaveCount(0);
+    const hosts = await stores
       .locator('a[href^="https://"]')
       .evaluateAll((links) => links.map((link) => new URL((link as HTMLAnchorElement).href).host));
-    for (const host of [
-      "lifesupply.ca",
-      "wellmartmedical.com",
-      "www.lifesupplyclinics.com",
-      "balkowitsch.com",
-    ]) {
+    for (const host of ["lifesupply.ca", "wellmartmedical.com", "balkowitsch.com"]) {
       expect(hosts, host).toContain(host);
     }
+    // The fourth destination is the clinic section, which has its own page.
+    await expect(
+      page.locator("main").getByRole("link", { name: "Clinic Solutions" }).first(),
+    ).toHaveAttribute("href", /clinic-solutions/);
   });
 
   test("routes contact intents to verified pages or approved channels without a form", async ({
@@ -705,14 +779,15 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/partners");
     const main = page.locator("main");
-    for (const path of [
-      "/partners/clinics",
-      "/partners/pharmacies",
-      "/partners/suppliers",
-      "/partners/acquisitions",
-    ]) {
+    for (const path of ["/partners/pharmacies", "/partners/suppliers", "/partners/acquisitions"]) {
       await expect(main.locator(`a[href="${path}"]`).first()).toBeVisible();
     }
+    // Clinic collaboration became a Clinic Solutions section on 2026-09-10,
+    // so the hub routes there rather than to a page of its own.
+    await expect(main.locator('a[href="/partners/clinics"]')).toHaveCount(0);
+    await expect(
+      main.locator('a[href^="/clinic-solutions"][href$="#collaboration"]').first(),
+    ).toBeVisible();
     await expect(main.getByRole("link", { name: "Clinic Solutions" })).toHaveAttribute(
       "href",
       /^\/clinic-solutions\/?$/,
@@ -979,8 +1054,17 @@ test.describe("LifeSupply public site", () => {
     expect(sitemap.ok()).toBe(true);
     const xml = await sitemap.text();
     const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
-    // 40 canonical URLs since the 2026-09-08 restructure (withdrawn pages and profiles redirect).
-    expect(locs.length).toBeGreaterThanOrEqual(40);
+    // 37 canonical URLs: 41 before the consolidation, less the four addresses
+    // stage 1 retired, which redirect and are therefore absent from the map.
+    expect(locs.length).toBe(37);
+    for (const retired of [
+      "/shop",
+      "/clinic-solutions/equipment",
+      "/clinic-solutions/ongoing-supplies",
+      "/partners/clinics",
+    ]) {
+      expect(locs, retired).not.toContain(`https://lifesupplyhealth.com${retired}`);
+    }
     for (const loc of locs) {
       // The origin itself is `https://lifesupplyhealth.com/`; every other entry is unslashed.
       expect(loc, loc).toMatch(/^https:\/\/lifesupplyhealth\.com(\/|\/[a-z0-9\-/]*[a-z0-9])$/);
@@ -1059,8 +1143,11 @@ test.describe("LifeSupply public site", () => {
 
     // Round two removed staff login from the panel; it lives only in the footer now.
     await expect(menu.getByRole("link", { name: "Command Center login" })).toHaveCount(0);
-    // The panel still carries the public utility links.
-    await expect(menu.getByRole("link", { name: "Shop & Services" })).toHaveCount(1);
+    // The panel still carries the public utility links. Shop & Services left
+    // the menu on 2026-09-10 when it merged into the Medical Supplies stores
+    // section, so Contact is the utility link that remains.
+    await expect(menu.getByRole("link", { name: "Shop & Services" })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Contact", exact: true })).toHaveCount(1);
 
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);

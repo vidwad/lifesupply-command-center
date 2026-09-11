@@ -210,7 +210,64 @@ export const clinics = {
     actions: ["plan_clinic", "equipment_quote", "clinic_supply_review"],
   },
 
-  /** `/clinic-solutions/equipment/` */
+  /**
+   * Section navigation for the consolidated page (consolidation stage 1).
+   * Clinic Solutions is now one page covering the whole relationship, so a
+   * reader needs to see its shape before scrolling into it.
+   */
+  sections: [
+    { href: "#planning", label: "Plan and build" },
+    { href: "#equipment", label: "Equip" },
+    { href: "#ongoing-supplies", label: "Keep supplied" },
+    { href: "#collaboration", label: "Collaboration" },
+  ],
+
+  /**
+   * Clinic collaboration, moved here from `/partners/clinics` when that page
+   * was retired (consolidation stage 1, 2026-09-10). It belongs beside the
+   * clinic relationship it describes rather than in a partners hub, and the
+   * distinction it draws — purchasing is not collaboration — is the reason it
+   * has to travel with the rest of the clinic content rather than be dropped.
+   *
+   * The supply program a collaboration would configure is the metabolic-health
+   * service, so the section links there rather than restating its scope.
+   */
+  collaboration: {
+    eyebrow: "Collaboration",
+    title: "Working with LifeSupply beyond purchasing.",
+    intro:
+      "Some clinics want more than a supply account: a say in how a program's supplies are configured, or a design partnership on a project. That is a different relationship from buying, and it is described here.",
+    distinction: {
+      title: "Collaboration is not procurement",
+      items: [
+        "A clinic that purchases supplies is a customer of the operating store, with that store's account, prices, and support. No collaboration is required.",
+        "A program collaboration means the clinic helps define a supply configuration, a workflow, or a pilot, agreed in writing before anything is fulfilled.",
+        "A design partnership relates to a clinic project delivered through LifeSupply Clinics and its delivery partners, on the terms of that project.",
+        "An expression of interest is not a pilot, and a pilot is not contracted revenue for either side until it is agreed.",
+      ],
+    },
+    items: [
+      {
+        title: "Program configuration",
+        text: "Clinical staff define what a supply configuration must contain for their program; LifeSupply models it as starter, consumable, and occasional roles and states compatibility. Nothing is fulfilled until the configuration and its store are confirmed.",
+        status: "Proposed",
+      },
+      {
+        title: "Pilots",
+        text: "A limited, written pilot of a program's supply or workflow support, with its scope, duration, responsibilities, and exit stated up front.",
+        status: "Proposed",
+      },
+      {
+        title: "Design partnership",
+        text: "Early involvement in a clinic project's planning, layout, and equipment choices, delivered through LifeSupply Clinics within its verified delivery arrangements.",
+        status: "Available through LifeSupply Clinics",
+      },
+    ],
+    metabolicNote:
+      "The supply program a collaboration would configure is the metabolic-health service, which is in development. Its scope, its eight pathways, and what has to be confirmed before anything runs are set out on Metabolic Health.",
+    actions: ["clinic_collaboration", "metabolic_hub"],
+  },
+
   equipment: {
     eyebrow: "Equipment",
     title: "Room-by-room equipment planning and quotes.",

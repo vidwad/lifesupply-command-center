@@ -11,6 +11,7 @@ import {
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { Callout, IconBadge } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
@@ -22,11 +23,14 @@ import { BRAND_ROUTES } from "@/lib/public-site/routes";
 const STORE_KEYS: readonly OperatingBrandKey[] = ["lifesupply", "wellmart", "balkowitsch"];
 
 /**
- * Medical Supply Solutions hub (`/medical-supply-solutions/`, restructured
- * from Our Businesses on 2026-09-08): the three online stores, each with its
- * photograph and internal page, and the hand-offs to Clinic Solutions and
- * Shop & Services. The corporate portfolio (entities, capabilities,
- * developing programs) now lives on About.
+ * Medical Supply Solutions (`/medical-supply-solutions/`, restructured from
+ * Our Businesses on 2026-09-08): the three online stores, each with its
+ * photograph, its support channel and its internal page, and the hand-off to
+ * Clinic Solutions. The corporate portfolio (entities, capabilities,
+ * developing programs) lives on About.
+ *
+ * Shop & Services merged into the `#stores` section on 2026-09-10 (website
+ * consolidation, stage 1). `/shop` permanently redirects here.
  */
 export function MedicalSupplySolutionsPage() {
   const { hub } = LIFE_SUPPLY_CONTENT.businesses;
@@ -41,17 +45,21 @@ export function MedicalSupplySolutionsPage() {
         description={hub.description}
         actions={
           <>
-            <ActionLink action="shop_services" />
+            <ActionLink action="medical_supply_stores" />
             <ActionLink action="clinic_solutions" variant="onDark" />
           </>
         }
       />
 
-      {/* The stores, each with its conceptual photograph. */}
-      <section className="px-5 py-20 lg:px-8">
+      {/* The stores, each with its conceptual photograph and its own support channel. */}
+      <AnchoredSection id="stores" className="px-5 py-20 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Reveal>
-            <SectionHeading eyebrow={hub.stores.eyebrow} title={hub.stores.title} />
+            <SectionHeading
+              eyebrow={hub.stores.eyebrow}
+              title={hub.stores.title}
+              description={hub.stores.intro}
+            />
           </Reveal>
           <Stagger className="mt-10 grid gap-5 md:grid-cols-3">
             {stores.map((record) => (
@@ -70,6 +78,30 @@ export function MedicalSupplySolutionsPage() {
                       {record.name}
                     </h3>
                     <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{record.purpose}</p>
+                    {/*
+                     * The store's own support channel, carried over from Shop
+                     * & Services when it merged in (2026-09-10). A visitor
+                     * with an existing order needs the store that took it,
+                     * not this site.
+                     */}
+                    <dl className="mt-5 grid gap-1 text-sm text-[var(--lsh-muted)]">
+                      {record.supportPhone ? (
+                        <div className="flex gap-2">
+                          <dt className="lsh-display text-[10px] text-[var(--lsh-charcoal)]">
+                            Support
+                          </dt>
+                          <dd>{record.supportPhone}</dd>
+                        </div>
+                      ) : null}
+                      {record.supportEmail ? (
+                        <div className="flex gap-2">
+                          <dt className="lsh-display text-[10px] text-[var(--lsh-charcoal)]">
+                            Email
+                          </dt>
+                          <dd className="break-all">{record.supportEmail}</dd>
+                        </div>
+                      ) : null}
+                    </dl>
                     {/*
                      * The store is the primary action and the brand page the
                      * secondary one (round three, outcome 7). These cards used to
@@ -106,8 +138,38 @@ export function MedicalSupplySolutionsPage() {
               </StaggerItem>
             ))}
           </Stagger>
+
+          {/*
+           * Geography, currency and the support boundary: the two things Shop
+           * & Services said that the store cards do not, kept at the point
+           * where a visitor is choosing between them.
+           */}
+          <div className="mt-12 grid gap-8 border-t border-[var(--lsh-rule)] pt-10 lg:grid-cols-2">
+            <Reveal className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] pl-6">
+              <IconBadge icon="globe" />
+              <div>
+                <Eyebrow as="h3">{hub.stores.geography.title}</Eyebrow>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">
+                  {hub.stores.geography.text}
+                </p>
+              </div>
+            </Reveal>
+            <Reveal
+              delay={0.05}
+              className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] pl-6"
+            >
+              <IconBadge icon="shield" />
+              <div>
+                <Eyebrow as="h3">{hub.stores.support.title}</Eyebrow>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{hub.stores.support.text}</p>
+                <div className="mt-5">
+                  <ActionLink action="contact_directory" variant="onLight" />
+                </div>
+              </div>
+            </Reveal>
+          </div>
         </div>
-      </section>
+      </AnchoredSection>
 
       {/*
        * A distinct route for professional buyers (round three, outcome 7).
@@ -133,8 +195,17 @@ export function MedicalSupplySolutionsPage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-6">
-                <ActionLink action={hub.procurement.action as ActionKey} />
+              <p className="mt-5 text-sm leading-6 text-[var(--lsh-muted)]">
+                {hub.procurement.clinicPointer}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {hub.procurement.actions.map((action, index) => (
+                  <ActionLink
+                    key={action}
+                    action={action as ActionKey}
+                    variant={index === 0 ? "primary" : "onLight"}
+                  />
+                ))}
               </div>
             </Reveal>
             <Reveal
@@ -161,17 +232,6 @@ export function MedicalSupplySolutionsPage() {
       >
         <p className="lsh-display text-2xl leading-[1.1]">{hub.clinics.title}</p>
         <p className="mt-2 text-[var(--lsh-muted)]">{hub.clinics.text}</p>
-      </Callout>
-
-      {/* Choosing a store. */}
-      <Callout
-        icon="globe"
-        eyebrow={hub.services.eyebrow}
-        tone="onLight"
-        action={<ActionLink action={hub.services.action as ActionKey} variant="onLight" />}
-      >
-        <p className="lsh-display text-2xl leading-[1.1]">{hub.services.title}</p>
-        <p className="mt-2 text-[var(--lsh-muted)]">{hub.services.text}</p>
       </Callout>
     </LifeSupplyLayout>
   );

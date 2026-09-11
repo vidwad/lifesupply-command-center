@@ -26,7 +26,7 @@ One page covering the whole relationship: plan, equip, supply.
 | Planning, design and construction | `#planning` | Existing hub service descriptions, clinic types, project process, geography, delivery arrangements, project attribution, consultation action |
 | Equipment and opening supplies | `#equipment` | All of `/clinic-solutions/equipment`: room-by-room planning, quote checklist, equipment and supply information, opening-supply category links, equipment-quote action |
 | Ongoing clinic supplies | `#ongoing-supplies` | All of `/clinic-solutions/ongoing-supplies`: routine procurement, store categories, ordering, accounts, currency, support, supply-review enquiry, and the distinction between ordinary purchasing today and any proposed replenishment or contracted procurement |
-| Clinic collaboration | `#collaboration` | Relevant `/partners/clinics` content, plus a concise proposed supply-program explanation and a link to `/metabolic-health#collaboration` for the fuller scope |
+| Clinic collaboration | `#collaboration` | Relevant `/partners/clinics` content, plus a concise proposed supply-program explanation and a link to Metabolic Health for the fuller scope. **Stage 1 links to `/metabolic-health`, not `/metabolic-health#collaboration`:** that anchor does not exist until stage 2 builds it, and a link to a fragment nothing renders is worse than a link to the page. Stage 2 narrows it. |
 | Published project examples | — | Existing verified references and links, unchanged |
 | Enquiries and questions | — | Consultation, equipment quote, supply review, consolidated FAQs |
 

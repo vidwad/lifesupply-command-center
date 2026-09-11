@@ -5,7 +5,6 @@ import { Reveal } from "@/components/public-site/motion";
 import {
   BentoGrid,
   Callout,
-  IconBadge,
   IconFeatureGrid,
   ProcessSteps,
   SplitSection,
@@ -13,10 +12,16 @@ import {
 import type { ActionKey } from "@/lib/public-site/actions";
 import { partners } from "@/lib/public-site/content/partners";
 import { iconForTitle } from "@/lib/public-site/icon-map";
-import { STAGE_5_ROUTES } from "@/lib/public-site/routes";
+import { STAGE_3_ROUTES, STAGE_5_ROUTES, sectionRoute } from "@/lib/public-site/routes";
 
+/**
+ * Where each relationship is described. Clinic collaboration moved onto the
+ * Clinic Solutions page as a section on 2026-09-10 (website consolidation,
+ * stage 1), so the hub sends a visitor to that section rather than keeping a
+ * page whose only job was to repeat the clinic context.
+ */
 const RELATIONSHIP_ROUTES = {
-  clinics: STAGE_5_ROUTES.partnerClinics,
+  clinics: sectionRoute(STAGE_3_ROUTES.clinicSolutions, "collaboration"),
   pharmacies: STAGE_5_ROUTES.partnerPharmacies,
   suppliers: STAGE_5_ROUTES.partnerSuppliers,
   acquisitions: STAGE_5_ROUTES.partnerAcquisitions,
@@ -105,43 +110,6 @@ export function PartnersPage() {
         <p className="lsh-display text-2xl leading-[1.1]">{hub.procurement.title}</p>
         <p className="mt-2 text-[var(--lsh-muted)]">{hub.procurement.text}</p>
       </Callout>
-    </LifeSupplyLayout>
-  );
-}
-
-/** `/partners/clinics/` */
-export function PartnerClinicsPage() {
-  const c = partners.clinics;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        eyebrow={c.eyebrow}
-        title={c.title}
-        description={c.intro}
-        actions={<ActionLink action="clinic_collaboration" />}
-      />
-      <section className="px-5 py-16 lg:px-8">
-        <Container>
-          <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7">
-            <IconBadge icon="shield" />
-            <div>
-              <Eyebrow as="h2">{c.distinction.title}</Eyebrow>
-              <RuleList items={c.distinction.items} />
-            </div>
-          </Reveal>
-        </Container>
-      </section>
-      <IconFeatureGrid
-        eyebrow={c.collaboration.eyebrow}
-        title={c.collaboration.title}
-        items={c.collaboration.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          status: item.status,
-          icon: iconForTitle(item.title),
-        }))}
-      />
-      <ActionsClose actions={c.actions} />
     </LifeSupplyLayout>
   );
 }
