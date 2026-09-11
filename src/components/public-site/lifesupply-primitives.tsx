@@ -195,9 +195,12 @@ export function SectionHeading({
   const paragraphs = typeof description === "string" ? [description] : (description ?? []);
   return (
     <div className={`max-w-3xl ${className}`.trim()}>
-      <Eyebrow tone={dark ? "onDark" : "red"}>{eyebrow}</Eyebrow>
+      {/* A caller may omit the eyebrow where the band above it already
+          carries one; the title then starts the block rather than leaving a
+          phantom line of space above itself. */}
+      {eyebrow ? <Eyebrow tone={dark ? "onDark" : "red"}>{eyebrow}</Eyebrow> : null}
       <h2
-        className={`lsh-display mt-4 text-3xl leading-[1.08] sm:text-4xl ${
+        className={`lsh-display text-3xl leading-[1.08] sm:text-4xl ${eyebrow ? "mt-4" : ""} ${
           dark ? "text-white" : "text-[var(--lsh-charcoal)]"
         }`}
       >

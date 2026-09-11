@@ -13,13 +13,7 @@ import {
 } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
-import {
-  Callout,
-  IconBadge,
-  IconFeatureGrid,
-  ProcessSteps,
-  SplitSection,
-} from "@/components/public-site/sections";
+import { Callout, IconBadge, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { getBrand, getBrandCategory } from "@/lib/public-site/brands";
 import {
@@ -32,20 +26,22 @@ import {
 } from "@/lib/public-site/content/metabolic";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 
-/** The status line and the disclaimer every metabolic page carries. */
-function StatusBand() {
+/**
+ * The two boundaries that qualify everything below them, stated once.
+ *
+ * A status band, a disclaimer and an "Important information" list of four
+ * carried these between them, and said that nothing is available five times
+ * over. The hero says that once now; this says what the service is not.
+ */
+function BoundariesBand() {
+  const { boundaries } = metabolic;
   return (
-    <section className="px-5 py-12 lg:px-8">
-      <Reveal className="mx-auto grid max-w-7xl gap-6 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[auto_1fr_1fr] lg:pl-8">
-        <IconBadge icon="activity" />
-        <p className="leading-7 text-[var(--lsh-charcoal)]">
-          <span className="lsh-display mr-2 inline-flex border border-[var(--lsh-brand-red)] px-2 py-0.5 text-[10px] text-[var(--lsh-brand-red)]">
-            {metabolic.status.label}
-          </span>
-          {metabolic.status.sentence}
-        </p>
-        <p className="leading-7 text-[var(--lsh-muted)]">{metabolic.disclaimer}</p>
-      </Reveal>
+    <section className="border-b border-[var(--lsh-rule)] px-5 py-12 lg:px-8">
+      <Container className="grid gap-8 lg:grid-cols-[auto_1fr_1fr] lg:gap-10">
+        <IconBadge icon="shield" />
+        <p className="leading-7 text-[var(--lsh-charcoal)]">{boundaries.clinical}</p>
+        <p className="leading-7 text-[var(--lsh-muted)]">{boundaries.guidance}</p>
+      </Container>
     </section>
   );
 }
@@ -88,6 +84,20 @@ function BrowseLinks({ kit }: { kit: KitPathway }) {
  * the pathways define. Everything is sectioned here instead, each pathway
  * keeping the anchor its page's slug used.
  */
+/**
+ * `/metabolic-health/` — displayed as Metabolic Health Solutions.
+ *
+ * Redesigned on 2026-09-11. The page stated the same four-part offer four
+ * times before the reader reached the eight pathways: once in the
+ * introduction, once as "A connected supply experience", once as "Four ways
+ * the relationship creates value", and once as a "Program support" list.
+ * That, with two process sequences that covered the same ground and three
+ * notes repeating that nothing was available, put roughly six thousand pixels
+ * of preamble in front of the content people arrive for.
+ *
+ * The offer is described once. The eleven anchors the consolidation's
+ * redirects land on are unchanged.
+ */
 export function MetabolicHealthPage() {
   const { hub } = metabolic;
   const [primary, secondary] = hub.actions as readonly ActionKey[];
@@ -105,148 +115,91 @@ export function MetabolicHealthPage() {
         }
       />
       <OnThisPage items={metabolic.sections} />
-      <StatusBand />
+      <BoundariesBand />
+      <OfferSection />
 
-      {/*
-       * Who buys what, and on what basis (round three, outcome 4). This used to
-       * sit below the page's closing actions and disclosures, where a reader
-       * reached it only after the whole pathway pitch. The commercial
-       * explanation now precedes the detail it explains.
-       */}
+      {/* Who buys what, and on what basis (round three, outcome 4). */}
       <CommercialModel model={commercialModel} />
-
-      {/* A connected supply experience: start, continue, support. */}
-      <ProcessSteps
-        eyebrow={hub.experience.eyebrow}
-        title={hub.experience.title}
-        description={hub.experience.intro}
-        steps={hub.experience.steps.map((step) => ({
-          index: step.index,
-          title: step.title,
-          text: step.text,
-          icon: iconForTitle(step.title),
-        }))}
-      />
-      <Callout icon="activity" eyebrow="The result" tone="onLight">
-        <p className="lsh-display text-2xl leading-[1.1]">{hub.experience.result}</p>
-      </Callout>
-
-      {/* Four ways the relationship creates value. */}
-      <IconFeatureGrid
-        tone="onSurface"
-        numbered
-        columns={4}
-        eyebrow={hub.streams.eyebrow}
-        title={hub.streams.title}
-        description={hub.streams.intro}
-        items={hub.streams.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          icon: iconForTitle(item.title),
-        }))}
-      />
-      <Callout icon="shield" tone="onSurface">
-        <p>{hub.streams.note}</p>
-      </Callout>
-
-      {/* For care partners, beside conceptual monitoring supplies. */}
-      <SplitSection
-        eyebrow={hub.audiences.eyebrow}
-        title={hub.audiences.title}
-        graphic="metabolicSupplies"
-      >
-        <p>{hub.audiences.intro}</p>
-        <ul className="grid gap-5">
-          {hub.audiences.items.map((item) => (
-            <li key={item.title} className="flex gap-4">
-              <IconBadge icon={iconForTitle(item.title)} size={18} />
-              <div>
-                <h3 className="lsh-display text-lg text-[var(--lsh-charcoal)]">{item.title}</h3>
-                <p className="mt-1 text-sm leading-6">{item.text}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <div className="grid gap-6 border-t border-[var(--lsh-rule)] pt-6 sm:grid-cols-2">
-          <div>
-            <Eyebrow as="h3">{hub.audiences.support.title}</Eyebrow>
-            <ul className="mt-3 grid gap-1.5 text-sm leading-6 text-[var(--lsh-charcoal)]">
-              {hub.audiences.support.items.map((item) => (
-                <li key={item} className="lsh-bullet">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <Eyebrow as="h3">{hub.audiences.principle.title}</Eyebrow>
-            <p className="mt-3 text-sm leading-6 text-[var(--lsh-charcoal)]">
-              {hub.audiences.principle.text}
-            </p>
-          </div>
-        </div>
-      </SplitSection>
-
-      {/* Flexible by design: the six configuration dimensions. */}
-      <IconFeatureGrid
-        tone="onSurface"
-        columns={3}
-        eyebrow={hub.configure.eyebrow}
-        title={hub.configure.title}
-        description={hub.configure.intro}
-        items={hub.configure.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          icon: iconForTitle(item.title),
-        }))}
-      />
-      <Callout icon="clipboardCheck" tone="onSurface">
-        <p>{hub.configure.note}</p>
-      </Callout>
-
-      {/* Next step: discuss, configure, confirm. */}
-      <ProcessSteps
-        eyebrow={hub.process.eyebrow}
-        title={hub.process.title}
-        description={hub.process.intro}
-        steps={hub.process.items.map((step) => ({
-          index: step.index,
-          title: step.title,
-          text: step.text,
-          icon: iconForTitle(step.title),
-        }))}
-        action={
-          <>
-            <ActionLink action="discuss_program" />
-            <ActionLink action="explore_kits" variant="onDark" />
-            <ActionLink action="refills_information" variant="onDark" />
-          </>
-        }
-      />
-
-      {/* Important information, as the overview states it. */}
-      <section className="px-5 py-16 lg:px-8">
-        <Container>
-          <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
-            <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2">{hub.important.title}</Eyebrow>
-              <IconBadge icon="shield" size={18} />
-            </div>
-            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] md:grid-cols-2">
-              {hub.important.items.map((item) => (
-                <li key={item} className="lsh-bullet">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </Container>
-      </section>
 
       <PathwaysSection />
       <ReplenishmentSection />
       <CollaborationSection />
+      <ClosingBand />
     </LifeSupplyLayout>
+  );
+}
+
+/**
+ * The offer, in one section. Four parts, each stated one way.
+ */
+function OfferSection() {
+  const { offer } = metabolic.hub;
+  return (
+    <section className="px-5 py-20 lg:px-8">
+      <Container>
+        <Reveal className="max-w-2xl">
+          <SectionHeading eyebrow={offer.eyebrow} title={offer.title} />
+        </Reveal>
+        <Stagger
+          as="ul"
+          className="-mx-5 mt-12 grid gap-px bg-[var(--lsh-rule)] lg:-mx-8 lg:grid-cols-2"
+        >
+          {offer.items.map((item, index) => (
+            <StaggerItem as="li" key={item.title} className="h-full bg-[var(--lsh-paper)]">
+              <article className="flex h-full flex-col gap-4 p-5 lg:p-8">
+                <span
+                  aria-hidden="true"
+                  className="lsh-display text-[var(--lsh-charcoal)]/25 text-4xl leading-none"
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                  {item.title}
+                </h3>
+                <p className="leading-7 text-[var(--lsh-muted)]">{item.text}</p>
+              </article>
+            </StaggerItem>
+          ))}
+        </Stagger>
+        <Reveal delay={0.1} className="mt-8 border-t border-[var(--lsh-rule)] pt-8">
+          <p className="max-w-3xl leading-7 text-[var(--lsh-muted)]">{offer.note}</p>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
+
+/** The closing band: what a first conversation covers, and what it is not. */
+function ClosingBand() {
+  const { close, actions } = metabolic.hub;
+  return (
+    <section className="bg-[var(--lsh-ink)] px-5 py-24 text-white lg:px-8">
+      <Container>
+        <Reveal className="grid gap-10 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-end lg:pl-10">
+          <div>
+            <Eyebrow tone="onDark" as="h2">
+              {close.eyebrow}
+            </Eyebrow>
+            <p className="lsh-display mt-4 text-4xl leading-[1.05] lg:text-5xl">{close.title}</p>
+            <p className="mt-5 max-w-xl leading-7 text-white/75">{close.text}</p>
+          </div>
+          <div>
+            <div className="flex flex-wrap gap-3">
+              {(actions as readonly ActionKey[]).map((action, index) => (
+                <ActionLink
+                  key={action}
+                  action={action}
+                  variant={index === 0 ? "primary" : "onDark"}
+                />
+              ))}
+            </div>
+            <p className="mt-8 border-t border-white/15 pt-6 text-sm leading-6 text-white/60">
+              {close.qualification}
+            </p>
+          </div>
+        </Reveal>
+      </Container>
+    </section>
   );
 }
 
@@ -263,30 +216,30 @@ function PathwaysSection() {
   const { kitsHub } = metabolic;
   return (
     <AnchoredSection id="pathways">
-      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
-        <Container>
-          <Reveal>
+      {/*
+       * One band, one heading. It was three sections until 2026-09-11 — a
+       * heading, then the comparison under a near-identical heading of its
+       * own, then the item roles beneath the table that uses them. The roles
+       * now come first, because the table's "Durable and consumable roles"
+       * column means nothing until they have been read.
+       */}
+      <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
+        <Container className="min-w-0">
+          <Reveal className="max-w-3xl">
             <SectionHeading
               eyebrow={kitsHub.eyebrow}
               title={kitsHub.title}
               description={kitsHub.intro}
             />
           </Reveal>
-        </Container>
-      </section>
 
-      {/* The single catalogue: every row opens that pathway's section below. */}
-      <PathwayComparison
-        comparison={pathwayComparison}
-        pathways={comparisonRows().map((row) => ({ ...row, href: `#${row.slug}` }))}
-      />
-
-      <section className="px-5 pb-16 lg:px-8">
-        <Container>
           {/* The three item roles every pathway is described with. */}
-          <Stagger className="grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
+          <Stagger className="-mx-5 mt-12 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3 lg:-mx-8">
             {kitsHub.legend.items.map((item) => (
-              <StaggerItem key={item.role} className="flex gap-4 bg-[var(--lsh-surface)] p-6">
+              <StaggerItem
+                key={item.role}
+                className="flex gap-4 bg-[var(--lsh-surface)] p-5 lg:p-8"
+              >
                 <IconBadge icon={iconForTitle(item.role)} size={18} />
                 <div>
                   <Eyebrow as="h3">{item.title}</Eyebrow>
@@ -295,6 +248,14 @@ function PathwaysSection() {
               </StaggerItem>
             ))}
           </Stagger>
+
+          {/* The single catalogue: every row opens that pathway's section below. */}
+          <div className="mt-12">
+            <PathwayComparison
+              comparison={pathwayComparison}
+              pathways={comparisonRows().map((row) => ({ ...row, href: `#${row.slug}` }))}
+            />
+          </div>
         </Container>
       </section>
 
@@ -335,30 +296,21 @@ function PathwaySection({ slug }: { slug: string }) {
           <p>{kit.purpose}</p>
         </Reveal>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-2">
-          <Reveal className="flex gap-5 bg-[var(--lsh-surface)] p-6">
-            <IconBadge icon="users" size={18} />
-            <div>
-              <Eyebrow as="h4">Who it is for</Eyebrow>
-              <p className="mt-2 text-sm leading-6 text-[var(--lsh-charcoal)]">{kit.audience}</p>
-            </div>
-          </Reveal>
-          <Reveal
-            delay={0.05}
-            className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6"
-          >
-            <IconBadge icon="shield" size={18} />
-            <div>
-              <Eyebrow as="h4">The distinction that matters</Eyebrow>
-              <p className="mt-2 text-sm leading-6 text-[var(--lsh-charcoal)]">{kit.distinction}</p>
-            </div>
-          </Reveal>
-        </div>
+        <Reveal className="-mx-5 mt-8 flex gap-5 bg-[var(--lsh-surface)] p-5 lg:-mx-8 lg:p-8">
+          <IconBadge icon="users" size={18} />
+          <div>
+            <Eyebrow as="h4">Who it is for</Eyebrow>
+            <p className="mt-2 text-sm leading-6 text-[var(--lsh-charcoal)]">{kit.audience}</p>
+          </div>
+        </Reveal>
 
         {/* Roles only. Approved contents, quantities and a store configuration do not exist yet. */}
-        <Stagger as="ul" className="mt-5 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3">
+        <Stagger
+          as="ul"
+          className="-mx-5 mt-px grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3 lg:-mx-8"
+        >
           {kit.roles.map((item) => (
-            <StaggerItem as="li" key={item.role} className="bg-[var(--lsh-paper)] p-6">
+            <StaggerItem as="li" key={item.role} className="bg-[var(--lsh-paper)] p-5 lg:p-8">
               <div className="flex items-start justify-between gap-3">
                 <IconBadge icon={iconForTitle(item.role)} size={18} />
                 <span className="lsh-display border border-[var(--lsh-rule-strong)] px-2 py-1 text-[10px] text-[var(--lsh-muted)]">
@@ -371,8 +323,8 @@ function PathwaySection({ slug }: { slug: string }) {
           ))}
         </Stagger>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
-          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
+        <div className="-mx-5 mt-5 grid gap-5 lg:-mx-8 lg:grid-cols-2">
+          <Reveal className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-5 lg:p-8">
             <div className="flex items-start justify-between gap-4">
               <Eyebrow as="h4">Compatibility</Eyebrow>
               <IconBadge icon="clipboardCheck" size={18} />
@@ -387,7 +339,7 @@ function PathwaySection({ slug }: { slug: string }) {
           </Reveal>
           <Reveal
             delay={0.05}
-            className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-6"
+            className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-5 lg:p-8"
           >
             <div className="flex items-start justify-between gap-4">
               <Eyebrow as="h4">Excluded</Eyebrow>
@@ -437,9 +389,9 @@ function ReplenishmentSection() {
   const { refills } = metabolic;
   return (
     <AnchoredSection id="replenishment">
-      <section className="border-t border-[var(--lsh-rule)] px-5 pt-20 lg:px-8">
+      <section className="border-t border-[var(--lsh-rule)] px-5 pb-12 pt-20 lg:px-8">
         <Container>
-          <Reveal>
+          <Reveal className="max-w-3xl">
             <SectionHeading
               eyebrow={refills.eyebrow}
               title={refills.title}
@@ -448,13 +400,7 @@ function ReplenishmentSection() {
           </Reveal>
         </Container>
       </section>
-      <SplitSection
-        tone="onSurface"
-        eyebrow={refills.eyebrow}
-        title={refills.today.title}
-        graphic="pharmacy"
-        side="left"
-      >
+      <SplitSection tone="onSurface" title={refills.today.title} graphic="pharmacy" side="left">
         <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
           {refills.today.items.map((item) => (
             <li key={item} className="lsh-bullet">
@@ -481,7 +427,7 @@ function ReplenishmentSection() {
  */
 function CollaborationSection() {
   const { collaboration } = metabolic;
-  const blocks = [collaboration.who, collaboration.boundary, collaboration.before] as const;
+  const blocks = [collaboration.who, collaboration.planning] as const;
   return (
     <AnchoredSection id="collaboration">
       <section className="border-t border-[var(--lsh-rule)] px-5 py-20 lg:px-8">
@@ -493,39 +439,22 @@ function CollaborationSection() {
               description={collaboration.intro}
             />
           </Reveal>
-          <Stagger as="ul" className="mt-10 grid gap-5 md:grid-cols-3">
-            {blocks.map((block, index) => (
+          <Stagger as="ul" className="mt-12 grid items-start gap-8 lg:grid-cols-2 lg:gap-16">
+            {blocks.map((block) => (
               <StaggerItem as="li" key={block.title} className="h-full">
-                <div
-                  className={`flex h-full flex-col border-t-4 bg-[var(--lsh-surface)] p-7 ${
-                    index === 1 ? "border-[var(--lsh-charcoal)]" : "border-[var(--lsh-brand-red)]"
-                  }`}
-                >
-                  <Eyebrow as="h3">{block.title}</Eyebrow>
-                  <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                    {block.items.map((item) => (
-                      <li
-                        key={item}
-                        className={`border-l-2 pl-3 ${
-                          index === 1
-                            ? "border-[var(--lsh-charcoal)]"
-                            : "border-[var(--lsh-brand-red)]"
-                        }`}
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <Eyebrow as="h3">{block.title}</Eyebrow>
+                <ul className="mt-5 grid gap-2 leading-7 text-[var(--lsh-muted)]">
+                  {block.items.map((item) => (
+                    <li key={item} className="lsh-bullet">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </StaggerItem>
             ))}
           </Stagger>
-          <Reveal
-            delay={0.1}
-            className="mt-8 flex flex-col gap-5 border-t border-[var(--lsh-rule)] pt-8 lg:flex-row lg:items-center lg:justify-between"
-          >
-            <p className="max-w-3xl leading-7 text-[var(--lsh-muted)]">{collaboration.note}</p>
-            <div className="flex shrink-0 flex-wrap gap-3">
+          <Reveal delay={0.1} className="mt-10 border-t border-[var(--lsh-rule)] pt-8">
+            <div className="flex flex-wrap gap-3">
               {collaboration.actions.map((action, index) => (
                 <ActionLink
                   key={action}

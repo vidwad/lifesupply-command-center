@@ -69,7 +69,7 @@ export function AnchoredSection({
     <section id={id} className={`scroll-mt-24 ${className}`.trim()}>
       {children}
       {backTo ? (
-        <p className="mx-auto mt-10 max-w-7xl">
+        <p className="mx-auto mt-10 max-w-7xl px-5 lg:px-8">
           <a
             href={backTo.href}
             className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors hover:text-[var(--lsh-brand-red)]"

@@ -183,7 +183,8 @@ export function SplitSection({
   tone = "onLight",
   fill = false,
 }: {
-  eyebrow: string;
+  /** Optional: omit it where the band above already carries one. */
+  eyebrow?: string;
   title: string;
   children: React.ReactNode;
   graphic: GraphicKey;
