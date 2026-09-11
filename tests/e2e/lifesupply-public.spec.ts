@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { architecture } from "@/lib/public-site/content/architecture";
+
 import { clinics } from "@/lib/public-site/content/clinics";
 
 const RENDER_ORIGIN = "https://lifesupply-cc-web.onrender.com";
@@ -146,34 +148,33 @@ test.describe("LifeSupply public site", () => {
     await expect(stats.nth(2)).toHaveText("1M+");
   });
 
-  test("opens the homepage after the hero with Experienced, Growing, and Connected, before the group introduction", async ({
+  test("opens the homepage after the hero with Experienced, Growing, and Connected, then how the business fits together", async ({
     page,
   }) => {
     await page.goto("/");
     const main = page.locator("main");
-    // Audience routes open the page, then the three-panel statement, then the group
-    // introduction (website improvement program, 2026-09-09).
+    // The three-panel statement opens the page, then the program
+    // architecture shared with About (product owner, 2026-09-11).
     const headings = main.getByRole("heading", { level: 2 });
-    await expect(headings.nth(0)).toHaveText("Where to start");
-    await expect(headings.nth(1)).toHaveText("Who we are and where we are going.");
-    for (const route of [
-      "Operating businesses",
-      "Partnership opportunities",
-      "Investor information",
-    ]) {
-      await expect(main.getByRole("heading", { level: 3, name: route })).toBeVisible();
-    }
+    await expect(headings.nth(0)).toHaveText("Who we are and where we are going.");
+    await expect(headings.nth(1)).toHaveText(architecture.title);
     await expect(main.getByRole("heading", { level: 3, name: "Experienced" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
     await expect(main.getByText("This is where we want to be")).toBeVisible();
-    // The third section explains how the group is put together. It used to
-    // restate the operating scope the panels above already carry (round four,
-    // change 1).
-    const order = await main
-      .getByRole("heading", { level: 2 })
-      .evaluateAll((nodes) => nodes.slice(0, 3).map((node) => node.textContent?.trim()));
-    expect(order[2]).toBe("One parent company, three wholly-owned subsidiaries.");
+    // The About sections that now close the page, in order.
+    const order = await headings.evaluateAll((nodes) =>
+      nodes.map((node) => node.textContent?.trim() ?? ""),
+    );
+    const at = (text: string) => order.findIndex((h) => h.includes(text));
+    expect(at("Canada and the United States")).toBeGreaterThan(at(architecture.title));
+    expect(at("Build on the operating base")).toBeGreaterThan(at("Canada and the United States"));
+    expect(at("Developing opportunities")).toBeGreaterThan(at("Build on the operating base"));
+    expect(order[order.length - 1]).toBe("Reach the right LifeSupply conversation.");
+    // Nothing the owner removed is back.
+    await expect(main.getByRole("heading", { name: "Where to start" })).toHaveCount(0);
+    await expect(main.getByRole("heading", { name: /A clinic project can start/ })).toHaveCount(0);
+    await expect(main.getByText("Explore partner relationships")).toHaveCount(0);
   });
 
   test("keeps the hero heading one accessible sentence while its words animate", async ({
@@ -279,7 +280,9 @@ test.describe("LifeSupply public site", () => {
     // Reveal animations collapse too: a section far below the fold is fully
     // opaque without scrolling to it. The nearest ancestor carrying an inline
     // style is the motion wrapper; with reduced motion there is none.
-    const heading = page.getByRole("heading", { name: "Metabolic-health supply services." });
+    const heading = page.getByRole("heading", {
+      name: "Reach the right LifeSupply conversation.",
+    });
     await expect(heading).toBeVisible();
     // Hydration applies the instant reveal a frame after load, so poll briefly.
     await expect
@@ -575,40 +578,18 @@ test.describe("LifeSupply public site", () => {
     }
   });
 
-  test("gives the homepage clinic, program, partner, and investor paths verified destinations", async ({
-    page,
-  }) => {
+  test("gives the homepage hero and brand cards verified destinations", async ({ page }) => {
     await page.goto("/");
     const main = page.locator("main");
-    await expect(main.getByRole("link", { name: "Book a consultation" })).toHaveAttribute(
-      "href",
-      "https://www.lifesupplyclinics.com/contact-us/",
-    );
-    await expect(main.getByRole("link", { name: "Request an equipment quote" })).toHaveAttribute(
-      "href",
-      "https://www.lifesupplyclinics.com/buy-clinic-equipment/",
-    );
-    await expect(main.getByRole("link", { name: "Request a supply review" })).toHaveAttribute(
-      "href",
-      /^mailto:info@lifesupply\.com\?subject=/,
-    );
-    await expect(main.getByRole("link", { name: "Metabolic Health", exact: true })).toHaveAttribute(
-      "href",
-      /^\/metabolic-health\/?$/,
-    );
-    // The audience routes under the hero reuse these actions, so every match must agree.
-    // The Partners hub was retired on 2026-09-10; the partner path now goes
-    // where the conversation actually starts, with its own anchor.
+    // The clinic, metabolic and partner routes left the homepage on
+    // 2026-09-11; the hero's two actions and the brand cards remain.
     for (const link of await main
-      .getByRole("link", { name: "Explore partner relationships" })
-      .all()) {
-      await expect(link).toHaveAttribute("href", "/contact#business-inquiries");
-    }
-    for (const link of await main
-      .getByRole("link", { name: "Investor relations", exact: true })
+      .getByRole("link", { name: "Investor information", exact: true })
       .all()) {
       await expect(link).toHaveAttribute("href", /^\/investor-relations\/?$/);
     } // next/link drops the trailing slash
+    await expect(main.getByRole("link", { name: "Book a consultation" })).toHaveCount(0);
+    await expect(main.getByRole("link", { name: "Explore partner relationships" })).toHaveCount(0);
     // Four brand cards, all external, all verified hosts.
     const cards = main.locator('a[href^="https://"]:has-text("Visit ")');
     await expect(cards).toHaveCount(4);

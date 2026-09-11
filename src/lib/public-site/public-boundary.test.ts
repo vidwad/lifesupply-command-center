@@ -577,7 +577,6 @@ describe("routes and content governance", () => {
       "Information on this site is current at the date published and may be updated.",
       "Health, safety, medical, and industrial supply categories across Canada",
       "Publicly reported scale, with source context.",
-      "A clinic project can start at any stage.",
       "A platform approach to medical-supply access.",
       "The operating websites behind the group.",
     ];
@@ -672,7 +671,13 @@ describe("design-pass graphics and section primitives", () => {
       "investors",
     ]) {
       const page = read(`${PUBLIC_DIR}/pages/${name}.tsx`);
-      expect(page, name).toMatch(/@\/components\/public-site\/(sections|icons)/);
+      // The homepage has rendered no content icon of its own since the
+      // 2026-09-11 restructure; its lucide imports are the two affordances
+      // checked below, and the sections it shares with About resolve theirs
+      // through the registry in `about-sections.tsx`.
+      if (name !== "home") {
+        expect(page, name).toMatch(/@\/components\/public-site\/(sections|icons)/);
+      }
       // Only interface affordances may come straight from lucide.
       const lucide = /import \{([^}]*)\} from "lucide-react"/.exec(page)?.[1] ?? "";
       const AFFORDANCES = [
@@ -754,13 +759,15 @@ describe("round two: qualified inquiries and policy accuracy", () => {
 describe("round four: consolidation, precision and available actions", () => {
   it("gives each homepage section its own job", () => {
     const home = stripComments(read("src/lib/public-site/content/home.ts"));
-    // The group introduction explains the structure; it no longer restates the
-    // operating scope the panels above and the brand cards below already carry.
-    expect(home).toContain("One parent company, three wholly-owned subsidiaries.");
-    expect(home).not.toMatch(/introduction:[\s\S]{0,600}Four operating websites sit under one/);
-    // The growth direction is stated once, in the panels.
-    const introBlock = home.slice(home.indexOf("introduction:"), home.indexOf("audiences:"));
-    expect(introBlock).not.toMatch(/stated direction|growth strateg/i);
+    // Since 2026-09-11 the homepage carries no group introduction of its own:
+    // how the business fits together is the program architecture, shared with
+    // About, and the corporate structure stays on About.
+    expect(home).not.toContain("introduction:");
+    expect(home).not.toMatch(/Four operating websites sit under one/);
+    const about = stripComments(read("src/lib/public-site/content/about.ts"));
+    expect(about).toContain("One parent company, three wholly-owned subsidiaries.");
+    // The growth direction is stated once on the homepage, in the panels.
+    expect((home.match(/growth strateg/gi) ?? []).length).toBe(0);
   });
 
   it("says the four categories are coordinated, never one contract or account", () => {
@@ -807,6 +814,10 @@ describe("round four: consolidation, precision and available actions", () => {
   it("orders the milestones oldest first and marks the cumulative figure", () => {
     const about = stripComments(read("src/lib/public-site/content/about.ts"));
     expect(about).toContain("orderedMilestones");
+    // Rendered through the section About shares with the homepage (2026-09-11).
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/about-sections.tsx`))).toContain(
+      "orderedMilestones().map",
+    );
     // Every entry carries a sort key, so a new one cannot land out of order.
     const entries = about.match(/date: "/g) ?? [];
     const keys = about.match(/sortKey: "/g) ?? [];
@@ -1394,13 +1405,33 @@ describe("Stage 2 registries and navigation", () => {
   it("builds the Home and About contracts from the content model and the brand registry", () => {
     const source = pages();
     expect((source.match(/<BrandGrid \/>/g) ?? []).length).toBe(2);
+    // The homepage order the product owner set on 2026-09-11, and the About
+    // sections it shares through `about-sections.tsx`.
+    const home = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
     for (const block of [
       "homepage.whoWeAre.panels.map",
-      "homepage.introduction",
-      "homepage.clinicLifecycle.steps.map",
-      "homepage.metabolic",
-      "homepage.paths.map",
+      "<ProgramArchitecture content={architecture} />",
+      "homepage.operatingContext",
+      "homepage.publicMetrics.map",
+      "<FootprintAndMilestones />",
+      "<OperatingBaseBand />",
+      "<BrandGrid />",
+      "<GrowthDirection />",
+      "<DevelopingOpportunities />",
       "homepage.closing",
+    ]) {
+      expect(home, block).toContain(block);
+    }
+    for (const gone of [
+      "homepage.audiences",
+      "homepage.introduction",
+      "clinicLifecycle",
+      "homepage.metabolic",
+      "homepage.paths",
+    ]) {
+      expect(home, gone).not.toContain(gone);
+    }
+    for (const block of [
       "about.footprint",
       // Ordered by sortKey rather than by array position (round four).
       "orderedMilestones().map",
@@ -1624,10 +1655,10 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     ]) {
       expect(home, String(banned)).not.toMatch(banned);
     }
-    // The panels sit between the hero and the group introduction.
+    // The panels sit between the hero and the program architecture.
     const page = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
     expect(page.indexOf("homepage.whoWeAre")).toBeGreaterThan(page.indexOf("<PublicHero"));
-    expect(page.indexOf("homepage.whoWeAre")).toBeLessThan(page.indexOf("homepage.introduction"));
+    expect(page.indexOf("homepage.whoWeAre")).toBeLessThan(page.indexOf("<ProgramArchitecture"));
   });
 
   it("closes About on the developing opportunities, carries no group or capabilities section, and divides it with decorative legacy bands", () => {
@@ -1645,8 +1676,10 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(aboutContent).toContain("Developing opportunities under evaluation.");
     // The growth paragraph (after the prior site's "Our growth strategy") is strategy and
     // objective, never a transaction under way or an available service.
-    expect(page).toContain("{about.developing.lead}");
-    expect(page).toContain("{item.detail}");
+    expect(page).toContain("<DevelopingOpportunities />");
+    const shared = stripComments(read(`${PUBLIC_DIR}/pages/about-sections.tsx`));
+    expect(shared).toContain("{about.developing.lead}");
+    expect(shared).toContain("{item.detail}");
     expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
     // Neither developing program may read as purchasable, and neither carries a
     // launch date (round three replaced the older double-hedge with this).
@@ -1663,15 +1696,18 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     }
     // The developing grid is the last block before the layout closes.
     expect(page.trimEnd()).toMatch(
-      /about\.developing\.items\.map[\s\S]*?<\/section>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
+      /<DevelopingOpportunities \/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
     );
     // The hero backdrop and two bands, each decorative, drawn from the registry, never a path literal.
     expect(page).toContain('media={<HeroBackdrop band="data" />}');
-    expect((page.match(/<ParallaxBand\b/g) ?? []).length).toBe(2);
+    // The desk band is About's own; the warehouse band is the operating-base
+    // section About shares with the homepage since 2026-09-11.
+    expect((page.match(/<ParallaxBand\b/g) ?? []).length).toBe(1);
     expect(page).toMatch(
       /<ParallaxBand\s+band="desk"\s+tone="redLight"\s+eyebrow=\{about\.bands\.desk\.eyebrow\}/,
     );
-    expect(page).toMatch(
+    expect(page).toContain("<OperatingBaseBand />");
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/about-sections.tsx`))).toMatch(
       /<ParallaxBand\s+band="warehouse"\s+tone="ink"\s+eyebrow=\{about\.bands\.warehouse\.eyebrow\}/,
     );
     // The band lines repeat approved copy only: the three cited figures and the brand count.
