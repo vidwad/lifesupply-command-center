@@ -122,7 +122,14 @@ test.describe("LifeSupply public site", () => {
     // Any upward movement returns it immediately. One step, not a loop: the
     // listener is provably attached by now, and scrolling all the way to the
     // top would put the header back under the utility strip rather than at 0.
-    await page.evaluate(() => window.scrollBy(0, -200));
+    //
+    // Let the last downward frame settle first. The hook coalesces scrolls
+    // onto an animation frame, so an immediate upward scroll would be folded
+    // into the same frame as the last downward one and still read as down.
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
+    await page.evaluate(() => window.scrollBy(0, -300));
     await expect.poll(async () => (await header.boundingBox())?.y ?? -1, { timeout: 8000 }).toBe(0);
   });
 
