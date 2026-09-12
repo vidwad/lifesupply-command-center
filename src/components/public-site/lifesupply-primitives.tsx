@@ -97,7 +97,8 @@ export function PublicHero({
 }: {
   eyebrow: string;
   title: string;
-  description?: string;
+  /** One paragraph, or several when the hero introduces the whole page. */
+  description?: string | readonly string[];
   size?: "home" | "page";
   actions?: React.ReactNode;
   /** Optional decorative media layer rendered beneath the colour field. */
@@ -163,14 +164,21 @@ export function PublicHero({
           >
             {title}
           </h1>
-          {description ? (
-            <p
-              className={`lsh-enter mt-6 max-w-2xl leading-8 text-white/80 ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
-              style={{ "--lsh-enter-delay": "0.16s" } as React.CSSProperties}
-            >
-              {description}
-            </p>
-          ) : null}
+          {(typeof description === "string" ? [description] : (description ?? [])).map(
+            (paragraph, index) => (
+              <p
+                key={paragraph.slice(0, 40)}
+                className={`lsh-enter max-w-2xl leading-8 text-white/80 ${index === 0 ? "mt-6" : "mt-4"} ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
+                style={
+                  {
+                    "--lsh-enter-delay": `${0.16 + index * 0.04}s`,
+                  } as React.CSSProperties
+                }
+              >
+                {paragraph}
+              </p>
+            ),
+          )}
           {actions ? (
             <div
               className="lsh-enter mt-9 flex flex-wrap gap-3"

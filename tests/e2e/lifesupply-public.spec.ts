@@ -234,12 +234,7 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/about-us");
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(
-      page.getByRole("heading", {
-        level: 1,
-        name: "A platform approach to medical-supply access.",
-      }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: about.hero.title })).toBeVisible();
   });
 
   test("divides About with two decorative legacy photographs that drift on scroll and hold still under reduced motion, behind a photographic hero", async ({
@@ -249,7 +244,7 @@ test.describe("LifeSupply public site", () => {
     const main = page.locator("main");
     // About's hero is a commissioned conceptual image since 2026-09-12; the
     // legacy photograph that stood here is now the homepage hero.
-    await expect(main.locator('[data-hero-graphic="aboutAtrium"] img')).toHaveCount(1);
+    await expect(main.locator('[data-hero-graphic="aboutMedtech"] img')).toHaveCount(1);
     await expect(main.locator('[data-hero-band="data"]')).toHaveCount(0);
     const bands = main.locator("[data-band]");
     // One on About since 2026-09-11: the warehouse band went to the homepage
@@ -272,7 +267,8 @@ test.describe("LifeSupply public site", () => {
     // 2026-09-11, with nothing after it but the footer.
     await expect(main.getByText(/Shared capabilities|Published entities/)).toHaveCount(0);
     const headings = main.getByRole("heading", { level: 2 });
-    await expect(headings.last()).toHaveText("Our Board of Directors");
+    // About closes on the contact section since 2026-09-12 (product owner).
+    await expect(headings.last()).toHaveText(about.connect.title);
     // The approved growth-strategy paragraph left the page on 2026-09-12
     // when the section was rewritten as Solutions development. It is kept
     // in the content model, unpublished, so it must not be on any page.
@@ -310,21 +306,27 @@ test.describe("LifeSupply public site", () => {
     );
     expect(badges).toBe(2);
     await expect(section).not.toContainText(/available now|order now|buy now|coming soon/i);
-    // The three tiers moved to About on 2026-09-12 (product owner), between
-    // the band and the team, and render on that page only. The two
-    // clarifying notes came back with them.
+    // The tiers block renders nowhere since the About rewrite on 2026-09-12
+    // (product owner). About tells the same three states as prose, and the
+    // two clarifying notes went with the block, so what they drew has to be
+    // drawn by the sections themselves: what runs today, what is being built
+    // and cannot be bought, and what is only being assessed.
     await expect(
       page.locator("main").getByRole("heading", { name: architecture.title }),
     ).toHaveCount(0);
     await page.goto("/about-us");
-    await expect(main.getByRole("heading", { name: architecture.title })).toBeVisible();
-    await expect(main.getByRole("heading", { name: "Operating", exact: true })).toBeVisible();
-    await expect(main.getByRole("heading", { name: "In development", exact: true })).toBeVisible();
-    await expect(
-      main.getByRole("heading", { name: "Under evaluation", exact: true }),
-    ).toBeVisible();
-    await expect(main.getByText(/The two meanings of pharmacy/i)).toBeVisible();
-    await expect(main.getByText(/How participation works/i)).toBeVisible();
+    await expect(main.getByRole("heading", { name: architecture.title })).toHaveCount(0);
+    await expect(main.getByText(/The two meanings of pharmacy/i)).toHaveCount(0);
+    await expect(main.getByText(/How participation works/i)).toHaveCount(0);
+    await expect(main.getByRole("heading", { name: about.operations.title })).toBeVisible();
+    await expect(main.getByRole("heading", { name: about.priorities.title })).toBeVisible();
+    await expect(main.getByRole("heading", { name: about.longerTerm.title })).toBeVisible();
+    await expect(main.getByText(about.priorities.note)).toBeVisible();
+    await expect(main.getByText(about.longerTerm.note)).toBeVisible();
+    // The two pharmacy businesses stay apart: one being built, one only
+    // assessed, each said where it belongs.
+    await expect(main.getByRole("heading", { name: "Pharmacy Solutions" })).toBeVisible();
+    await expect(main.getByRole("heading", { name: "Licensed pharmacy operations" })).toBeVisible();
     // The photograph moves with the scroll position.
     const first = bands.first();
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -610,7 +612,7 @@ test.describe("LifeSupply public site", () => {
       if (/youtube|ytimg|googlevideo/.test(host)) thirdParty.push(request.url());
     });
     await page.goto("/about-us");
-    const play = page.getByRole("button", { name: /Play the video/ });
+    const play = page.getByRole("button", { name: /Watch the company introduction/i });
     await expect(play).toBeVisible();
     await expect(page.locator("iframe")).toHaveCount(0);
     expect(thirdParty).toEqual([]);
@@ -1126,17 +1128,27 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/about-us");
     const main = page.locator("main");
-    // Round three replaced the provenance note with the title itself.
+    // Round three replaced the provenance note with the title itself, and the
+    // internal biography-preservation note came off the page on 2026-09-12.
     await expect(main.getByText(/as published on the prior LifeSupply website/)).toHaveCount(0);
-    await expect(main.getByText("Chairman & CEO", { exact: true }).first()).toBeVisible();
-    await expect(main.getByRole("heading", { name: "Our Board of Directors" })).toBeVisible();
+    await expect(main.getByText(/This preserved biography and title/)).toHaveCount(0);
+    // One leadership section since 2026-09-12, with his full title, and Abdul
+    // Ladha named once on the page rather than as both leader and director.
+    await expect(
+      main.getByText("Chairman & Chief Executive Officer", { exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      main.getByRole("heading", { name: "The people guiding LifeSupply." }),
+    ).toBeVisible();
+    await expect(main.getByRole("heading", { name: "Our Board of Directors" })).toHaveCount(0);
+    await expect(main.getByRole("heading", { level: 3, name: "Abdul Ladha" })).toHaveCount(1);
     // A card opens that person's dialog. The board cards use the short name;
     // the biography keeps the full legacy name it was published under
     // ("Barrett E.G. Sleeman, P.Eng."), so each is matched on a pattern.
     for (const [name, anchor, full] of [
       ["Abdul Ladha", "abdul-ladha", /Abdul Ladha/],
       ["Keith Dolo", "keith-dolo", /Keith Dolo/],
-      ["Barrett Sleeman", "barrett-sleeman", /Sleeman/],
+      ["Barrett E.G. Sleeman, P.Eng.", "barrett-sleeman", /Sleeman/],
       ["Dr. David Vogt", "david-vogt", /David Vogt/],
     ] as const) {
       const card = main.getByRole("link", { name: new RegExp(name) }).last();
@@ -1151,7 +1163,10 @@ test.describe("LifeSupply public site", () => {
       // The portrait and the note that dates the title travelled with the
       // biography; a legacy title must never read as a newly confirmed one.
       await expect(dialog.getByRole("img", { name: full }), anchor).toBeVisible();
-      await expect(dialog).toContainText("Current roles are confirmed through the company");
+      // The internal preservation note came off the page on 2026-09-12. The
+      // rewritten biographies state career history in the past tense and
+      // claim no role held today, so nothing is left for it to qualify.
+      await expect(dialog).not.toContainText("Current roles are confirmed through the company");
       const close = dialog.getByRole("link", { name: /^Close$/ });
       await expect(close, `${anchor}: one close control`).toHaveCount(1);
       await expect(close, `${anchor}: close is in view`).toBeInViewport();

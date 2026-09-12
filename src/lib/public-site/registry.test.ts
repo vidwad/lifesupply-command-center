@@ -411,7 +411,9 @@ describe("route registry", () => {
     expect(team.board.map((director) => director.name)).toEqual([
       "Abdul Ladha",
       "Keith Dolo",
-      "Barrett Sleeman",
+      // The card carries his full professional name since 2026-09-12, the
+      // same form his profile has always used.
+      "Barrett E.G. Sleeman, P.Eng.",
       "Dr. David Vogt",
     ]);
     expect(team.legacyProfiles.map((p) => p.slug)).toEqual([
@@ -420,7 +422,9 @@ describe("route registry", () => {
       "barrett-e-g-sleeman",
       "david-vogt",
     ]);
-    expect(legacyTitle("abdul-ladha")).toBe("Chairman & CEO");
+    // His full title since 2026-09-12 (product owner), on the one card he
+    // now appears on.
+    expect(legacyTitle("abdul-ladha")).toBe("Chairman & Chief Executive Officer");
     for (const person of [...team.management, ...team.board]) {
       expect(legacyTitle(person.slug), person.slug).toBeTruthy();
       expect(existsSync(join(ROOT, `public${person.image}`)), person.image).toBe(true);

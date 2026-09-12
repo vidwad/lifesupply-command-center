@@ -1,9 +1,8 @@
 import Image from "next/image";
 import { ArrowRight, Mail, Phone, X } from "lucide-react";
 
-import { Container, Eyebrow, SectionHeading } from "@/components/public-site/lifesupply-primitives";
+import { Container, SectionHeading } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { IconBadge } from "@/components/public-site/sections";
 import { legacyProfile, legacyTitle, profileAnchor, team } from "@/lib/public-site/content/team";
 
 /**
@@ -20,90 +19,24 @@ import { legacyProfile, legacyTitle, profileAnchor, team } from "@/lib/public-si
  * rather than on the top of a listing.
  */
 
-/** The title and text the team page opened with. */
-export function TeamIntro() {
-  const { hero } = team;
-  return (
-    <section className="px-5 py-20 lg:px-8">
-      <Container>
-        <Reveal className="max-w-3xl">
-          <SectionHeading
-            eyebrow={hero.eyebrow}
-            title={hero.title}
-            description={hero.description}
-          />
-        </Reveal>
-      </Container>
-    </section>
-  );
-}
-
-/** Leadership: the single confirmed executive, at full width. */
-export function Leadership() {
-  const { management, labels } = team;
-  return (
-    <section className="px-5 pb-16 lg:px-8">
-      <Container>
-        <Reveal className="flex items-center gap-4">
-          <IconBadge icon="users" size={18} />
-          <Eyebrow as="h2">{labels.management}</Eyebrow>
-        </Reveal>
-        <div className="mt-6 grid gap-5">
-          {management.map((member) => (
-            <Reveal key={member.slug} className="h-full">
-              <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                <a
-                  href={`#${profileAnchor(member.slug)}`}
-                  className="group grid h-full gap-8 p-8 md:grid-cols-[auto_1fr] md:items-center lg:p-10"
-                >
-                  <Image
-                    src={member.image}
-                    alt={member.name}
-                    width={200}
-                    height={200}
-                    sizes="(min-width: 1024px) 192px, 160px"
-                    className="h-40 w-40 rounded-full object-cover ring-0 ring-[var(--lsh-brand-red)] transition-[box-shadow] duration-300 group-hover:ring-4 motion-reduce:transition-none lg:h-48 lg:w-48"
-                  />
-                  <div>
-                    <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                      {legacyTitle(member.slug)}
-                    </p>
-                    <h3 className="lsh-display mt-2 text-3xl text-[var(--lsh-charcoal)] sm:text-4xl">
-                      {member.name}
-                    </h3>
-                    <p className="mt-4 max-w-2xl leading-7 text-[var(--lsh-muted)]">
-                      {member.summary}
-                    </p>
-                    <span className="lsh-display mt-6 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-                      Read full profile{" "}
-                      <ArrowRight
-                        size={15}
-                        aria-hidden="true"
-                        className="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
-                      />
-                    </span>
-                  </div>
-                </a>
-              </SpotlightCard>
-            </Reveal>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-}
-
-/** The board: four portrait cards in the order the prior site used. */
-export function BoardOfDirectors() {
-  const { board, labels } = team;
+/**
+ * Leadership and governance: one section since 2026-09-12 (product owner).
+ * Abdul Ladha appeared twice on the page, once as Leadership and again as
+ * the first director; he now appears once, with his full title.
+ */
+export function LeadershipAndGovernance() {
+  const { board } = team;
   return (
     <section id="board" className="scroll-mt-24 bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
       <Container>
-        <Reveal className="flex items-center gap-4">
-          <IconBadge icon="landmark" size={18} />
-          <Eyebrow as="h2">{labels.board}</Eyebrow>
+        <Reveal className="max-w-3xl">
+          <SectionHeading
+            eyebrow={team.hero.eyebrow}
+            title={team.hero.title}
+            description={team.hero.description}
+          />
         </Reveal>
-        <Stagger as="ul" className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <Stagger as="ul" className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {board.map((director) => (
             <StaggerItem key={director.slug} as="li" className="h-full">
               <SpotlightCard
@@ -136,7 +69,7 @@ export function BoardOfDirectors() {
                       {director.summary}
                     </p>
                     <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-5 text-[11px] text-[var(--lsh-brand-red)]">
-                      Read full profile{" "}
+                      {director.linkLabel}{" "}
                       <ArrowRight
                         size={15}
                         aria-hidden="true"
@@ -245,9 +178,6 @@ function ProfileDialog({ slug }: { slug: string }) {
                 ))}
               </ul>
             ) : null}
-            <p className="mt-8 border-t border-[var(--lsh-rule)] pt-6 text-sm leading-6 text-[var(--lsh-muted)]">
-              {team.profileNote}
-            </p>
           </div>
         </div>
       </div>

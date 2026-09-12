@@ -17,11 +17,16 @@
  * last sentence and a missing "a" in Dr. Vogt's first.
  */
 export const team = {
+  /**
+   * One section, not two (product owner, 2026-09-12). Abdul Ladha appeared
+   * twice on the page: once as Leadership and again as the first director.
+   * He now appears once, with his full title.
+   */
   hero: {
-    eyebrow: "Our team",
-    title: "Leadership and board of LifeSupply Health Inc.",
+    eyebrow: "Leadership and governance",
+    title: "The people guiding LifeSupply.",
     description:
-      "The people who run the group and the directors who oversee it, across online medical supply in Canada and the United States, clinic projects in British Columbia, and the supply programs now in development.",
+      "LifeSupply’s leadership and board bring experience in business operations, finance, capital markets, engineering, technology, and innovation.",
   },
   labels: {
     management: "Leadership",
@@ -45,28 +50,32 @@ export const team = {
       name: "Abdul Ladha",
       slug: "abdul-ladha",
       summary:
-        "Abdul Ladha is an electrical engineer, entrepreneur, business leader and philanthropist. He has 30 years of business and capital market experience.",
+        "Electrical engineer, entrepreneur, and business leader with three decades of business and capital-market experience.",
+      linkLabel: "Read Abdul’s biography",
       image: "/lsh/abdul-ladha.jpg",
     },
     {
       name: "Keith Dolo",
       slug: "keith-dolo-2",
       summary:
-        "Keith Dolo holds an honors degree in commerce with an outstanding track record in finance and accounting.",
+        "Business leader with experience in finance, accounting, corporate leadership, and investment in growing e-commerce businesses.",
+      linkLabel: "Read Keith’s biography",
       image: "/lsh/keith-dolo.jpg",
     },
     {
-      name: "Barrett Sleeman",
+      name: "Barrett E.G. Sleeman, P.Eng.",
       slug: "barrett-e-g-sleeman",
       summary:
-        "Barrett Sleeman is a Professional Engineer with a varied career history in resource development and finance.",
+        "Professional engineer with experience in banking, financial analysis, resource development, and public-company leadership.",
+      linkLabel: "Read Barrett’s biography",
       image: "/lsh/barrett-sleeman.jpg",
     },
     {
       name: "Dr. David Vogt",
       slug: "david-vogt",
       summary:
-        "Dr. David Vogt is a scientist and innovation leader based in Vancouver, Canada. He holds an Interdisciplinary Ph.D. (SFU 1990), a B.A. in English Literature (UBC 1978) and a Hons. B.Sc. in Astrophysics (UBC 1977).",
+        "Scientist and innovation leader with experience spanning technology ventures, research, education, and corporate governance.",
+      linkLabel: "Read David’s biography",
       image: "/lsh/david-vogt.jpg",
     },
   ],
@@ -87,12 +96,12 @@ export const team = {
       anchor: "abdul-ladha",
       slug: "abdul-ladha",
       name: "Abdul Ladha",
-      role: "Chairman & CEO",
+      role: "Chairman & Chief Executive Officer",
       image: "/lsh/abdul-ladha.jpg",
       bio: [
-        "Abdul Ladha is an electrical engineer, entrepreneur, business leader and philanthropist. He has 30 years of business and capital market experience.",
-        "He was the Chairman and CEO of Ableauctions.com Inc., leading the company’s development and deployment of live auction technology and services to some of the world’s most prestigious galleries and industrial auction houses.",
-        "Abdul is the founder of the Spark Global Philanthropic Foundation and is periodically an instructor at the Sauder School of Business, University of British Columbia.",
+        "Abdul Ladha is an electrical engineer, entrepreneur, business leader, and philanthropist with three decades of business and capital-market experience.",
+        "He served as Chairman and Chief Executive Officer of Ableauctions.com Inc., leading the development and deployment of live auction technology and services for galleries and industrial auction houses.",
+        "Abdul founded the Spark Global Philanthropic Foundation and has taught periodically at the University of British Columbia’s Sauder School of Business.",
       ],
     },
     {
@@ -102,7 +111,9 @@ export const team = {
       role: "Director",
       image: "/lsh/keith-dolo.jpg",
       bio: [
-        "Keith Dolo holds an honors degree in commerce with an outstanding track record in finance and accounting. He served for 8 years as VP of Robert Half International, an S&P 500, NYSE ($6.1 billion) listed company, named by Fortune magazine in its “Most Admired Companies” list for 23 consecutive years. Keith has served as the chairman & CEO of Sproutly Canada and is the co-founder of Maverick Brands, a brand accelerator that invests in high growth e-commerce companies.",
+        "Keith Dolo holds an honours degree in commerce and has experience in finance, accounting, and corporate leadership.",
+        "He spent eight years as a Vice President at Robert Half International and has served as Chairman and Chief Executive Officer of Sproutly Canada.",
+        "Keith is also a co-founder of Maverick Brands, a brand accelerator that invests in growing e-commerce companies.",
       ],
     },
     {
@@ -112,7 +123,9 @@ export const team = {
       role: "Director",
       image: "/lsh/barrett-sleeman.jpg",
       bio: [
-        "Barrett Sleeman is a Professional Engineer with a varied career history in resource development and finance. He has supervised a $5 billion loan portfolio for the Royal Bank of Canada, served as a financial analyst for a national brokerage house, and has been an officer and director of numerous public companies. He is a retired emergency medical technician and first responder and is a director of THEMAC Resources Group.",
+        "Barrett Sleeman is a Professional Engineer whose career spans resource development, finance, and public-company leadership.",
+        "His experience includes supervising a $5 billion loan portfolio for the Royal Bank of Canada, working as a financial analyst for a national brokerage firm, and serving as an officer and director of numerous public companies.",
+        "Barrett is also a retired emergency medical technician and first responder.",
       ],
     },
     {
@@ -122,9 +135,10 @@ export const team = {
       role: "Director",
       image: "/lsh/david-vogt.jpg",
       bio: [
-        "Dr. David Vogt is a scientist and innovation leader based in Vancouver, Canada. He holds an Interdisciplinary Ph.D. (SFU 1990), a B.A. in English Literature (UBC 1978) and a Hons. B.Sc. in Astrophysics (UBC 1977).",
-        "Dr. Vogt has launched ten information technology companies and is currently CEO of two of these. He has also founded and led collaborative innovation organizations employing Vancouver as a “living lab” for pioneering mobile media and urban data solutions.",
-        "Dr. Vogt has a breadth of academic, government, corporate, non-profit and startup experience, including advisory and governance roles, and continues to teach graduate courses at the University of British Columbia.",
+        "Dr. David Vogt is a Vancouver-based scientist and innovation leader with experience across academic, government, corporate, non-profit, and startup organizations.",
+        "He holds an interdisciplinary Ph.D. from Simon Fraser University, a Bachelor of Arts in English Literature, and an Honours Bachelor of Science in Astrophysics from the University of British Columbia.",
+        "His career includes launching ten information technology companies and founding and leading collaborative innovation organizations focused on mobile media and urban data solutions.",
+        "Dr. Vogt’s experience also includes advisory and governance roles and graduate-level teaching at the University of British Columbia.",
       ],
     },
   ],
@@ -141,6 +155,15 @@ export const team = {
     "dr-dedeshya-holowenko",
     "john-anderson-2",
   ],
+  /**
+   * Unpublished since 2026-09-12 (product owner): an internal note about how
+   * the copy was preserved is not page copy. It was needed while the
+   * biographies were the prior site's text, which asserted current roles --
+   * "is currently CEO of two of these", "is a director of THEMAC Resources
+   * Group". The rewritten biographies state career history in the past tense
+   * and make no claim about a role held today, so the caveat has nothing
+   * left to qualify.
+   */
   profileNote:
     "This preserved biography and title are from the prior public website. Current roles are confirmed through the company before a profile is updated.",
 } as const;
