@@ -895,16 +895,20 @@ describe("round three: architecture, placement and voice", () => {
     expect(architecture).toContain("Pharmacy supply programs");
     expect(architecture).toContain("Licensed pharmacy operations");
     expect(architecture).toContain("Supplying pharmacies and running one are different businesses");
-    // The homepage carries the tiers alone (product owner, 2026-09-11), and
-    // About ends on the team, so the two clarifying notes render nowhere
-    // today. What they drew is carried by the tiers themselves, which is what
-    // this asserts: the two pharmacy businesses are named, in different
-    // tiers, each with its own status.
+    // The section moved to About on 2026-09-12 (product owner) and renders
+    // there only, with the two clarifying notes published again beneath the
+    // tiers. The homepage must not carry a second copy.
     const arch = stripComments(read(`${PUBLIC_DIR}/program-architecture.tsx`));
     expect(arch).toContain("{notes ? (");
-    expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
-      "<ProgramArchitecture content={architecture} notes={false} />",
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).not.toContain(
+      "<ProgramArchitecture",
     );
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`))).toContain(
+      "<ProgramArchitecture content={architecture} />",
+    );
+    // And the tiers still carry the distinction on their own: the two
+    // pharmacy businesses are named, in different tiers, each with its own
+    // status, so the notes explain rather than do the work.
     const inDevelopment = architecture.slice(
       architecture.indexOf('status: "In development"'),
       architecture.indexOf('status: "Under evaluation"'),
@@ -1444,7 +1448,6 @@ describe("Stage 2 registries and navigation", () => {
     const home = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
     for (const block of [
       "homepage.whoWeAre.panels.map",
-      "<ProgramArchitecture content={architecture} notes={false} />",
       "homepage.operatingContext",
       "homepage.publicMetrics.map",
       "<FootprintAndMilestones />",
@@ -1709,10 +1712,14 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     ]) {
       expect(home, String(banned)).not.toMatch(banned);
     }
-    // The panels sit between the hero and the program architecture.
+    // The panels sit between the hero and the red operating-context band.
+    // The program architecture stood between them until 2026-09-12, when the
+    // product owner moved it to About.
     const page = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
     expect(page.indexOf("homepage.whoWeAre")).toBeGreaterThan(page.indexOf("<PublicHero"));
-    expect(page.indexOf("homepage.whoWeAre")).toBeLessThan(page.indexOf("<ProgramArchitecture"));
+    expect(page.indexOf("homepage.whoWeAre")).toBeLessThan(
+      page.indexOf("homepage.operatingContext"),
+    );
   });
 
   it("closes About on the developing opportunities, carries no group or capabilities section, and divides it with decorative legacy bands", () => {
