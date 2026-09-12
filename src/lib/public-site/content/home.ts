@@ -22,9 +22,21 @@ export const homepage = {
    * register; no new claim is introduced.
    */
   eyebrow: "LifeSupply Health Inc.",
-  title: "Medical supplies and clinic projects today, two supply programs in development.",
+  title: "A health and medical supplies & services company.",
+  /**
+   * The product owner proposed the prior site's own line here on
+   * 2026-09-12 -- "over 55,000 medical products ... over 45,000 Canadians
+   * since inception" -- which is S-44 in the source register. The old
+   * site stated those two facts four different ways (S-43 to S-47:
+   * 46,000, 45,000 and 30,000 customers; 50,000 and 55,000 products), and
+   * the register marks them unreliable. Shown that record, the product
+   * owner chose the figures the 2025 annual report supports instead
+   * (S-41, S-42), which are the ones the band further down the page
+   * already cites. "Served ... since inception" keeps S-42's
+   * qualification: it is cumulative, never a count of current customers.
+   */
   description:
-    "A Canadian group of four operating businesses: medical, health, and home-care supplies sold online across Canada and the United States, and clinic planning, design, and equipment services for projects in British Columbia. Pharmacy and metabolic-health supply programs are in development.",
+    "LifeSupply is an online retailer of more than 50,000 medical products, with more than one million customers served since inception.",
   /**
    * Background footage for the hero: the legacy lifesupplyhealth.com hero
    * video (wp-content/uploads/2021/10/LSHomeVid.mp4, 19 s, 1488×836), cut
@@ -57,6 +69,14 @@ export const homepage = {
   whoWeAre: {
     eyebrow: "Experience and direction",
     title: "Who we are and where we are going.",
+    /**
+     * The standfirst (product owner, 2026-09-12). Same facts the hero
+     * carried before the title changed: four businesses, three selling
+     * online in two countries and one delivering clinic projects in
+     * British Columbia, with two supply programs still in development.
+     */
+    description:
+      "Four operating businesses under one group. Three sell medical, health, and home-care supplies online across Canada and the United States; the fourth plans, designs, and equips clinics for projects in British Columbia. Two further supply programs, in pharmacy and metabolic health, are in development.",
     panels: [
       {
         eyebrow: "Our record",

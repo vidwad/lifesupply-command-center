@@ -1423,6 +1423,15 @@ describe("Stage 2 registries and navigation", () => {
     expect(home).toContain("homepage.publicMetrics.map");
     const c = content();
     for (const figure of ['"25+"', '"50K+"', '"1M+"']) expect(c, figure).toContain(figure);
+    // The hero names a customer count since 2026-09-12, so it has to carry
+    // S-42's qualification in the sentence itself: cumulative, never a count
+    // of customers held today.
+    const homeContent = stripComments(read("src/lib/public-site/content/home.ts"));
+    const hero = homeContent.slice(0, homeContent.indexOf("whoWeAre:"));
+    if (/million customers/i.test(hero)) {
+      expect(hero).toMatch(/customers served since inception/i);
+      expect(hero).not.toMatch(/(active|current|existing) customers/i);
+    }
     // The conflicting counts catalogued in SOURCE_REGISTER.md §4.
     for (const legacy of [
       "55,000",

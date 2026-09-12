@@ -529,10 +529,14 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             <p className="mt-5 max-w-sm text-sm leading-6 text-white/70">{brand.footerTagline}</p>
             {/*
              * What the group is, under the tagline (product owner,
-             * 2026-09-12). Rendered from the homepage hero's own sentence
-             * rather than a second copy of it, so the two cannot drift.
+             * 2026-09-12). It reads from the homepage standfirst rather
+             * than holding a second copy, so the two cannot drift. It
+             * followed the hero until the hero became a retailer
+             * statement later the same day.
              */}
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/60">{homepage.description}</p>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-white/60">
+              {homepage.whoWeAre.description}
+            </p>
           </div>
           <div>
             <Eyebrow as="h2" tone="onDark">

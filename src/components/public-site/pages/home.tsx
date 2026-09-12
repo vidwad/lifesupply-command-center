@@ -78,7 +78,11 @@ export function LifeSupplyHome() {
       <section className="bg-[var(--lsh-paper)] px-5 py-20 lg:px-8">
         <Container>
           <Reveal>
-            <SectionHeading eyebrow={homepage.whoWeAre.eyebrow} title={homepage.whoWeAre.title} />
+            <SectionHeading
+              eyebrow={homepage.whoWeAre.eyebrow}
+              title={homepage.whoWeAre.title}
+              description={homepage.whoWeAre.description}
+            />
           </Reveal>
           {/*
            * Three columns, no panels. A single red rule over each column and
