@@ -86,8 +86,10 @@ export const CONSOLIDATED_ROUTES = {
   // subject, and the enquiry routing it offered is what Contact does. Its
   // two remaining children stay live at their own addresses.
   partners: "/partners/",
-  // Stage 4 (2026-09-10): the four retained leadership profiles. Each is a
-  // section of `/our-team` now, at the anchor `PROFILE_ANCHORS` names.
+  // Stage 5 (2026-09-11): About absorbed the team, so the team address and
+  // the four retained leadership profiles all resolve there. Each profile
+  // opens as a dialog at the anchor `PROFILE_ANCHORS` names.
+  team: "/our-team/",
   ...Object.fromEntries(
     team.legacyProfiles.map((profile) => [`profile_${profile.anchor}`, `/${profile.slug}/`]),
   ),
@@ -111,7 +113,7 @@ export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
   // address and its anchor can never drift apart.
   [METABOLIC_ROUTES.hub]: ["pathways", ...KIT_SLUGS, "replenishment", "collaboration"],
   [LIFE_SUPPLY_ROUTES.contact]: ["business-inquiries"],
-  [LIFE_SUPPLY_ROUTES.team]: PROFILE_ANCHORS,
+  [LIFE_SUPPLY_ROUTES.about]: PROFILE_ANCHORS,
 };
 
 /** `"/clinic-solutions/" + "equipment"` → `"/clinic-solutions/#equipment"`. */
@@ -300,7 +302,10 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "live",
     navGroup: "investors",
   },
-  { path: "/our-team/", label: "Our team", stage: 5, status: "live", navGroup: "about" },
+  // Absorbed into About on 2026-09-11 (product owner): the title, the
+  // leadership card and the board now sit under the "Since inception"
+  // band there, and each profile opens as a dialog.
+  { path: "/our-team/", label: "Our team", stage: 5, status: "redirect", navGroup: null },
   // Contact is the last primary item since 2026-09-10; it is added by
   // `buildPrimaryNavigation()` rather than derived from a group.
   { path: "/contact/", label: "Contact", stage: 3, status: "live", navGroup: null },

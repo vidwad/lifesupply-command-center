@@ -430,7 +430,9 @@
   .lsh-metabolic-rhythm-track {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    /* `minmax(0, …)`, not `1fr`: a label with a wider min-content would
+       otherwise push the track past the page at 320px. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.25rem;
     align-items: center;
   }
@@ -546,6 +548,52 @@
     height: 0.375rem;
     border-radius: 9999px;
     background: var(--lsh-brand-red);
+  }
+
+  /*
+   * A director's full profile, as a dialog the address bar opens.
+   *
+   * Pure CSS, driven by `:target`, so `/about-us#david-vogt` shows the
+   * profile with JavaScript disabled and the four legacy profile addresses
+   * keep landing on a person rather than on a listing. The overlay is a
+   * sibling link that fills the viewport, so a click anywhere outside the
+   * panel closes it; the close control inside it does the same.
+   *
+   * Hidden rather than merely transparent, so nothing inside a closed
+   * profile is reachable by keyboard or announced to a screen reader.
+   */
+  .lsh-profile-dialog {
+    display: none;
+  }
+
+  .lsh-profile-dialog:target {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+  }
+
+  .lsh-profile-dialog:target .lsh-profile-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.75);
+  }
+
+  .lsh-profile-dialog:target .lsh-profile-panel {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    background: var(--lsh-paper);
+  }
+
+  @media (min-width: 48rem) {
+    .lsh-profile-dialog:target .lsh-profile-panel {
+      inset: 50% auto auto 50%;
+      width: min(62rem, calc(100vw - 3rem));
+      max-height: min(46rem, calc(100vh - 3rem));
+      transform: translate(-50%, -50%);
+      box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.45);
+    }
   }
 
   /* Red on red would disappear; on a red ground the disc goes to paper. */

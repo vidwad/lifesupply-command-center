@@ -43,7 +43,6 @@ test.describe("LifeSupply public site", () => {
       "/about-us",
       "/medical-supply-solutions",
       "/pharmacy-solutions",
-      "/our-team",
       "/investor-relations",
       "/news",
       "/contact",
@@ -197,8 +196,13 @@ test.describe("LifeSupply public site", () => {
     const main = page.locator("main");
     await expect(main.locator('[data-hero-band="data"] img')).toHaveCount(1);
     const bands = main.locator("[data-band]");
-    await expect(bands).toHaveCount(2);
-    for (const index of [0, 1]) {
+    // One on About since 2026-09-11: the warehouse band went to the homepage
+    // with the operating-base section, and is checked there.
+    await expect(bands).toHaveCount(1);
+    await page.goto("/");
+    await expect(page.locator("main").locator('[data-band="warehouse"]')).toHaveCount(1);
+    await page.goto("/about-us");
+    for (const index of [0]) {
       const band = bands.nth(index);
       // The photograph's layer is decorative; the band's one line is real text.
       await expect(band.locator('[aria-hidden="true"] img')).toHaveCount(1);
@@ -208,14 +212,19 @@ test.describe("LifeSupply public site", () => {
         .toBeGreaterThan(0);
     }
     await expect(bands.nth(0)).toContainText("More than 25 years of operations");
-    await expect(bands.nth(1)).toContainText("Four operating websites");
-    // The removed sections are gone and the developing opportunities close the page.
+    // The removed sections are gone, and About closes on the board since
+    // 2026-09-11, with nothing after it but the footer.
     await expect(main.getByText(/Shared capabilities|Published entities/)).toHaveCount(0);
     const headings = main.getByRole("heading", { level: 2 });
-    await expect(headings.last()).toHaveText("Developing opportunities under evaluation.");
+    await expect(headings.last()).toHaveText("Our Board of Directors");
+    // The growth paragraph moved to the homepage with the growth direction.
+    await page.goto("/");
     await expect(
-      main.getByText(/The growth strategy is to acquire profitable operations/),
+      page.locator("main").getByText(/The growth strategy is to acquire profitable operations/),
     ).toBeVisible();
+    await expect(page.locator("main").locator('[data-band="warehouse"]')).toContainText(
+      "Four operating websites",
+    );
     // Each developing card still carries its own detail, and the pharmacy card
     // now distinguishes supplying pharmacies from running one (round three).
     await expect(
@@ -425,8 +434,10 @@ test.describe("LifeSupply public site", () => {
     await expect(panel.getByRole("button", { name: "Solutions", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Solutions", exact: true })).toHaveCount(0);
     const chevrons = panel.locator('button[aria-label^="Expand"], button[aria-label^="Collapse"]');
-    // One per group that has children: About, Medical Supplies, Solutions, Investors.
-    await expect(chevrons).toHaveCount(4);
+    // One per group that has children: Medical Supplies, Solutions, Investors.
+    // About lost its only child on 2026-09-11, when it absorbed the team, so
+    // it is a plain link with no chevron.
+    await expect(chevrons).toHaveCount(3);
     const sizes = await chevrons.evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
@@ -446,7 +457,6 @@ test.describe("LifeSupply public site", () => {
       "Disclosures",
       "Investors",
       "About",
-      "Our team",
       "News & resources",
       "Contact",
       "LifeSupply",
@@ -970,7 +980,6 @@ test.describe("LifeSupply public site", () => {
       "/about-us",
       "/news",
       "/pharmacy-solutions",
-      "/our-team",
       "/investor-relations/disclosures",
     ]) {
       await page.goto(route);
@@ -1011,20 +1020,18 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
   });
 
-  test("shows the leader and the board with portraits, their full profiles below, and redirects the withdrawn ones", async ({
+  test("shows the leader and the board on About, each profile as a dialog, and redirects the withdrawn ones", async ({
     page,
   }) => {
-    await page.goto("/our-team");
+    await page.goto("/about-us");
     const main = page.locator("main");
     // Round three replaced the provenance note with the title itself.
     await expect(main.getByText(/as published on the prior LifeSupply website/)).toHaveCount(0);
     await expect(main.getByText("Chairman & CEO", { exact: true }).first()).toBeVisible();
     await expect(main.getByRole("heading", { name: "Our Board of Directors" })).toBeVisible();
-    // The four biographies became sections of this page on 2026-09-10, so a
-    // card links to an anchor and the full record is already on the page.
-    // The board cards use the short name; the biography keeps the full legacy
-    // name it was published under ("Barrett E.G. Sleeman, P.Eng."), so each
-    // person is matched on a pattern rather than on one exact string.
+    // A card opens that person's dialog. The board cards use the short name;
+    // the biography keeps the full legacy name it was published under
+    // ("Barrett E.G. Sleeman, P.Eng."), so each is matched on a pattern.
     for (const [name, anchor, full] of [
       ["Abdul Ladha", "abdul-ladha", /Abdul Ladha/],
       ["Keith Dolo", "keith-dolo", /Keith Dolo/],
@@ -1034,18 +1041,28 @@ test.describe("LifeSupply public site", () => {
       const card = main.getByRole("link", { name: new RegExp(name) }).last();
       await expect(card, name).toHaveAttribute("href", `#${anchor}`);
       await expect(card.getByRole("img", { name }), name).toBeVisible();
-      const section = page.locator(`#${anchor}`);
-      await expect(section, anchor).toBeVisible();
-      await expect(section.getByRole("heading", { name: full }), anchor).toBeVisible();
+      // Closed until its anchor is the target.
+      await expect(page.locator(`#${anchor}`), anchor).toBeHidden();
+      await page.goto(`/about-us#${anchor}`);
+      const dialog = page.locator(`#${anchor}`);
+      await expect(dialog, anchor).toBeVisible();
+      await expect(dialog.getByRole("heading", { name: full }), anchor).toBeVisible();
       // The portrait and the note that dates the title travelled with the
       // biography; a legacy title must never read as a newly confirmed one.
-      await expect(section.getByRole("img", { name: full }), anchor).toBeVisible();
-      await expect(section).toContainText("Current roles are confirmed through the company");
+      await expect(dialog.getByRole("img", { name: full }), anchor).toBeVisible();
+      await expect(dialog).toContainText("Current roles are confirmed through the company");
+      const close = dialog.getByRole("link", { name: /^Close$/ });
+      await expect(close, `${anchor}: one close control`).toHaveCount(1);
+      await expect(close, `${anchor}: close is in view`).toBeInViewport();
+      await close.click();
+      await expect(dialog, `${anchor}: closes`).toBeHidden();
+      await page.goto("/about-us");
     }
-    // The biography itself is here, not only the summary card.
+    // The biography itself is in the dialog, not only the summary card.
+    await page.goto("/about-us#keith-dolo");
     await expect(page.locator("#keith-dolo")).toContainText("Robert Half International");
+    await page.goto("/about-us");
     await expect(main.getByText(/Ben Hastibakhsh|Margaret Clarke|John Anderson/)).toHaveCount(0);
-    // One h1 still, because four pages became four sections rather than four headings.
     await expect(page.locator("h1")).toHaveCount(1);
 
     for (const [slug, anchor] of [
@@ -1056,13 +1073,13 @@ test.describe("LifeSupply public site", () => {
     ] as const) {
       const moved = await page.request.get(slug, { maxRedirects: 0 });
       expect(moved.status(), slug).toBe(308);
-      expect(moved.headers()["location"], slug).toBe(`/our-team#${anchor}`);
+      expect(moved.headers()["location"], slug).toBe(`/about-us#${anchor}`);
     }
-    // The ten withdrawn addresses still land on the listing, unchanged.
-    for (const slug of ["/john-anderson-2", "/ben-hastibakhsh", "/ross-jelveh"]) {
+    // The ten withdrawn addresses land on About, and so does the team address.
+    for (const slug of ["/john-anderson-2", "/ben-hastibakhsh", "/ross-jelveh", "/our-team"]) {
       const withdrawn = await page.request.get(slug, { maxRedirects: 0 });
       expect(withdrawn.status(), slug).toBe(308);
-      expect(withdrawn.headers()["location"], slug).toMatch(/\/our-team$/);
+      expect(withdrawn.headers()["location"], slug).toMatch(/\/about-us$/);
     }
   });
 
@@ -1237,11 +1254,12 @@ test.describe("LifeSupply public site", () => {
     expect(sitemap.ok()).toBe(true);
     const xml = await sitemap.text();
     const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
-    // 21 canonical URLs, the number the owner's instruction names: 41 before
-    // the consolidation, less four in stage 1, eleven in stage 2, the Partners
-    // hub in stage 3 and the four leadership profiles in stage 4. Each
+    // 20 canonical URLs: 41 before the consolidation, less four in stage 1,
+    // eleven in stage 2, the Partners hub in stage 3, the four leadership
+    // profiles in stage 4, and the team page in stage 5, which About
+    // absorbed on 2026-09-11. Each
     // redirects and is therefore absent from the map rather than dropped.
-    expect(locs.length).toBe(21);
+    expect(locs.length).toBe(20);
     for (const retired of [
       "/shop",
       "/clinic-solutions/equipment",

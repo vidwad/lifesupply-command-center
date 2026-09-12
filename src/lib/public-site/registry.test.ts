@@ -159,11 +159,14 @@ describe("route registry", () => {
   it("keeps the legacy-compatible routes live, and the renamed hub as a redirect", () => {
     expect(isLiveRoute("/our-operations/")).toBe(false);
     expect(ROUTES.find((route) => route.path === "/our-operations/")?.status).toBe("redirect");
+    // About absorbed the team on 2026-09-11; the address stays in the
+    // table as a redirect row so the sitemap keeps being derived.
+    expect(isLiveRoute("/our-team/")).toBe(false);
+    expect(ROUTES.find((route) => route.path === "/our-team/")?.status).toBe("redirect");
     for (const path of [
       "/",
       "/about-us/",
       "/medical-supply-solutions/",
-      "/our-team/",
       "/investor-relations/",
       "/news/",
       "/contact/",
@@ -378,7 +381,10 @@ describe("route registry", () => {
     ]);
     // 2026-09-09: News & resources moved from the About group into Investors, replacing the
     // documents index; Shareholder services withdrawn. Both old addresses are redirect rows.
-    expect(groups.find((g) => g.key === "about")!.links.map((l) => l.href)).toEqual(["/our-team/"]);
+    // The About group's one child was Our team, which became sections of
+    // About itself on 2026-09-11, so the item is now a plain link.
+    expect(groups.find((g) => g.key === "about")!.links).toEqual([]);
+    expect(groups.find((g) => g.key === "about")!.href).toBe("/about-us/");
     for (const path of [WITHDRAWN_ROUTES.investorDocuments, WITHDRAWN_ROUTES.shareholderServices]) {
       expect(isLiveRoute(path), path).toBe(false);
     }

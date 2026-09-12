@@ -24,7 +24,6 @@ const RETAINED = [
   "/clinic-solutions",
   "/pharmacy-solutions",
   "/metabolic-health",
-  "/our-team",
   "/contact",
   "/news",
   "/investor-relations",
@@ -61,10 +60,10 @@ const REDIRECTS: [string, string][] = [
   ],
   ["/metabolic-health/refills", "/metabolic-health#replenishment"],
   ["/partners", "/contact#business-inquiries"],
-  ["/abdul-ladha", "/our-team#abdul-ladha"],
-  ["/keith-dolo-2", "/our-team#keith-dolo"],
-  ["/barrett-e-g-sleeman", "/our-team#barrett-sleeman"],
-  ["/david-vogt", "/our-team#david-vogt"],
+  ["/abdul-ladha", "/about-us#abdul-ladha"],
+  ["/keith-dolo-2", "/about-us#keith-dolo"],
+  ["/barrett-e-g-sleeman", "/about-us#barrett-sleeman"],
+  ["/david-vogt", "/about-us#david-vogt"],
 ];
 
 const LEGACY: [string, string][] = [
@@ -78,13 +77,16 @@ const LEGACY: [string, string][] = [
   ["/clinic-solutions/design-build", "/clinic-solutions"],
   ["/investor-relations/documents", "/news"],
   ["/investor-relations/shareholder-services", "/investor-relations"],
-  ["/ross-jelveh", "/our-team"],
-  ["/gary-li", "/our-team"],
-  ["/john-anderson-2", "/our-team"],
+  // About absorbed the team on 2026-09-11.
+  ["/our-team", "/about-us"],
+  ["/ross-jelveh", "/about-us"],
+  ["/gary-li", "/about-us"],
+  ["/john-anderson-2", "/about-us"],
 ];
 
-test("A. every retained page answers 200 and the count is 21", async ({ page }) => {
-  expect(RETAINED).toHaveLength(21);
+test("A. every retained page answers 200 and the count is 20", async ({ page }) => {
+  // Twenty-one until 2026-09-11, when About absorbed the team.
+  expect(RETAINED).toHaveLength(20);
   for (const route of RETAINED) {
     const response = await page.request.get(route, { maxRedirects: 0 });
     expect(response.status(), route).toBe(200);
@@ -120,18 +122,15 @@ test("A. an unknown slug still returns the recovery page", async ({ page }) => {
 });
 
 test("C. every declared fragment resolves to a visible section", async ({ page }) => {
-  const byPage = new Map<string, string[]>();
+  // Navigated with the fragment, which is what the redirect sends a visitor
+  // to and the only way a `:target` profile dialog can be judged.
   for (const [, to] of REDIRECTS) {
-    const [path, anchor] = to.split("#");
-    byPage.set(path!, [...(byPage.get(path!) ?? []), anchor!]);
-  }
-  for (const [path, anchors] of byPage) {
-    await page.goto(path);
-    for (const anchor of anchors) {
-      const target = page.locator(`#${anchor}`);
-      await expect(target, `${path}#${anchor}`).toHaveCount(1);
-      await expect(target, `${path}#${anchor}`).toBeVisible();
-    }
+    if (!to.includes("#")) continue;
+    const anchor = to.split("#")[1]!;
+    await page.goto(to);
+    const target = page.locator(`#${anchor}`);
+    await expect(target, to).toHaveCount(1);
+    await expect(target, to).toBeVisible();
   }
 });
 
@@ -139,8 +138,9 @@ test("C. deep links reveal their content with JavaScript disabled", async ({ bro
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   for (const [, to] of REDIRECTS) {
-    const [path, anchor] = to.split("#");
-    await page.goto(path!);
+    if (!to.includes("#")) continue;
+    const anchor = to.split("#")[1]!;
+    await page.goto(to);
     const target = page.locator(`#${anchor}`);
     await expect(target, `no-JS ${to}`).toHaveCount(1);
     await expect(target, `no-JS ${to}`).toBeVisible();
@@ -264,7 +264,9 @@ test("C. the sticky header does not cover a section a redirect lands on", async 
   for (const [from, to] of [
     ["/clinic-solutions/equipment", "equipment"],
     ["/metabolic-health/care-kits/diabetes-supplies", "diabetes-supplies"],
-    ["/abdul-ladha", "abdul-ladha"],
+    // A profile address lands on a dialog, which sits above the header
+    // rather than under it, so this rule does not apply to one. That it
+    // opens at all is asserted by the two fragment checks above.
   ] as const) {
     await page.goto(from);
     // Let fonts, images and the responsive layout settle before measuring.
@@ -315,7 +317,7 @@ test("C. every section a redirect names carries its own heading and context", as
     ["/metabolic-health", "collaboration"],
     ["/metabolic-health", "glp-1-support"],
     ["/medical-supply-solutions", "stores"],
-    ["/our-team", "keith-dolo"],
+    ["/about-us#keith-dolo", "keith-dolo"],
     ["/contact", "business-inquiries"],
   ] as const) {
     await page.goto(path);
@@ -333,7 +335,7 @@ test("C. no section target is hidden inside a closed accordion or details", asyn
   for (const [path, anchor] of [
     ["/clinic-solutions", "equipment"],
     ["/metabolic-health", "glp-1-support"],
-    ["/our-team", "david-vogt"],
+    ["/about-us#david-vogt", "david-vogt"],
   ] as const) {
     await page.goto(path);
     const insideClosed = await page.locator(`#${anchor}`).evaluate((el) => {

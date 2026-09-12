@@ -1,5 +1,7 @@
 # Redirect map
 
+**2026-09-11.** About absorbed the team. `/our-team` now answers 308 to `/about-us`; the four retained profile addresses answer 308 to `/about-us#<anchor>`, where each opens as a dialog; and the ten withdrawn profile addresses answer 308 to `/about-us`. Twenty retired addresses became twenty-one, and twenty-one retained pages became twenty.
+
 All redirects are **permanent, server-side**, configured in `next.config.ts` using the repository's established convention. No client-side redirect page is introduced.
 
 Trailing slashes stay at the Next default: a slashed request answers 308 to the unslashed path, which is the canonical form (`seo.ts`). That behaviour predates this work and is verified rather than changed.
