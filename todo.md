@@ -35,7 +35,7 @@
 - [x] Strengthen the page-specific hero treatment across primary public LifeSupply routes using the approved conceptual-graphic registry, while preserving the legacy homepage footage, approved About/Clinic imagery, legal-page restraint, and public-host boundary.
 - [x] Remove the first animated Metabolic Health supply-orbit graphic while retaining the layered editorial hero and later approved visual narrative.
 - [x] Expand the shared LifeSupply, Wellmart Medical, and Balkowitsch Worldwide storefront template with a consistent premium image-led category, commerce-boundary, and verified-storefront composition without adding claims, prices, availability, or unverified service terms.
-- [ ] Validate the sitewide hero treatment and three storefront pages on desktop, mobile, keyboard, reduced-motion, and public-route boundaries before creating a design-review preview.
+- [x] Validate the sitewide hero treatment and three storefront pages on desktop, mobile, keyboard, reduced-motion, and public-route boundaries before creating a design-review preview.
 - [x] Squash-merge the owner-approved Metabolic Health visual-storytelling PR #160 into `main` and verify the resulting public deployment.
 
 ## Public front end — first refinement pass (shell, `/`, `/about-us/`)

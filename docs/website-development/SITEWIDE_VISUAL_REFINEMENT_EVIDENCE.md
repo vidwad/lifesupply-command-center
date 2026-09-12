@@ -11,3 +11,7 @@ The locally served LifeSupply and Wellmart Medical storefront pages were reviewe
 | Core Node 24 checks | `format`, `typecheck`, `lint`, and `test` passed: 108 files and 1,342 tests. |
 | Focused browser checks | Desktop/mobile storefront visual sequence, reduced motion, Metabolic visual sequence, 320-pixel overflow, and principal-page overflow checks passed. |
 | Local production build | The existing Next prerender `useContext` failure occurred for `/medical-supply-solutions`; PR CI’s production build is the release authority and passed for this branch. |
+
+## Vercel review deployment — 2026-09-12
+
+The ready PR #165 deployment was reviewed at `/metabolic-health` and `/medical-supply-solutions/lifesupply`. The Metabolic Health opening no longer displayed the animated orbit, while its layered hero, approved in-development qualification, value cards, and later editorial sequence remained intact. The LifeSupply storefront displayed its brand-specific hero, category visual, dated storefront screen, service channels, and the existing external store links. No protected dashboard content appeared on either route.
