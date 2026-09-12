@@ -154,17 +154,26 @@ export const homepage = {
     description:
       "Our three online stores and clinic-services business serve medical, home-care, professional, safety, and industrial supply needs across their respective markets.",
     /**
-     * Nothing is sold on this site, and each business keeps its own accounts,
-     * currency, prices and support. That boundary is the reason this line is
-     * here, said as an instruction rather than as a disclaimer.
+     * Unpublished since 2026-09-12 (product owner), the same day it was
+     * added. Kept on the record. The boundary it stated still holds: nothing
+     * is sold on this site, and each business keeps its own accounts,
+     * currency, prices and support. Every card links out to the business
+     * that takes the order, which is what carries it now.
      */
     note: "Shop or enquire directly with the relevant brand. Each business manages its own ordering and customer-service arrangements.",
   },
 
   // Stage 2 draft heading; the channels are the approved directory.
+  /**
+   * The contact section (product owner, 2026-09-12). The three routes each
+   * say who they are for, and the closing line sends order questions to the
+   * store that took the order, because nothing is sold on this site.
+   */
   closing: {
-    eyebrow: "Contact",
-    title: "Reach the right person.",
+    eyebrow: "Contact LifeSupply",
+    title: "Start the right conversation.",
+    lead: "Contact us about investor information, acquisition opportunities, or the group’s supply and clinic services.",
+    note: "For assistance with an existing order, please contact the store where you made your purchase.",
   },
 
   /**

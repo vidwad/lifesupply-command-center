@@ -1745,7 +1745,9 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       expect(page, gone).not.toContain(gone);
       expect(aboutContent, gone).not.toContain(gone);
     }
-    expect(aboutContent).toContain("Developing opportunities under evaluation.");
+    // Retitled "Solutions development" on 2026-09-12 (product owner).
+    expect(aboutContent).toContain('eyebrow: "Solutions development"');
+    expect(aboutContent).toContain("New supply programs for clinics and pharmacies.");
     // The growth paragraph (after the prior site's "Our growth strategy") is
     // strategy and objective, never a transaction under way or an available
     // service. It renders on the homepage since 2026-09-11, through the
@@ -1755,12 +1757,21 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
       "<DevelopingOpportunities />",
     );
-    expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
-    // The note and the two card details were removed on 2026-09-12 (product
-    // owner) and kept unpublished, so asserting they exist in the content
-    // module would no longer say anything about the page. What has to carry
-    // the status instead is the section's own title and the badge on every
-    // card, and neither program may read as purchasable without them.
+    // The approved growth-strategy paragraph left this section when it was
+    // rewritten on 2026-09-12. It is kept on the record as `growthStrategy`
+    // and renders nowhere, so this asserts that rather than its presence in
+    // the module, which would now say nothing about any page.
+    expect(aboutContent).toContain("growthStrategy:");
+    expect(shared).not.toContain("about.developing.growthStrategy");
+    // The section no longer says "under evaluation" in its title, so the
+    // note is what states plainly that neither programme can be bought, and
+    // it has to be rendered rather than merely present.
+    expect(aboutContent).toContain("These programs are not yet available.");
+    expect(shared).toContain("{about.developing.note}");
+    // Each card carries its own status, detail and destination label.
+    expect(shared).toContain("{item.status}");
+    expect(shared).toContain("{item.detail}");
+    expect(shared).toContain("{item.cta}");
     // Each card is a link to its own page under Solutions (product owner,
     // 2026-09-12). The destination is read from the route registry by the
     // item's key, so the content model holds no paths and a card cannot point
@@ -1772,10 +1783,9 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(shared).toContain("metabolic: METABOLIC_ROUTES.hub");
     expect(shared).toContain("pharmacy: PHARMACY_ROUTES.hub");
     expect(aboutContent).not.toMatch(/developing[\s\S]{0,1200}"\/metabolic-health/);
-    expect(shared).not.toContain("{about.developing.note}");
-    expect(shared).not.toContain("{item.detail}");
-    expect(shared).toContain("{item.status}");
-    expect(aboutContent).toContain('title: "Developing opportunities under evaluation."');
+    // The note and the card details were unpublished on 2026-09-12 and
+    // published again the same day when the section was rewritten as
+    // Solutions development; both are asserted as rendered above.
     expect(
       (
         aboutContent

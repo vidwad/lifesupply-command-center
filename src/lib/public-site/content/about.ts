@@ -189,8 +189,8 @@ export const about = {
    * same day. Nothing here is offered as available.
    */
   developing: {
-    eyebrow: "Looking ahead",
-    title: "Developing opportunities under evaluation.",
+    eyebrow: "Solutions development",
+    title: "New supply programs for clinics and pharmacies.",
     /**
      * The strategy statement, after the prior About page's "Our growth
      * strategy" (product owner, 2026-09-09), stated as strategy and objective
@@ -199,36 +199,42 @@ export const about = {
      * 2026-09-09 at the product owner's request). Nothing here is offered as
      * available.
      */
-    lead: "The growth strategy is to acquire profitable operations that complement the existing business model. The objective is to integrate strategically located bricks-and-mortar medical supply stores, pharmacies, clinics, and distributors into current operations. Each one would widen the inventory LifeSupply can draw on, and with it the products and services offered online in Canada and the United States.",
+    lead: "LifeSupply is developing two complementary offerings focused on non-drug supplies and fulfilment. Both build on the group’s existing commerce and clinic-related capabilities.",
+    /**
+     * Unpublished since 2026-09-12 (product owner), when this section was
+     * rewritten as Solutions development. It is the approved growth-strategy
+     * paragraph after the prior About page's "Our growth strategy"; kept on
+     * the record so it can be restored verbatim if it is wanted again.
+     */
+    growthStrategy:
+      "The growth strategy is to acquire profitable operations that complement the existing business model. The objective is to integrate strategically located bricks-and-mortar medical supply stores, pharmacies, clinics, and distributors into current operations. Each one would widen the inventory LifeSupply can draw on, and with it the products and services offered online in Canada and the United States.",
     intro: "A closer look at the two programs in development above.",
     items: [
       {
         key: "metabolic",
-        title: "Metabolic-health supply services",
+        title: "Metabolic Health Solutions",
         status: "In development",
-        text: "Starter equipment, consumables replenished as they are used, clinic procurement, kitting and fulfilment, and contracted non-clinical workflow support, for clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
-        /** Unpublished since 2026-09-12 (product owner). */
+        text: "Proposed supply support for clinics and pharmacies serving metabolic-health programs.",
         detail:
-          "It would apply the existing supply model to a recurring patient-support need, one configurable pathway at a time.",
+          "The offering is being developed around configurable patient supplies, clinic procurement, kitting, fulfilment, and non-clinical workflow support. Initial equipment and supplies would be considered separately from consumables that need replenishment as they are used.",
+        cta: "Explore Metabolic Health Solutions",
       },
       {
         key: "pharmacy",
-        title: "Pharmacy supply programs",
+        title: "Pharmacy Solutions",
         status: "In development",
-        text: "Pharmacist-selected non-drug supplies and fulfilment for pharmacies. The pharmacy is the customer, and medication is excluded entirely.",
-        /** Unpublished since 2026-09-12 (product owner). */
+        text: "Proposed fulfilment support for pharmacist-selected, non-drug products.",
         detail:
-          "Whether LifeSupply should hold licensed pharmacy operations of its own is a separate question, under evaluation rather than in development. Supplying pharmacies and running one are different businesses.",
+          "The offering would help participating pharmacies arrange supply support for their customers. Product selection, ordering processes, replenishment responsibilities, and commercial terms would be defined with each participating pharmacy before launch.",
+        cta: "Explore Pharmacy Solutions",
       },
     ],
     /**
-     * Unpublished since 2026-09-12 (product owner): the note and the two
-     * card details were removed from the section. Kept here so what they
-     * state is on the record and can be restored verbatim. What carries the
-     * status now is the section title, "Developing opportunities under
-     * evaluation", and the "In development" badge on each card.
+     * Restored to the page on 2026-09-12 in the product owner's own words.
+     * The section no longer carries "under evaluation" in its title, so this
+     * line is what states plainly that neither programme can be bought.
      */
-    note: "Neither program is available today, and no launch date is set.",
+    note: "These programs are not yet available.",
   },
 
   // Stage 2 draft heading; the cards come from the brand registry.
@@ -241,10 +247,20 @@ export const about = {
    * Growth direction. The first paragraph is the approved `growth` text; the
    * second is the guide's expansion direction (S-120), stated conditionally.
    */
+  /**
+   * The next phase (product owner, 2026-09-12), rewritten from "Growth
+   * direction". A short headline, the sentence that frames it, and two
+   * paragraphs. Everything stays conditional: a clinic project "can create"
+   * opportunities, and the two programs are still only in development.
+   */
   direction: {
-    eyebrow: "Growth direction",
-    title: "Build on the operating base.",
-    text: "The direction is to build deeper clinic relationships and recurring patient-support supply programs on top of the commerce, clinic-development, and equipment capabilities that already exist. Every initiative on this site carries its own status, so what operates today is never confused with what is still being built.",
+    eyebrow: "The next phase",
+    title: "Build deeper relationships from an established supply business.",
+    lead: "LifeSupply’s online stores and clinic services provide the foundation for broader customer relationships.",
+    paragraphs: [
+      "A clinic project can create opportunities for equipment purchasing and ongoing supplies. Existing supply capabilities also provide a starting point for the pharmacy and metabolic-health programs now in development.",
+      "Our focus is on developing these opportunities through the group’s operating businesses, customer relationships, and complementary acquisitions. New services will require their own delivery arrangements and commercial terms.",
+    ],
   },
 } as const;
 

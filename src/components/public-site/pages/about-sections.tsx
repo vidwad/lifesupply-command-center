@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { Container, SectionHeading } from "@/components/public-site/lifesupply-primitives";
@@ -134,10 +134,12 @@ export function GrowthDirection() {
       graphic="boardroom"
       side="left"
     >
-      <p className="text-white/85">{about.growth}</p>
-      <p>{about.direction.text}</p>
+      <p className="text-white/85">{about.direction.lead}</p>
+      {about.direction.paragraphs.map((paragraph) => (
+        <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+      ))}
       <div className="pt-2">
-        <ActionLink action="explore_businesses" />
+        <ActionLink action="growth_strategy">Explore our growth strategy</ActionLink>
       </div>
     </SplitSection>
   );
@@ -171,6 +173,12 @@ export function DevelopingOpportunities() {
           <Reveal delay={0.1}>
             <p className="mt-7 border-l-4 border-[var(--lsh-brand-red)] pl-6 text-lg leading-8 text-[var(--lsh-charcoal)]">
               {about.developing.lead}
+            </p>
+          </Reveal>
+          {/* Neither programme can be bought; the section says so in words. */}
+          <Reveal delay={0.15}>
+            <p className="mt-7 text-sm leading-6 text-[var(--lsh-muted)]">
+              {about.developing.note}
             </p>
           </Reveal>
         </div>
@@ -207,6 +215,17 @@ export function DevelopingOpportunities() {
                       {item.title}
                     </h3>
                     <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
+                    <p className="mt-3 border-t border-[var(--lsh-rule)] pt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+                      {item.detail}
+                    </p>
+                    <span className="lsh-display mt-5 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
+                      {item.cta}
+                      <ArrowRight
+                        size={15}
+                        aria-hidden="true"
+                        className="transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none"
+                      />
+                    </span>
                   </SpotlightCard>
                 </Link>
               </StaggerItem>
