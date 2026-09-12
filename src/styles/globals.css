@@ -290,65 +290,6 @@
     border-color: rgb(222 0 0 / 48%);
   }
 
-  .lsh-metabolic-orbit {
-    position: relative;
-    overflow: hidden;
-    border-top: 3px solid var(--lsh-brand-red);
-    background:
-      radial-gradient(circle at 50% 50%, rgb(222 0 0 / 5%), transparent 44%), var(--lsh-surface);
-  }
-
-  .lsh-metabolic-orbit::before,
-  .lsh-metabolic-orbit::after {
-    position: absolute;
-    z-index: 1;
-    content: "";
-    display: block;
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 9999px;
-    background: var(--lsh-brand-red);
-    box-shadow: 0 0 0 5px rgb(222 0 0 / 10%);
-  }
-
-  .lsh-metabolic-orbit::before {
-    left: 17%;
-    top: 50%;
-  }
-
-  .lsh-metabolic-orbit::after {
-    right: 20%;
-    top: 26%;
-  }
-
-  .lsh-metabolic-orbit svg {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  .lsh-metabolic-orbit-ring {
-    stroke: var(--lsh-charcoal);
-    stroke-opacity: 0.22;
-    stroke-width: 1;
-  }
-
-  .lsh-metabolic-orbit-ring--middle {
-    stroke: var(--lsh-brand-red);
-    stroke-opacity: 0.52;
-  }
-
-  .lsh-metabolic-orbit-ring--inner {
-    stroke: var(--lsh-brand-red);
-    stroke-opacity: 0.65;
-  }
-
-  .lsh-metabolic-orbit-node {
-    fill: var(--lsh-paper);
-    stroke: var(--lsh-brand-red);
-    stroke-width: 2;
-  }
-
   .lsh-metabolic-card {
     position: relative;
     overflow: hidden;
@@ -469,6 +410,35 @@
     height: 4.5rem;
   }
 
+  @media (max-width: 420px) {
+    .lsh-metabolic-rhythm {
+      padding-inline: 0.25rem;
+    }
+
+    .lsh-metabolic-rhythm-track {
+      gap: 0.5rem;
+    }
+
+    .lsh-metabolic-rhythm-unit {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .lsh-metabolic-rhythm-unit::before {
+      inset: 0.5rem;
+    }
+
+    .lsh-metabolic-rhythm-unit--two {
+      width: 3.25rem;
+      height: 3.25rem;
+    }
+
+    .lsh-metabolic-rhythm-unit--three {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+  }
+
   .lsh-metabolic-collaboration-stage {
     position: relative;
     overflow: hidden;
@@ -498,6 +468,137 @@
     fill: var(--lsh-brand-red);
     stroke: var(--lsh-paper);
     stroke-width: 1.5;
+  }
+
+  /* Shared deep-frame treatment for every conceptual public-page hero. */
+  .lsh-graphic-backdrop {
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .lsh-graphic-backdrop-image {
+    filter: grayscale(1) contrast(1.08);
+    transform: scale(1.025);
+  }
+
+  .lsh-graphic-backdrop::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    content: "";
+    background:
+      linear-gradient(90deg, rgb(0 0 0 / 28%), transparent 52%),
+      linear-gradient(180deg, rgb(0 0 0 / 18%), transparent 40%);
+    pointer-events: none;
+  }
+
+  .lsh-graphic-backdrop-accent {
+    position: absolute;
+    z-index: 2;
+    right: 6%;
+    bottom: 14%;
+    width: min(24vw, 16rem);
+    height: 2px;
+    background: var(--lsh-brand-red);
+    box-shadow: 0 0 22px rgb(222 0 0 / 52%);
+  }
+
+  /* Shared retail composition: verified external links stay as content; visuals remain decorative. */
+  .lsh-storefront-category-copy {
+    border-left: 4px solid var(--lsh-brand-red);
+    background: var(--lsh-paper);
+  }
+
+  .lsh-storefront-category-visual {
+    position: relative;
+    min-height: 21rem;
+    overflow: hidden;
+    border-top: 3px solid var(--lsh-brand-red);
+    background: var(--lsh-ink);
+  }
+
+  .lsh-storefront-category-visual::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(108deg, rgb(0 0 0 / 42%), transparent 68%);
+    pointer-events: none;
+  }
+
+  .lsh-storefront-category-visual img {
+    filter: grayscale(1) contrast(1.08);
+  }
+
+  .lsh-storefront-category-rule {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    bottom: 12%;
+    width: 38%;
+    height: 2px;
+    background: var(--lsh-brand-red);
+    box-shadow: 0 0 18px rgb(222 0 0 / 48%);
+  }
+
+  .lsh-storefront-category-mark {
+    position: absolute;
+    z-index: 2;
+    display: block;
+    width: 0.65rem;
+    height: 0.65rem;
+    border: 2px solid var(--lsh-paper);
+    border-radius: 9999px;
+    background: var(--lsh-brand-red);
+    box-shadow: 0 0 0 5px rgb(222 0 0 / 12%);
+  }
+
+  .lsh-storefront-category-mark--one {
+    top: 18%;
+    right: 20%;
+  }
+
+  .lsh-storefront-category-mark--two {
+    right: 9%;
+    bottom: 25%;
+  }
+
+  .lsh-storefront-terminal {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 85% 20%, rgb(222 0 0 / 27%), transparent 30%), var(--lsh-ink);
+  }
+
+  .lsh-storefront-terminal::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    opacity: 0.28;
+    background-image: linear-gradient(rgb(255 255 255 / 11%) 1px, transparent 1px);
+    background-size: 100% 4rem;
+    pointer-events: none;
+  }
+
+  .lsh-storefront-terminal > * {
+    position: relative;
+  }
+
+  .lsh-storefront-screen-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 22%);
+    background: rgb(255 255 255 / 6%);
+    box-shadow: 0 24px 56px rgb(0 0 0 / 34%);
+  }
+
+  .lsh-storefront-screen-frame::after {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 34%;
+    height: 3px;
+    content: "";
+    background: var(--lsh-brand-red);
   }
 
   @keyframes lsh-enter-rise {
@@ -613,21 +714,33 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    .lsh-graphic-backdrop-image {
+      animation: lsh-hero-graphic-breathe 24s ease-in-out infinite alternate;
+    }
+
+    .lsh-graphic-backdrop-accent,
+    .lsh-storefront-category-rule {
+      animation: lsh-editorial-rule-travel 7s cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
+    }
+
+    .lsh-storefront-category-visual img {
+      animation: lsh-storefront-image-breathe 18s ease-in-out infinite alternate;
+    }
+
+    .lsh-storefront-category-mark--one {
+      animation: lsh-storefront-mark-drift 8s ease-in-out infinite alternate;
+    }
+
+    .lsh-storefront-category-mark--two {
+      animation: lsh-storefront-mark-drift 9s ease-in-out infinite alternate-reverse;
+    }
+
     .lsh-metabolic-hero-halo--one {
       animation: lsh-metabolic-drift 14s ease-in-out infinite alternate;
     }
 
     .lsh-metabolic-hero-halo--two {
       animation: lsh-metabolic-drift 10s ease-in-out infinite alternate-reverse;
-    }
-
-    .lsh-metabolic-orbit svg {
-      animation: lsh-metabolic-orbit-turn 34s linear infinite;
-    }
-
-    .lsh-metabolic-orbit::before,
-    .lsh-metabolic-orbit::after {
-      animation: lsh-metabolic-pulse 2.8s ease-in-out infinite alternate;
     }
 
     .lsh-metabolic-editorial img {
@@ -675,21 +788,41 @@
     }
   }
 
-  @keyframes lsh-metabolic-orbit-turn {
+  @keyframes lsh-hero-graphic-breathe {
     from {
-      transform: rotate(0deg);
+      transform: scale(1.025);
     }
     to {
-      transform: rotate(360deg);
+      transform: scale(1.075);
     }
   }
 
-  @keyframes lsh-metabolic-pulse {
+  @keyframes lsh-editorial-rule-travel {
     from {
-      transform: scale(0.85);
+      transform: scaleX(0.62);
+      transform-origin: left;
     }
     to {
-      transform: scale(1.15);
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+  }
+
+  @keyframes lsh-storefront-image-breathe {
+    from {
+      transform: scale(1.02);
+    }
+    to {
+      transform: scale(1.07);
+    }
+  }
+
+  @keyframes lsh-storefront-mark-drift {
+    from {
+      transform: translate3d(-3px, 4px, 0);
+    }
+    to {
+      transform: translate3d(4px, -4px, 0);
     }
   }
 

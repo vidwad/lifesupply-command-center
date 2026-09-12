@@ -16,7 +16,6 @@ import {
   MetabolicEditorialVisual,
   MetabolicHeroVisual,
   MetabolicReplenishmentRhythm,
-  MetabolicSupplyOrbit,
 } from "@/components/public-site/metabolic-visuals";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection, OnThisPage } from "@/components/public-site/on-this-page";
@@ -102,14 +101,9 @@ function ValueSection() {
   return (
     <section className="px-5 py-20 lg:px-8">
       <Container>
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
-          <Reveal className="max-w-3xl">
-            <SectionHeading eyebrow={value.eyebrow} title={value.title} description={value.intro} />
-          </Reveal>
-          <Reveal delay={0.08} className="mx-auto w-full max-w-sm lg:max-w-none">
-            <MetabolicSupplyOrbit />
-          </Reveal>
-        </div>
+        <Reveal className="max-w-3xl">
+          <SectionHeading eyebrow={value.eyebrow} title={value.title} description={value.intro} />
+        </Reveal>
         <Stagger
           as="ul"
           className="-mx-5 mt-12 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-3 lg:-mx-8"
@@ -351,13 +345,13 @@ function ReplenishmentSection() {
           <Reveal delay={0.05} className="mt-12">
             <SupplyRolesDiagram roles={refills.roles} />
           </Reveal>
-          <div className="mt-10 grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-2">
-            <Reveal className="bg-[var(--lsh-ink)]">
+          <div className="mt-10 grid grid-cols-1 gap-px bg-[var(--lsh-rule)] lg:grid-cols-2">
+            <Reveal className="min-w-0 bg-[var(--lsh-ink)]">
               <MetabolicEditorialVisual visual="replenishment" />
             </Reveal>
             <Reveal
               delay={0.05}
-              className="flex min-h-72 items-center bg-[var(--lsh-paper)] p-6 lg:p-10"
+              className="flex min-w-0 items-center bg-[var(--lsh-paper)] p-6 lg:min-h-72 lg:p-10"
             >
               <MetabolicReplenishmentRhythm />
             </Reveal>
