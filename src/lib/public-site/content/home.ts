@@ -66,9 +66,24 @@ export const homepage = {
    * founding-investor description is kept as a description of that base.
    * Nothing here states a growth rate, a transaction, or a ranking as fact.
    */
+  /**
+   * What the group is and what it does, above the panels (product owner,
+   * 2026-09-12). Every fact here is already carried elsewhere on the site:
+   * the stores and their two countries, the clinic services and their
+   * province, and the two programs in development with their status intact.
+   */
+  whoWeDo: {
+    eyebrow: "Who are we and what we do",
+    title: "Medical supplies and clinic services across Canada and the United States.",
+    paragraphs: [
+      "LifeSupply Health brings together online medical and home-care supply businesses serving Canada and the United States, alongside clinic planning, design, construction, and equipment services for projects in British Columbia.",
+      "We are building on these operations through technology, complementary acquisitions, and the development of pharmacy and metabolic-health supply programs.",
+    ],
+  },
+
   whoWeAre: {
     eyebrow: "Experience and direction",
-    title: "Who we are and where we are going.",
+    title: "An established business. A clear direction for growth.",
     /**
      * The standfirst (product owner, 2026-09-12). Same facts the hero
      * carried before the title changed: four businesses, three selling
@@ -76,22 +91,22 @@ export const homepage = {
      * British Columbia, with two supply programs still in development.
      */
     description:
-      "Four operating businesses under one group. Three sell medical, health, and home-care supplies online across Canada and the United States; the fourth plans, designs, and equips clinics for projects in British Columbia. Two further supply programs, in pharmacy and metabolic health, are in development.",
+      "LifeSupply’s strategy builds on the operating history, customer relationships, and supply capabilities of its businesses.",
     panels: [
       {
         eyebrow: "Our record",
         headline: "Experienced",
-        text: "More than 25 years of operations, built up by acquisition. Wellmart Health Supplies became the Canadian operating base in 2020, and Balkowitsch Enterprises added United States reach and a distributor network in 2023. Today those businesses sell medical, health, and home-care supplies online across Canada and the United States, and plan, design, and build clinics for projects in British Columbia.",
+        text: "LifeSupply brings together businesses with more than 25 years of operating history. The acquisition of Wellmart Health Supplies in 2020 established the group’s Canadian operating base. The acquisition of Balkowitsch Enterprises in 2023 extended its customer reach and distributor relationships into the United States.",
       },
       {
         eyebrow: "Our strategy",
         headline: "Growing",
-        text: "The strategy is to build on the existing business through operating discipline, technology, and complementary acquisitions. The objective is to bring strategically located medical supply stores, pharmacies, clinics, and distributors into the group, and to widen what can be offered online in Canada and the United States.",
+        text: "Our strategy combines stronger performance in the existing businesses, better ordering and fulfilment technology, and selective acquisitions. We seek complementary operations that broaden our product range, extend our market reach, and deepen relationships with healthcare customers.",
       },
       {
         eyebrow: "Our ambition",
         headline: "Connected",
-        text: "The ambition is to become a global leader in the online sale and distribution of health and medical products and related services. That means deeper clinic relationships, recurring patient-support supply programs, and commerce, clinic-development, and equipment capabilities working together for a broader customer base over time.",
+        text: "Our ambition is to build lasting supply relationships with clinics, pharmacies, and the patients they support. Over time, we aim to connect the group’s commerce, clinic-development, and equipment capabilities with new patient-supply and fulfilment services.",
       },
     ],
   },
@@ -99,25 +114,51 @@ export const homepage = {
   // Approved (moved from JSX in PR #61). Verified proof, with source context.
   glance: {
     eyebrow: "LifeSupply at a glance",
-    title: "Scale, as the 2025 annual report states it.",
-    description:
-      "The 2025 annual-report narrative cites the figures below. Read them with the qualifications that report states.",
+    title: "The scale of our operating businesses.",
+    /**
+     * The source and the cumulative qualification moved out of a standfirst
+     * and under the figures themselves (product owner, 2026-09-12), so the
+     * caveat sits with the numbers rather than above them.
+     */
+    source:
+      "Source: LifeSupply’s 2025 Annual Report. Customer figures are cumulative and do not represent current active customers.",
   },
+  /**
+   * The unit sits beside the figure rather than inside it, so the numeral
+   * still carries the band at display size while the line reads "25+ years"
+   * (product owner, 2026-09-12). The source and the cumulative qualification
+   * are carried once, by `glance.source`, beneath all three.
+   */
   publicMetrics: [
-    { value: "25+", label: "years of operations cited in the 2025 annual report" },
-    { value: "50K+", label: "products cited in the 2025 annual report" },
+    {
+      value: "25+",
+      unit: "years",
+      label: "Operating history across the group’s businesses.",
+    },
+    {
+      value: "50,000+",
+      unit: "products",
+      label: "Reported product range across the group.",
+    },
     {
       value: "1M+",
-      label: "customers served cumulatively since inception, cited in the 2025 annual report",
+      unit: "customers served",
+      label: "Cumulative customers served since inception.",
     },
   ],
 
   // Stage 2 draft. Section heading only; the cards come from the brand registry.
   brands: {
     eyebrow: "Operating brands",
-    title: "Four businesses, each with its own customers.",
+    title: "Four brands serving distinct supply and clinic needs.",
     description:
-      "LifeSupply Health is the corporate group; nothing is sold on this site. Each brand runs its own storefront or service site, with its own accounts, currency, prices, and customer support.",
+      "Our three online stores and clinic-services business serve medical, home-care, professional, safety, and industrial supply needs across their respective markets.",
+    /**
+     * Nothing is sold on this site, and each business keeps its own accounts,
+     * currency, prices and support. That boundary is the reason this line is
+     * here, said as an instruction rather than as a disclaimer.
+     */
+    note: "Shop or enquire directly with the relevant brand. Each business manages its own ordering and customer-service arrangements.",
   },
 
   // Stage 2 draft heading; the channels are the approved directory.

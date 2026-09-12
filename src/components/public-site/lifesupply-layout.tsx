@@ -531,11 +531,11 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
              * What the group is, under the tagline (product owner,
              * 2026-09-12). It reads from the homepage standfirst rather
              * than holding a second copy, so the two cannot drift. It
-             * followed the hero until the hero became a retailer
-             * statement later the same day.
+             * followed the hero, then the panels' standfirst, as each in
+             * turn stopped being a description of the group.
              */}
             <p className="mt-4 max-w-sm text-sm leading-6 text-white/60">
-              {homepage.whoWeAre.description}
+              {homepage.whoWeDo.paragraphs[0]}
             </p>
           </div>
           <div>

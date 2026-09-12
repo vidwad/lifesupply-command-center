@@ -223,7 +223,11 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 0.78;
-    font-size: clamp(4rem, 12vw, 9rem);
+    /* Sized to the longest value the band carries. "50,000+" is seven
+       glyphs and runs about 3.1x its font size wide, so at the old
+       clamp it overran its third of the row by 68px at 1440 and kept
+       overrunning down to the single-column breakpoint. */
+    font-size: clamp(3rem, 7.6vw, 7rem);
     font-variant-numeric: tabular-nums;
   }
 

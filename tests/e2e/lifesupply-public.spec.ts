@@ -158,15 +158,22 @@ test.describe("LifeSupply public site", () => {
 
   test("counts the reported figures up to exactly the approved text", async ({ page }) => {
     await page.goto("/");
-    const glance = page.getByText("years of operations cited in the 2025 annual report");
+    const glance = page.getByRole("heading", {
+      name: "The scale of our operating businesses.",
+    });
     await glance.scrollIntoViewIfNeeded();
     // The figures band became a definition list in the 2026-09-10 design pass:
     // the figure is the description, its label the term.
     const stats = page.locator('main [data-stat="figure"]');
     await expect(stats).toHaveCount(3);
     await expect(stats.nth(0)).toHaveText("25+", { timeout: 8_000 });
-    await expect(stats.nth(1)).toHaveText("50K+");
+    await expect(stats.nth(1)).toHaveText("50,000+");
     await expect(stats.nth(2)).toHaveText("1M+");
+    // The source and the cumulative qualification moved under the three
+    // figures on 2026-09-12, so the caveat sits with them rather than above.
+    const band = page.locator("section", { has: glance });
+    await expect(band).toContainText("2025 Annual Report");
+    await expect(band).toContainText(/cumulative and do not represent current active customers/i);
   });
 
   test("opens the homepage after the hero with Experienced, Growing, and Connected", async ({
@@ -178,19 +185,25 @@ test.describe("LifeSupply public site", () => {
     // stood second until 2026-09-12, when the product owner moved it to
     // About; the reported figures follow the panels now.
     const headings = main.getByRole("heading", { level: 2 });
-    await expect(headings.nth(0)).toHaveText("Who we are and where we are going.");
-    await expect(headings.nth(1)).toHaveText(homepage.glance.title);
+    // "Who are we and what we do" opens the page above the panels since
+    // 2026-09-12, so the panels are second and the figures third.
+    await expect(headings.nth(0)).toHaveText(homepage.whoWeDo.title);
+    await expect(headings.nth(1)).toHaveText(homepage.whoWeAre.title);
+    await expect(headings.nth(2)).toHaveText(homepage.glance.title);
     await expect(main.getByRole("heading", { name: architecture.title })).toHaveCount(0);
     await expect(main.getByRole("heading", { level: 3, name: "Experienced" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
-    await expect(main.getByText(homepage.whoWeAre.panels[2].eyebrow)).toBeVisible();
+    // Exact: the third panel's own text now opens with "Our ambition" too.
+    await expect(
+      main.getByText(homepage.whoWeAre.panels[2].eyebrow, { exact: true }),
+    ).toBeVisible();
     // The About sections that now close the page, in order.
     const order = await headings.evaluateAll((nodes) =>
       nodes.map((node) => node.textContent?.trim() ?? ""),
     );
     const at = (text: string) => order.findIndex((h) => h.includes(text));
-    expect(at("Canada and the United States")).toBeGreaterThan(at(homepage.glance.title));
+    expect(at("Acquisitions, appointments")).toBeGreaterThan(at(homepage.glance.title));
     expect(at("Build on the operating base")).toBeGreaterThan(at("Canada and the United States"));
     expect(at("Developing opportunities")).toBeGreaterThan(at("Build on the operating base"));
     expect(order[order.length - 1]).toBe(homepage.closing.title);
@@ -668,9 +681,23 @@ test.describe("LifeSupply public site", () => {
     } // next/link drops the trailing slash
     await expect(main.getByRole("link", { name: "Book a consultation" })).toHaveCount(0);
     await expect(main.getByRole("link", { name: "Explore partner relationships" })).toHaveCount(0);
-    // Four brand cards, all external, all verified hosts.
-    const cards = main.locator('a[href^="https://"]:has-text("Visit ")');
+    // Four brand cards, all external, all verified hosts. Each carries its
+    // own call to action since 2026-09-12, so they are matched by destination
+    // rather than by a shared "Visit" label.
+    const cards = main.locator(
+      'a[href^="https://lifesupply.ca"], a[href^="https://wellmartmedical.com"], a[href^="https://www.lifesupplyclinics.com"], a[href^="https://balkowitsch.com"]',
+    );
     await expect(cards).toHaveCount(4);
+    for (const [cta, host] of [
+      ["Shop LifeSupply", "lifesupply.ca"],
+      ["Shop Wellmart Medical", "wellmartmedical.com"],
+      ["Explore LifeSupply Clinics", "www.lifesupplyclinics.com"],
+      ["Shop Balkowitsch", "balkowitsch.com"],
+    ] as const) {
+      const card = main.locator("a", { hasText: cta });
+      await expect(card, cta).toHaveCount(1);
+      await expect(card, cta).toHaveAttribute("href", new RegExp(`^https://${host}`));
+    }
   });
 
   test("sends each store brand page to its own store, and the Clinics page to the Clinics site", async ({

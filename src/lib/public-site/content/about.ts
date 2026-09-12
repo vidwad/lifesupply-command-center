@@ -84,10 +84,25 @@ export const about = {
     action: "contact_directory",
   },
 
+  /**
+   * The footprint is stated country by country (product owner, 2026-09-12)
+   * rather than as one paragraph. Each brand is named where it operates, and
+   * the names are the registry's: Balkowitsch Worldwide is the store,
+   * Balkowitsch Enterprises Inc. the company that was acquired.
+   */
   footprint: {
     eyebrow: "Footprint",
     title: "Canada and the United States.",
-    text: "Two Canadian storefronts sell in Canadian dollars and ship across Canada. LifeSupply Clinics serves clinic projects in British Columbia. Balkowitsch Worldwide sells in U.S. dollars from the United States.",
+    regions: [
+      {
+        name: "Canada",
+        text: "LifeSupply.ca and Wellmart Medical serve Canadian customers through their online stores. LifeSupply Clinics supports clinic planning, development, and equipment requirements for projects in British Columbia.",
+      },
+      {
+        name: "United States",
+        text: "Balkowitsch Worldwide serves the U.S. market through its online medical, health, and wellness supply business.",
+      },
+    ],
   },
 
   /**

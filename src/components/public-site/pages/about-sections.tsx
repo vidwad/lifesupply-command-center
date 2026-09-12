@@ -35,12 +35,23 @@ export function FootprintAndMilestones() {
       <Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <Reveal>
-            <SectionHeading
-              eyebrow={about.footprint.eyebrow}
-              title={about.footprint.title}
-              description={about.footprint.text}
-            />
+            <SectionHeading eyebrow={about.footprint.eyebrow} title={about.footprint.title} />
           </Reveal>
+          {/*
+           * Country by country since 2026-09-12 (product owner), each naming
+           * the brands that operate there, rather than one paragraph that ran
+           * the two together.
+           */}
+          <Stagger as="dl" className="mt-8 grid gap-6">
+            {about.footprint.regions.map((region) => (
+              <StaggerItem key={region.name} className="border-t border-[var(--lsh-rule)] pt-5">
+                <dt className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+                  {region.name}
+                </dt>
+                <dd className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{region.text}</dd>
+              </StaggerItem>
+            ))}
+          </Stagger>
           <Reveal delay={0.1} className="group mt-8">
             <figure className="relative overflow-hidden border-t-4 border-[var(--lsh-brand-red)]">
               <Image
