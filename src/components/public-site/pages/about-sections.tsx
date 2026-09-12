@@ -149,11 +149,6 @@ export function DevelopingOpportunities() {
               {about.developing.lead}
             </p>
           </Reveal>
-          <Reveal delay={0.15}>
-            <p className="mt-7 text-sm leading-6 text-[var(--lsh-muted)]">
-              {about.developing.note}
-            </p>
-          </Reveal>
         </div>
         <div>
           <Reveal>
@@ -178,9 +173,6 @@ export function DevelopingOpportunities() {
                     {item.title}
                   </h3>
                   <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-                  <p className="mt-3 border-t border-[var(--lsh-rule)] pt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                    {item.detail}
-                  </p>
                 </SpotlightCard>
               </StaggerItem>
             ))}

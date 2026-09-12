@@ -1741,15 +1741,26 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     // sections file About and the homepage share.
     const shared = stripComments(read(`${PUBLIC_DIR}/pages/about-sections.tsx`));
     expect(shared).toContain("{about.developing.lead}");
-    expect(shared).toContain("{item.detail}");
     expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
       "<DevelopingOpportunities />",
     );
     expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
-    // Neither developing program may read as purchasable, and neither carries
-    // a launch date.
-    expect(aboutContent).toContain("Neither program is available today, and no launch date is set");
-    expect(aboutContent).toContain("Supplying pharmacies and running one are different businesses");
+    // The note and the two card details were removed on 2026-09-12 (product
+    // owner) and kept unpublished, so asserting they exist in the content
+    // module would no longer say anything about the page. What has to carry
+    // the status instead is the section's own title and the badge on every
+    // card, and neither program may read as purchasable without them.
+    expect(shared).not.toContain("{about.developing.note}");
+    expect(shared).not.toContain("{item.detail}");
+    expect(shared).toContain("{item.status}");
+    expect(aboutContent).toContain('title: "Developing opportunities under evaluation."');
+    expect(
+      (
+        aboutContent
+          .slice(aboutContent.indexOf("developing:"))
+          .match(/status: "In development"/g) ?? []
+      ).length,
+    ).toBe(2);
     for (const banned of [
       /\bwe (will|are going to) (launch|open|acquire)\b/i,
       /\bcoming soon\b/i,
