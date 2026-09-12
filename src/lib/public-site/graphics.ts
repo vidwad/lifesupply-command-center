@@ -47,7 +47,7 @@ const HERO_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-11 for the hero backdrops; monochrome brief, no person, no text, no logo; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment because the hero scrim supplies the brand colour; conceptual, not operational photography.";
 
 const ABOUT_HERO_PROVENANCE =
-  "Gamma image generation (photo mode), commissioned 2026-09-12 for the About hero when the homepage took the legacy photograph that stood there; monochrome brief, no person, no text, no logo, no product; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment because the hero scrim supplies the brand colour; conceptual, not operational photography, and not a LifeSupply building.";
+  "Gamma image generation (photo mode), commissioned 2026-09-12 for the About hero; monochrome brief, no person, no text, no logo, no product; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment because the hero scrim supplies the brand colour; conceptual, not operational photography, and not a LifeSupply building.";
 
 export const GRAPHICS = {
   /**
@@ -55,6 +55,20 @@ export const GRAPHICS = {
    * into shadow so the heading sits on near-black, and the glazing carries
    * the light on the right, where the scrim is thinnest.
    */
+  /**
+   * Behind the About hero since 2026-09-12 (product owner asked for something
+   * more modern, medical and high-tech). Composed for the slot the same way
+   * the atrium was: the left third falls into shadow under the heading, and
+   * the daylight carries the right, where the scrim is thinnest.
+   */
+  aboutMedtech: {
+    src: "/lsh/graphics/about-medtech.jpg",
+    alt: "Conceptual photograph of a diagnostic monitor and a smooth equipment housing on a pale counter in an empty, daylit clinical room.",
+    width: 1600,
+    height: 900,
+    provenance: ABOUT_HERO_PROVENANCE,
+  },
+  /** Behind the About hero from 2026-09-12; unpublished the same day. */
   aboutAtrium: {
     src: "/lsh/graphics/about-atrium.jpg",
     alt: "Conceptual photograph of an empty concrete-and-glass atrium, with a cantilevered staircase beside a full-height glazed wall.",

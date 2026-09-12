@@ -581,7 +581,7 @@ describe("routes and content governance", () => {
       "Information on this site is current at the date published and may be updated.",
       "Health, safety, medical, and industrial supplies, sold online across Canada",
       "The scale of our operating businesses.",
-      "A platform approach to medical-supply access.",
+      "An established supply business. Building broader healthcare capabilities.",
       "The operating websites behind the group.",
     ];
     const c = content();
@@ -619,9 +619,12 @@ describe("design-pass graphics and section primitives", () => {
       const heroes = page.match(/<PublicHero\b/g) ?? [];
       expect(heroes.length, `${name} has a hero`).toBeGreaterThan(0);
       for (const block of page.split(/<PublicHero\b/).slice(1)) {
-        // The opening tag ends at the hero's own `/>` on its line, or at
-        // `</PublicHero>`; a backdrop's `/>` is followed by `}` and does not count.
-        const end = block.search(/\n\s*\/>|\/>\s*\n|<\/PublicHero>/);
+        // Every hero declares its backdrop before the next section opens. The
+        // slice used to end at the first `/>` on its own line, which since
+        // 2026-09-12 can be an action nested in the hero's `actions`
+        // fragment, so it ends at the next `<section` or `</LifeSupplyLayout>`
+        // instead -- still the hero's own element, never the page's.
+        const end = block.search(/<section\b|<\/LifeSupplyLayout>/);
         const open = end === -1 ? block : block.slice(0, end);
         expect(open, `${name}: a hero without a backdrop`).toContain("media={");
       }
@@ -903,9 +906,19 @@ describe("round three: architecture, placement and voice", () => {
     expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).not.toContain(
       "<ProgramArchitecture",
     );
-    expect(stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`))).toContain(
-      "<ProgramArchitecture content={architecture} />",
-    );
+    // About tells the same three tiers as prose from 2026-09-12 (product
+    // owner), so the tiers block renders nowhere. What it drew must still be
+    // drawn: the two pharmacy businesses named separately, one in development
+    // and one only being assessed, each with its own status.
+    const aboutPage = stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`));
+    expect(aboutPage).not.toContain("<ProgramArchitecture");
+    expect(aboutPage).toContain("{about.priorities.items.map(");
+    expect(aboutPage).toContain("{about.longerTerm.items.map(");
+    const aboutCopy = stripComments(read("src/lib/public-site/content/about.ts"));
+    expect(aboutCopy).toContain('title: "Pharmacy Solutions"');
+    expect(aboutCopy).toContain('title: "Licensed pharmacy operations"');
+    expect(aboutCopy).toContain("not currently offered by LifeSupply");
+    expect(aboutCopy).toContain("Medication and dispensing are outside their proposed scope.");
     // And the tiers still carry the distinction on their own: the two
     // pharmacy businesses are named, in different tiers, each with its own
     // status, so the notes explain rather than do the work.
@@ -1490,10 +1503,26 @@ describe("Stage 2 registries and navigation", () => {
     ]) {
       expect(source, block).toContain(block);
     }
-    // And About itself now ends on the team (product owner, 2026-09-11).
+    // About, rewritten on 2026-09-12 (product owner): the operating business
+    // first, then what is being built, then what is only being assessed, and
+    // one leadership section rather than an intro, a leader and a board.
     const about = stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`));
-    for (const block of ["<TeamIntro />", "<Leadership />", "<BoardOfDirectors />"]) {
+    for (const block of [
+      "{about.heroParagraphs}",
+      "{about.purpose.title}",
+      "{about.foundation.metrics.map(",
+      "{about.operations.blocks.map(",
+      "{about.priorities.items.map(",
+      "{about.longerTerm.items.map(",
+      "{about.approach.items.map(",
+      "<LeadershipAndGovernance />",
+      "{about.connect.title}",
+      "<ProfileDialogs />",
+    ]) {
       expect(about, block).toContain(block);
+    }
+    for (const gone of ["<TeamIntro />", "<Leadership />", "<BoardOfDirectors />"]) {
+      expect(about, gone).not.toContain(gone);
     }
     // Primary actions are registry keys rendered through ActionLink.
     expect(source).toContain('<ActionLink action="explore_businesses"');
@@ -1786,28 +1815,32 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     // The note and the card details were unpublished on 2026-09-12 and
     // published again the same day when the section was rewritten as
     // Solutions development; both are asserted as rendered above.
-    expect(
-      (
-        aboutContent
-          .slice(aboutContent.indexOf("developing:"))
-          .match(/status: "In development"/g) ?? []
-      ).length,
-    ).toBe(2);
+    const blockOf = (key: string) => {
+      const from = aboutContent.indexOf(`${key}: {`);
+      const rest = aboutContent.slice(from);
+      const next = rest.slice(1).search(/\n {2}[a-zA-Z]+: \{/);
+      return next === -1 ? rest : rest.slice(0, next + 1);
+    };
+    // Two programmes on the homepage and the same two on About, each marked
+    // in development in its own block.
+    expect((blockOf("developing").match(/status: "In development"/g) ?? []).length).toBe(2);
+    expect((blockOf("priorities").match(/status: "In development"/g) ?? []).length).toBe(2);
     for (const banned of [
       /\bwe (will|are going to) (launch|open|acquire)\b/i,
       /\bcoming soon\b/i,
     ]) {
       expect(aboutContent, String(banned)).not.toMatch(banned);
     }
-    // About closes on the board and the profile dialogs, and nothing follows
-    // them but the footer (product owner, 2026-09-11).
-    expect(page.trimEnd()).toMatch(
-      /<BoardOfDirectors \/>\s*<ProfileDialogs \/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
+    // About closes on the contact section and the profile dialogs, and
+    // nothing follows them but the footer (product owner, 2026-09-12).
+    expect(page.trimEnd()).toMatch(/<ProfileDialogs \/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/);
+    expect(page.indexOf("<LeadershipAndGovernance />")).toBeLessThan(
+      page.indexOf("{about.connect.title}"),
     );
     // The hero backdrop and the one remaining band, each decorative, drawn
     // from the registry, never a path literal. The warehouse band moved to
     // the homepage with the operating-base section.
-    expect(page).toContain('media={<GraphicBackdrop graphic="aboutAtrium" position="62% 50%" />}');
+    expect(page).toContain('media={<GraphicBackdrop graphic="aboutMedtech" position="62% 50%" />}');
     // The photograph About used is now the homepage hero, carried at full
     // density behind the thinner scrim (product owner, 2026-09-12).
     expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
@@ -1832,8 +1865,12 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
 
   it("lists the confirmed leader and the four directors of the prior site, and none of the withdrawn people", () => {
     const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team-sections.tsx`));
-    expect(teamPage).toContain("labels.board");
+    // One section since 2026-09-12 (product owner): Abdul Ladha was both the
+    // Leadership card and the first director, and now appears once.
+    expect(teamPage).toContain("team.hero.eyebrow");
     expect(teamPage).toContain("board.map(");
+    expect(teamPage).not.toContain("labels.management");
+    expect(teamPage).not.toMatch(/export function (TeamIntro|Leadership)\b/);
     const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
     // Four profiles, four board cards, one leadership card.
     expect((teamContent.match(/slug: "/g) ?? []).length).toBe(9);
@@ -2099,15 +2136,14 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
       expect(c, String(banned)).not.toMatch(banned);
     }
     // Only the three approved figures appear anywhere in the Stage 5 copy,
-    // apart from the two figures inside the directors' preserved biographies,
-    // which describe other organisations (a listed employer's size and a
-    // bank loan portfolio), never LifeSupply.
+    // apart from the one figure inside a director's biography, which
+    // describes a bank loan portfolio he supervised, never LifeSupply. The
+    // second such figure -- a former employer's market capitalisation in
+    // Keith Dolo's biography -- left with the 2026-09-12 rewrite.
     const dollars = c.match(/\$[\d.,]+( billion|[MK])?/g) ?? [];
-    expect(new Set(dollars)).toEqual(
-      new Set(["$6.75M", "$2.20M", "$284K", "$6.1 billion", "$5 billion"]),
-    );
+    expect(new Set(dollars)).toEqual(new Set(["$6.75M", "$2.20M", "$284K", "$5 billion"]));
     const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
-    expect(teamContent.match(/\$[\d.,]+( billion|[MK])?/g)).toEqual(["$6.1 billion", "$5 billion"]);
+    expect(teamContent.match(/\$[\d.,]+( billion|[MK])?/g)).toEqual(["$5 billion"]);
   });
 
   it("keeps static documents at a request step and downloads only through the published read model", () => {
@@ -2128,8 +2164,10 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
 
   it("resolves team titles only through the dated legacy profiles, and no longer renders the undated deck", () => {
     const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team-sections.tsx`));
-    expect(teamPage).toContain("legacyTitle(member.slug)");
-    expect(teamPage).not.toMatch(/member\.role/);
+    // Titles still resolve through the dated legacy profiles, now on the one
+    // combined section's cards rather than on a separate leadership card.
+    expect(teamPage).toContain("legacyTitle(director.slug)");
+    expect(teamPage).not.toMatch(/member\.role|director\.role/);
     expect(stage5Pages()).not.toContain("investor-presentation-preview");
     expect(stage5Content()).not.toContain("investor-presentation-preview");
   });

@@ -12,7 +12,8 @@ export const about = {
   // Approved (moved from JSX).
   hero: {
     eyebrow: "About LifeSupply",
-    title: "A platform approach to medical-supply access.",
+    /** Rewritten 2026-09-12: what the business is, and what it is building. */
+    title: "An established supply business. Building broader healthcare capabilities.",
   },
   labels: { mission: "Mission", vision: "Vision" },
   /**
@@ -39,19 +40,44 @@ export const about = {
    * until the visitor presses play.
    */
   video: {
-    eyebrow: "Watch",
-    title: "Who we are and what we do.",
+    eyebrow: "A message from our Chairman & CEO",
+    title: "Meet LifeSupply.",
     description:
-      "Abdul Ladha, Chairman & CEO, introduces LifeSupply Health in the company's published video.",
-    playLabel: "Play the video",
+      "Abdul Ladha introduces LifeSupply Health, its operating businesses, and the company’s direction.",
+    playLabel: "Watch the company introduction",
+    /**
+     * Unpublished since 2026-09-12 (product owner): a technical explanation
+     * of how the embed loads is not page copy. The behaviour it described is
+     * unchanged and is asserted in the browser suite -- nothing is requested
+     * from YouTube until the visitor presses play.
+     */
     note: "Plays from YouTube's privacy-enhanced player when you press play; nothing is loaded from YouTube before that.",
     watchLabel: "Open on YouTube",
   },
+  /**
+   * Purpose, with the mission and vision beneath it (product owner,
+   * 2026-09-12). The vision keeps the approved claim word for word -- a
+   * global leader in the online sale and distribution of health and medical
+   * products and related services -- and says what it is built on.
+   */
+  purpose: {
+    eyebrow: "Our purpose",
+    title: "Help customers access the products and services they need.",
+  },
   mission:
-    "Through a commitment to technology, innovation, and excellence, LifeSupply aims to serve a broad customer base with premium products, competitive pricing, and direct access.",
+    "To make medical, health, and related supplies easier to access through a broad product selection, competitive pricing, and technology that supports purchasing and service.",
   vision:
-    "LifeSupply's vision is to become a global leader in the online sale and distribution of health and medical products and related services.",
-  /** The hero line: what the group is, not what a document says about it. */
+    "To become a global leader in the online sale and distribution of health and medical products and related services, building on established businesses and developing capabilities that support lasting customer relationships.",
+  /**
+   * The hero (product owner, 2026-09-12): what the group is, then what it is
+   * building on that. `heroSummary` is kept because the page previously read
+   * from it; the hero now renders `heroParagraphs`.
+   */
+  heroParagraphs: [
+    "LifeSupply Health Inc. is a Canadian company bringing together online medical and home-care supply businesses in Canada and the United States, alongside clinic planning, development, and equipment services in British Columbia.",
+    "Our operating businesses provide the foundation for the next phase of growth: improving how customers purchase supplies, developing new services for clinics and pharmacies, and pursuing complementary acquisitions.",
+  ],
+  /** Unpublished since 2026-09-12; kept on the record. */
   heroSummary:
     "A Canadian group with more than 25 years of operations. It sells health, safety, medical and industrial products online, builds and equips clinics in British Columbia, and is developing two supply programs on that base.",
   growth:
@@ -261,6 +287,167 @@ export const about = {
       "A clinic project can create opportunities for equipment purchasing and ongoing supplies. Existing supply capabilities also provide a starting point for the pharmacy and metabolic-health programs now in development.",
       "Our focus is on developing these opportunities through the group’s operating businesses, customer relationships, and complementary acquisitions. New services will require their own delivery arrangements and commercial terms.",
     ],
+  },
+  /**
+   * The About page, rewritten on 2026-09-12 at the product owner's direction.
+   * It tells the operating business first, then separates what is being built
+   * from what is only being assessed, so the story is not interrupted by
+   * repeated statements of what the group does not do. Each boundary is
+   * stated once, beside the activity it applies to.
+   *
+   * Every fact is one the site already carried. The three figures are the
+   * 2025 annual report's, with the cumulative qualification kept; the store
+   * roles and the clinic scope are the brand registry's; and the two supply
+   * programs and the four regulated activities keep the statuses the program
+   * architecture gave them.
+   */
+  foundation: {
+    eyebrow: "Our foundation",
+    title: "Established businesses. Experience across two markets.",
+    paragraphs: [
+      "LifeSupply brings together businesses with more than 25 years of operating history.",
+      "The acquisition of Wellmart Health Supplies in 2020 established the group’s Canadian operating base. The acquisition of Balkowitsch Enterprises in 2023 extended its reach into the United States, adding established customer and distributor relationships.",
+      "Today, the group combines online product sales with clinic-development and equipment services, providing several ways to serve healthcare businesses and customers.",
+    ],
+    metrics: [
+      {
+        label: "Operating history",
+        value: "25+ years",
+        caption: "across the group’s businesses",
+      },
+      {
+        label: "Product range",
+        value: "50,000+ products",
+        caption: "reported across the group",
+      },
+      {
+        label: "Customers served",
+        value: "1 million+",
+        caption: "cumulatively since inception",
+      },
+    ],
+    source:
+      "Source: LifeSupply’s 2025 Annual Report. Customer figures are cumulative and do not represent current active customers.",
+  },
+
+  operations: {
+    eyebrow: "Our operations",
+    title: "What we do today.",
+    blocks: [
+      {
+        key: "stores",
+        title: "Online medical and related supplies",
+        lead: "LifeSupply’s online stores serve customers across Canada and the United States. Their respective product ranges include medical, health, home-care, safety, and industrial supplies.",
+        items: [
+          "LifeSupply.ca serves Canadian customers with medical, health, and home-care products, including supplies for professional settings.",
+          "Wellmart Medical serves Canadian customers with home medical equipment and everyday care supplies.",
+          "Balkowitsch Worldwide serves the U.S. market with medical, health, wellness, and related products.",
+        ],
+        note: "Each store manages its own product selection, pricing, customer accounts, and support. Canadian stores price in Canadian dollars; Balkowitsch prices in U.S. dollars.",
+        action: "explore_businesses",
+        cta: "Explore medical supply businesses",
+      },
+      {
+        key: "clinics",
+        title: "Clinic planning, development, and equipment",
+        lead: "LifeSupply Clinics supports projects in British Columbia through planning, design, construction and fit-out coordination, and equipment supply.",
+        items: [
+          "The business helps clinic owners address the practical requirements of establishing or improving their premises, working with project partners to define and deliver the required scope.",
+        ],
+        note: "LifeSupply’s role is developing and equipping clinic premises. Patient care remains the responsibility of the clinic operator and its healthcare professionals.",
+        action: "clinic_solutions",
+        cta: "Explore clinic solutions",
+      },
+    ],
+  },
+
+  priorities: {
+    eyebrow: "Our development priorities",
+    title: "Building new supply services around existing capabilities.",
+    lead: "LifeSupply is developing two offerings that extend its supply capabilities into more structured relationships with clinics and pharmacies.",
+    items: [
+      {
+        key: "metabolic",
+        title: "Metabolic Health Solutions",
+        status: "In development",
+        summary:
+          "Proposed non-drug supply services for clinics and pharmacies supporting metabolic-health programs.",
+        detail:
+          "The offering is being developed around configurable patient supplies, clinic procurement, kitting, fulfilment, and non-clinical workflow support. It would distinguish initial equipment needs from consumables that require replenishment as they are used.",
+        boundary:
+          "Participating healthcare providers would retain responsibility for clinical decisions and patient care.",
+        cta: "Explore Metabolic Health Solutions",
+      },
+      {
+        key: "pharmacy",
+        title: "Pharmacy Solutions",
+        status: "In development",
+        summary:
+          "Proposed supply and fulfilment services for pharmacist-selected, non-drug products.",
+        detail:
+          "The offering would support participating pharmacies in arranging product supply for their customers. Product selection, ordering processes, replenishment responsibilities, and commercial terms would be established with each pharmacy before launch.",
+        boundary: null,
+        cta: "Explore Pharmacy Solutions",
+      },
+    ],
+    note: "These programs are not yet available, and no launch date has been set. Medication and dispensing are outside their proposed scope.",
+  },
+
+  longerTerm: {
+    eyebrow: "Longer-term opportunities",
+    title: "Evaluating additional healthcare capabilities.",
+    lead: "Alongside its supply-service development, LifeSupply is assessing opportunities in regulated healthcare activities. These represent potential future capabilities and are separate from the group’s existing operations and proposed non-drug supply programs.",
+    items: [
+      {
+        title: "Licensed pharmacy operations",
+        text: "Evaluating whether owning or operating a licensed pharmacy could complement the group’s broader business.",
+      },
+      {
+        title: "Specialty and compounding services",
+        text: "Assessing potential pharmacy capabilities involving compounded preparations, subject to the applicable professional standards and regulatory requirements.",
+      },
+      {
+        title: "Peptide synthesis and research",
+        text: "Exploring the potential for research partnerships and synthesis capabilities, including the facilities, expertise, and resources such activities would require.",
+      },
+      {
+        title: "Regulated manufacturing",
+        text: "Assessing whether manufacturing capabilities could form part of a future expansion beyond product distribution.",
+      },
+    ],
+    note: "These activities are under evaluation and are not currently offered by LifeSupply. Any decision to proceed would depend on a viable business case, appropriate funding, qualified personnel, suitable facilities, and the required licences and authorizations.",
+    cta: "Learn about advanced therapeutics opportunities",
+  },
+
+  approach: {
+    eyebrow: "Our approach to growth",
+    title: "Strengthen the business. Extend its capabilities.",
+    lead: "LifeSupply’s growth strategy starts with the performance of its existing operations.",
+    items: [
+      {
+        title: "Improve operating performance",
+        text: "Strengthen purchasing, product selection, margin management, and fulfilment across the operating businesses.",
+      },
+      {
+        title: "Use technology to improve service",
+        text: "Develop more effective ordering and operational processes that support customers and improve how the businesses work.",
+      },
+      {
+        title: "Pursue complementary acquisitions",
+        text: "Seek businesses that can broaden the group’s product range, extend its geographic reach, or add relevant capabilities and customer relationships.",
+      },
+      {
+        title: "Develop recurring supply relationships",
+        text: "Build opportunities to support ongoing clinic and pharmacy supply needs, with service responsibilities and commercial terms defined for each offering.",
+      },
+    ],
+    cta: "Explore our growth strategy",
+  },
+
+  connect: {
+    eyebrow: "Connect with LifeSupply",
+    title: "Learn more about the business and its next phase.",
+    lead: "Explore our operating businesses, review our growth strategy, or contact the team about a business or investment enquiry.",
   },
 } as const;
 
