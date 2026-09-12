@@ -235,6 +235,12 @@ export const metabolic = {
         text: "Bought once or rarely, such as a travel or storage organiser.",
       },
     ],
+    /**
+     * Unpublished since 2026-09-12 (product owner): the Today / In
+     * development pair and the substitutions line were removed from the
+     * replenishment section. Kept here so what they state is still on the
+     * record and can be restored verbatim.
+     */
     today: {
       title: "Today",
       text: "Reordering happens through the operating stores, with their accounts and repeat ordering as each store provides. There is no automatic shipment, no reminder service, and no subscription on this site today, so intervals, pauses, changes, and cancellation follow the store's own ordering.",
@@ -707,6 +713,8 @@ export const commercialModel = {
    * implied one integrated arrangement; it is said here as what each party
    * keeps rather than as a list of things that do not exist.
    */
+  // Unpublished since 2026-09-12 (product owner): the "Separate arrangements"
+  // block was removed from the commercial model. Kept for the record.
   note: "Under the proposed model, supply planning would coordinate store purchases and separately agreed services: the operating stores keep their own ordering arrangements and accounts, and a proposed service would need its own agreed scope. It is a proposed model, not an offer, and it establishes no contract; it does not include connections between organisations' ordering systems.",
 } as const;
 

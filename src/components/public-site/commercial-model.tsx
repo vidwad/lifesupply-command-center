@@ -1,4 +1,4 @@
-import { Container, Eyebrow, SectionHeading } from "@/components/public-site/lifesupply-primitives";
+import { Container, SectionHeading } from "@/components/public-site/lifesupply-primitives";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { SupplyModelDiagram } from "@/components/public-site/supply-model-diagram";
 
@@ -95,11 +95,6 @@ export function CommercialModel({ model }: { model: Model }) {
             </StaggerItem>
           ))}
         </Stagger>
-
-        <Reveal className="mt-8 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-5">
-          <Eyebrow as="h3">Separate arrangements</Eyebrow>
-          <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{model.note}</p>
-        </Reveal>
       </Container>
     </section>
   );

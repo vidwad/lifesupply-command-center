@@ -10,7 +10,8 @@ import {
   ProfileDialogs,
   TeamIntro,
 } from "@/components/public-site/pages/team-sections";
-import { HeroBackdrop, ParallaxBand } from "@/components/public-site/parallax-band";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
+import { ParallaxBand } from "@/components/public-site/parallax-band";
 import { IconBadge } from "@/components/public-site/sections";
 import { VideoEmbed } from "@/components/public-site/video-embed";
 import { iconForTitle } from "@/lib/public-site/icon-map";
@@ -46,35 +47,14 @@ export function AboutPage() {
         title={about.hero.title}
         description={about.heroSummary}
         actions={<ActionLink action="explore_businesses" />}
-        media={<HeroBackdrop band="data" />}
+        media={<GraphicBackdrop graphic="aboutAtrium" position="62% 50%" />}
       />
 
-      {/* Operating philosophy beside the company video: Mission and Vision stacked
-          in one column, the video in the other (product owner, 2026-09-09). */}
+      {/* The company video leads on the left in the wider track, with Mission
+          and Vision stacked beside it (product owner, 2026-09-12; the two
+          columns were the other way round from 2026-09-09). */}
       <section className="px-5 py-20 lg:px-8">
-        <Stagger className="mx-auto grid max-w-7xl gap-px bg-[var(--lsh-rule)] lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="grid gap-px">
-            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-8 lg:p-10">
-              <div className="flex items-start justify-between gap-4">
-                <Eyebrow as="h2">{about.labels.mission}</Eyebrow>
-                <IconBadge icon={iconForTitle(about.labels.mission)} />
-              </div>
-              <p className="lsh-display mt-5 text-2xl leading-[1.15] text-[var(--lsh-charcoal)] lg:text-3xl lg:leading-[1.1]">
-                {about.mission}
-              </p>
-            </StaggerItem>
-            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white lg:p-10">
-              <div className="flex items-start justify-between gap-4">
-                <Eyebrow as="h2" tone="onDark">
-                  {about.labels.vision}
-                </Eyebrow>
-                <IconBadge icon={iconForTitle(about.labels.vision)} tone="onDark" />
-              </div>
-              <p className="lsh-display mt-5 text-2xl leading-[1.15] text-white lg:text-3xl lg:leading-[1.1]">
-                {about.vision}
-              </p>
-            </StaggerItem>
-          </div>
+        <Stagger className="mx-auto grid max-w-7xl gap-px bg-[var(--lsh-rule)] lg:grid-cols-[1.1fr_0.9fr]">
           <StaggerItem className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8 lg:p-10">
             <div className="flex items-start justify-between gap-4">
               <Eyebrow as="h2">{about.video.eyebrow}</Eyebrow>
@@ -99,6 +79,28 @@ export function AboutPage() {
               </a>
             </div>
           </StaggerItem>
+          <div className="grid gap-px">
+            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-8 lg:p-10">
+              <div className="flex items-start justify-between gap-4">
+                <Eyebrow as="h2">{about.labels.mission}</Eyebrow>
+                <IconBadge icon={iconForTitle(about.labels.mission)} />
+              </div>
+              <p className="lsh-display mt-5 text-2xl leading-[1.15] text-[var(--lsh-charcoal)] lg:text-3xl lg:leading-[1.1]">
+                {about.mission}
+              </p>
+            </StaggerItem>
+            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white lg:p-10">
+              <div className="flex items-start justify-between gap-4">
+                <Eyebrow as="h2" tone="onDark">
+                  {about.labels.vision}
+                </Eyebrow>
+                <IconBadge icon={iconForTitle(about.labels.vision)} tone="onDark" />
+              </div>
+              <p className="lsh-display mt-5 text-2xl leading-[1.15] text-white lg:text-3xl lg:leading-[1.1]">
+                {about.vision}
+              </p>
+            </StaggerItem>
+          </div>
         </Stagger>
       </section>
 

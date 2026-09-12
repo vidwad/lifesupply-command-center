@@ -277,6 +277,16 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "investors",
   },
   {
+    // Acquisitions moved into the Investors group, where the reader who wants
+    // it already is, and sits directly after Growth strategy because it is
+    // how that strategy is executed (product owner, 2026-09-12).
+    path: "/partners/acquisitions/",
+    label: "Acquisitions & Strategic Transactions",
+    stage: 5,
+    status: "live",
+    navGroup: "investors",
+  },
+  {
     path: "/investor-relations/advanced-therapeutics/",
     label: "Advanced therapeutics",
     stage: 5,
@@ -289,15 +299,6 @@ export const ROUTES: readonly RouteRecord[] = [
   {
     path: "/investor-relations/disclosures/",
     label: "Disclosures",
-    stage: 5,
-    status: "live",
-    navGroup: "investors",
-  },
-  {
-    // Acquisitions moved into the Investors group, where the reader who wants
-    // it already is.
-    path: "/partners/acquisitions/",
-    label: "Acquisitions & Strategic Transactions",
     stage: 5,
     status: "live",
     navGroup: "investors",

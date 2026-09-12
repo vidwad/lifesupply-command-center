@@ -2,7 +2,7 @@ import { Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { BrandGrid } from "@/components/public-site/brand-grid";
-import { HeroVideo } from "@/components/public-site/hero-video";
+import { HeroBackdrop } from "@/components/public-site/parallax-band";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
@@ -50,12 +50,20 @@ export function LifeSupplyHome() {
   const { homepage, contact, architecture } = LIFE_SUPPLY_CONTENT;
   return (
     <LifeSupplyLayout>
+      {/*
+       * The hero leads on the picture since 2026-09-12 (product owner): the
+       * legacy background footage read as a murky dark field behind the
+       * heading, so the homepage takes the photograph About used, carried at
+       * full density behind a thinner scrim. The company video still plays on
+       * About, where it is introduced rather than used as wallpaper.
+       */}
       <PublicHero
         size="home"
         eyebrow={homepage.eyebrow}
         title={homepage.title}
         description={homepage.description}
-        media={<HeroVideo {...homepage.heroMedia} />}
+        media={<HeroBackdrop band="data" prominence="full" position="72% 50%" />}
+        scrim="light"
         actions={
           <>
             <ActionLink action="investor_information">Investor information</ActionLink>

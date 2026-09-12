@@ -308,19 +308,6 @@ function ExecutionSequence() {
             </StaggerItem>
           ))}
         </Stagger>
-        <div className="mt-8 grid gap-5 lg:grid-cols-2">
-          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-            <Eyebrow as="h3">{e.gate.title}</Eyebrow>
-            <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{e.gate.text}</p>
-          </Reveal>
-          <Reveal
-            delay={0.05}
-            className="border-l-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-6"
-          >
-            <Eyebrow as="h3">Where it stands</Eyebrow>
-            <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{e.status}</p>
-          </Reveal>
-        </div>
       </Container>
     </section>
   );

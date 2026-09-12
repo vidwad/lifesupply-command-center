@@ -356,19 +356,6 @@ function ReplenishmentSection() {
               <MetabolicReplenishmentRhythm />
             </Reveal>
           </div>
-          <div className="mt-12 grid gap-8 border-t border-[var(--lsh-rule-strong)] pt-8 lg:grid-cols-2 lg:gap-16">
-            <Reveal>
-              <Eyebrow as="h3">{refills.today.title}</Eyebrow>
-              <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{refills.today.text}</p>
-            </Reveal>
-            <Reveal delay={0.05}>
-              <Eyebrow as="h3">{refills.later.title}</Eyebrow>
-              <p className="mt-3 leading-7 text-[var(--lsh-charcoal)]">{refills.later.text}</p>
-              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                {refills.substitutions}
-              </p>
-            </Reveal>
-          </div>
         </Container>
       </section>
     </AnchoredSection>

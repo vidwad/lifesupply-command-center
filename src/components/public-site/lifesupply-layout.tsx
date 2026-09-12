@@ -61,8 +61,13 @@ function NavItem({
   label: string;
   onNavigate?: () => void;
   className?: string;
-  /** inline: primary menu item with the red rule; utility: strip link, colour change only; menu: dropdown row. */
-  variant?: "inline" | "utility" | "menu";
+  /**
+   * inline: menu item with the red rule, used in the footer and the mobile
+   * panel; primary: the same item one step larger, for the desktop header
+   * only (product owner, 2026-09-12); utility: strip link, colour change
+   * only; menu: dropdown row.
+   */
+  variant?: "inline" | "primary" | "utility" | "menu";
   external?: boolean;
   /** Inert measurement data attributes (measurement.ts); never a handler. */
   attributes?: Record<string, string>;
@@ -73,8 +78,10 @@ function NavItem({
   const pathname = usePathname();
   const active = !neverCurrent && (forceActive || (!external && isActiveRoute(pathname, href)));
   const classes =
-    variant === "inline"
-      ? `lsh-display relative inline-flex w-fit items-center gap-1 py-1.5 text-[11px] transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
+    variant === "inline" || variant === "primary"
+      ? `lsh-display relative inline-flex w-fit items-center gap-1 py-1.5 ${
+          variant === "primary" ? "text-[13px]" : "text-[11px]"
+        } transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-[var(--lsh-brand-red)] after:transition-[width] after:duration-300 hover:after:w-full motion-reduce:after:transition-none ${
           active ? "text-white after:w-5" : "text-white/75 after:w-0 hover:text-white"
         } ${className}`.trim()
       : variant === "utility"
@@ -143,7 +150,9 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
   if (group.links.length === 0) {
     // A group with neither children nor a hub cannot render anything; the
     // registry does not produce one, and this keeps that true by construction.
-    return group.href === null ? null : <NavItem href={group.href} label={group.label} />;
+    return group.href === null ? null : (
+      <NavItem href={group.href} label={group.label} variant="primary" />
+    );
   }
 
   return (
@@ -155,7 +164,12 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
       }}
     >
       {group.href === null ? null : (
-        <NavItem href={group.href} label={group.label} forceActive={childActive} />
+        <NavItem
+          href={group.href}
+          label={group.label}
+          variant="primary"
+          forceActive={childActive}
+        />
       )}
       <button
         type="button"
@@ -169,7 +183,7 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
         }
         className={
           group.href === null
-            ? `lsh-display inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] transition-colors ${
+            ? `lsh-display inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] transition-colors ${
                 childActive ? "text-white" : "text-white/75 hover:text-white"
               }`
             : "-mr-1 grid h-6 w-5 place-items-center text-white/75 transition-colors hover:text-white"
@@ -270,7 +284,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
   const scrollingDown = useScrollDirection();
   const headerHidden = scrollingDown && !isMenuOpen && !focusWithinHeader;
 
-  const { brand, contact } = LIFE_SUPPLY_CONTENT;
+  const { brand, contact, homepage } = LIFE_SUPPLY_CONTENT;
   const corporate = contact.channels.find((channel) => channel.label === "Corporate office");
   const investors = contact.channels.find((channel) => channel.label === "Investor relations");
 
@@ -364,7 +378,15 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav
-            className="hidden items-center justify-end gap-3.5 xl:flex xl:flex-1 2xl:gap-5"
+            /*
+             * The row centres both boxes, but the logo is a lockup: its
+             * triangle mark rises well above the LIFESUPPLY wordmark, so the
+             * wordmark's cap block sits in the lower part of the image. Its
+             * centre measures at 70.4% of the logo's height, not 50%, which
+             * left the menu reading about 7px high. The nudge puts the menu's
+             * caps on the wordmark's optical line (product owner, 2026-09-12).
+             */
+            className="hidden translate-y-[7px] items-center justify-end gap-3.5 xl:flex xl:flex-1 2xl:gap-5"
             aria-label="Primary navigation"
           >
             {PRIMARY_NAV.map((group) => (
@@ -505,6 +527,12 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               className="h-7 w-auto"
             />
             <p className="mt-5 max-w-sm text-sm leading-6 text-white/70">{brand.footerTagline}</p>
+            {/*
+             * What the group is, under the tagline (product owner,
+             * 2026-09-12). Rendered from the homepage hero's own sentence
+             * rather than a second copy of it, so the two cannot drift.
+             */}
+            <p className="mt-4 max-w-sm text-sm leading-6 text-white/60">{homepage.description}</p>
           </div>
           <div>
             <Eyebrow as="h2" tone="onDark">
