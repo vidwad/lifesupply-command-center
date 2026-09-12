@@ -68,10 +68,11 @@ No pathway is presented as a purchasable boxed product, an approved configuratio
 | --- | --- |
 | `/shop` | `/medical-supply-solutions#stores` — geography, currency, support, category emphasis, direct store actions |
 | `/partners` | `/contact#business-inquiries` — the enquiry routing it offered |
-| `/abdul-ladha` | `/our-team#abdul-ladha` |
-| `/keith-dolo-2` | `/our-team#keith-dolo` |
-| `/barrett-e-g-sleeman` | `/our-team#barrett-sleeman` |
-| `/david-vogt` | `/our-team#david-vogt` |
+| `/abdul-ladha` | `/about-us#abdul-ladha` |
+| `/keith-dolo-2` | `/about-us#keith-dolo` |
+| `/barrett-e-g-sleeman` | `/about-us#barrett-sleeman` |
+| `/david-vogt` | `/about-us#david-vogt` |
+| `/our-team` | `/about-us` — see below |
 
 Abdul Ladha is presented **once**, with the appropriate combined role. Where a role is supported only by legacy material it is qualified honestly rather than presented as newly confirmed. No title, appointment, credential or headshot is fabricated.
 
@@ -83,3 +84,28 @@ Abdul Ladha is presented **once**, with the appropriate combined role. Where a r
 - **Contact** moves the full subsidiary narrative to About and keeps its enquiry-first layout, working subjects, direct details, copy-email fallback and verified external destinations.
 - **Growth Strategy** stays focused on the proposed execution sequence and dependencies, linking to history and news rather than repeating them.
 - **Disclosures** remains the authoritative financial scope, sharing its published metric data with other pages so no value can drift.
+
+## Stage 5 (2026-09-11): Our team into About
+
+The product owner set About's shape: hero, Mission and Vision beside the
+company video, the "Since inception" band, and then the team — the title and
+text `/our-team/` opened with, Leadership, and the Board of Directors, with
+nothing after them but the footer.
+
+| Was on `/our-team/` | Now |
+| --- | --- |
+| Hero title and description | The first content under the band on `/about-us/` |
+| Leadership card | `/about-us/`, unchanged |
+| Board of Directors cards | `/about-us/#board`, unchanged |
+| The four biographies, as sections | `/about-us/#<anchor>`, each as a dialog opened by `:target` in CSS, so a deep link still reveals the profile with JavaScript disabled |
+
+| Was on `/about-us/` after the band | Now |
+| --- | --- |
+| Footprint and milestones | The homepage, through `about-sections.tsx` |
+| The operating-base band | The homepage, same file |
+| Operating brands | The homepage |
+| Growth direction | The homepage, same file |
+| Program architecture (three tiers) | The homepage, tiers only |
+| Developing opportunities | The homepage, same file |
+| Corporate structure statement | **Not rendered.** "One parent company, three wholly-owned subsidiaries" is still in `content/about.ts`, and Contact still names all three entities with their acquisition detail, but the sentence itself is unpublished. Flagged to the product owner. |
+| The two architecture notes | **Not rendered.** "The two meanings of pharmacy" and "How participation works" stay in `content/architecture.ts`. The distinction they drew survives in the tiers, which name Pharmacy supply programs under In development and Licensed pharmacy operations under Under evaluation. Flagged to the product owner. |

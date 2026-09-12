@@ -23,7 +23,7 @@ Excluded from the count, as the brief directs: `news/[slug]` and `resources/[slu
 | --- | --- | --- |
 | 1 | `/` | Home |
 | 2 | `/about-us` | Primary home for company identity, structure, footprint, history, video |
-| 3 | `/our-team` | Gains the four leadership biographies |
+| 3 | `/our-team` | Gained the four leadership biographies in stage 4; **retired 2026-09-11**, absorbed into `/about-us` |
 | 4 | `/medical-supply-solutions` | Canonical store-selection hub; absorbs `/shop` |
 | 5 | `/medical-supply-solutions/lifesupply` | |
 | 6 | `/medical-supply-solutions/wellmart-medical` | |
@@ -65,7 +65,7 @@ Excluded from the count, as the brief directs: `news/[slug]` and `resources/[slu
 | 14 | `/metabolic-health/care-kits/clinic-injectable-supplies` | as above |
 | 15 | `/metabolic-health/care-kits/pharmacy-patient-support` | as above |
 | 16 | `/metabolic-health/refills` | Replenishment becomes an anchored section |
-| 17 | `/abdul-ladha` | Biography merges into `/our-team` |
+| 17 | `/abdul-ladha` | Biography merged into `/our-team` in stage 4, and into `/about-us` on 2026-09-11 |
 | 18 | `/keith-dolo-2` | as above |
 | 19 | `/barrett-e-g-sleeman` | as above |
 | 20 | `/david-vogt` | as above |

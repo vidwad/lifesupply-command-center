@@ -158,20 +158,21 @@ const nextConfig: NextConfig = {
       // 200 (docs/website-consolidation/REDIRECTS.md). A wildcard here would
       // take both of them out, and a canary forbids that form.
       { source: "/partners", destination: "/contact#business-inquiries", permanent: true },
-      // Website consolidation, stage 4 (2026-09-10): the four retained
-      // biographies became sections of the team page, so their addresses go
-      // to the person rather than to the top of a listing.
-      { source: "/abdul-ladha", destination: "/our-team#abdul-ladha", permanent: true },
-      { source: "/keith-dolo-2", destination: "/our-team#keith-dolo", permanent: true },
+      // Website consolidation, stage 5 (2026-09-11): About absorbed the team,
+      // so the team address goes there, and the four retained biographies go
+      // to the person's dialog rather than to the top of a listing.
+      { source: "/our-team", destination: "/about-us", permanent: true },
+      { source: "/abdul-ladha", destination: "/about-us#abdul-ladha", permanent: true },
+      { source: "/keith-dolo-2", destination: "/about-us#keith-dolo", permanent: true },
       {
         source: "/barrett-e-g-sleeman",
-        destination: "/our-team#barrett-sleeman",
+        destination: "/about-us#barrett-sleeman",
         permanent: true,
       },
-      { source: "/david-vogt", destination: "/our-team#david-vogt", permanent: true },
+      { source: "/david-vogt", destination: "/about-us#david-vogt", permanent: true },
       // Leadership profiles withdrawn on 2026-09-08 (product owner: no longer
-      // involved); the addresses go to the team page. Keep in step with
-      // `team.withdrawnProfileSlugs` (content/team.ts).
+      // involved); the addresses go to the team section of About. Keep in
+      // step with `team.withdrawnProfileSlugs` (content/team.ts).
       ...[
         "ross-jelveh",
         "ross-jelveh-2",
@@ -183,7 +184,7 @@ const nextConfig: NextConfig = {
         "dr-margaret-clarke-2",
         "dr-dedeshya-holowenko",
         "john-anderson-2",
-      ].map((slug) => ({ source: `/${slug}`, destination: "/our-team", permanent: true })),
+      ].map((slug) => ({ source: `/${slug}`, destination: "/about-us", permanent: true })),
     ];
   },
   experimental: {

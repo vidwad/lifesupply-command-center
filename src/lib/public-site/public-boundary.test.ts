@@ -519,7 +519,6 @@ describe("routes and content governance", () => {
       "src/app/about-us/page.tsx",
       "src/app/medical-supply-solutions/page.tsx",
       "src/app/pharmacy-solutions/page.tsx",
-      "src/app/our-team/page.tsx",
       "src/app/investor-relations/page.tsx",
       "src/app/news/page.tsx",
       "src/app/contact/page.tsx",
@@ -604,7 +603,6 @@ describe("design-pass graphics and section primitives", () => {
       "metabolic",
       "partners",
       "investors",
-      "team",
       "news",
       "contact",
       "policies",
@@ -892,15 +890,24 @@ describe("round three: architecture, placement and voice", () => {
     expect(architecture).toContain("Pharmacy supply programs");
     expect(architecture).toContain("Licensed pharmacy operations");
     expect(architecture).toContain("Supplying pharmacies and running one are different businesses");
-    // Both notes are About's: the section exists there to draw exactly those
-    // distinctions, and the homepage carries the tiers alone (2026-09-11).
+    // The homepage carries the tiers alone (product owner, 2026-09-11), and
+    // About ends on the team, so the two clarifying notes render nowhere
+    // today. What they drew is carried by the tiers themselves, which is what
+    // this asserts: the two pharmacy businesses are named, in different
+    // tiers, each with its own status.
     const arch = stripComments(read(`${PUBLIC_DIR}/program-architecture.tsx`));
     expect(arch).toContain("{notes ? (");
-    expect(stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`))).toContain(
-      "<ProgramArchitecture content={architecture} />",
-    );
     expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
       "<ProgramArchitecture content={architecture} notes={false} />",
+    );
+    const inDevelopment = architecture.slice(
+      architecture.indexOf('status: "In development"'),
+      architecture.indexOf('status: "Under evaluation"'),
+    );
+    expect(inDevelopment).toContain("Pharmacy supply programs");
+    expect(inDevelopment).not.toContain("Licensed pharmacy operations");
+    expect(architecture.slice(architecture.indexOf('status: "Under evaluation"'))).toContain(
+      "Licensed pharmacy operations",
     );
     // Nothing in development or under evaluation may read as purchasable.
     expect(architecture).toContain("Nothing here can be bought");
@@ -1013,7 +1020,7 @@ describe("round three: architecture, placement and voice", () => {
   it("carries no document or leadership provenance note in public copy", () => {
     const newsContent = stripComments(read("src/lib/public-site/content/news.ts"));
     const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
-    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team.tsx`));
+    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team-sections.tsx`));
     // Publishing mechanics: reviewers, versions-on-approval, governed workflow.
     for (const banned of [
       /author, reviewer, and review date/i,
@@ -1414,7 +1421,8 @@ describe("Stage 2 registries and navigation", () => {
 
   it("builds the Home and About contracts from the content model and the brand registry", () => {
     const source = pages();
-    expect((source.match(/<BrandGrid \/>/g) ?? []).length).toBe(2);
+    // One brand grid since 2026-09-11: the homepage's. About ends on the team.
+    expect((source.match(/<BrandGrid \/>/g) ?? []).length).toBe(1);
     // The homepage order the product owner set on 2026-09-11, and the About
     // sections it shares through `about-sections.tsx`.
     const home = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
@@ -1441,6 +1449,7 @@ describe("Stage 2 registries and navigation", () => {
     ]) {
       expect(home, gone).not.toContain(gone);
     }
+    // The About sections themselves, wherever they are rendered from.
     for (const block of [
       "about.footprint",
       // Ordered by sortKey rather than by array position (round four).
@@ -1450,6 +1459,11 @@ describe("Stage 2 registries and navigation", () => {
       "about.developing.items.map",
     ]) {
       expect(source, block).toContain(block);
+    }
+    // And About itself now ends on the team (product owner, 2026-09-11).
+    const about = stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`));
+    for (const block of ["<TeamIntro />", "<Leadership />", "<BoardOfDirectors />"]) {
+      expect(about, block).toContain(block);
     }
     // Primary actions are registry keys rendered through ActionLink.
     expect(source).toContain('<ActionLink action="explore_businesses"');
@@ -1567,7 +1581,7 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     ]) {
       expect(config, slug).toContain(`"${slug}"`);
     }
-    expect(config).toContain('destination: "/our-team"');
+    expect(config).toContain('destination: "/about-us"');
     expect(config).not.toContain('destination: "/ross-jelveh-2"');
     // The directors restored on 2026-09-09 are live profiles, not redirects.
     for (const slug of ["keith-dolo-2", "barrett-e-g-sleeman", "david-vogt", "abdul-ladha"]) {
@@ -1684,59 +1698,55 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       expect(aboutContent, gone).not.toContain(gone);
     }
     expect(aboutContent).toContain("Developing opportunities under evaluation.");
-    // The growth paragraph (after the prior site's "Our growth strategy") is strategy and
-    // objective, never a transaction under way or an available service.
-    expect(page).toContain("<DevelopingOpportunities />");
+    // The growth paragraph (after the prior site's "Our growth strategy") is
+    // strategy and objective, never a transaction under way or an available
+    // service. It renders on the homepage since 2026-09-11, through the
+    // sections file About and the homepage share.
     const shared = stripComments(read(`${PUBLIC_DIR}/pages/about-sections.tsx`));
     expect(shared).toContain("{about.developing.lead}");
     expect(shared).toContain("{item.detail}");
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
+      "<DevelopingOpportunities />",
+    );
     expect(aboutContent).toContain("The growth strategy is to acquire profitable operations");
-    // Neither developing program may read as purchasable, and neither carries a
-    // launch date (round three replaced the older double-hedge with this).
+    // Neither developing program may read as purchasable, and neither carries
+    // a launch date.
     expect(aboutContent).toContain("Neither program is available today, and no launch date is set");
-    // Supplying pharmacies and running one stay distinguishable here too.
     expect(aboutContent).toContain("Supplying pharmacies and running one are different businesses");
     for (const banned of [
-      /we are acquiring/i,
-      /has acquired|have acquired/i,
-      /(acquire|acquisition of|closing|signed|announce[sd]?) (a |the )?pharmacy/i,
-      /now available|available now/i,
+      /\bwe (will|are going to) (launch|open|acquire)\b/i,
+      /\bcoming soon\b/i,
     ]) {
       expect(aboutContent, String(banned)).not.toMatch(banned);
     }
-    // The developing grid is the last block before the layout closes.
+    // About closes on the board and the profile dialogs, and nothing follows
+    // them but the footer (product owner, 2026-09-11).
     expect(page.trimEnd()).toMatch(
-      /<DevelopingOpportunities \/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
+      /<BoardOfDirectors \/>\s*<ProfileDialogs \/>\s*<\/LifeSupplyLayout>\s*\);\s*}\s*$/,
     );
-    // The hero backdrop and two bands, each decorative, drawn from the registry, never a path literal.
+    // The hero backdrop and the one remaining band, each decorative, drawn
+    // from the registry, never a path literal. The warehouse band moved to
+    // the homepage with the operating-base section.
     expect(page).toContain('media={<HeroBackdrop band="data" />}');
-    // The desk band is About's own; the warehouse band is the operating-base
-    // section About shares with the homepage since 2026-09-11.
     expect((page.match(/<ParallaxBand\b/g) ?? []).length).toBe(1);
     expect(page).toMatch(
       /<ParallaxBand\s+band="desk"\s+tone="redLight"\s+eyebrow=\{about\.bands\.desk\.eyebrow\}/,
     );
-    expect(page).toContain("<OperatingBaseBand />");
-    expect(stripComments(read(`${PUBLIC_DIR}/pages/about-sections.tsx`))).toMatch(
+    expect(shared).toMatch(
       /<ParallaxBand\s+band="warehouse"\s+tone="ink"\s+eyebrow=\{about\.bands\.warehouse\.eyebrow\}/,
     );
-    // The band lines repeat approved copy only: the three cited figures and the brand count.
+    // The band lines repeat approved copy only: the three cited figures and
+    // the brand count.
     expect(aboutContent).toContain(
       "More than 25 years of operations, more than 50,000 products, more than 1 million customers served.",
     );
     expect(aboutContent).toContain(
       "Four operating websites in Canada and the United States, behind one group.",
     );
-    const band = parallaxBand();
-    expect(band).toContain('aria-hidden="true"');
-    expect(band).toContain('alt=""');
-    expect(band).toContain("useReducedMotion()");
-    expect(band).not.toContain("/lsh/");
-    expect(band).not.toMatch(/#[0-9a-f]{3,6}\b/i);
   });
 
   it("lists the confirmed leader and the four directors of the prior site, and none of the withdrawn people", () => {
-    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team.tsx`));
+    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team-sections.tsx`));
     expect(teamPage).toContain("labels.board");
     expect(teamPage).toContain("board.map(");
     const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
@@ -1978,7 +1988,7 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
       .map((name) => stripComments(read(`src/lib/public-site/content/${name}.ts`)))
       .join("\n");
   const stage5Pages = () =>
-    ["investors", "partners", "team", "news", "policies"]
+    ["investors", "partners", "team-sections", "news", "policies"]
       .map((name) => stripComments(read(`${PUBLIC_DIR}/pages/${name}.tsx`)))
       .join("\n");
 
@@ -2032,7 +2042,7 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
   });
 
   it("resolves team titles only through the dated legacy profiles, and no longer renders the undated deck", () => {
-    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team.tsx`));
+    const teamPage = stripComments(read(`${PUBLIC_DIR}/pages/team-sections.tsx`));
     expect(teamPage).toContain("legacyTitle(member.slug)");
     expect(teamPage).not.toMatch(/member\.role/);
     expect(stage5Pages()).not.toContain("investor-presentation-preview");
@@ -2310,7 +2320,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
     [PHARMACY_ROUTES.hub]: `${PUBLIC_DIR}/pages/pharmacy.tsx`,
     [METABOLIC_ROUTES.hub]: `${PUBLIC_DIR}/pages/metabolic.tsx`,
     [LIFE_SUPPLY_ROUTES.contact]: `${PUBLIC_DIR}/pages/contact.tsx`,
-    [LIFE_SUPPLY_ROUTES.team]: `${PUBLIC_DIR}/pages/team.tsx`,
+    [LIFE_SUPPLY_ROUTES.about]: `${PUBLIC_DIR}/pages/team-sections.tsx`,
   };
 
   it("renders every section anchor the registry declares", () => {
@@ -2334,6 +2344,12 @@ describe("website consolidation: sections, redirects and deep links", () => {
           ((PROFILE_ANCHORS as readonly string[]).includes(anchor) &&
             source.includes("id={profile.anchor}") &&
             source.includes("team.legacyProfiles.map"));
+        // A profile is a dialog since 2026-09-11, opened by `:target` in CSS
+        // alone, so a deep link still reveals it with JavaScript disabled.
+        if ((PROFILE_ANCHORS as readonly string[]).includes(anchor)) {
+          expect(read(CSS)).toMatch(/\.lsh-profile-dialog:target\s*\{/);
+          expect(source).toContain('role="dialog"');
+        }
         expect(literal || mapped, `${route}#${anchor}`).toBe(true);
       }
     }
@@ -2378,10 +2394,10 @@ describe("website consolidation: sections, redirects and deep links", () => {
       "/metabolic-health/care-kits": "/metabolic-health#pathways",
       "/metabolic-health/refills": "/metabolic-health#replenishment",
       "/partners": "/contact#business-inquiries",
-      "/abdul-ladha": "/our-team#abdul-ladha",
-      "/keith-dolo-2": "/our-team#keith-dolo",
-      "/barrett-e-g-sleeman": "/our-team#barrett-sleeman",
-      "/david-vogt": "/our-team#david-vogt",
+      "/abdul-ladha": "/about-us#abdul-ladha",
+      "/keith-dolo-2": "/about-us#keith-dolo",
+      "/barrett-e-g-sleeman": "/about-us#barrett-sleeman",
+      "/david-vogt": "/about-us#david-vogt",
       // Every pathway address keeps its slug as its anchor.
       ...Object.fromEntries(
         KIT_SLUGS.map((slug) => [

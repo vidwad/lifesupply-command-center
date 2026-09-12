@@ -1,44 +1,44 @@
 import { ExternalLink } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
-import { BrandGrid } from "@/components/public-site/brand-grid";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
+import { Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
+import { Stagger, StaggerItem } from "@/components/public-site/motion";
 import {
-  DevelopingOpportunities,
-  FootprintAndMilestones,
-  GrowthDirection,
-  OperatingBaseBand,
-} from "@/components/public-site/pages/about-sections";
-import {
-  Container,
-  Eyebrow,
-  PublicHero,
-  SectionHeading,
-} from "@/components/public-site/lifesupply-primitives";
-import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
+  BoardOfDirectors,
+  Leadership,
+  ProfileDialogs,
+  TeamIntro,
+} from "@/components/public-site/pages/team-sections";
 import { HeroBackdrop, ParallaxBand } from "@/components/public-site/parallax-band";
-import { ProgramArchitecture } from "@/components/public-site/program-architecture";
 import { IconBadge } from "@/components/public-site/sections";
 import { VideoEmbed } from "@/components/public-site/video-embed";
-import type { ActionKey } from "@/lib/public-site/actions";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import { ABOUT_VIDEO, youtubeWatchUrl } from "@/lib/public-site/video";
 
 /**
- * About — the Stage 2 page contract (guide §3, `/about-us/`): operating
- * philosophy beside the company video, geographic footprint, sourced
- * milestones, brands, growth direction, and the developing opportunities
- * under evaluation, which close the page. Since 2026-09-11 the footprint,
- * the operating-base band, the growth direction and the developing
- * opportunities render through `about-sections.tsx`, which the homepage
- * also uses, so the two pages cannot drift. Photographs from the prior About
- * page return as the hero backdrop and two parallax divider bands (product
- * owner, 2026-09-09); the former group statement, published-entities list,
- * and shared-capabilities grid were removed the same day.
+ * About — `/about-us/`, reshaped on 2026-09-11 (product owner):
+ *
+ *   1. Hero
+ *   2. Mission and Vision beside the company video
+ *   3. "Since inception" — the band that closes the company's own account
+ *   4. The team: the title and text `/our-team/` opened with, Leadership,
+ *      and the Board of Directors, with each profile as a dialog
+ *
+ * Nothing follows the board but the footer. Everything that used to sit
+ * after the band — the footprint and milestones, the operating-base band,
+ * the brands, the growth direction, the program architecture and the
+ * developing opportunities — renders on the homepage instead, through the
+ * same components, so nothing was lost by moving them.
+ *
+ * `/our-team/` redirects here, and the four legacy profile addresses land on
+ * the person's dialog rather than on the top of a listing. The hero backdrop
+ * and the band photograph are the prior About page's (product owner,
+ * 2026-09-09).
  */
 export function AboutPage() {
-  const { about, architecture } = LIFE_SUPPLY_CONTENT;
+  const { about } = LIFE_SUPPLY_CONTENT;
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -110,57 +110,20 @@ export function AboutPage() {
       />
 
       {/*
-       * The corporate structure, moved here from Contact on 2026-09-10. About
-       * carries identity, history and footprint, so what the company legally
-       * is belongs with them; Contact keeps the entity names and channels,
-       * which is what a visitor deciding who to write to needs.
+       * The team, under the "Since inception" band and nothing after it but
+       * the footer (product owner, 2026-09-11). `/our-team/` redirects here.
+       *
+       * What this replaced now lives on the homepage: the footprint and
+       * milestones, the operating-base band, the brands, the growth direction,
+       * the program architecture and the developing opportunities all render
+       * there, through the same components, so nothing was lost with the
+       * sections. The corporate-structure statement is the one exception and
+       * is recorded in the change log.
        */}
-      <section className="px-5 py-20 lg:px-8">
-        <Container>
-          <Reveal className="grid gap-8 border-l-4 border-[var(--lsh-brand-red)] pl-6 lg:grid-cols-[1.1fr_0.9fr] lg:pl-8">
-            <div>
-              <SectionHeading
-                eyebrow={about.structure.eyebrow}
-                title={about.structure.title}
-                description={about.structure.text}
-              />
-            </div>
-            <div className="flex flex-col justify-end gap-5">
-              <p className="text-sm leading-6 text-[var(--lsh-muted)]">{about.structure.note}</p>
-              <div>
-                <ActionLink action={about.structure.action as ActionKey} variant="onLight" />
-              </div>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
-
-      <FootprintAndMilestones />
-
-      <OperatingBaseBand />
-
-      {/* Brands, from the registry. */}
-      <section className="py-20">
-        <Container>
-          <Reveal>
-            <SectionHeading eyebrow={about.portfolio.eyebrow} title={about.portfolio.title} />
-          </Reveal>
-          <div className="mt-10">
-            <BrandGrid />
-          </div>
-        </Container>
-      </section>
-
-      <GrowthDirection />
-
-      {/*
-       * The whole shape of the business in one view (round three, outcome 3):
-       * what operates, what is being built, and what is still being weighed.
-       * The developing programs below this are the detail beneath it.
-       */}
-      <ProgramArchitecture content={architecture} />
-
-      <DevelopingOpportunities />
+      <TeamIntro />
+      <Leadership />
+      <BoardOfDirectors />
+      <ProfileDialogs />
     </LifeSupplyLayout>
   );
 }
