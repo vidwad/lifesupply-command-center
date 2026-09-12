@@ -1750,6 +1750,17 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     // module would no longer say anything about the page. What has to carry
     // the status instead is the section's own title and the badge on every
     // card, and neither program may read as purchasable without them.
+    // Each card is a link to its own page under Solutions (product owner,
+    // 2026-09-12). The destination is read from the route registry by the
+    // item's key, so the content model holds no paths and a card cannot point
+    // at an address the registry does not publish.
+    expect(shared).toContain("href={DEVELOPING_ROUTES[item.key]}");
+    // `article` is not a name-from-content role, so the link needs its own
+    // label or it reaches assistive technology unnamed.
+    expect(shared).toContain("aria-label={item.title}");
+    expect(shared).toContain("metabolic: METABOLIC_ROUTES.hub");
+    expect(shared).toContain("pharmacy: PHARMACY_ROUTES.hub");
+    expect(aboutContent).not.toMatch(/developing[\s\S]{0,1200}"\/metabolic-health/);
     expect(shared).not.toContain("{about.developing.note}");
     expect(shared).not.toContain("{item.detail}");
     expect(shared).toContain("{item.status}");

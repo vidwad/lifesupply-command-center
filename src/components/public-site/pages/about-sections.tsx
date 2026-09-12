@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
@@ -16,6 +17,7 @@ import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { orderedMilestones } from "@/lib/public-site/content/about";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
+import { METABOLIC_ROUTES, PHARMACY_ROUTES } from "@/lib/public-site/routes";
 
 /**
  * The About sections the homepage also carries (product owner, 2026-09-11):
@@ -135,6 +137,17 @@ export function GrowthDirection() {
  * statement, and the status note hold the left; each opportunity carries its
  * own discussion in a card on the right.
  */
+/**
+ * Where each developing card goes when it is clicked (product owner,
+ * 2026-09-12): its own page under Solutions. Read from the route registry by
+ * the item's key, so the content model holds no paths and a card can never
+ * point at an address the registry does not publish.
+ */
+const DEVELOPING_ROUTES = {
+  metabolic: METABOLIC_ROUTES.hub,
+  pharmacy: PHARMACY_ROUTES.hub,
+} as const;
+
 export function DevelopingOpportunities() {
   const { about } = LIFE_SUPPLY_CONTENT;
   return (
@@ -158,22 +171,33 @@ export function DevelopingOpportunities() {
           </Reveal>
           <Stagger as="ul" className="mt-6 grid gap-5">
             {about.developing.items.map((item) => (
-              <StaggerItem key={item.title} as="li">
-                <SpotlightCard
-                  as="article"
-                  className="lsh-lift border-t-2 border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] p-7 transition-colors hover:border-[var(--lsh-brand-red)] lg:p-8"
+              <StaggerItem key={item.title} as="li" className="h-full">
+                {/*
+                 * `article` is not a name-from-content role, so without an
+                 * explicit label this link reaches assistive technology with
+                 * no name at all. The programme title is the name.
+                 */}
+                <Link
+                  href={DEVELOPING_ROUTES[item.key]}
+                  aria-label={item.title}
+                  className="group block h-full"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <IconBadge icon={iconForTitle(item.title)} />
-                    <span className="lsh-display border border-[var(--lsh-brand-red)] px-2 py-0.5 text-[10px] text-[var(--lsh-brand-red)]">
-                      {item.status}
-                    </span>
-                  </div>
-                  <h3 className="lsh-display mt-6 text-2xl leading-tight text-[var(--lsh-charcoal)]">
-                    {item.title}
-                  </h3>
-                  <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
-                </SpotlightCard>
+                  <SpotlightCard
+                    as="article"
+                    className="lsh-lift h-full border-t-2 border-[var(--lsh-rule-strong)] bg-[var(--lsh-paper)] p-7 transition-colors group-hover:border-[var(--lsh-brand-red)] lg:p-8"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <IconBadge icon={iconForTitle(item.title)} />
+                      <span className="lsh-display border border-[var(--lsh-brand-red)] px-2 py-0.5 text-[10px] text-[var(--lsh-brand-red)]">
+                        {item.status}
+                      </span>
+                    </div>
+                    <h3 className="lsh-display mt-6 text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
+                  </SpotlightCard>
+                </Link>
               </StaggerItem>
             ))}
           </Stagger>
