@@ -191,6 +191,7 @@ export const about = {
         title: "Metabolic-health supply services",
         status: "In development",
         text: "Starter equipment, consumables replenished as they are used, clinic procurement, kitting and fulfilment, and contracted non-clinical workflow support, for clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
+        /** Unpublished since 2026-09-12 (product owner). */
         detail:
           "It would apply the existing supply model to a recurring patient-support need, one configurable pathway at a time.",
       },
@@ -198,10 +199,18 @@ export const about = {
         title: "Pharmacy supply programs",
         status: "In development",
         text: "Pharmacist-selected non-drug supplies and fulfilment for pharmacies. The pharmacy is the customer, and medication is excluded entirely.",
+        /** Unpublished since 2026-09-12 (product owner). */
         detail:
           "Whether LifeSupply should hold licensed pharmacy operations of its own is a separate question, under evaluation rather than in development. Supplying pharmacies and running one are different businesses.",
       },
     ],
+    /**
+     * Unpublished since 2026-09-12 (product owner): the note and the two
+     * card details were removed from the section. Kept here so what they
+     * state is on the record and can be restored verbatim. What carries the
+     * status now is the section title, "Developing opportunities under
+     * evaluation", and the "In development" badge on each card.
+     */
     note: "Neither program is available today, and no launch date is set.",
   },
 

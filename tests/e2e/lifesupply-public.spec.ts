@@ -250,10 +250,30 @@ test.describe("LifeSupply public site", () => {
     await expect(page.locator("main").locator('[data-band="warehouse"]')).toContainText(
       "Four operating websites",
     );
-    // Each developing card still carries its own detail, and the pharmacy card
-    // now distinguishes supplying pharmacies from running one (round three).
-    await expect(main.getByText(about.developing.items[1].detail)).toBeVisible();
-    await expect(main.getByText(about.developing.items[0].detail)).toBeVisible();
+    // The card details and the "no launch date" note were removed on
+    // 2026-09-12 at the product owner's instruction. Each card must therefore
+    // carry its status on its own, and the section may never read as an offer.
+    const developing = page.locator("main").getByRole("heading", {
+      name: "Developing opportunities under evaluation.",
+    });
+    await expect(developing).toBeVisible();
+    for (const item of about.developing.items) {
+      await expect(page.locator("main").getByText(item.detail)).toHaveCount(0);
+      await expect(page.locator("main").getByRole("heading", { name: item.title })).toBeVisible();
+    }
+    await expect(
+      page.locator("main").getByText(about.developing.note, { exact: false }),
+    ).toHaveCount(0);
+    const section = page.locator("section", {
+      has: page.getByRole("heading", { name: "Developing opportunities under evaluation." }),
+    });
+    // Counted in the section's own text, so a wrapper element that happens
+    // to contain a badge cannot inflate the number.
+    const badges = await section.evaluate(
+      (el) => (el.textContent?.match(/In development/g) ?? []).length,
+    );
+    expect(badges).toBe(2);
+    await expect(section).not.toContainText(/available now|order now|buy now|coming soon/i);
     // The three tiers moved to About on 2026-09-12 (product owner), between
     // the band and the team, and render on that page only. The two
     // clarifying notes came back with them.
