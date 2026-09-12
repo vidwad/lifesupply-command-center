@@ -26,7 +26,7 @@ export const architecture = {
   eyebrow: "How the business fits together",
   title: "What LifeSupply runs today, what it is building, and what it is still weighing.",
   intro:
-    "LifeSupply sells health, safety, medical and industrial products online across Canada and the United States, and delivers clinic projects in British Columbia. Two supply programs are being built on that base. A separate set of regulated activities is being assessed on its own terms, and none of them is running.",
+    "Through its operating businesses, LifeSupply sells health, safety, medical and industrial products online across Canada and the United States, and delivers clinic projects in British Columbia. Two supply programs are being built on that base. A separate set of regulated activities is being assessed on its own terms, and none of them is running.",
   statusLabel: "Status",
   tiers: [
     {
@@ -34,13 +34,13 @@ export const architecture = {
       meaning: "Running today.",
       items: [
         {
-          title: "Online supply commerce",
-          text: "Health, safety, medical and industrial products through LifeSupply.ca and Wellmart Medical in Canada, priced in Canadian dollars, and Balkowitsch Worldwide in the United States, priced in U.S. dollars. Each store keeps its own accounts, prices and support.",
+          title: "Online supply stores",
+          text: "LifeSupply.ca and Wellmart Medical sell health, safety, medical and industrial products in Canada, priced in Canadian dollars; Balkowitsch Worldwide sells in the United States, priced in U.S. dollars. Each store keeps its own accounts, prices and support.",
           href: "/medical-supply-solutions",
         },
         {
           title: "Clinic projects",
-          text: "LifeSupply Clinics plans, designs, builds and fits out clinics and supplies their equipment, for projects in British Columbia. LifeSupply does not operate patient-care clinics.",
+          text: "For projects in British Columbia, LifeSupply Clinics plans, designs, builds and fits out clinics, and supplies their equipment. LifeSupply does not operate patient-care clinics.",
           href: "/clinic-solutions",
         },
       ],
@@ -50,7 +50,7 @@ export const architecture = {
       meaning: "Being designed and tested. Nothing here can be bought, and no launch date is set.",
       items: [
         {
-          title: "Metabolic-health supply and services",
+          title: "Metabolic-health supply services",
           text: "Configurable patient-supply pathways, clinic procurement, kitting and fulfilment, and non-clinical workflow support. Clinical and pharmacy providers keep every clinical decision.",
           href: "/metabolic-health",
         },
@@ -64,7 +64,7 @@ export const architecture = {
     {
       status: "Under evaluation",
       meaning:
-        "Regulated activities being assessed. None is offered, licensed or operating, and each would need licences and qualified people the group does not hold today.",
+        "Regulated activities being assessed. None is offered, licensed or operating, and each would need licences the group does not hold and qualified people it has not hired.",
       items: [
         {
           title: "Licensed pharmacy operations",
@@ -73,15 +73,15 @@ export const architecture = {
         },
         {
           title: "Specialty and compounding",
-          text: "Compounded preparations for specific programs, which would sit behind pharmacy licensing and compounding standards.",
+          text: "Compounded preparations for specific programs, which would require pharmacy licensing and compliance with compounding standards.",
         },
         {
           title: "Peptide synthesis and research",
-          text: "Research-stage synthesis capability, which would need research partners and facilities.",
+          text: "A research-stage synthesis capability, which would need research partners and facilities the group does not have.",
         },
         {
           title: "Manufacturing",
-          text: "Producing regulated products rather than distributing them. LifeSupply does not manufacture regulated products today.",
+          text: "Making regulated products rather than distributing them. LifeSupply does not manufacture regulated products today.",
         },
       ],
     },

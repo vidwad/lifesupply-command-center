@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
 
+import { about } from "@/lib/public-site/content/about";
+
 import { architecture } from "@/lib/public-site/content/architecture";
 
 import { clinics } from "@/lib/public-site/content/clinics";
+
+import { homepage } from "@/lib/public-site/content/home";
 
 const RENDER_ORIGIN = "https://lifesupply-cc-web.onrender.com";
 
@@ -20,11 +24,7 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/");
 
-    await expect(
-      page.getByRole("heading", {
-        name: "Medical supplies today, with new supply services in development.",
-      }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: homepage.title })).toBeVisible();
 
     const dashboardLogin = page.getByRole("link", { name: "Command Center login" }).first();
 
@@ -160,7 +160,7 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByRole("heading", { level: 3, name: "Experienced" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
-    await expect(main.getByText("This is where we want to be")).toBeVisible();
+    await expect(main.getByText(homepage.whoWeAre.panels[2].eyebrow)).toBeVisible();
     // The About sections that now close the page, in order.
     const order = await headings.evaluateAll((nodes) =>
       nodes.map((node) => node.textContent?.trim() ?? ""),
@@ -169,7 +169,7 @@ test.describe("LifeSupply public site", () => {
     expect(at("Canada and the United States")).toBeGreaterThan(at(architecture.title));
     expect(at("Build on the operating base")).toBeGreaterThan(at("Canada and the United States"));
     expect(at("Developing opportunities")).toBeGreaterThan(at("Build on the operating base"));
-    expect(order[order.length - 1]).toBe("Reach the right LifeSupply conversation.");
+    expect(order[order.length - 1]).toBe(homepage.closing.title);
     // Nothing the owner removed is back.
     await expect(main.getByRole("heading", { name: "Where to start" })).toHaveCount(0);
     await expect(main.getByRole("heading", { name: /A clinic project can start/ })).toHaveCount(0);
@@ -227,12 +227,8 @@ test.describe("LifeSupply public site", () => {
     );
     // Each developing card still carries its own detail, and the pharmacy card
     // now distinguishes supplying pharmacies from running one (round three).
-    await expect(
-      main.getByText(/Holding licensed pharmacy operations of its own is a separate question/),
-    ).toBeVisible();
-    await expect(
-      main.getByText(/It applies the existing supply model to a recurring patient-support need/),
-    ).toBeVisible();
+    await expect(main.getByText(about.developing.items[1].detail)).toBeVisible();
+    await expect(main.getByText(about.developing.items[0].detail)).toBeVisible();
     // The three tiers of the business appear above the developing detail.
     await expect(main.getByRole("heading", { name: "Operating", exact: true })).toBeVisible();
     await expect(main.getByRole("heading", { name: "In development", exact: true })).toBeVisible();
@@ -289,9 +285,7 @@ test.describe("LifeSupply public site", () => {
     // Reveal animations collapse too: a section far below the fold is fully
     // opaque without scrolling to it. The nearest ancestor carrying an inline
     // style is the motion wrapper; with reduced motion there is none.
-    const heading = page.getByRole("heading", {
-      name: "Reach the right LifeSupply conversation.",
-    });
+    const heading = page.getByRole("heading", { name: homepage.closing.title });
     await expect(heading).toBeVisible();
     // Hydration applies the instant reveal a frame after load, so poll briefly.
     await expect

@@ -208,7 +208,7 @@ export const BRANDS: readonly BrandRecord[] = [
     country: "US",
     currency: "USD",
     purpose:
-      "U.S. online store with medical, health, wellness, and related categories, priced in U.S. dollars.",
+      "U.S. online store selling medical, health, wellness, and related products, priced in U.S. dollars.",
     supportUrl: "https://balkowitsch.com/contact-us/",
     supportPhone: "(800) 355-2956",
     supportEmail: "sales@balkowitsch.com",

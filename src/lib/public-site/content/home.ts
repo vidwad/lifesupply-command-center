@@ -22,9 +22,9 @@ export const homepage = {
    * register; no new claim is introduced.
    */
   eyebrow: "LifeSupply Health Inc.",
-  title: "Medical supplies today, with new supply services in development.",
+  title: "Medical supplies and clinic projects today, two supply programs in development.",
   description:
-    "An established Canadian group: online medical, health, and home-care supply businesses serving Canada and the United States, and clinic planning, design, and equipment services for projects in British Columbia. Pharmacy and metabolic-health supply programs are in development.",
+    "A Canadian group of four operating businesses: medical, health, and home-care supplies sold online across Canada and the United States, and clinic planning, design, and equipment services for projects in British Columbia. Pharmacy and metabolic-health supply programs are in development.",
   /**
    * Background footage for the hero: the legacy lifesupplyhealth.com hero
    * video (wp-content/uploads/2021/10/LSHomeVid.mp4, 19 s, 1488×836), cut
@@ -59,19 +59,19 @@ export const homepage = {
     title: "Who we are and where we are going.",
     panels: [
       {
-        eyebrow: "This is who we are",
+        eyebrow: "Our record",
         headline: "Experienced",
-        text: "More than 25 years of operations, built up by acquisition: Wellmart Health Supplies became the Canadian operating base in 2020, and Balkowitsch Enterprises added United States reach and a distributor network in 2023. Today the businesses connect online medical, health, and supply commerce across Canada and the United States with clinic planning, design, and build services for projects in British Columbia.",
+        text: "More than 25 years of operations, built up by acquisition. Wellmart Health Supplies became the Canadian operating base in 2020, and Balkowitsch Enterprises added United States reach and a distributor network in 2023. Today those businesses sell medical, health, and home-care supplies online across Canada and the United States, and plan, design, and build clinics for projects in British Columbia.",
       },
       {
-        eyebrow: "This is where we are going",
+        eyebrow: "Our strategy",
         headline: "Growing",
-        text: "The strategy is to build on the existing business through operating discipline, technology and complementary acquisitions. The objective is to integrate strategically located medical supply stores, pharmacies, clinics and distributors, broadening the products and services offered online in Canada and the United States.",
+        text: "The strategy is to build on the existing business through operating discipline, technology, and complementary acquisitions. The objective is to bring strategically located medical supply stores, pharmacies, clinics, and distributors into the group, and to widen what can be offered online in Canada and the United States.",
       },
       {
-        eyebrow: "This is where we want to be",
+        eyebrow: "Our ambition",
         headline: "Connected",
-        text: "The ambition is to become a global leader in the online sale and distribution of health and medical products and related services: deeper clinic relationships, recurring patient-support supply programs, and commerce, clinic-development and equipment capabilities connected to serve a broader customer base over time.",
+        text: "The ambition is to become a global leader in the online sale and distribution of health and medical products and related services. That means deeper clinic relationships, recurring patient-support supply programs, and commerce, clinic-development, and equipment capabilities working together for a broader customer base over time.",
       },
     ],
   },
@@ -79,28 +79,31 @@ export const homepage = {
   // Approved (moved from JSX in PR #61). Verified proof, with source context.
   glance: {
     eyebrow: "LifeSupply at a glance",
-    title: "Publicly reported scale, with source context.",
+    title: "Scale, as the 2025 annual report states it.",
     description:
-      "These figures are cited in the 2025 annual-report narrative and should be read with the report’s stated qualifications.",
+      "The 2025 annual-report narrative cites the figures below. Read them with the qualifications that report states.",
   },
   publicMetrics: [
     { value: "25+", label: "years of operations cited in the 2025 annual report" },
     { value: "50K+", label: "products cited in the 2025 annual report" },
-    { value: "1M+", label: "customers served cited in the 2025 annual report" },
+    {
+      value: "1M+",
+      label: "customers served cumulatively since inception, cited in the 2025 annual report",
+    },
   ],
 
   // Stage 2 draft. Section heading only; the cards come from the brand registry.
   brands: {
     eyebrow: "Operating brands",
-    title: "Four operating businesses, each with its own customers.",
+    title: "Four businesses, each with its own customers.",
     description:
-      "Each brand keeps its own storefront or service site, accounts, currency, and customer support. LifeSupply Health is the corporate hub, not a store.",
+      "LifeSupply Health is the corporate group; nothing is sold on this site. Each brand runs its own storefront or service site, with its own accounts, currency, prices, and customer support.",
   },
 
   // Stage 2 draft heading; the channels are the approved directory.
   closing: {
     eyebrow: "Contact",
-    title: "Reach the right LifeSupply conversation.",
+    title: "Reach the right person.",
   },
 
   /**
@@ -108,8 +111,8 @@ export const homepage = {
    * A restatement of `description`; not a new claim.
    */
   operatingContext: {
-    eyebrow: "Public operating context",
+    eyebrow: "What the stores sell",
     statement:
-      "Health, safety, medical, and industrial supply categories across Canada and the United States.",
+      "Health, safety, medical, and industrial supplies, sold online across Canada and the United States.",
   },
 } as const;

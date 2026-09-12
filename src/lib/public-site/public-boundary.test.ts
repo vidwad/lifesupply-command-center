@@ -574,8 +574,8 @@ describe("routes and content governance", () => {
     const sentences = [
       "Corporate information, operating context, and investor resources",
       "Information on this site is current at the date published and may be updated.",
-      "Health, safety, medical, and industrial supply categories across Canada",
-      "Publicly reported scale, with source context.",
+      "Health, safety, medical, and industrial supplies, sold online across Canada",
+      "Scale, as the 2025 annual report states it.",
       "A platform approach to medical-supply access.",
       "The operating websites behind the group.",
     ];
@@ -1653,15 +1653,29 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
 
   it("opens the homepage after the hero with the three-panel statement, stated as record, strategy, and ambition", () => {
     const home = stripComments(read("src/lib/public-site/content/home.ts"));
-    for (const line of [
-      "This is who we are",
-      "This is where we are going",
-      "This is where we want to be",
+    // Exactly three panels, framed as record, then strategy, then ambition.
+    // The eyebrows were rewritten in the product owner's copy pass on
+    // 2026-09-11; the framing and its order are the rule, not the wording.
+    const whoWeAre = home.slice(home.indexOf("whoWeAre: {"));
+    const nextKey = whoWeAre.slice(1).search(/\n {2}[a-zA-Z]+: \{/);
+    const panels = nextKey === -1 ? whoWeAre : whoWeAre.slice(0, nextKey + 1);
+    const eyebrows = [...panels.matchAll(/eyebrow: "([^"]+)"/g)].map((match) => match[1]);
+    expect(eyebrows).toEqual([
+      "Experience and direction",
+      "Our record",
+      "Our strategy",
+      "Our ambition",
+    ]);
+    // The substance of each panel is unchanged, and stays with its frame.
+    for (const [index, line] of [
       "More than 25 years of operations",
       "The strategy is to build on the existing business",
       "The ambition is to become a global leader",
-    ]) {
-      expect(home, line).toContain(line);
+    ].entries()) {
+      expect(panels, line).toContain(line);
+      expect(panels.indexOf(line), line).toBeGreaterThan(
+        panels.indexOf(`eyebrow: "${eyebrows[index + 1]}"`),
+      );
     }
     // Trimmed on the product owner's instruction, later on 2026-09-09.
     expect(home).not.toContain("as cited in the 2025 annual-report narrative, and a founding");

@@ -28,7 +28,7 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  *   1. Hero
  *   2. Experience and direction — who we are, where we are going
  *   3. How the business fits together — the program architecture, from About
- *   4. Public operating context — the red band
+ *   4. What the stores sell — the red band
  *   5. LifeSupply at a glance — the reported figures, on ink
  *   6. Footprint and milestones — from About
  *   7. The operating base — the warehouse band, from About
