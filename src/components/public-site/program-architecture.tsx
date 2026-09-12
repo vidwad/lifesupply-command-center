@@ -14,8 +14,20 @@ import type { architecture as Architecture } from "@/lib/public-site/content/arc
  * tier from `lg` up, stacked below that, with the status carried as a badge on
  * each tier rather than repeated on every item. Items that have a page of
  * their own link to it.
+ *
+ * The two notes beneath the tiers — what "pharmacy" means here, and what
+ * LifeSupply's part in a regulated program is — are About's, where the
+ * section exists to draw exactly those distinctions. The homepage carries the
+ * tiers alone (product owner, 2026-09-11).
  */
-export function ProgramArchitecture({ content }: { content: typeof Architecture }) {
+export function ProgramArchitecture({
+  content,
+  notes = true,
+}: {
+  content: typeof Architecture;
+  /** The two clarifying notes beneath the tiers. Off on the homepage. */
+  notes?: boolean;
+}) {
   return (
     <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
       <Container className="min-w-0">
@@ -65,21 +77,23 @@ export function ProgramArchitecture({ content }: { content: typeof Architecture 
           ))}
         </Stagger>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-2">
-          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-6">
-            <Eyebrow as="h3">{content.note.title}</Eyebrow>
-            <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{content.note.text}</p>
-          </Reveal>
-          <Reveal
-            delay={0.05}
-            className="border-l-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-paper)] p-6"
-          >
-            <Eyebrow as="h3">{content.principle.title}</Eyebrow>
-            <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
-              {content.principle.text}
-            </p>
-          </Reveal>
-        </div>
+        {notes ? (
+          <div className="mt-8 grid gap-5 lg:grid-cols-2">
+            <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-6">
+              <Eyebrow as="h3">{content.note.title}</Eyebrow>
+              <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{content.note.text}</p>
+            </Reveal>
+            <Reveal
+              delay={0.05}
+              className="border-l-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-paper)] p-6"
+            >
+              <Eyebrow as="h3">{content.principle.title}</Eyebrow>
+              <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
+                {content.principle.text}
+              </p>
+            </Reveal>
+          </div>
+        ) : null}
       </Container>
     </section>
   );
