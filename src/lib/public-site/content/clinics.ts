@@ -281,10 +281,23 @@ export const clinics = {
     close: {
       eyebrow: "Next step",
       title: "Start with what the clinic needs.",
+      /** One image per route (product owner, 2026-09-12), from the registry. */
       routes: [
-        { prompt: "Opening, renovating, or expanding?", action: "plan_clinic" },
-        { prompt: "Equipping rooms, or replacing a device?", action: "equipment_quote" },
-        { prompt: "Need everyday supplies?", action: "clinic_supply_review" },
+        {
+          prompt: "Opening, renovating, or expanding?",
+          action: "plan_clinic",
+          graphic: "clinicPlans",
+        },
+        {
+          prompt: "Equipping rooms, or replacing a device?",
+          action: "equipment_quote",
+          graphic: "clinicDevice",
+        },
+        {
+          prompt: "Need everyday supplies?",
+          action: "clinic_supply_review",
+          graphic: "clinicSupplies",
+        },
       ],
       qualification:
         "Projects, equipment purchases, and ongoing supplies are scoped and agreed separately.",

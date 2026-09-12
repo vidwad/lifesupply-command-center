@@ -304,8 +304,9 @@ export const about = {
   foundation: {
     eyebrow: "Our foundation",
     title: "Established businesses. Experience across two markets.",
+    /** The standfirst, under the title (product owner, 2026-09-12). */
+    lead: "LifeSupply brings together businesses with more than 25 years of operating history.",
     paragraphs: [
-      "LifeSupply brings together businesses with more than 25 years of operating history.",
       "The acquisition of Wellmart Health Supplies in 2020 established the group’s Canadian operating base. The acquisition of Balkowitsch Enterprises in 2023 extended its reach into the United States, adding established customer and distributor relationships.",
       "Today, the group combines online product sales with clinic-development and equipment services, providing several ways to serve healthcare businesses and customers.",
     ],

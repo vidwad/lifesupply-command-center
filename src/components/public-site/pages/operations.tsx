@@ -146,30 +146,6 @@ export function MedicalSupplySolutionsPage() {
            * & Services said that the store cards do not, kept at the point
            * where a visitor is choosing between them.
            */}
-          <div className="mt-12 grid gap-8 border-t border-[var(--lsh-rule)] pt-10 lg:grid-cols-2">
-            <Reveal className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] pl-6">
-              <IconBadge icon="globe" />
-              <div>
-                <Eyebrow as="h3">{hub.stores.geography.title}</Eyebrow>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">
-                  {hub.stores.geography.text}
-                </p>
-              </div>
-            </Reveal>
-            <Reveal
-              delay={0.05}
-              className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] pl-6"
-            >
-              <IconBadge icon="shield" />
-              <div>
-                <Eyebrow as="h3">{hub.stores.support.title}</Eyebrow>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{hub.stores.support.text}</p>
-                <div className="mt-5">
-                  <ActionLink action="contact_directory" variant="onLight" />
-                </div>
-              </div>
-            </Reveal>
-          </div>
         </div>
       </AnchoredSection>
 

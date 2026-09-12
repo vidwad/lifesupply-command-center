@@ -137,9 +137,17 @@ export function AboutPage() {
           their source and the cumulative qualification beneath them. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
         <Container className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          <Reveal>
-            <SectionHeading eyebrow={about.foundation.eyebrow} title={about.foundation.title} />
-          </Reveal>
+          {/* Sticky while the right column scrolls, as on Our development
+              priorities (product owner, 2026-09-12). */}
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <Reveal>
+              <SectionHeading
+                eyebrow={about.foundation.eyebrow}
+                title={about.foundation.title}
+                description={about.foundation.lead}
+              />
+            </Reveal>
+          </div>
           <div>
             <Stagger className="grid gap-6">
               {about.foundation.paragraphs.map((paragraph) => (

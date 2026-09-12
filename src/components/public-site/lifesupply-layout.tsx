@@ -526,7 +526,6 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               sizes="220px"
               className="h-7 w-auto"
             />
-            <p className="mt-5 max-w-sm text-sm leading-6 text-white/70">{brand.footerTagline}</p>
             {/*
              * What the group is, under the tagline (product owner,
              * 2026-09-12). It reads from the homepage standfirst rather
@@ -534,7 +533,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
              * followed the hero, then the panels' standfirst, as each in
              * turn stopped being a description of the group.
              */}
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/60">
+            <p className="mt-5 max-w-sm text-sm leading-6 text-white/70">
               {homepage.whoWeDo.paragraphs[0]}
             </p>
           </div>

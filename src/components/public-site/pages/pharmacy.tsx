@@ -29,7 +29,7 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
  * say anything of its own.
  */
 export function PharmacySolutionsPage() {
-  const { hub, scope } = LIFE_SUPPLY_CONTENT.pharmacy;
+  const { hub } = LIFE_SUPPLY_CONTENT.pharmacy;
   const [primary, secondary] = hub.actions as readonly ActionKey[];
   return (
     <LifeSupplyLayout>
@@ -47,22 +47,6 @@ export function PharmacySolutionsPage() {
       />
 
       <OnThisPage items={LIFE_SUPPLY_CONTENT.pharmacy.sections} />
-
-      {/* Which of the two pharmacy businesses this page is about (round three). */}
-      <section className="px-5 pt-16 lg:px-8">
-        <Container>
-          <Reveal className="border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6 lg:p-7">
-            <Eyebrow as="h2">{scope.title}</Eyebrow>
-            <div className="mt-3 grid gap-3 lg:grid-cols-2 lg:gap-8">
-              {scope.paragraphs.map((paragraph) => (
-                <p key={paragraph} className="text-sm leading-6 text-[var(--lsh-muted)]">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </Reveal>
-        </Container>
-      </section>
 
       {/* Why it matters: the intro, then the typeset hub diagram, which carries the four value items. */}
       <section className="px-5 py-20 lg:px-8">

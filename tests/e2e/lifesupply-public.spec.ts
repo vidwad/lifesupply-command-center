@@ -876,8 +876,12 @@ test.describe("LifeSupply public site", () => {
     await expect(stores.getByText("Canada · CAD")).toHaveCount(2);
     await expect(stores.getByText("United States · USD")).toHaveCount(1);
     await expect(stores).toContainText("does not sell products or take orders");
-    await expect(stores).toContainText("Geography and currency");
-    await expect(stores).toContainText("cannot see or change store orders");
+    // The "Geography and currency" and "Support boundary" blocks came off on
+    // 2026-09-12 (product owner). Every card still shows its own country and
+    // currency, asserted above, and the section still says this site sells
+    // nothing, so the facts survive without the two blocks.
+    await expect(stores).not.toContainText("Geography and currency");
+    await expect(stores).not.toContainText("Support boundary");
     await expect(page.locator("main").getByText(/add to cart/i)).toHaveCount(0);
     const hosts = await stores
       .locator('a[href^="https://"]')
