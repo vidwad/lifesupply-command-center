@@ -8,7 +8,6 @@ import {
   MetabolicCoordinationGrid,
   MetabolicEditorialVisual,
   MetabolicReplenishmentRhythm,
-  MetabolicSupplyOrbit,
 } from "./metabolic-visuals";
 
 const ROOT = join(__dirname, "../../..");
@@ -16,13 +15,12 @@ const source = readFileSync(join(__dirname, "metabolic-visuals.tsx"), "utf8");
 const styles = readFileSync(join(ROOT, "src/styles/globals.css"), "utf8");
 
 describe("Metabolic Health visual layer", () => {
-  it("renders the pathway graphic as decorative, text-free SVG", () => {
-    const markup = renderToStaticMarkup(<MetabolicSupplyOrbit />);
+  it("removes the opening orbit so the first content section stays copy-led", () => {
+    const pageSource = readFileSync(join(__dirname, "pages/metabolic.tsx"), "utf8");
 
-    expect(markup).toContain('aria-hidden="true"');
-    expect(markup).toContain("<svg");
-    expect(markup).not.toContain("<text");
-    expect(markup).not.toContain("aria-label");
+    expect(source).not.toContain("MetabolicSupplyOrbit");
+    expect(pageSource).not.toContain("MetabolicSupplyOrbit");
+    expect(styles).not.toContain(".lsh-metabolic-orbit");
   });
 
   it("keeps the new hero artwork conceptual and excludes clinical product imagery", () => {
@@ -45,7 +43,6 @@ describe("Metabolic Health visual layer", () => {
 
   it("gates decorative Metabolic Health motion behind the reduced-motion preference", () => {
     expect(styles).toContain(".lsh-metabolic-hero-halo--one");
-    expect(styles).toContain(".lsh-metabolic-orbit svg");
     expect(styles).toContain(".lsh-metabolic-editorial img");
     expect(styles).toContain(".lsh-metabolic-coordinates");
     expect(styles).toContain("@media (prefers-reduced-motion: no-preference)");

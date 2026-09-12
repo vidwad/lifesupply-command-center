@@ -34,7 +34,11 @@ export function GraphicBackdrop({
 }) {
   const image = getGraphic(graphic);
   return (
-    <div aria-hidden="true" data-hero-graphic={graphic} className="absolute inset-0">
+    <div
+      aria-hidden="true"
+      data-hero-graphic={graphic}
+      className="lsh-graphic-backdrop absolute inset-0"
+    >
       <Image
         src={image.src}
         alt=""
@@ -42,9 +46,10 @@ export function GraphicBackdrop({
         priority
         sizes="100vw"
         style={{ objectPosition: position }}
-        className={`object-cover ${dim ? "opacity-50" : "opacity-80"}`}
+        className={`lsh-graphic-backdrop-image object-cover ${dim ? "opacity-50" : "opacity-80"}`}
         draggable={false}
       />
+      <span className="lsh-graphic-backdrop-accent" />
     </div>
   );
 }

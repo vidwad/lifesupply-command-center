@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ExternalLink, Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
@@ -9,7 +10,7 @@ import { SiteScreen } from "@/components/public-site/site-screen";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { brandGeography, getBrand, type BrandRecord } from "@/lib/public-site/brands";
-import { BRAND_GRAPHICS, type GraphicKey } from "@/lib/public-site/graphics";
+import { BRAND_GRAPHICS, getGraphic, type GraphicKey } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -21,6 +22,39 @@ const STORE_GRAPHICS: Record<"lifesupply" | "wellmart" | "balkowitsch", GraphicK
   wellmart: BRAND_GRAPHICS.wellmart,
   balkowitsch: BRAND_GRAPHICS.balkowitsch,
 };
+
+/** A second, conceptual category visual keeps the three storefront pages image-led without inventing store inventory. */
+const STORE_CATEGORY_GRAPHICS: Record<"lifesupply" | "wellmart" | "balkowitsch", GraphicKey> = {
+  lifesupply: "suppliesFlatlay",
+  wellmart: "equipment",
+  balkowitsch: "shipping",
+};
+
+export function StoreCategoryVisual({
+  brandKey,
+}: {
+  brandKey: "lifesupply" | "wellmart" | "balkowitsch";
+}) {
+  const graphic = getGraphic(STORE_CATEGORY_GRAPHICS[brandKey]);
+  return (
+    <div
+      aria-hidden="true"
+      data-storefront-category-visual={brandKey}
+      className="lsh-storefront-category-visual"
+    >
+      <Image
+        src={graphic.src}
+        alt=""
+        fill
+        sizes="(min-width: 1024px) 42vw, 100vw"
+        className="object-cover"
+      />
+      <span className="lsh-storefront-category-rule" />
+      <span className="lsh-storefront-category-mark lsh-storefront-category-mark--one" />
+      <span className="lsh-storefront-category-mark lsh-storefront-category-mark--two" />
+    </div>
+  );
+}
 
 /** Verified category chips from the registry. */
 function CategoryLinks({ record }: { record: BrandRecord }) {
@@ -167,42 +201,57 @@ export function StoreBrandPage({
         <p>{page.audience.text}</p>
       </SplitSection>
 
-      {/* Verified categories, from the registry. */}
+      {/* Verified categories stay as external links; the visual is conceptual and carries no inventory claim. */}
       <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-        <Container className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-          <Reveal className="flex items-start gap-5">
-            <IconBadge icon={iconForTitle(page.categories.title)} />
-            <div>
-              <Eyebrow as="h2">{page.categories.title}</Eyebrow>
-              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{page.categories.text}</p>
+        <Container className="grid gap-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center">
+          <Reveal className="lsh-storefront-category-copy p-6 lg:p-9">
+            <div className="flex items-start gap-5">
+              <IconBadge icon={iconForTitle(page.categories.title)} />
+              <div>
+                <Eyebrow as="h2">{page.categories.title}</Eyebrow>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{page.categories.text}</p>
+              </div>
+            </div>
+            <div className="mt-7">
+              <CategoryLinks record={record} />
             </div>
           </Reveal>
-          <div>
-            <CategoryLinks record={record} />
-          </div>
+          <Reveal delay={0.08}>
+            <StoreCategoryVisual brandKey={brandKey} />
+          </Reveal>
         </Container>
       </section>
 
-      <section className="bg-[var(--lsh-paper)] py-20">
+      <section className="lsh-storefront-terminal px-5 py-16 text-white lg:px-8 lg:py-20">
         <Container className="grid gap-8 lg:grid-cols-2">
-          <ServiceChannels record={record} title={page.channels.title} text={page.channels.text} />
-          <Reveal className="flex flex-col justify-between border border-[var(--lsh-rule)] p-7">
-            <div>
-              {/* The store's actual home page, dated, on a laptop frame. */}
-              <SiteScreen site={brandKey} className="-mx-7 -mt-7 mb-6" />
-              <div className="flex items-start justify-between gap-4">
-                <Eyebrow as="h2">On this site</Eyebrow>
-                <IconBadge icon="globe" size={18} />
-              </div>
-              <p className="mt-4 leading-7 text-[var(--lsh-muted)]">
-                {LIFE_SUPPLY_CONTENT.businesses.hub.stores.support.text}
-              </p>
+          <Reveal className="lsh-storefront-screen-frame">
+            {/* The store's actual home page, dated, on a laptop frame. */}
+            <SiteScreen site={brandKey} />
+          </Reveal>
+          <Reveal
+            delay={0.08}
+            className="flex flex-col justify-center border-l-4 border-[var(--lsh-brand-red)] pl-6 sm:pl-8"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <Eyebrow as="h2" tone="onDark">
+                On this site
+              </Eyebrow>
+              <IconBadge icon="globe" size={18} />
             </div>
+            <p className="text-white/78 mt-5 max-w-xl leading-7">
+              {LIFE_SUPPLY_CONTENT.businesses.hub.stores.support.text}
+            </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <ActionLink action="medical_supply_stores" variant="onLight" />
-              <ActionLink action="contact_directory" variant="onLight" />
+              <ActionLink action="medical_supply_stores" variant="onDark" />
+              <ActionLink action="contact_directory" variant="onDark" />
             </div>
           </Reveal>
+        </Container>
+      </section>
+
+      <section className="bg-[var(--lsh-paper)] px-5 py-16 lg:px-8 lg:py-20">
+        <Container>
+          <ServiceChannels record={record} title={page.channels.title} text={page.channels.text} />
         </Container>
       </section>
     </LifeSupplyLayout>
