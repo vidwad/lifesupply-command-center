@@ -209,26 +209,14 @@ function ProfileDialog({ slug }: { slug: string }) {
               className="h-auto w-full border-t-4 border-[var(--lsh-brand-red)] object-cover"
             />
           </div>
-          <div className="order-1 md:order-2">
-            <div className="flex items-start justify-between gap-6">
-              <div>
-                <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                  {profile.role}
-                </p>
-                <h2
-                  id={headingId}
-                  className="lsh-display mt-2 text-3xl text-[var(--lsh-charcoal)] sm:text-4xl"
-                >
-                  {profile.name}
-                </h2>
-              </div>
-              <a
-                href="#board"
-                className="lsh-display inline-flex shrink-0 items-center gap-2 border border-[var(--lsh-rule-strong)] px-3 py-2 text-[10px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
-              >
-                Close <X size={13} aria-hidden="true" />
-              </a>
-            </div>
+          <div>
+            <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{profile.role}</p>
+            <h2
+              id={headingId}
+              className="lsh-display mt-2 pr-24 text-3xl text-[var(--lsh-charcoal)] sm:text-4xl"
+            >
+              {profile.name}
+            </h2>
             <div className="mt-6 grid gap-5">
               {profile.bio.map((paragraph) => (
                 <p key={paragraph} className="leading-8 text-[var(--lsh-muted)]">

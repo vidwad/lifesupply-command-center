@@ -1051,6 +1051,11 @@ test.describe("LifeSupply public site", () => {
       // biography; a legacy title must never read as a newly confirmed one.
       await expect(dialog.getByRole("img", { name: full }), anchor).toBeVisible();
       await expect(dialog).toContainText("Current roles are confirmed through the company");
+      const close = dialog.getByRole("link", { name: /^Close$/ });
+      await expect(close, `${anchor}: one close control`).toHaveCount(1);
+      await expect(close, `${anchor}: close is in view`).toBeInViewport();
+      await close.click();
+      await expect(dialog, `${anchor}: closes`).toBeHidden();
       await page.goto("/about-us");
     }
     // The biography itself is in the dialog, not only the summary card.
