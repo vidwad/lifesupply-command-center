@@ -105,32 +105,52 @@ test.describe("LifeSupply public site", () => {
     const header = page.locator("header");
     await expect(header).toBeInViewport();
 
-    // Well past the 96px "always show" zone; one downward step is a direction.
-    await page.evaluate(() => window.scrollTo(0, 1200));
+    // The direction listener attaches at hydration, so a single scroll fired
+    // before that is lost rather than late. Repeat the stimulus inside the
+    // poll: every step is past the 96px "always show" zone and carries a
+    // downward delta, so the first one to land after hydration hides it.
     await expect
-      .poll(async () => (await header.boundingBox())?.y ?? 0, { timeout: 3000 })
+      .poll(
+        async () => {
+          await page.evaluate(() => window.scrollBy(0, 400));
+          return (await header.boundingBox())?.y ?? 0;
+        },
+        { timeout: 8000 },
+      )
       .toBeLessThan(0);
 
     // Any upward movement returns it immediately.
-    await page.evaluate(() => window.scrollTo(0, 900));
-    await expect.poll(async () => (await header.boundingBox())?.y ?? -1, { timeout: 3000 }).toBe(0);
+    await expect
+      .poll(
+        async () => {
+          await page.evaluate(() => window.scrollBy(0, -200));
+          return (await header.boundingBox())?.y ?? -1;
+        },
+        { timeout: 8000 },
+      )
+      .toBe(0);
   });
 
-  test("plays a silent, looping, inline background video in the hero, with no control", async ({
+  test("carries a decorative photograph in the hero, decoded, with no footage and no control", async ({
     page,
   }) => {
     await page.goto("/");
-    const video = page.locator("video");
-    await expect(video).toHaveCount(1);
-    await expect(video).toHaveAttribute("playsinline", "");
-    await expect(video).toHaveAttribute("loop", "");
-    // React sets muted as a property, not an attribute, so read the property.
-    expect(await video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(true);
+    // The background footage was replaced by the photograph on 2026-09-12
+    // (product owner): it reads as a picture rather than as a dark field.
+    // The company video still plays on About, where it is introduced.
+    await expect(page.locator("video")).toHaveCount(0);
+    const backdrop = page.locator('[data-hero-band="data"]');
+    await expect(backdrop).toHaveCount(1);
+    // Decorative: hidden from assistive technology, and no alt text.
+    await expect(backdrop).toHaveAttribute("aria-hidden", "true");
+    const image = backdrop.locator("img");
+    await expect(image).toHaveAttribute("alt", "");
+    // It actually decoded; a hero that silently 404s still lays out right.
     await expect
-      .poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused && v.currentTime > 0), {
+      .poll(() => image.evaluate((img) => (img as HTMLImageElement).naturalWidth), {
         timeout: 10_000,
       })
-      .toBe(true);
+      .toBeGreaterThan(0);
     await expect(page.getByRole("button", { name: /background video/ })).toHaveCount(0);
   });
 
@@ -194,7 +214,10 @@ test.describe("LifeSupply public site", () => {
   }) => {
     await page.goto("/about-us");
     const main = page.locator("main");
-    await expect(main.locator('[data-hero-band="data"] img')).toHaveCount(1);
+    // About's hero is a commissioned conceptual image since 2026-09-12; the
+    // legacy photograph that stood here is now the homepage hero.
+    await expect(main.locator('[data-hero-graphic="aboutAtrium"] img')).toHaveCount(1);
+    await expect(main.locator('[data-hero-band="data"]')).toHaveCount(0);
     const bands = main.locator("[data-band]");
     // One on About since 2026-09-11: the warehouse band went to the homepage
     // with the operating-base section, and is checked there.
@@ -281,7 +304,9 @@ test.describe("LifeSupply public site", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await expect(page.locator("video")).toHaveCount(0);
-    await expect(page.locator('img[src*="hero-poster"]')).toHaveCount(1);
+    // The hero is a still photograph for everyone since 2026-09-12, so there
+    // is nothing left here for reduced motion to turn off.
+    await expect(page.locator('[data-hero-band="data"] img')).toHaveCount(1);
     // Reveal animations collapse too: a section far below the fold is fully
     // opaque without scrolling to it. The nearest ancestor carrying an inline
     // style is the motion wrapper; with reduced motion there is none.
@@ -856,17 +881,18 @@ test.describe("LifeSupply public site", () => {
       expect(["lifesupply.ca", "wellmartmedical.com", "balkowitsch.com"]).toContain(host);
   });
 
-  test("states in the replenishment section that no automatic shipment or subscription exists", async ({
-    page,
-  }) => {
+  test("explains replenishment without ever offering a subscription", async ({ page }) => {
     await page.goto("/metabolic-health");
     const replenishment = page.locator("#replenishment");
     await expect(replenishment).toContainText(/starter items are not refills/i);
-    await expect(
-      replenishment.getByText(
-        /no automatic shipment, no reminder service, and no subscription on this site today/,
-      ),
-    ).toBeVisible();
+    // The "Today / In development" pair that spelled this out was removed on
+    // 2026-09-12 at the product owner's instruction. The section must
+    // therefore never read as an offer on its own: no subscription, no
+    // automatic shipment, and nothing to buy here.
+    await expect(replenishment).not.toContainText(/subscription|auto-?ship|reminder service/i);
+    await expect(replenishment).not.toContainText(/add to cart|buy now|order now/i);
+    await expect(replenishment).toContainText(/Starter equipment/);
+    await expect(replenishment).toContainText(/Consumables/);
   });
 
   test("carries every stage 2 address to the section that replaced it", async ({ page }) => {

@@ -234,6 +234,12 @@ export const investorRelations = {
           text: "Extend only the parts that repeat reliably. Capacity, partner readiness and consistent service quality decide how far and how fast, one program at a time.",
         },
       ],
+      /**
+       * Unpublished since 2026-09-12 (product owner): the gate and status
+       * cards were removed from the page. Kept here so the execution
+       * sequence's status is still recorded, and so nothing has to be
+       * re-derived if they go back.
+       */
       gate: {
         title: "What has to be true before scaling",
         text: "Unit economics that hold, customers who stay, technology that carries the volume, and service quality that does not slip. Scaling follows those, not a date.",

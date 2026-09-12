@@ -94,7 +94,21 @@ export function ParallaxBand({
  * the left while the scene shows through on the right. Static, so the h1
  * never has a moving field behind it.
  */
-export function HeroBackdrop({ band }: { band: LegacyBandKey }) {
+export function HeroBackdrop({
+  band,
+  prominence = "standard",
+  position,
+}: {
+  band: LegacyBandKey;
+  /**
+   * `full` carries the photograph at its own density rather than at 80%, for
+   * a hero that leads on the picture (product owner, 2026-09-12). Pair it
+   * with PublicHero's lighter scrim, or the gain is spent under the black.
+   */
+  prominence?: "standard" | "full";
+  /** CSS object-position, to keep the subject clear of the copy. */
+  position?: string;
+}) {
   const image = getLegacyBand(band);
   return (
     <div aria-hidden="true" data-hero-band={band} className="absolute inset-0">
@@ -104,7 +118,8 @@ export function HeroBackdrop({ band }: { band: LegacyBandKey }) {
         fill
         priority
         sizes="100vw"
-        className="object-cover opacity-80"
+        style={position ? { objectPosition: position } : undefined}
+        className={`object-cover ${prominence === "full" ? "opacity-100" : "opacity-80"}`}
         draggable={false}
       />
     </div>

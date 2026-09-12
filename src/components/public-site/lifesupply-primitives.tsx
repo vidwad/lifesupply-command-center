@@ -93,14 +93,21 @@ export function PublicHero({
   size = "page",
   actions,
   media,
+  scrim = "standard",
 }: {
   eyebrow: string;
   title: string;
   description?: string;
   size?: "home" | "page";
   actions?: React.ReactNode;
-  /** Optional decorative media layer (HeroVideo) rendered beneath the colour field. */
+  /** Optional decorative media layer rendered beneath the colour field. */
   media?: React.ReactNode;
+  /**
+   * `light` thins the scrim so a photographic hero reads as a picture rather
+   * than as a dark field (product owner, 2026-09-12). The left stop stays
+   * dark enough for the copy; only the right half opens up.
+   */
+  scrim?: "standard" | "light";
 }) {
   const isHome = size === "home";
   return (
@@ -120,7 +127,9 @@ export function PublicHero({
       <div
         className={`absolute inset-0 ${
           media
-            ? "[background-image:radial-gradient(circle_at_85%_10%,rgba(222,0,0,0.5),transparent_32%),linear-gradient(105deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.8)_45%,rgba(0,0,0,0.55)_100%)]"
+            ? scrim === "light"
+              ? "[background-image:radial-gradient(circle_at_85%_10%,rgba(222,0,0,0.45),transparent_34%),linear-gradient(105deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.62)_45%,rgba(0,0,0,0.3)_100%)]"
+              : "[background-image:radial-gradient(circle_at_85%_10%,rgba(222,0,0,0.5),transparent_32%),linear-gradient(105deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.8)_45%,rgba(0,0,0,0.55)_100%)]"
             : "[background-image:radial-gradient(circle_at_85%_10%,rgba(222,0,0,0.55),transparent_30%),linear-gradient(120deg,rgba(29,29,29,0.98),rgba(0,0,0,1))]"
         }`}
         aria-hidden="true"

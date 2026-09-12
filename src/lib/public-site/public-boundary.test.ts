@@ -290,7 +290,12 @@ describe("the hero footage", () => {
     for (const rel of Object.values(ASSETS)) {
       expect(c).toContain(`"${rel.replace(/^public/, "")}"`);
     }
-    expect(pages()).toContain("<HeroVideo {...homepage.heroMedia} />");
+    // The homepage hero became a photograph on 2026-09-12 at the product
+    // owner's instruction, so no page embeds the footage today. It is kept
+    // declared and shipped so it can be put back without re-deriving it, and
+    // nothing may render it from a path literal in the meantime.
+    expect(pages()).not.toContain("<HeroVideo");
+    expect(pages()).not.toContain("/lsh/hero/");
   });
 
   it("is decorative, silent, inline, looped, and pauses itself off screen", () => {
@@ -942,9 +947,17 @@ describe("round three: architecture, placement and voice", () => {
     ]) {
       expect(investors).toContain(stage);
     }
-    // Planned, never achieved.
-    expect(investors).toContain("All four steps are planned");
-    expect(investors).toContain("has completed a pilot");
+    // Planned, never achieved. The gate and "Where it stands" cards were
+    // removed from the page on 2026-09-12 (product owner) and their sentences
+    // kept unpublished, so what carries the status now is the section's own
+    // title and intro and the label on every stage card.
+    const investorsPage = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
+    expect(investorsPage).not.toContain("{e.gate.text}");
+    expect(investorsPage).not.toContain("{e.status}");
+    expect(investors).toContain('stageLabel: "Planned step"');
+    expect(investorsPage).toContain("{e.stageLabel} {stage.index}");
+    expect(investors).toContain("The sequence, and where it currently stands.");
+    expect(investors).toContain("no launch date is published");
     // No schedule or scale target reaches the sequence.
     const execution = investors.slice(investors.indexOf("execution:"));
     expect(execution).not.toMatch(/\b\d+\s*(days?|weeks?|months?|clinics?|partners?|patients?)\b/i);
@@ -1202,10 +1215,13 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
       expect(c, part).toContain(`title: "${part}"`);
     }
     expect(c).not.toMatch(/Contracting party|Revenue type/);
-    // Proposed, never an offer; and no price, percentage or volume.
-    expect(c).toMatch(/not an offer/);
-    expect(c).toMatch(/establishes no contract/);
+    // Proposed, never an offer. The "Separate arrangements" note was removed
+    // from the block on 2026-09-12 (product owner) and kept unpublished, so
+    // every card must carry its own status rather than leaning on that note.
     const model = stripComments(read(`${PUBLIC_DIR}/commercial-model.tsx`));
+    expect(model).not.toContain("{model.note}");
+    expect(model).not.toContain("Separate arrangements");
+    expect(model).toContain("[model.labels.status, item.status],");
     expect(model).not.toMatch(/\$\s?\d|\b\d{1,3}\s?%/);
     // One layer. The diagram sets store purchasing against a proposed
     // service before a word is read, and each card carries what it covers,
@@ -1741,7 +1757,12 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     // The hero backdrop and the one remaining band, each decorative, drawn
     // from the registry, never a path literal. The warehouse band moved to
     // the homepage with the operating-base section.
-    expect(page).toContain('media={<HeroBackdrop band="data" />}');
+    expect(page).toContain('media={<GraphicBackdrop graphic="aboutAtrium" position="62% 50%" />}');
+    // The photograph About used is now the homepage hero, carried at full
+    // density behind the thinner scrim (product owner, 2026-09-12).
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
+      '<HeroBackdrop band="data" prominence="full" position="72% 50%" />',
+    );
     expect((page.match(/<ParallaxBand\b/g) ?? []).length).toBe(1);
     expect(page).toMatch(
       /<ParallaxBand\s+band="desk"\s+tone="redLight"\s+eyebrow=\{about\.bands\.desk\.eyebrow\}/,
@@ -2506,9 +2527,17 @@ describe("website consolidation: sections, redirects and deep links", () => {
     ]) {
       expect(page, part).toContain(part);
     }
-    // Replenishment and the pharmacy programme likewise.
-    expect(page).toContain("{refills.later.text}");
-    expect(page).toContain("{refills.substitutions}");
+    // Replenishment and the pharmacy programme likewise. The Today / In
+    // development pair and the substitutions line were removed on 2026-09-12
+    // (product owner) and kept unpublished; the section is now its heading,
+    // the three item roles and the rhythm, and none of it may offer a
+    // subscription.
+    expect(page).not.toContain("{refills.today.text}");
+    expect(page).not.toContain("{refills.later.text}");
+    expect(page).not.toContain("{refills.substitutions}");
+    expect(page).toContain("<SupplyRolesDiagram roles={refills.roles} />");
+    expect(page).toMatch(/eyebrow=\{refills\.eyebrow\}/);
+    expect(page).not.toMatch(/subscription|auto-?ship|recurring order/i);
     const pharmacyPage = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
     expect(pharmacyPage).toContain("partnerProgram.model.items.map");
     expect(pharmacyPage).toContain("partnerProgram.responsibilities.items.map");

@@ -371,13 +371,15 @@ describe("route registry", () => {
   it("makes the Stage 5 pages live: Investors with five entries, three policy pages", () => {
     for (const path of Object.values(STAGE_5_ROUTES)) expect(isLiveRoute(path), path).toBe(true);
     const groups = buildPrimaryNavigation();
-    // Acquisitions joined the Investors menu when Partners was retired.
+    // Acquisitions joined the Investors menu when Partners was retired, and
+    // moved directly below Growth strategy on 2026-09-12 at the product
+    // owner's instruction: it is how that strategy is executed.
     expect(groups.find((g) => g.key === "investors")!.links.map((l) => l.href)).toEqual([
       STAGE_5_ROUTES.growthStrategy,
+      STAGE_5_ROUTES.partnerAcquisitions,
       STAGE_5_ROUTES.advancedTherapeutics,
       LIFE_SUPPLY_ROUTES.news,
       STAGE_5_ROUTES.disclosures,
-      STAGE_5_ROUTES.partnerAcquisitions,
     ]);
     // 2026-09-09: News & resources moved from the About group into Investors, replacing the
     // documents index; Shareholder services withdrawn. Both old addresses are redirect rows.

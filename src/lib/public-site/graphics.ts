@@ -46,7 +46,22 @@ const BRAND_PROVENANCE =
 const HERO_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-11 for the hero backdrops; monochrome brief, no person, no text, no logo; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment because the hero scrim supplies the brand colour; conceptual, not operational photography.";
 
+const ABOUT_HERO_PROVENANCE =
+  "Gamma image generation (photo mode), commissioned 2026-09-12 for the About hero when the homepage took the legacy photograph that stood there; monochrome brief, no person, no text, no logo, no product; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment because the hero scrim supplies the brand colour; conceptual, not operational photography, and not a LifeSupply building.";
+
 export const GRAPHICS = {
+  /**
+   * Behind the About hero. Composed for the slot: the left third falls away
+   * into shadow so the heading sits on near-black, and the glazing carries
+   * the light on the right, where the scrim is thinnest.
+   */
+  aboutAtrium: {
+    src: "/lsh/graphics/about-atrium.jpg",
+    alt: "Conceptual photograph of an empty concrete-and-glass atrium, with a cantilevered staircase beside a full-height glazed wall.",
+    width: 1600,
+    height: 900,
+    provenance: ABOUT_HERO_PROVENANCE,
+  },
   /** Behind the News & Resources heroes. The one image commissioned for the hero pass. */
   newsDesk: {
     src: "/lsh/graphics/news-desk.jpg",
