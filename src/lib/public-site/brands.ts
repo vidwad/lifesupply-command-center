@@ -41,6 +41,17 @@ export interface BrandRecord {
   /** Relationship to LifeSupply Health Inc., once confirmed. `null` until WEB-01. */
   relationship: "corporate" | "operated_by_group_entity" | "related" | null;
   canonicalUrl: string;
+  /**
+   * Presentation copy for the homepage brand grid (product owner,
+   * 2026-09-12): the descriptor beside the country, the card's own summary,
+   * and the label on its call to action. `purpose` stays the registry's
+   * description of the site itself and is what the stores page renders.
+   */
+  card?: {
+    descriptor: string;
+    summary: string;
+    cta: string;
+  };
   country: "CA" | "US";
   currency: "CAD" | "USD" | null;
   /** One-line purpose in plain language. */
@@ -107,6 +118,12 @@ export const BRANDS: readonly BrandRecord[] = [
     currency: "CAD",
     purpose:
       "Canadian online store for medical, health, and home-care supplies, including clinic supplies.",
+    card: {
+      descriptor: "Online medical and home-care supplies",
+      summary:
+        "Medical, health, and home-care products for Canadian customers, including supplies for clinic and dental settings.",
+      cta: "Shop LifeSupply",
+    },
     supportUrl: "https://lifesupply.ca/contact/",
     supportPhone: "1-855-755-5433",
     supportEmail: "info@lifesupply.com",
@@ -142,6 +159,12 @@ export const BRANDS: readonly BrandRecord[] = [
     country: "CA",
     currency: "CAD",
     purpose: "Canadian online store for home medical equipment and supplies.",
+    card: {
+      descriptor: "Home medical equipment and supplies",
+      summary:
+        "Home medical equipment and everyday care supplies, including mobility, bath safety, and incontinence products.",
+      cta: "Shop Wellmart Medical",
+    },
     supportUrl: "https://wellmartmedical.com/contact-us/",
     supportPhone: "1-855-755-5433",
     supportEmail: "info@wellmartmedical.com",
@@ -179,6 +202,12 @@ export const BRANDS: readonly BrandRecord[] = [
     currency: "CAD",
     purpose:
       "Clinic planning, design, construction and fit-out, project coordination, and equipment inquiries, within verified delivery arrangements.",
+    card: {
+      descriptor: "Clinic planning, development, and equipment",
+      summary:
+        "Planning, design, construction and fit-out coordination, and equipment support for clinic projects, working with project partners.",
+      cta: "Explore LifeSupply Clinics",
+    },
     supportUrl: "https://www.lifesupplyclinics.com/contact-us/",
     supportPhone: "1-855-755-5433",
     supportEmail: "info@lifesupplyclinics.com",
@@ -209,6 +238,12 @@ export const BRANDS: readonly BrandRecord[] = [
     currency: "USD",
     purpose:
       "U.S. online store selling medical, health, wellness, and related products, priced in U.S. dollars.",
+    card: {
+      descriptor: "Online medical, health, and wellness supplies",
+      summary:
+        "Medical, health, wellness, and related products for U.S. customers, with pricing in U.S. dollars.",
+      cta: "Shop Balkowitsch",
+    },
     supportUrl: "https://balkowitsch.com/contact-us/",
     supportPhone: "(800) 355-2956",
     supportEmail: "sales@balkowitsch.com",
@@ -253,8 +288,24 @@ export function getBrandCategory(key: BrandKey, label: string): VerifiedLink {
   return category;
 }
 
-/** "Canada · CAD" style descriptor used on cards; never a legal statement. */
+/** "Canada · CAD" style descriptor used on the stores page; never a legal statement. */
 export function brandGeography(record: BrandRecord): string {
   const country = record.country === "CA" ? "Canada" : "United States";
   return record.currency ? `${country} · ${record.currency}` : country;
+}
+
+/**
+ * "Canada · Online medical and home-care supplies" for the homepage grid: the
+ * place first, then what the brand sells there. British Columbia rather than
+ * Canada for the clinic business, because that is the province its projects
+ * are in and the site may not imply a national clinic footprint.
+ */
+export function brandCardDescriptor(record: BrandRecord): string {
+  const place =
+    record.key === "clinics"
+      ? "British Columbia"
+      : record.country === "CA"
+        ? "Canada"
+        : "United States";
+  return record.card ? `${place} · ${record.card.descriptor}` : place;
 }

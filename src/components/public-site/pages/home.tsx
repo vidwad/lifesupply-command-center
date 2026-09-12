@@ -74,6 +74,27 @@ export function LifeSupplyHome() {
         }
       />
 
+      {/*
+       * What the group is and what it does (product owner, 2026-09-12). It
+       * sits between the hero and the panels: the hero says what kind of
+       * company this is, this says what it actually runs, and the panels then
+       * say where it came from and where it is going.
+       */}
+      <section className="border-b border-[var(--lsh-rule)] bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
+        <Container className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <Reveal>
+            <SectionHeading eyebrow={homepage.whoWeDo.eyebrow} title={homepage.whoWeDo.title} />
+          </Reveal>
+          <Stagger className="grid gap-6 lg:pt-2">
+            {homepage.whoWeDo.paragraphs.map((paragraph) => (
+              <StaggerItem key={paragraph.slice(0, 40)}>
+                <p className="leading-8 text-[var(--lsh-muted)]">{paragraph}</p>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </section>
+
       {/* Who we are, where we are going, where we want to be: three panels after the hero. */}
       <section className="bg-[var(--lsh-paper)] px-5 py-20 lg:px-8">
         <Container>
@@ -131,7 +152,6 @@ export function LifeSupplyHome() {
             <h2 className="lsh-display mt-4 text-3xl leading-tight sm:text-4xl">
               {homepage.glance.title}
             </h2>
-            <p className="mt-4 leading-7 text-white/70">{homepage.glance.description}</p>
           </Reveal>
           {/*
            * Each entry is reversed so the figure reads first and the label
@@ -148,12 +168,26 @@ export function LifeSupplyHome() {
                 <dt className="mt-6 max-w-[18rem] text-sm leading-6 text-white/60">
                   {metric.label}
                 </dt>
-                <dd data-stat="figure" className="lsh-figure text-[var(--lsh-red-on-ink)]">
-                  {metric.value}
+                {/* The unit sits on its own line under the figure at every
+                    width, so the three cells align whether or not the
+                    longest value leaves room beside it. */}
+                <dd>
+                  <span data-stat="figure" className="lsh-figure text-[var(--lsh-red-on-ink)]">
+                    {metric.value}
+                  </span>
+                  <span className="lsh-display mt-3 block text-sm text-white/70">
+                    {metric.unit}
+                  </span>
                 </dd>
               </StaggerItem>
             ))}
           </Stagger>
+          {/* The source and the cumulative qualification, once, under all three. */}
+          <Reveal>
+            <p className="mt-12 border-t border-white/20 pt-6 text-xs leading-5 text-white/50">
+              {homepage.glance.source}
+            </p>
+          </Reveal>
         </Container>
       </section>
 
@@ -169,6 +203,13 @@ export function LifeSupplyHome() {
               title={homepage.brands.title}
               description={homepage.brands.description}
             />
+            {/*
+             * Where to go and who you deal with there. Nothing is sold on this
+             * site, and each business keeps its own ordering and support.
+             */}
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--lsh-muted)]">
+              {homepage.brands.note}
+            </p>
           </Reveal>
           <div className="mt-10">
             <BrandGrid />

@@ -4,7 +4,11 @@ import { measurementAttributes } from "@/lib/public-site/measurement";
 
 import { BrandImage } from "@/components/public-site/brand-image";
 import { Stagger, StaggerItem } from "@/components/public-site/motion";
-import { OPERATING_BRANDS, brandGeography, type OperatingBrandKey } from "@/lib/public-site/brands";
+import {
+  OPERATING_BRANDS,
+  brandCardDescriptor,
+  type OperatingBrandKey,
+} from "@/lib/public-site/brands";
 
 /**
  * The four operating brands, from the brand registry. Each card opens with
@@ -45,7 +49,7 @@ export function BrandGrid() {
               className="mt-0 block h-0.5 w-full origin-left scale-x-0 bg-[var(--lsh-brand-red)] transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"
             />
             <p className="lsh-display mt-5 text-[10px] text-[var(--lsh-brand-red)]">
-              {brandGeography(record)}
+              {brandCardDescriptor(record)}
             </p>
             {record.asset ? (
               <Image
@@ -61,9 +65,11 @@ export function BrandGrid() {
                 {record.name}
               </h3>
             )}
-            <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{record.purpose}</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+              {record.card ? record.card.summary : record.purpose}
+            </p>
             <span className="lsh-display mt-auto inline-flex items-center gap-2 pt-5 text-[11px] text-[var(--lsh-brand-red)]">
-              Visit {record.name}{" "}
+              {record.card ? record.card.cta : `Visit ${record.name}`}{" "}
               <ExternalLink
                 size={15}
                 aria-hidden="true"

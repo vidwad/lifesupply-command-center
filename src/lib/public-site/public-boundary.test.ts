@@ -580,7 +580,7 @@ describe("routes and content governance", () => {
       "Corporate information, operating context, and investor resources",
       "Information on this site is current at the date published and may be updated.",
       "Health, safety, medical, and industrial supplies, sold online across Canada",
-      "Scale, as the 2025 annual report states it.",
+      "The scale of our operating businesses.",
       "A platform approach to medical-supply access.",
       "The operating websites behind the group.",
     ];
@@ -1088,8 +1088,10 @@ describe("round three: architecture, placement and voice", () => {
     // group's verified acquisition history.
     const home = stripComments(read("src/lib/public-site/content/home.ts"));
     expect(home).not.toMatch(/founding investor|investment bankers|capital-market professionals/i);
-    expect(home).toContain("Wellmart Health Supplies became the Canadian operating base in 2020");
-    expect(home).toContain("Balkowitsch Enterprises added United States reach");
+    expect(home).toContain("Wellmart Health Supplies in 2020");
+    expect(home).toContain("Balkowitsch Enterprises in 2023");
+    expect(home).toMatch(/Canadian operating base/);
+    expect(home).toMatch(/distributor relationships into the United States/);
   });
 
   it("draws the three card icons to the same rules as the stock set", () => {
@@ -1422,7 +1424,7 @@ describe("Stage 2 registries and navigation", () => {
     const home = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
     expect(home).toContain("homepage.publicMetrics.map");
     const c = content();
-    for (const figure of ['"25+"', '"50K+"', '"1M+"']) expect(c, figure).toContain(figure);
+    for (const figure of ['"25+"', '"50,000+"', '"1M+"']) expect(c, figure).toContain(figure);
     // The hero names a customer count since 2026-09-12, so it has to carry
     // S-42's qualification in the sentence itself: cumulative, never a count
     // of customers held today.
@@ -1696,9 +1698,9 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     ]);
     // The substance of each panel is unchanged, and stays with its frame.
     for (const [index, line] of [
-      "More than 25 years of operations",
-      "The strategy is to build on the existing business",
-      "The ambition is to become a global leader",
+      "more than 25 years of operating history",
+      "Our strategy combines",
+      "Our ambition is to build lasting supply relationships",
     ].entries()) {
       expect(panels, line).toContain(line);
       expect(panels.indexOf(line), line).toBeGreaterThan(
