@@ -892,6 +892,16 @@ describe("round three: architecture, placement and voice", () => {
     expect(architecture).toContain("Pharmacy supply programs");
     expect(architecture).toContain("Licensed pharmacy operations");
     expect(architecture).toContain("Supplying pharmacies and running one are different businesses");
+    // Both notes are About's: the section exists there to draw exactly those
+    // distinctions, and the homepage carries the tiers alone (2026-09-11).
+    const arch = stripComments(read(`${PUBLIC_DIR}/program-architecture.tsx`));
+    expect(arch).toContain("{notes ? (");
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`))).toContain(
+      "<ProgramArchitecture content={architecture} />",
+    );
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`))).toContain(
+      "<ProgramArchitecture content={architecture} notes={false} />",
+    );
     // Nothing in development or under evaluation may read as purchasable.
     expect(architecture).toContain("Nothing here can be bought");
     expect(architecture).toContain("None is offered, licensed or operating");
@@ -1410,7 +1420,7 @@ describe("Stage 2 registries and navigation", () => {
     const home = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
     for (const block of [
       "homepage.whoWeAre.panels.map",
-      "<ProgramArchitecture content={architecture} />",
+      "<ProgramArchitecture content={architecture} notes={false} />",
       "homepage.operatingContext",
       "homepage.publicMetrics.map",
       "<FootprintAndMilestones />",

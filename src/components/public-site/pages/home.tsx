@@ -99,8 +99,12 @@ export function LifeSupplyHome() {
         </Container>
       </section>
 
-      {/* How the business fits together: what operates, what is being built, what is being weighed. */}
-      <ProgramArchitecture content={architecture} />
+      {/*
+       * How the business fits together: what operates, what is being built,
+       * what is being weighed. The two clarifying notes beneath the tiers
+       * stay on About (product owner, 2026-09-11).
+       */}
+      <ProgramArchitecture content={architecture} notes={false} />
 
       {/* The red information band, carrying the operating-context statement. */}
       <Reveal>
