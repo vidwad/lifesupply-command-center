@@ -204,8 +204,8 @@ test.describe("LifeSupply public site", () => {
     );
     const at = (text: string) => order.findIndex((h) => h.includes(text));
     expect(at("Acquisitions, appointments")).toBeGreaterThan(at(homepage.glance.title));
-    expect(at("Build on the operating base")).toBeGreaterThan(at("Canada and the United States"));
-    expect(at("Developing opportunities")).toBeGreaterThan(at("Build on the operating base"));
+    expect(at("Build deeper relationships")).toBeGreaterThan(at("Canada and the United States"));
+    expect(at("New supply programs")).toBeGreaterThan(at("Build deeper relationships"));
     expect(order[order.length - 1]).toBe(homepage.closing.title);
     // Nothing the owner removed is back.
     await expect(main.getByRole("heading", { name: "Where to start" })).toHaveCount(0);
@@ -215,8 +215,8 @@ test.describe("LifeSupply public site", () => {
 
   test("sends each developing card to its own page under Solutions", async ({ page }) => {
     for (const [title, path] of [
-      ["Metabolic-health supply services", "/metabolic-health"],
-      ["Pharmacy supply programs", "/pharmacy-solutions"],
+      ["Metabolic Health Solutions", "/metabolic-health"],
+      ["Pharmacy Solutions", "/pharmacy-solutions"],
     ] as const) {
       await page.goto("/");
       const card = page.locator("main").getByRole("link", { name: title, exact: true });
@@ -273,30 +273,35 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByText(/Shared capabilities|Published entities/)).toHaveCount(0);
     const headings = main.getByRole("heading", { level: 2 });
     await expect(headings.last()).toHaveText("Our Board of Directors");
-    // The growth paragraph moved to the homepage with the growth direction.
+    // The approved growth-strategy paragraph left the page on 2026-09-12
+    // when the section was rewritten as Solutions development. It is kept
+    // in the content model, unpublished, so it must not be on any page.
     await page.goto("/");
     await expect(
       page.locator("main").getByText(/The growth strategy is to acquire profitable operations/),
+    ).toHaveCount(0);
+    // What replaced it says plainly that neither programme can be bought.
+    await expect(
+      page.locator("main").getByText("These programs are not yet available."),
     ).toBeVisible();
     await expect(page.locator("main").locator('[data-band="warehouse"]')).toContainText(
       "Four operating websites",
     );
-    // The card details and the "no launch date" note were removed on
-    // 2026-09-12 at the product owner's instruction. Each card must therefore
-    // carry its status on its own, and the section may never read as an offer.
+    // Retitled "Solutions development" on 2026-09-12 (product owner), with
+    // the card details and a plain unavailability line published again. Each
+    // card carries its own status, and the section may never read as an offer.
     const developing = page.locator("main").getByRole("heading", {
-      name: "Developing opportunities under evaluation.",
+      name: about.developing.title,
     });
     await expect(developing).toBeVisible();
     for (const item of about.developing.items) {
-      await expect(page.locator("main").getByText(item.detail)).toHaveCount(0);
+      await expect(page.locator("main").getByText(item.detail)).toBeVisible();
       await expect(page.locator("main").getByRole("heading", { name: item.title })).toBeVisible();
+      await expect(page.locator("main").getByText(item.cta, { exact: true })).toBeVisible();
     }
-    await expect(
-      page.locator("main").getByText(about.developing.note, { exact: false }),
-    ).toHaveCount(0);
+    await expect(page.locator("main").getByText(about.developing.note)).toBeVisible();
     const section = page.locator("section", {
-      has: page.getByRole("heading", { name: "Developing opportunities under evaluation." }),
+      has: page.getByRole("heading", { name: about.developing.title }),
     });
     // Counted in the section's own text, so a wrapper element that happens
     // to contain a badge cannot inflate the number.

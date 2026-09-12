@@ -20,18 +20,38 @@ export const contact = {
   channels: [
     {
       label: "Investor relations",
+      /**
+       * `homeLabel` and `blurb` are the homepage contact section's own
+       * wording (product owner, 2026-09-12). The address, email and phone
+       * stay here and are rendered from here on both pages, so there is one
+       * place to change a contact detail.
+       */
+      homeLabel: "Investor Relations",
+      blurb: "For financial information, corporate reporting, and investor enquiries.",
       name: "Investor Relations",
       email: "invest@lifesupply.com",
       phone: "604-677-4146",
     },
     {
       label: "Mergers & acquisitions",
+      homeLabel: "Acquisitions and Business Opportunities",
+      /**
+       * The only channel that routes to a named person. The other two are
+       * routes rather than people, so the homepage prints the heading and the
+       * address and no name under them.
+       */
+      homeShowsName: true,
+      blurb:
+        "For business owners and advisers interested in discussing a potential acquisition or related opportunity.",
       name: "Abdul Ladha",
       email: "abdul@lifesupply.com",
       phone: "604-677-4146",
     },
     {
       label: "Corporate office",
+      homeLabel: "General Business Enquiries",
+      blurb:
+        "For corporate enquiries and help finding the appropriate contact for supply or clinic-service opportunities.",
       name: "General inquiries",
       email: "info@lifesupply.com",
       /** The group's one corporate address (product owner, 2026-09-10). */

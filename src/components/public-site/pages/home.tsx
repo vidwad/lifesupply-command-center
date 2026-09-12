@@ -92,6 +92,12 @@ export function LifeSupplyHome() {
               </StaggerItem>
             ))}
           </Stagger>
+          {/* Nothing is sold on this site, so an order question belongs to the store. */}
+          <Reveal>
+            <p className="mt-12 border-t border-white/20 pt-6 text-sm leading-6 text-white/60">
+              {homepage.closing.note}
+            </p>
+          </Reveal>
         </Container>
       </section>
 
@@ -203,13 +209,6 @@ export function LifeSupplyHome() {
               title={homepage.brands.title}
               description={homepage.brands.description}
             />
-            {/*
-             * Where to go and who you deal with there. Nothing is sold on this
-             * site, and each business keeps its own ordering and support.
-             */}
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--lsh-muted)]">
-              {homepage.brands.note}
-            </p>
           </Reveal>
           <div className="mt-10">
             <BrandGrid />
@@ -228,18 +227,27 @@ export function LifeSupplyHome() {
               tone="onDark"
               eyebrow={homepage.closing.eyebrow}
               title={homepage.closing.title}
+              description={homepage.closing.lead}
             />
             <div className="shrink-0">
-              <ActionLink action="contact_directory">Contact directory</ActionLink>
+              <ActionLink action="contact_directory">View all contact options</ActionLink>
             </div>
           </Reveal>
           <Stagger className="mt-12 grid gap-x-10 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
             {contact.channels.map((channel) => (
               <StaggerItem key={channel.label} className="border-t border-white/25 pt-6">
                 <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
-                  {channel.label}
+                  {channel.homeLabel}
                 </p>
-                <p className="lsh-display mt-3 text-2xl leading-none">{channel.name}</p>
+                <p className="mt-3 text-sm leading-6 text-white/70">{channel.blurb}</p>
+                {/*
+                 * The person's name, only where the channel routes to one.
+                 * Investor Relations and General Business Enquiries are routes,
+                 * not people, so they print the heading and the address alone.
+                 */}
+                {"homeShowsName" in channel ? (
+                  <p className="lsh-display mt-4 text-2xl leading-none">{channel.name}</p>
+                ) : null}
                 <div className="mt-4 grid gap-1.5 text-sm text-white/75">
                   <a
                     href={`mailto:${channel.email}`}
