@@ -17,7 +17,6 @@ import {
   GrowthDirection,
   OperatingBaseBand,
 } from "@/components/public-site/pages/about-sections";
-import { ProgramArchitecture } from "@/components/public-site/program-architecture";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
@@ -27,15 +26,18 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  *
  *   1. Hero
  *   2. Experience and direction — who we are, where we are going
- *   3. How the business fits together — the program architecture, from About
- *   4. What the stores sell — the red band
- *   5. LifeSupply at a glance — the reported figures, on ink
- *   6. Footprint and milestones — from About
- *   7. The operating base — the warehouse band, from About
- *   8. Operating brands
- *   9. Growth direction — on ink, from About
- *  10. Looking ahead — the two programs in development, from About
- *  11. Contact
+ *   3. What the stores sell — the red band
+ *   4. LifeSupply at a glance — the reported figures, on ink
+ *   5. Footprint and milestones — from About
+ *   6. The operating base — the warehouse band, from About
+ *   7. Operating brands
+ *   8. Growth direction — on ink, from About
+ *   9. Looking ahead — the two programs in development, from About
+ *  10. Contact
+ *
+ * The program architecture was section 3 until 2026-09-12, when the product
+ * owner moved it to About, between the "Since inception" band and the team.
+ * It renders there only now.
  *
  * Everything else the page carried — the "Where to start" index, the group
  * introduction, the clinic lifecycle, the metabolic block, the partner and
@@ -47,7 +49,7 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  * authored here.
  */
 export function LifeSupplyHome() {
-  const { homepage, contact, architecture } = LIFE_SUPPLY_CONTENT;
+  const { homepage, contact } = LIFE_SUPPLY_CONTENT;
   return (
     <LifeSupplyLayout>
       {/*
@@ -106,13 +108,6 @@ export function LifeSupplyHome() {
           </Stagger>
         </Container>
       </section>
-
-      {/*
-       * How the business fits together: what operates, what is being built,
-       * what is being weighed. The two clarifying notes beneath the tiers
-       * stay on About (product owner, 2026-09-11).
-       */}
-      <ProgramArchitecture content={architecture} notes={false} />
 
       {/* The red information band, carrying the operating-context statement. */}
       <Reveal>

@@ -167,16 +167,18 @@ test.describe("LifeSupply public site", () => {
     await expect(stats.nth(2)).toHaveText("1M+");
   });
 
-  test("opens the homepage after the hero with Experienced, Growing, and Connected, then how the business fits together", async ({
+  test("opens the homepage after the hero with Experienced, Growing, and Connected", async ({
     page,
   }) => {
     await page.goto("/");
     const main = page.locator("main");
-    // The three-panel statement opens the page, then the program
-    // architecture shared with About (product owner, 2026-09-11).
+    // The three-panel statement opens the page. The program architecture
+    // stood second until 2026-09-12, when the product owner moved it to
+    // About; the reported figures follow the panels now.
     const headings = main.getByRole("heading", { level: 2 });
     await expect(headings.nth(0)).toHaveText("Who we are and where we are going.");
-    await expect(headings.nth(1)).toHaveText(architecture.title);
+    await expect(headings.nth(1)).toHaveText(homepage.glance.title);
+    await expect(main.getByRole("heading", { name: architecture.title })).toHaveCount(0);
     await expect(main.getByRole("heading", { level: 3, name: "Experienced" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Growing" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 3, name: "Connected" })).toBeVisible();
@@ -186,7 +188,7 @@ test.describe("LifeSupply public site", () => {
       nodes.map((node) => node.textContent?.trim() ?? ""),
     );
     const at = (text: string) => order.findIndex((h) => h.includes(text));
-    expect(at("Canada and the United States")).toBeGreaterThan(at(architecture.title));
+    expect(at("Canada and the United States")).toBeGreaterThan(at(homepage.glance.title));
     expect(at("Build on the operating base")).toBeGreaterThan(at("Canada and the United States"));
     expect(at("Developing opportunities")).toBeGreaterThan(at("Build on the operating base"));
     expect(order[order.length - 1]).toBe(homepage.closing.title);
@@ -252,12 +254,21 @@ test.describe("LifeSupply public site", () => {
     // now distinguishes supplying pharmacies from running one (round three).
     await expect(main.getByText(about.developing.items[1].detail)).toBeVisible();
     await expect(main.getByText(about.developing.items[0].detail)).toBeVisible();
-    // The three tiers of the business appear above the developing detail.
+    // The three tiers moved to About on 2026-09-12 (product owner), between
+    // the band and the team, and render on that page only. The two
+    // clarifying notes came back with them.
+    await expect(
+      page.locator("main").getByRole("heading", { name: architecture.title }),
+    ).toHaveCount(0);
+    await page.goto("/about-us");
+    await expect(main.getByRole("heading", { name: architecture.title })).toBeVisible();
     await expect(main.getByRole("heading", { name: "Operating", exact: true })).toBeVisible();
     await expect(main.getByRole("heading", { name: "In development", exact: true })).toBeVisible();
     await expect(
       main.getByRole("heading", { name: "Under evaluation", exact: true }),
     ).toBeVisible();
+    await expect(main.getByText(/The two meanings of pharmacy/i)).toBeVisible();
+    await expect(main.getByText(/How participation works/i)).toBeVisible();
     // The photograph moves with the scroll position.
     const first = bands.first();
     await page.evaluate(() => window.scrollTo(0, 0));
