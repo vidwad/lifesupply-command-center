@@ -119,16 +119,11 @@ test.describe("LifeSupply public site", () => {
       )
       .toBeLessThan(0);
 
-    // Any upward movement returns it immediately.
-    await expect
-      .poll(
-        async () => {
-          await page.evaluate(() => window.scrollBy(0, -200));
-          return (await header.boundingBox())?.y ?? -1;
-        },
-        { timeout: 8000 },
-      )
-      .toBe(0);
+    // Any upward movement returns it immediately. One step, not a loop: the
+    // listener is provably attached by now, and scrolling all the way to the
+    // top would put the header back under the utility strip rather than at 0.
+    await page.evaluate(() => window.scrollBy(0, -200));
+    await expect.poll(async () => (await header.boundingBox())?.y ?? -1, { timeout: 8000 }).toBe(0);
   });
 
   test("carries a decorative photograph in the hero, decoded, with no footage and no control", async ({
@@ -196,6 +191,22 @@ test.describe("LifeSupply public site", () => {
     await expect(main.getByRole("heading", { name: "Where to start" })).toHaveCount(0);
     await expect(main.getByRole("heading", { name: /A clinic project can start/ })).toHaveCount(0);
     await expect(main.getByText("Explore partner relationships")).toHaveCount(0);
+  });
+
+  test("sends each developing card to its own page under Solutions", async ({ page }) => {
+    for (const [title, path] of [
+      ["Metabolic-health supply services", "/metabolic-health"],
+      ["Pharmacy supply programs", "/pharmacy-solutions"],
+    ] as const) {
+      await page.goto("/");
+      const card = page.locator("main").getByRole("link", { name: title, exact: true });
+      await expect(card, title).toHaveCount(1);
+      await card.scrollIntoViewIfNeeded();
+      await card.click();
+      await expect(page, title).toHaveURL(new RegExp(`${path}/?$`));
+      // It landed on the real page, not a redirect stub or an empty shell.
+      await expect(page.locator("main").getByRole("heading", { level: 1 })).toBeVisible();
+    }
   });
 
   test("keeps the hero heading one accessible sentence while its words animate", async ({

@@ -188,6 +188,7 @@ export const about = {
     intro: "A closer look at the two programs in development above.",
     items: [
       {
+        key: "metabolic",
         title: "Metabolic-health supply services",
         status: "In development",
         text: "Starter equipment, consumables replenished as they are used, clinic procurement, kitting and fulfilment, and contracted non-clinical workflow support, for clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
@@ -196,6 +197,7 @@ export const about = {
           "It would apply the existing supply model to a recurring patient-support need, one configurable pathway at a time.",
       },
       {
+        key: "pharmacy",
         title: "Pharmacy supply programs",
         status: "In development",
         text: "Pharmacist-selected non-drug supplies and fulfilment for pharmacies. The pharmacy is the customer, and medication is excluded entirely.",
