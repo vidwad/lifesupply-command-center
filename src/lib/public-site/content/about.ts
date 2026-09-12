@@ -55,7 +55,7 @@ export const about = {
   heroSummary:
     "A Canadian group with more than 25 years of operations. It sells health, safety, medical and industrial products online, builds and equips clinics in British Columbia, and is developing two supply programs on that base.",
   growth:
-    "The strategy is to hold margin discipline in the existing supply business, put technology into ordering and fulfilment, add complementary businesses that fit the model, and go deeper in both Canada and the United States.",
+    "Four things carry the strategy: margin discipline in the existing supply business, technology in ordering and fulfilment, complementary businesses that fit the model, and more depth in both Canada and the United States.",
 
   /**
    * Footprint. Stage 2 draft from observed store facts: two Canadian
@@ -105,7 +105,7 @@ export const about = {
    */
   milestones: {
     eyebrow: "Milestones",
-    title: "A dated public record.",
+    title: "Acquisitions, appointments, partnerships and results.",
     note: "Oldest first.",
     items: [
       {
@@ -184,22 +184,22 @@ export const about = {
      * 2026-09-09 at the product owner's request). Nothing here is offered as
      * available.
      */
-    lead: "The growth strategy is to acquire profitable operations that complement the existing business model. The objective is to integrate strategically located bricks-and-mortar medical supply stores, pharmacies, clinics, and distributors into current operations, broadening the range of inventory available to LifeSupply and enabling a wider range of products and services to be offered online in Canada and the United States.",
+    lead: "The growth strategy is to acquire profitable operations that complement the existing business model. The objective is to integrate strategically located bricks-and-mortar medical supply stores, pharmacies, clinics, and distributors into current operations. Each one would widen the inventory LifeSupply can draw on, and with it the products and services offered online in Canada and the United States.",
     intro: "A closer look at the two programs in development above.",
     items: [
       {
         title: "Metabolic-health supply services",
         status: "In development",
-        text: "Starter equipment, usage-driven consumables, clinic procurement, kitting and fulfilment, and contracted workflow support for clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
+        text: "Starter equipment, consumables replenished as they are used, clinic procurement, kitting and fulfilment, and contracted non-clinical workflow support, for clinics, pharmacies, and programs supporting people on metabolic-health pathways.",
         detail:
-          "It applies the existing supply model to a recurring patient-support need, one configurable pathway at a time.",
+          "It would apply the existing supply model to a recurring patient-support need, one configurable pathway at a time.",
       },
       {
         title: "Pharmacy supply programs",
         status: "In development",
         text: "Pharmacist-selected non-drug supplies and fulfilment for pharmacies. The pharmacy is the customer, and medication is excluded entirely.",
         detail:
-          "Holding licensed pharmacy operations of its own is a separate question, and it sits under evaluation rather than in development. Supplying pharmacies and running one are different businesses.",
+          "Whether LifeSupply should hold licensed pharmacy operations of its own is a separate question, under evaluation rather than in development. Supplying pharmacies and running one are different businesses.",
       },
     ],
     note: "Neither program is available today, and no launch date is set.",
@@ -218,7 +218,7 @@ export const about = {
   direction: {
     eyebrow: "Growth direction",
     title: "Build on the operating base.",
-    text: "The stated direction is to develop deeper clinic relationships and recurring patient-support supply programs on top of the existing commerce, clinic-development, and equipment capabilities. Each initiative is presented on this site with its own status.",
+    text: "The direction is to build deeper clinic relationships and recurring patient-support supply programs on top of the commerce, clinic-development, and equipment capabilities that already exist. Every initiative on this site carries its own status, so what operates today is never confused with what is still being built.",
   },
 } as const;
 
