@@ -14,6 +14,7 @@ import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { IconBadge, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 
+import { getGraphic, type GraphicKey } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import {
@@ -576,9 +577,22 @@ function ClosingBand() {
         </Reveal>
         <Stagger as="ul" className="mt-12 grid gap-8 sm:grid-cols-3">
           {close.routes.map((route) => (
-            <StaggerItem as="li" key={route.action} className="border-t border-white/20 pt-5">
-              <p className="leading-7 text-white/75">{route.prompt}</p>
-              <div className="mt-4">
+            <StaggerItem as="li" key={route.action} className="flex h-full flex-col">
+              {/* The picture first, then the question it answers. Decorative:
+                  the prompt and the action carry the meaning. */}
+              <div className="relative aspect-[16/10] overflow-hidden bg-[var(--lsh-charcoal)]">
+                <Image
+                  src={getGraphic(route.graphic as GraphicKey).src}
+                  alt=""
+                  fill
+                  sizes="(min-width: 640px) 33vw, 100vw"
+                  className="object-cover"
+                  draggable={false}
+                />
+              </div>
+              <span aria-hidden="true" className="block h-0.5 w-full bg-[var(--lsh-brand-red)]" />
+              <p className="mt-5 leading-7 text-white/75">{route.prompt}</p>
+              <div className="mt-auto pt-4">
                 <ActionLink action={route.action as ActionKey} variant="onDark" />
               </div>
             </StaggerItem>

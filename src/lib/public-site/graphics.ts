@@ -49,7 +49,34 @@ const HERO_PROVENANCE =
 const ABOUT_HERO_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the About hero; monochrome brief, no person, no text, no logo, no product; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment because the hero scrim supplies the brand colour; conceptual, not operational photography, and not a LifeSupply building.";
 
+const CLINIC_ROUTE_PROVENANCE =
+  "Gamma image generation (photo mode), commissioned 2026-09-12 for the three next-step routes on Clinic Solutions; monochrome brief, no person, no text, no logo, no brand mark; scaled to 1600×900 and converted to neutral greyscale with ffmpeg; conceptual, not operational photography, and not a LifeSupply project.";
+
 export const GRAPHICS = {
+  /** Beside "Opening, renovating, or expanding?" on Clinic Solutions. */
+  clinicPlans: {
+    src: "/lsh/graphics/clinic-plans.jpg",
+    alt: "Conceptual still life of rolled architectural drawings, a floor plan, a scale rule and a pencil on a dark surface.",
+    width: 1600,
+    height: 900,
+    provenance: CLINIC_ROUTE_PROVENANCE,
+  },
+  /** Beside "Equipping rooms, or replacing a device?". */
+  clinicDevice: {
+    src: "/lsh/graphics/clinic-device.jpg",
+    alt: "Conceptual photograph of a screen on a slim rolling stand in an empty, daylit treatment room.",
+    width: 1600,
+    height: 900,
+    provenance: CLINIC_ROUTE_PROVENANCE,
+  },
+  /** Beside "Need everyday supplies?". */
+  clinicSupplies: {
+    src: "/lsh/graphics/clinic-supplies.jpg",
+    alt: "Conceptual still life of plain boxes, folded gauze and sealed pouches arranged on a pale shelf.",
+    width: 1600,
+    height: 900,
+    provenance: CLINIC_ROUTE_PROVENANCE,
+  },
   /**
    * Behind the About hero. Composed for the slot: the left third falls away
    * into shadow so the heading sits on near-black, and the glazing carries

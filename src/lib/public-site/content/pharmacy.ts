@@ -29,6 +29,13 @@ export const pharmacy = {
    * reader could not tell which one a page was about. This block says so on
    * the page most likely to be misread. Drafted with Codex, edited before use.
    */
+  /**
+   * Unpublished since 2026-09-12 (product owner). Both distinctions it drew
+   * survive where they belong: the hub's own title says the programme is in
+   * development, its cards say medication is excluded, and About now
+   * separates supplying pharmacies from holding a licensed pharmacy, which
+   * it lists under Longer-term opportunities as being assessed only.
+   */
   scope: {
     title: "Which pharmacy business this is",
     paragraphs: [

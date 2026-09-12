@@ -26,7 +26,10 @@ export const brand = {
     "Surrey, British Columbia V3W 5A1",
     "Canada",
   ],
-  // moved from JSX (footer)
+  /**
+   * Unpublished since 2026-09-12 (product owner): the footer now carries
+   * what the group is rather than what the site contains.
+   */
   footerTagline:
     "Corporate information, operating context, and investor resources from LifeSupply Health Inc.",
   // moved from JSX (footer)

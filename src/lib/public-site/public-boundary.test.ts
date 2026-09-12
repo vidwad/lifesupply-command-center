@@ -2005,12 +2005,18 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     expect(clinicPages()).toContain("projects.items");
     expect(contactPage()).toContain("contact.intents.map");
     expect(contactPage()).toContain("contact.existingOrder");
-    // The stores section renders the registry, not a hand-written list, and
-    // still states each store's geography and its own support channel.
+    // The stores section renders the registry, not a hand-written list. The
+    // "Geography and currency" and "Support boundary" blocks came off on
+    // 2026-09-12 (product owner), so what they carried has to be carried by
+    // the cards and the section's own intro: every card still names its
+    // country, its currency and its own support address, and the intro still
+    // says this site sells nothing and takes no orders.
     expect(storesPage()).toContain("stores.map");
     expect(storesPage()).toContain("brandGeography(record)");
     expect(storesPage()).toContain("record.supportEmail");
-    expect(storesPage()).toContain("{hub.stores.support.text}");
+    expect(storesPage()).not.toContain("{hub.stores.support.text}");
+    expect(storesPage()).not.toContain("{hub.stores.geography.text}");
+    expect(storesPage()).toContain("{hub.stores.intro}");
   });
 
   it("gives every Stage 3 page one PublicHero and the shared layout", () => {
@@ -2593,10 +2599,8 @@ describe("website consolidation: sections, redirects and deep links", () => {
     expect(
       bodyOf(stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`)), "PlanningSection"),
     ).toContain("{hub.planning.partnershipStatus}");
-    // Shop & Services: geography, currency, and the support boundary.
-    expect(businesses).toContain("Geography and currency");
-    expect(businesses).toContain("Support boundary");
-    expect(businesses).toContain("this site cannot see or change store orders");
+    // Shop & Services: the two blocks are unpublished but kept on the record,
+    // and the sentence that matters most is still on the page.
     expect(businesses).toContain("This corporate site does not sell products or take orders.");
   });
 

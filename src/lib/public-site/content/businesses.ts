@@ -42,6 +42,12 @@ export const businesses = {
       /** Card actions: the store first, the brand page second (round three, outcome 7). */
       shopLabel: "Shop",
       aboutLabel: "About",
+      /**
+       * Both blocks unpublished on 2026-09-12 (product owner). What they
+       * carried is still on the page: every store card shows its country and
+       * currency, and the section's own intro says this site sells nothing
+       * and takes no orders.
+       */
       geography: {
         title: "Geography and currency",
         text: "The Canadian stores price in Canadian dollars and ship within Canada. Balkowitsch Worldwide prices in U.S. dollars and ships from the United States. Shipping thresholds, delivery times, and returns are published on each store.",
