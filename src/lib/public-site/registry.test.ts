@@ -300,11 +300,13 @@ describe("route registry", () => {
       "Contact",
     ]);
     // Home left the menu on 2026-09-13: the logo is the link home. Investors
-    // is a direct link with no dropdown since the same day.
+    // is a menu of the consolidated page, named Investor Info, and Company
+    // News (product owner, later the same day).
     expect(groups.some((group) => group.key === "home")).toBe(false);
     const investors = groups.find((group) => group.key === "investors")!;
     expect(investors.href).toBe(LIFE_SUPPLY_ROUTES.investorRelations);
-    expect(investors.links).toEqual([]);
+    expect(investors.hubLabel).toBe("Investor Info");
+    expect(investors.links).toEqual([{ label: "Company News", href: LIFE_SUPPLY_ROUTES.news }]);
 
     // Solutions is a menu of exactly three, and no `/solutions` page exists.
     const solutions = groups.find((group) => group.key === "solutions")!;
@@ -436,8 +438,10 @@ describe("route registry", () => {
       sectionRoute(LIFE_SUPPLY_ROUTES.investorRelations, "advanced-therapeutics"),
     );
     const groups = buildPrimaryNavigation();
-    // Investors is a direct link: no dropdown, no children.
-    expect(groups.find((g) => g.key === "investors")!.links).toEqual([]);
+    // The retired pages are not children; Company News is the one child.
+    expect(groups.find((g) => g.key === "investors")!.links.map((l) => l.href)).toEqual([
+      LIFE_SUPPLY_ROUTES.news,
+    ]);
     // 2026-09-09: News & resources moved from the About group into Investors, replacing the
     // documents index; Shareholder services withdrawn. Both old addresses are redirect rows.
     // The About group's one child was Our team, which became sections of

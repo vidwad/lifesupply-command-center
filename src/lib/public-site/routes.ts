@@ -319,8 +319,10 @@ export const ROUTES: readonly RouteRecord[] = [
    * page, Contact, About and the footer rather than from a dropdown.
    */
   {
+    // "Investor Info" is the page's own name in the Investors menu, beside
+    // Company News (product owner, 2026-09-13).
     path: "/investor-relations/",
-    label: "Investors",
+    label: "Investor Info",
     stage: 5,
     status: "live",
     navGroup: "investors",
@@ -346,7 +348,8 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "redirect",
     navGroup: null,
   },
-  { path: "/news/", label: "Company News", stage: 5, status: "live", navGroup: null },
+  // Company News is the one child of the Investors menu (product owner, 2026-09-13).
+  { path: "/news/", label: "Company News", stage: 5, status: "live", navGroup: "investors" },
   {
     path: "/investor-relations/disclosures/",
     label: "Disclosures",
@@ -436,6 +439,12 @@ export interface NavGroup {
    * button that opens the menu rather than a link that goes somewhere.
    */
   href: string | null;
+  /**
+   * The hub page's own name for the first row of the dropdown, so a menu
+   * reads "Investor Info · Company News" rather than "Overview · Company
+   * News" (product owner, 2026-09-13). `null` for a group with no hub.
+   */
+  hubLabel: string | null;
   /** Further destinations, excluding the trigger's own href. */
   links: NavLink[];
 }
@@ -484,6 +493,10 @@ export function buildPrimaryNavigation(): NavGroup[] {
     key: group.key,
     label: group.label,
     href: group.hub,
+    hubLabel:
+      group.hub === null
+        ? null
+        : (ROUTES.find((route) => route.path === group.hub)?.label ?? group.label),
     links: liveChildren(group.key, group.hub),
   }));
   if (!isLiveRoute(LIFE_SUPPLY_ROUTES.contact)) return groups;
@@ -493,6 +506,7 @@ export function buildPrimaryNavigation(): NavGroup[] {
       key: "utility" as NavGroupKey,
       label: "Contact",
       href: LIFE_SUPPLY_ROUTES.contact,
+      hubLabel: null,
       links: [],
     },
   ];
