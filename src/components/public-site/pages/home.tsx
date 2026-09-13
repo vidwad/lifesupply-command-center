@@ -11,7 +11,7 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
+import { CountUp, Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import {
   DevelopingOpportunities,
   FootprintAndMilestones,
@@ -167,7 +167,12 @@ export function LifeSupplyHome() {
         />
       </Reveal>
 
-      {/* Verified proof, on ink, at the figure scale. */}
+      {/*
+       * Verified proof, on ink, at the figure scale. The three figures count
+       * up from zero when they scroll into view (product owner, 2026-09-13,
+       * as the site had before the 2026-09-09 design pass); the approved text
+       * is what the server renders, and reduced motion shows it at once.
+       */}
       <section className="bg-[var(--lsh-ink)] px-5 py-24 text-white lg:px-8">
         <Container>
           <Reveal className="max-w-3xl">
@@ -198,7 +203,7 @@ export function LifeSupplyHome() {
                     longest value leaves room beside it. */}
                 <dd>
                   <span data-stat="figure" className="lsh-figure text-[var(--lsh-red-on-ink)]">
-                    {metric.value}
+                    <CountUp value={metric.value} />
                   </span>
                   <span className="lsh-display mt-3 block text-sm text-white/70">
                     {metric.unit}

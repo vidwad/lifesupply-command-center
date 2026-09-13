@@ -192,7 +192,7 @@ function useHydratedReducedMotion() {
   );
 }
 
-/** "$6.75M" → { prefix: "$", value: 6.75, decimals: 2, suffix: "M" }. */
+/** "$6.75M" → { prefix: "$", value: 6.75, decimals: 2, suffix: "M" }; "50,000+" keeps its grouping. */
 function parseFigure(raw: string) {
   const match = raw.match(/^([^\d]*)(\d[\d,]*(?:\.\d+)?)(.*)$/);
   if (!match) return null;
@@ -202,15 +202,19 @@ function parseFigure(raw: string) {
     prefix: prefix ?? "",
     value: Number(digits?.replace(/,/g, "")),
     decimals,
+    grouped: (digits ?? "").includes(","),
     suffix: suffix ?? "",
   };
 }
 
 /**
- * A reported figure that counts up from zero the first time it scrolls into
- * view. The formatted string is the same text the content model holds, so
- * what the visitor ends on is exactly what was approved. Figures the parser
- * does not understand, and reduced-motion visitors, get the static text.
+ * A figure that counts up from zero the first time it scrolls into view.
+ * The formatted string is the same text the content model holds, so what the
+ * visitor ends on is exactly what was approved. The server, a visitor without
+ * JavaScript, a reduced-motion visitor, and a figure the parser does not
+ * understand all get the approved text at once: the count starts only once
+ * the figure is on screen on a client that welcomes motion, so reading the
+ * page never waits for an animation (product owner, 2026-09-13).
  */
 export function CountUp({
   value,
@@ -228,7 +232,12 @@ export function CountUp({
   const parsed = parseFigure(value);
   const count = useMotionValue(0);
   const decimals = parsed?.decimals ?? 0;
-  const text = useTransform(count, (latest) => latest.toFixed(decimals));
+  const grouped = parsed?.grouped ?? false;
+  const text = useTransform(count, (latest) =>
+    grouped && decimals === 0
+      ? Math.round(latest).toLocaleString("en-CA")
+      : latest.toFixed(decimals),
+  );
 
   useEffect(() => {
     if (!inView || !parsed || reduce) return;
@@ -238,7 +247,9 @@ export function CountUp({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inView, value, reduce]);
 
-  if (!parsed || reduce) {
+  // Until the figure is in view the approved text stands, on the server and
+  // on the client alike; the counter takes over only when the count starts.
+  if (!parsed || reduce || !inView) {
     return (
       <span ref={ref} className={className}>
         {value}
