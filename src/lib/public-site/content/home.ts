@@ -22,7 +22,7 @@ export const homepage = {
    * register; no new claim is introduced.
    */
   eyebrow: "LifeSupply Health Inc.",
-  title: "A health and medical supplies & services company.",
+  title: "A health and medical supplies & solutions company.",
   /**
    * The product owner proposed the prior site's own line here on
    * 2026-09-12 -- "over 55,000 medical products ... over 45,000 Canadians
