@@ -13,8 +13,10 @@ import {
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { SectionNav } from "@/components/public-site/section-nav";
+import { GraphicBand, IconBadge } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { investorRelations } from "@/lib/public-site/content/investors";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
 import type { PublishedDocumentDto } from "@/server/public-web/contracts";
@@ -160,13 +162,16 @@ export function InvestorRelationsPage({
                 as="li"
                 className="border-t-4 border-[var(--lsh-brand-red)] pt-5"
               >
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <IconBadge icon={iconForTitle(item.title)} />
+                    <span className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
                   <StatusTag status={item.status} />
                 </div>
-                <h3 className="lsh-display mt-4 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                <h3 className="lsh-display mt-5 text-xl leading-tight text-[var(--lsh-charcoal)]">
                   {item.title}
                 </h3>
                 <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
@@ -220,6 +225,13 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
+      {/* The operating half closes on a photograph and one statement. */}
+      <GraphicBand
+        graphic={ir.bands.foundation.graphic}
+        eyebrow={ir.bands.foundation.eyebrow}
+        statement={ir.bands.foundation.statement}
+      />
+
       {/* 3. The business model: a real table, status in words, repeat demand told apart from contracted revenue. */}
       <AnchoredSection id="business-model" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
@@ -236,9 +248,12 @@ export function InvestorRelationsPage({
               {ir.model.rows.map((row) => (
                 <li key={row.activity} className="py-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="lsh-display text-base leading-tight text-[var(--lsh-charcoal)]">
-                      {row.activity}
-                    </h3>
+                    <div className="flex items-center gap-3">
+                      <IconBadge icon={iconForTitle(row.activity)} size={18} />
+                      <h3 className="lsh-display text-base leading-tight text-[var(--lsh-charcoal)]">
+                        {row.activity}
+                      </h3>
+                    </div>
                     <StatusTag status={row.status} />
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{row.role}</p>
@@ -266,9 +281,12 @@ export function InvestorRelationsPage({
                     <tr key={row.activity} className="align-top">
                       <th
                         scope="row"
-                        className="lsh-display border-b border-[var(--lsh-rule)] py-5 pr-6 text-base leading-tight text-[var(--lsh-charcoal)]"
+                        className="border-b border-[var(--lsh-rule)] py-5 pr-6 text-base leading-tight text-[var(--lsh-charcoal)]"
                       >
-                        {row.activity}
+                        <span className="flex items-center gap-3">
+                          <IconBadge icon={iconForTitle(row.activity)} size={18} />
+                          <span className="lsh-display">{row.activity}</span>
+                        </span>
                       </th>
                       <td className="border-b border-[var(--lsh-rule)] py-5 pr-6 text-sm leading-6 text-[var(--lsh-muted)]">
                         {row.role}
@@ -304,9 +322,12 @@ export function InvestorRelationsPage({
             {ir.growth.priorities.map((priority) => (
               <li key={priority.index}>
                 <Reveal className="grid gap-6 py-10 lg:grid-cols-[4rem_1fr_1fr] lg:gap-10">
-                  <span className="lsh-display text-3xl leading-none text-[var(--lsh-brand-red)]">
-                    {priority.index}
-                  </span>
+                  <div className="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-5">
+                    <span className="lsh-display text-3xl leading-none text-[var(--lsh-brand-red)]">
+                      {priority.index}
+                    </span>
+                    <IconBadge icon={iconForTitle(priority.title)} />
+                  </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
@@ -377,7 +398,10 @@ export function InvestorRelationsPage({
                       </span>
                     ) : null}
                   </span>
-                  <p className="lsh-display mt-3 text-lg leading-tight text-[var(--lsh-charcoal)]">
+                  <div className="mt-4">
+                    <IconBadge icon={iconForTitle(step.title)} />
+                  </div>
+                  <p className="lsh-display mt-4 text-lg leading-tight text-[var(--lsh-charcoal)]">
                     {step.title}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{step.text}</p>
@@ -422,13 +446,16 @@ export function InvestorRelationsPage({
                 as="li"
                 className="grid gap-3 py-6 md:grid-cols-[6rem_1fr_1.2fr] md:gap-8"
               >
-                <div>
-                  <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                    {ir.execution.statusLabel} {phase.index}
-                  </span>
-                  <h3 className="lsh-display mt-1 text-xl leading-tight text-[var(--lsh-charcoal)]">
-                    {phase.title}
-                  </h3>
+                <div className="flex items-start gap-4 md:block">
+                  <IconBadge icon={iconForTitle(phase.title)} size={18} />
+                  <div className="md:mt-3">
+                    <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      {ir.execution.statusLabel} {phase.index}
+                    </span>
+                    <h3 className="lsh-display mt-1 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                      {phase.title}
+                    </h3>
+                  </div>
                 </div>
                 <p className="text-sm leading-6 text-[var(--lsh-charcoal)]">
                   <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-muted)] md:sr-only">
@@ -482,9 +509,12 @@ export function InvestorRelationsPage({
                 className="border-t border-[var(--lsh-rule-strong)] pt-5"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
-                    {option.title}
-                  </h3>
+                  <div className="flex items-center gap-4">
+                    <IconBadge icon={iconForTitle(option.title)} size={18} />
+                    <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
+                      {option.title}
+                    </h3>
+                  </div>
                   <StatusTag status={option.status} />
                 </div>
                 <dl className="mt-4 grid gap-3 text-sm leading-6 sm:grid-cols-2 sm:gap-8">
@@ -507,6 +537,13 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
+      {/* The supporting-information half opens on a photograph and one statement. */}
+      <GraphicBand
+        graphic={ir.bands.materials.graphic}
+        eyebrow={ir.bands.materials.eyebrow}
+        statement={ir.bands.materials.statement}
+      />
+
       {/* 7. Investor materials: one record per row, a document-specific request, and the governed published list. */}
       <AnchoredSection id="materials" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
@@ -527,11 +564,14 @@ export function InvestorRelationsPage({
                 as="li"
                 className="grid gap-4 py-6 lg:grid-cols-[1.4fr_1fr_auto] lg:items-start lg:gap-10"
               >
-                <div>
-                  <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
-                    {record.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{record.note}</p>
+                <div className="flex items-start gap-4">
+                  <IconBadge icon={iconForTitle(record.title)} size={18} />
+                  <div>
+                    <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
+                      {record.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{record.note}</p>
+                  </div>
                 </div>
                 <dl className="grid gap-2 text-sm leading-6">
                   <div className="flex gap-3">
