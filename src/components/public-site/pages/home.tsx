@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
@@ -17,6 +18,7 @@ import {
   GrowthDirection,
   OperatingBaseBand,
 } from "@/components/public-site/pages/about-sections";
+import { getGraphic } from "@/lib/public-site/graphics";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
@@ -50,6 +52,7 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  */
 export function LifeSupplyHome() {
   const { homepage, contact } = LIFE_SUPPLY_CONTENT;
+  const suppliesAndPlans = getGraphic("suppliesAndPlans");
   return (
     <LifeSupplyLayout>
       {/*
@@ -81,22 +84,38 @@ export function LifeSupplyHome() {
        * say where it came from and where it is going.
        */}
       <section className="border-b border-[var(--lsh-rule)] bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          <Reveal>
-            <SectionHeading eyebrow={homepage.whoWeDo.eyebrow} title={homepage.whoWeDo.title} />
-          </Reveal>
-          <Stagger className="grid gap-6 lg:pt-2">
-            {homepage.whoWeDo.paragraphs.map((paragraph) => (
-              <StaggerItem key={paragraph.slice(0, 40)}>
-                <p className="leading-8 text-[var(--lsh-muted)]">{paragraph}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
-          {/* Nothing is sold on this site, so an order question belongs to the store. */}
-          <Reveal>
-            <p className="mt-12 border-t border-white/20 pt-6 text-sm leading-6 text-white/60">
-              {homepage.closing.note}
-            </p>
+        <Container className="grid items-stretch gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <div>
+            <Reveal>
+              <SectionHeading eyebrow={homepage.whoWeDo.eyebrow} title={homepage.whoWeDo.title} />
+            </Reveal>
+            <Stagger className="mt-8 grid content-start gap-6">
+              {homepage.whoWeDo.paragraphs.map((paragraph) => (
+                <StaggerItem key={paragraph.slice(0, 40)}>
+                  <p className="leading-8 text-[var(--lsh-muted)]">{paragraph}</p>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+          {/*
+           * The two halves of the sentence in one frame: cartons and sealed
+           * packs for the online stores, floor plans and a scale rule for the
+           * clinic projects. It fills its column rather than sitting in a
+           * fixed box, so neither column ends early and the section has no
+           * empty half. The picture is on the right here and on the left in
+           * the growth-direction band further down, so the two read as a
+           * rhythm rather than the same composition twice.
+           */}
+          <Reveal delay={0.1} className="group min-h-64 lg:min-h-0">
+            <figure className="relative h-full min-h-64 overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)]">
+              <Image
+                src={suppliesAndPlans.src}
+                alt={suppliesAndPlans.alt}
+                fill
+                sizes="(min-width: 1024px) 560px, 100vw"
+                className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              />
+            </figure>
           </Reveal>
         </Container>
       </section>
@@ -267,6 +286,12 @@ export function LifeSupplyHome() {
               </StaggerItem>
             ))}
           </Stagger>
+          {/* Nothing is sold on this site, so an order question belongs to the store. */}
+          <Reveal>
+            <p className="mt-12 border-t border-white/20 pt-6 text-sm leading-6 text-white/60">
+              {homepage.closing.note}
+            </p>
+          </Reveal>
         </Container>
       </section>
     </LifeSupplyLayout>

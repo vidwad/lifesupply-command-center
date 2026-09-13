@@ -335,10 +335,22 @@ export const BRANDS: readonly BrandRecord[] = [
   },
 ];
 
-/** The four operating websites, in the order the guide lists them. */
-export const OPERATING_BRANDS: readonly BrandRecord[] = BRANDS.filter(
-  (record) => record.key !== "corporate",
-);
+/**
+ * The four operating websites, in the order they are presented: the three
+ * online stores first, then the clinic-services business (product owner,
+ * 2026-09-13). `BRANDS` keeps its own order, which the store-only lists rely
+ * on; this is the presentation order every grid and list follows.
+ */
+const PRESENTATION_ORDER: readonly OperatingBrandKey[] = [
+  "lifesupply",
+  "wellmart",
+  "balkowitsch",
+  "clinics",
+];
+
+export const OPERATING_BRANDS: readonly BrandRecord[] = PRESENTATION_ORDER.map((key) =>
+  BRANDS.find((record) => record.key === key),
+).filter((record): record is BrandRecord => record !== undefined);
 
 export function getBrand(key: BrandKey): BrandRecord {
   const record = BRANDS.find((entry) => entry.key === key);

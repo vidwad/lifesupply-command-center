@@ -56,6 +56,20 @@ const MEDICAL_SUPPLIES_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the Balkowitsch Worldwide profile on the consolidated Medical Supply Solutions page; monochrome brief, no person, no facility, no logo, no text, no legible reading on any screen; scaled to 1800×1012 and converted to neutral greyscale with ffmpeg, then given a midtone lift (lutyuv gamma 1.75) so it sits with the two Canadian store photographs rather than reading as a much darker frame beside them; no highlight is clipped. It is conceptual, not operational photography: not a LifeSupply facility, not a photograph of a listed product, and no item in it is a confirmed SKU. It replaced the warehouse photograph on this page, which showed a person packing and could be read as an employee or an operating site.";
 
 export const GRAPHICS = {
+  /**
+   * Beside "Who are we and what we do" on the homepage (product owner,
+   * 2026-09-13, who asked for an image in that section). The two halves of
+   * the sentence in one frame: supply cartons and sealed packs for the online
+   * stores, rolled floor plans and a scale rule for the clinic projects.
+   */
+  suppliesAndPlans: {
+    src: "/lsh/graphics/supplies-and-plans.jpg",
+    alt: "Conceptual still life of plain supply cartons and sealed packs beside rolled floor plans and a scale rule on a pale counter.",
+    width: 1600,
+    height: 900,
+    provenance:
+      'Gamma image generation (photo mode), commissioned 2026-09-13 for the homepage "Who are we and what we do" section; monochrome brief, no person, no facility, no logo, no legible text on the plans; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment; conceptual, not operational photography, and not a LifeSupply premises or project.',
+  },
   /** The Balkowitsch Worldwide store profile on Medical Supply Solutions. */
   balkowitschProducts: {
     src: "/lsh/graphics/medical-supplies/balkowitsch-products-greyscale-v1.jpg",

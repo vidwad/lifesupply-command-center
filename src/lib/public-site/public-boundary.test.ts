@@ -1926,9 +1926,11 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
         expect(source, name).not.toContain(name);
       }
     }
-    // The dated 2022 record of a board appointment is history, not a roster.
-    expect(stripComments(read("src/lib/public-site/content/about.ts"))).toContain(
-      "Dr. Margaret Clarke appointed",
+    // The 2022 board appointment came off the timeline on 2026-09-13 (product
+    // owner: not material). Her profile was withdrawn on 2026-09-08, so she is
+    // now named nowhere on the site, which is what this asserts.
+    expect(stripComments(read("src/lib/public-site/content/about.ts"))).not.toContain(
+      "Margaret Clarke",
     );
   });
 });
