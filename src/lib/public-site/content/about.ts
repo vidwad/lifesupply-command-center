@@ -164,13 +164,6 @@ export const about = {
         href: "https://www.yahoo.com/now/lifesupply-announces-acquisition-medical-supplies-150000544.html",
       },
       {
-        date: "April 21, 2022",
-        sortKey: "2022-04-21",
-        text: "Dr. Margaret Clarke appointed to the Board of Directors.",
-        source: "Yahoo Finance",
-        href: "https://ca.finance.yahoo.com/news/lifesupply-appoints-dr-margaret-clarke-150000607.html",
-      },
-      {
         date: "May 11, 2022",
         sortKey: "2022-05-11",
         text: "Distribution partnership with Ortho Active expanded.",

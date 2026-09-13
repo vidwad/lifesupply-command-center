@@ -60,11 +60,14 @@ describe("brand registry", () => {
       "clinics",
       "balkowitsch",
     ]);
+    // Presentation order since 2026-09-13 (product owner): the three online
+    // stores first, then the clinic-services business. `BRANDS` keeps its own
+    // order, which the store-only lists rely on.
     expect(OPERATING_BRANDS.map((record) => record.name)).toEqual([
       "LifeSupply",
       "Wellmart Medical",
-      "LifeSupply Clinics",
       "Balkowitsch Worldwide",
+      "LifeSupply Clinics",
     ]);
   });
 
