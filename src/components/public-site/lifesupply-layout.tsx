@@ -545,6 +545,17 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
             <p className="mt-5 max-w-sm text-sm leading-6 text-white/70">
               {homepage.whoWeDo.paragraphs[0]}
             </p>
+            {/*
+             * Legal & Disclaimer (product owner, 2026-09-13): the currency
+             * notice, which the bottom bar carried until then, and the
+             * investor disclosure, under the same red header the other
+             * columns use.
+             */}
+            <Eyebrow as="h2" tone="onDark" className="mt-8">
+              {brand.legalHeading}
+            </Eyebrow>
+            <p className="mt-4 max-w-sm text-xs leading-5 text-white/60">{brand.legalNotice}</p>
+            <p className="mt-3 max-w-sm text-xs leading-5 text-white/60">{brand.investorNotice}</p>
           </div>
           <div>
             <Eyebrow as="h2" tone="onDark">
@@ -594,9 +605,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-white/10 px-5 py-5 text-xs text-white/60 lg:px-8">
-          <span>
-            © {new Date().getFullYear()} LifeSupply Health Inc. {brand.legalNotice}
-          </span>
+          <span>© {new Date().getFullYear()} LifeSupply Health Inc.</span>
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {LEGAL_NAV.map((link) => (
               <li key={link.href}>

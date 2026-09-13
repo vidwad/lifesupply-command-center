@@ -154,6 +154,11 @@ export const pharmacy = {
         },
       ],
     },
+    /**
+     * Unpublished since 2026-09-13 (product owner): the complaints-and-recalls
+     * block came off the page. Kept here so the wording is on record; no
+     * page renders it, which a canary checks.
+     */
     responsibilities: {
       title: "Complaints and recalls",
       items: [

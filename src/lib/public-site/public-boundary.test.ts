@@ -2693,7 +2693,11 @@ describe("website consolidation: sections, redirects and deep links", () => {
     expect(page).not.toMatch(/subscription|auto-?ship|recurring order/i);
     const pharmacyPage = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
     expect(pharmacyPage).toContain("partnerProgram.model.items.map");
-    expect(pharmacyPage).toContain("partnerProgram.responsibilities.items.map");
+    // The complaints-and-recalls block came off on 2026-09-13 (product
+    // owner) and stays unpublished; the partner programme is its model and
+    // its two actions.
+    expect(pharmacyPage).not.toContain("partnerProgram.responsibilities");
+    expect(pharmacyPage).toContain("partnerProgram.actions.map");
     // And a pathway is still never sold: it is a configurable starting point.
     const content = stripComments(read("src/lib/public-site/content/metabolic.ts"));
     expect(content).toMatch(/configurable starting point rather than a product/);
@@ -2881,5 +2885,30 @@ describe("footer brand band (2026-09-13)", () => {
     expect(css()).toMatch(
       /\.lsh-marquee:hover \.lsh-marquee-belt,\s*\.lsh-marquee:focus-within \.lsh-marquee-belt\s*\{\s*animation-play-state: paused;/,
     );
+  });
+});
+
+describe("pharmacy responsibilities block and footer legal block (2026-09-13)", () => {
+  it("keeps the complaints-and-recalls wording on record and off the page", () => {
+    const content = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
+    expect(content).toContain('title: "Complaints and recalls"');
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
+    expect(page).not.toContain("partnerProgram.responsibilities");
+    expect(pages()).not.toContain("Complaints and recalls");
+  });
+
+  it("carries the legal notice and the investor disclosure under one red header in the footer", () => {
+    const footer = layout().slice(layout().indexOf("<footer"));
+    expect(footer).toContain("{brand.legalHeading}");
+    expect(footer).toContain("{brand.legalNotice}");
+    expect(footer).toContain("{brand.investorNotice}");
+    // Once: the bottom bar no longer repeats the notice beside the copyright.
+    expect((footer.match(/brand\.legalNotice/g) ?? []).length).toBe(1);
+    expect(footer.indexOf("{brand.legalHeading}")).toBeLessThan(footer.indexOf("Operating brands"));
+    // The disclosure is the standard one and promises nothing.
+    const brand = stripComments(read("src/lib/public-site/content/brand.ts"));
+    expect(brand).toContain("Nothing on this site is an offer to sell");
+    expect(brand).toContain("undertakes no obligation to update them except as required by law");
+    expect(brand).not.toMatch(/guarantee(d|s)? (return|growth|performance)/i);
   });
 });

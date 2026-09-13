@@ -3,7 +3,6 @@ import { CarePathwayDiagram } from "@/components/public-site/care-pathway-diagra
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
-  Eyebrow,
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
@@ -115,8 +114,8 @@ export function PharmacySolutionsPage() {
  *
  * It leads with the model, because the whole proposition turns on one
  * division of labour: the pharmacist selects, the supply service fulfils.
- * The complaints-and-recalls block stays with it — it is the part a pharmacy
- * actually has to check before agreeing to anything.
+ * The complaints-and-recalls block that followed the model came off on
+ * 2026-09-13 (product owner); the two actions now close the section.
  */
 function PartnerProgramSection() {
   const { partnerProgram } = LIFE_SUPPLY_CONTENT.pharmacy;
@@ -145,20 +144,7 @@ function PartnerProgramSection() {
       />
       <section className="px-5 pb-20 lg:px-8">
         <Container>
-          <Reveal className="flex gap-5 border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7">
-            <IconBadge icon="shield" />
-            <div>
-              <Eyebrow as="h3">{partnerProgram.responsibilities.title}</Eyebrow>
-              <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)] lg:grid-cols-3">
-                {partnerProgram.responsibilities.items.map((item) => (
-                  <li key={item} className="lsh-bullet">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Reveal>
-          <Reveal delay={0.05} className="mt-8 flex flex-wrap gap-3">
+          <Reveal className="flex flex-wrap gap-3">
             {partnerProgram.actions.map((action, index) => (
               <ActionLink
                 key={action}
