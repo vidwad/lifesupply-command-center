@@ -997,7 +997,11 @@ describe("round three: architecture, placement and voice", () => {
     }
     const investorsPage = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
     expect(investors).toContain('statusLabel: "Planned"');
-    expect(investorsPage).toContain("{ir.execution.statusLabel} {phase.index}");
+    // Every node on the stepper is labelled Planned and numbered; none is
+    // drawn as reached.
+    expect(investorsPage).toContain("status={ir.execution.statusLabel}");
+    expect(investorsPage).toContain("{phase.index}");
+    expect(investorsPage).not.toMatch(/complete|achieved|reached|done/i);
     expect(investorsPage).toContain("{phase.evidence}");
     expect(investors).toContain("A phased approach to development.");
     expect(investors).toContain("no launch date is published");
