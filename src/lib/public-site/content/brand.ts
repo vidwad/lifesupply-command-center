@@ -32,6 +32,15 @@ export const brand = {
    */
   footerTagline:
     "Corporate information, operating context, and investor resources from LifeSupply Health Inc.",
-  // moved from JSX (footer)
+  /**
+   * The footer's "Legal & Disclaimer" block (product owner, 2026-09-13):
+   * the currency notice, which the bottom bar carried until then, and the
+   * investor disclosure. The disclosure repeats nothing the investor pages
+   * do not already say: no offer or solicitation, forward-looking statements
+   * qualified, no duty to update beyond what is required.
+   */
+  legalHeading: "Legal & Disclaimer",
   legalNotice: "Information on this site is current at the date published and may be updated.",
+  investorNotice:
+    "Nothing on this site is an offer to sell or a solicitation of an offer to buy any security. Statements about programs in development, opportunities under evaluation, and proposed capabilities are forward-looking: they depend on approvals, financing, regulatory requirements, and market conditions that are not in place, may not occur, and are not guarantees. LifeSupply Health Inc. undertakes no obligation to update them except as required by law.",
 } as const;

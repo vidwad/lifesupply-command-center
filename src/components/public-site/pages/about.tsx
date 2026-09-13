@@ -82,8 +82,14 @@ export function AboutPage() {
           the visitor presses play; that is behaviour, and it is asserted in
           the browser suite rather than explained on the page. */}
       <section className="px-5 py-20 lg:px-8">
-        <Container className="grid gap-px bg-[var(--lsh-rule)] lg:grid-cols-[1.1fr_0.9fr]">
-          <Reveal className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8 lg:p-10">
+        {/*
+         * Two open columns rather than a grey box of boxes (product owner,
+         * 2026-09-13): the video on the left under one red rule, and on the
+         * right the purpose line with mission and vision as rule-separated
+         * blocks. No filled panels, no padding boxes.
+         */}
+        <Container className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+          <Reveal className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] pt-6">
             <div className="flex items-start justify-between gap-4">
               <Eyebrow as="h2">{about.video.eyebrow}</Eyebrow>
               <IconBadge icon="play" />
@@ -106,28 +112,26 @@ export function AboutPage() {
               </a>
             </div>
           </Reveal>
-          <Stagger className="grid gap-px">
-            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-8 lg:p-10">
+          <Stagger className="grid content-start gap-10">
+            <StaggerItem className="border-t-4 border-[var(--lsh-brand-red)] pt-6">
               <Eyebrow as="h2">{about.purpose.eyebrow}</Eyebrow>
               <p className="lsh-display mt-5 text-2xl leading-[1.15] text-[var(--lsh-charcoal)] lg:text-3xl lg:leading-[1.1]">
                 {about.purpose.title}
               </p>
             </StaggerItem>
-            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-8 lg:p-10">
+            <StaggerItem className="border-t border-[var(--lsh-rule-strong)] pt-6">
               <div className="flex items-start justify-between gap-4">
                 <Eyebrow as="h3">{about.labels.mission}</Eyebrow>
                 <IconBadge icon={iconForTitle(about.labels.mission)} />
               </div>
               <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{about.mission}</p>
             </StaggerItem>
-            <StaggerItem className="h-full border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] p-8 text-white lg:p-10">
+            <StaggerItem className="border-t border-[var(--lsh-rule-strong)] pt-6">
               <div className="flex items-start justify-between gap-4">
-                <Eyebrow as="h3" tone="onDark">
-                  {about.labels.vision}
-                </Eyebrow>
-                <IconBadge icon={iconForTitle(about.labels.vision)} tone="onDark" />
+                <Eyebrow as="h3">{about.labels.vision}</Eyebrow>
+                <IconBadge icon={iconForTitle(about.labels.vision)} />
               </div>
-              <p className="mt-4 leading-7 text-white/75">{about.vision}</p>
+              <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{about.vision}</p>
             </StaggerItem>
           </Stagger>
         </Container>
