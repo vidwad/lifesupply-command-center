@@ -1,27 +1,21 @@
 /**
- * Newsroom copy (Stage 5, updated in Stage 6; investor documents merged in
- * on 2026-09-09).
+ * Company News copy (Stage 5, updated in Stage 6; renamed from News &
+ * resources on 2026-09-13 at the product owner's direction).
  *
  * - `historical`: the four 2022 releases approved as already published,
- *   linking to their public sources with their original dates. Stable
- *   approved copy; stays static under the eligibility policy.
+ *   linking to their public sources with their original dates, newest
+ *   first. A historical archive: nothing is added to it to make the page
+ *   look active, and the 2022 board appointment is a dated record, not a
+ *   statement of current board membership.
  * - Company news and resources are governed content since Stage 6: the
  *   public pages read them from the Command Center's published-only
  *   endpoints (`src/lib/public-site/published.ts`). Nothing about them is
  *   authored here. When the endpoint is unavailable the section says so
  *   rather than showing an empty list.
+ * - The investor documents directory sat here from 2026-09-09 to
+ *   2026-09-13; it is the materials section of the investor page now
+ *   (`content/investors.ts`), and `/investor-relations/documents` lands there.
  */
-
-export interface DocumentRecord {
-  title: string;
-  /** As stated on the material itself; never inferred. */
-  date: string;
-  category: "Public" | "Restricted, on request" | "Historical";
-  version: string | null;
-  /** Public documents carry a same-origin href once Stage 6 publishes them; none exists yet. */
-  href: null;
-  note: string;
-}
 
 export interface HistoricalRelease {
   date: string;
@@ -32,28 +26,15 @@ export interface HistoricalRelease {
 
 export const news = {
   hero: {
-    eyebrow: "News & resources",
-    title: "Company news, investor documents, the historical record, and practical resources.",
+    eyebrow: "Company News",
+    title: "Company announcements and historical releases.",
     description:
-      "Company news carries its date. Investor documents are grouped by who can see them: some are open, some are shared on request. The 2022 releases are kept as a record and link to their original sources.",
+      "Announcements carry their date and link to their source. The 2022 releases are kept as a historical archive; new announcements are added here when they are published.",
   },
   /**
-   * A corporate overview built entirely from facts already published
-   * elsewhere on this site (round three, outcome 9). The news and resources
-   * sections are legitimately empty; rather than leave a visitor with nothing
-   * or invent an announcement to fill the gap, the page states what the group
-   * is. Every figure here appears on the investor pages with its full scope.
-   */
-  /**
-   * A short orientation for anyone who arrives here first, and a link to the
-   * page that explains the company.
-   *
-   * This block carried the whole company summary until 2026-09-10 — group,
-   * brands, footprint, scale, reported results and what is in development,
-   * six facts restating what About, Medical Supplies and Investor Relations
-   * each already said (website consolidation, stage 4). Six copies of a fact
-   * is six places for it to drift out of date. The figures in particular now
-   * have exactly one home, Disclosures, which every other page reads from.
+   * Unpublished since 2026-09-13 (product owner): the "New here?" company
+   * introduction came off the page, which is announcements and the archive.
+   * Kept on the record; About carries the group and Investors the figures.
    */
   overview: {
     eyebrow: "New here?",
@@ -72,7 +53,7 @@ export const news = {
     },
     historical: {
       title: "Historical releases",
-      note: "Dated releases from 2022, linking to their public sources.",
+      note: "A historical archive: dated 2022 releases, newest first, linking to their public sources.",
     },
     resources: {
       title: "Resources",
@@ -80,61 +61,10 @@ export const news = {
       unavailable: "Resources are temporarily unavailable.",
     },
   },
-  /**
-   * The investor documents index, merged here from the former
-   * `/investor-relations/documents/` page on 2026-09-09 (product owner).
-   * Unchanged in substance: access classes, the dated records, the
-   * governed published list, and the request step.
-   */
-  documents: {
-    eyebrow: "Investor documents",
-    title: "Investor documents: public, on request, and historical.",
-    /**
-     * Round four, change 9. Three access classes were published while nothing
-     * was downloadable, so two-thirds of the block described categories a
-     * visitor could not act on: "Public" held nothing, and the classification
-     * scheme is document control rather than information a reader needs. The
-     * page now names the materials that exist and the one action available,
-     * which is to ask for them. The classes stay on each record as a label.
-     */
-    intro:
-      "Three materials are held for investors. None is downloadable here: each is shared through investor relations, with the recipient and any confidentiality terms settled first.",
-    records: [
-      {
-        title: "Annual-report narrative, year ended December 31, 2025",
-        date: "Year ended December 31, 2025",
-        category: "Restricted, on request",
-        version: null,
-        href: null,
-        note: "Source of the unaudited consolidated figures shown on the investor pages.",
-      },
-      {
-        title: "Financing presentation",
-        date: "August 25, 2026",
-        category: "Restricted, on request",
-        version: null,
-        href: null,
-        note: "Outlines proposed expansion themes; subject to suitability, disclosure, board approval, regulatory requirements, and final terms.",
-      },
-      {
-        title: "Investor presentation",
-        date: "May 2022",
-        category: "Historical",
-        version: null,
-        href: null,
-        note: "Earlier corporate presentation from the prior website; available on request for the record.",
-      },
-    ] satisfies readonly DocumentRecord[],
-    published: {
-      title: "Published public documents",
-      empty: "There is no public document here yet.",
-      unavailable:
-        "The published document list is temporarily unavailable. The records below are unaffected.",
-      download: "Download",
-    },
-    requestNote:
-      "Requests are answered by the investor-relations contact. Restricted materials are provided only to suitable recipients and are not distributed through this site.",
-    actions: ["investor_materials"],
+  /** Where the investor materials went, for the one link this page keeps to them. */
+  materials: {
+    text: "Investor materials — the annual-report narrative, the financing presentation, and the historical investor presentation — are listed on the Investors page.",
+    action: "investor_materials_section",
   },
 
   itemUnavailable: {

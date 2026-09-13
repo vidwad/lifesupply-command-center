@@ -24,9 +24,6 @@ const RETAINED = [
   "/contact",
   "/news",
   "/investor-relations",
-  "/investor-relations/growth-strategy",
-  "/investor-relations/advanced-therapeutics",
-  "/investor-relations/disclosures",
   "/partners/acquisitions",
   "/privacy",
   "/terms",
@@ -60,6 +57,10 @@ const REDIRECTS: [string, string][] = [
   ["/keith-dolo-2", "/about-us#keith-dolo"],
   ["/barrett-e-g-sleeman", "/about-us#barrett-sleeman"],
   ["/david-vogt", "/about-us#david-vogt"],
+  // Investors consolidation (2026-09-13): three addresses became sections.
+  ["/investor-relations/growth-strategy", "/investor-relations#growth-strategy"],
+  ["/investor-relations/advanced-therapeutics", "/investor-relations#advanced-therapeutics"],
+  ["/investor-relations/disclosures", "/investor-relations#disclosures"],
 ];
 
 const LEGACY: [string, string][] = [
@@ -71,7 +72,7 @@ const LEGACY: [string, string][] = [
   ["/our-operations/lifesupply-clinics", "/clinic-solutions"],
   ["/our-operations/technology-fulfilment", "/medical-supply-solutions"],
   ["/clinic-solutions/design-build", "/clinic-solutions"],
-  ["/investor-relations/documents", "/news"],
+  ["/investor-relations/documents", "/investor-relations#materials"],
   ["/investor-relations/shareholder-services", "/investor-relations"],
   // About absorbed the team on 2026-09-11.
   ["/our-team", "/about-us"],
@@ -80,9 +81,10 @@ const LEGACY: [string, string][] = [
   ["/john-anderson-2", "/about-us"],
 ];
 
-test("A. every retained page answers 200 and the count is 20", async ({ page }) => {
-  // Twenty-one until 2026-09-11, when About absorbed the team.
-  expect(RETAINED).toHaveLength(16);
+test("A. every retained page answers 200 and the count is 13", async ({ page }) => {
+  // Twenty-one until 2026-09-11 (About absorbed the team), sixteen until
+  // 2026-09-13 (Medical Supplies on 2026-09-12, then Investors).
+  expect(RETAINED).toHaveLength(13);
   for (const route of RETAINED) {
     const response = await page.request.get(route, { maxRedirects: 0 });
     expect(response.status(), route).toBe(200);
@@ -90,7 +92,7 @@ test("A. every retained page answers 200 and the count is 20", async ({ page }) 
 });
 
 test("A. every retired address is a permanent redirect to its exact fragment", async ({ page }) => {
-  expect(REDIRECTS).toHaveLength(20);
+  expect(REDIRECTS).toHaveLength(23);
   for (const [from, to] of REDIRECTS) {
     const response = await page.request.get(from, { maxRedirects: 0 });
     expect(response.status(), from).toBe(308);

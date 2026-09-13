@@ -49,9 +49,6 @@ test.describe("LifeSupply public site", () => {
       "/clinic-solutions",
       "/metabolic-health",
       "/partners/acquisitions",
-      "/investor-relations/growth-strategy",
-      "/investor-relations/advanced-therapeutics",
-      "/investor-relations/disclosures",
       "/privacy",
       "/terms",
       "/accessibility",
@@ -504,7 +501,8 @@ test.describe("LifeSupply public site", () => {
     // Groups are collapsed so the panel fits the screen; a child appears once its group is expanded.
     // The five primary items. Solutions has no page of its own, so its label
     // is a button that opens the group rather than a link.
-    for (const name of ["Home", "About", "Medical Supplies", "Investors", "Contact"]) {
+    // Home left the menu on 2026-09-13; the logo is the link home.
+    for (const name of ["About", "Medical Supplies", "Investors", "Contact"]) {
       await expect(panel.getByRole("link", { name, exact: true })).toBeVisible();
     }
     // Solutions has no page, so its label is a button rather than a link. It
@@ -513,11 +511,11 @@ test.describe("LifeSupply public site", () => {
     await expect(panel.getByRole("button", { name: "Solutions", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Solutions", exact: true })).toHaveCount(0);
     const chevrons = panel.locator('button[aria-label^="Expand"], button[aria-label^="Collapse"]');
-    // One per group that has children: Solutions and Investors. About lost
-    // its only child on 2026-09-11 when it absorbed the team, and Medical
-    // Supplies lost its three on 2026-09-12 when the store pages became
-    // anchors, so both are plain links with no chevron.
-    await expect(chevrons).toHaveCount(2);
+    // One per group that has children, which is Solutions alone: About lost
+    // its only child on 2026-09-11, Medical Supplies its three on 2026-09-12,
+    // and Investors its five on 2026-09-13 when it became one page, so every
+    // other item is a plain link with no chevron.
+    await expect(chevrons).toHaveCount(1);
     const sizes = await chevrons.evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
@@ -525,22 +523,18 @@ test.describe("LifeSupply public site", () => {
       }),
     );
     expect(new Set(sizes).size, sizes.join(" ")).toBe(1);
-    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeHidden();
+    await expect(panel.getByRole("link", { name: "Clinic Solutions", exact: true })).toBeHidden();
     for (const name of [
       "Medical Supplies",
       "Clinic Solutions",
       "Metabolic Health Solutions",
       "Pharmacy Solutions",
-      "Acquisitions & Strategic Transactions",
-      "Growth strategy",
-      "Advanced therapeutics",
-      "Disclosures",
       "Investors",
       "About",
-      "News & resources",
       "Contact",
-      // The three store names left the panel on 2026-09-12: they are anchored
-      // profiles on Medical Supply Solutions, which is a direct link now.
+      // The three store names left the panel on 2026-09-12, and the five
+      // investor children on 2026-09-13; Acquisitions and Company News are
+      // reached from the investor page and the footer rather than the menu.
       "Medical Supplies",
     ]) {
       // Collapsed rows are display:none, so the role query must include hidden nodes.
@@ -563,25 +557,24 @@ test.describe("LifeSupply public site", () => {
     isMobile,
   }) => {
     test.skip(!isMobile, "mobile navigation only");
-    await page.goto("/investor-relations/disclosures");
+    // Solutions is the one group with children since 2026-09-13, so it is the
+    // group that opens for the current page.
+    await page.goto("/pharmacy-solutions");
     await page.getByRole("button", { name: "Open navigation" }).click();
     const panel = page.locator("#lsh-mobile-menu");
-    await expect(panel.getByRole("button", { name: "Collapse Investors" })).toBeVisible();
-    // The expanded group opens with its own page, then its children.
-    await expect(panel.getByRole("link", { name: "Overview", exact: true })).toHaveAttribute(
+    await expect(panel.getByRole("button", { name: "Collapse Solutions" })).toBeVisible();
+    await expect(
+      panel.getByRole("link", { name: "Pharmacy Solutions", exact: true }),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole("link", { name: "Pharmacy Solutions", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    // Investors is a plain link with no group to expand.
+    await expect(panel.getByRole("button", { name: /Investors/ })).toHaveCount(0);
+    await expect(panel.getByRole("link", { name: "Investors", exact: true })).toHaveAttribute(
       "href",
       /^\/investor-relations\/?$/,
     );
-    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeVisible();
-    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    // One group open at a time: expanding Solutions collapses Investors.
-    await expect(panel.getByRole("link", { name: "Clinic Solutions", exact: true })).toBeHidden();
-    await panel.getByRole("button", { name: "Expand Solutions" }).click();
-    await expect(panel.getByRole("link", { name: "Clinic Solutions", exact: true })).toBeVisible();
-    await expect(panel.getByRole("link", { name: "Disclosures", exact: true })).toBeHidden();
     // Solutions has no page behind it, so its panel offers no "Overview" row.
     const solutions = panel.locator("#lsh-mobile-group-solutions");
     await expect(solutions.getByRole("link", { name: "Overview" })).toHaveCount(0);
@@ -1081,7 +1074,8 @@ test.describe("LifeSupply public site", () => {
       "/about-us",
       "/news",
       "/pharmacy-solutions",
-      "/investor-relations/disclosures",
+      "/investor-relations",
+      "/partners/acquisitions",
     ]) {
       await page.goto(route);
       const { scrollWidth, clientWidth } = await page.evaluate(() => ({
@@ -1095,30 +1089,52 @@ test.describe("LifeSupply public site", () => {
   test("keeps investor documents at a request step with no file link, and shows the figures scoped", async ({
     page,
   }) => {
-    await page.goto("/news");
+    // The directory is the investor page's materials section since 2026-09-13.
+    await page.goto("/investor-relations#materials");
     const main = page.locator("main");
     await expect(
-      main.getByRole("heading", { name: "Investor documents", exact: true }),
+      main.getByRole("heading", { name: "Supporting information for investors.", exact: true }),
     ).toBeVisible();
-    await expect(main.locator("table tbody tr")).toHaveCount(3);
+    const materials = page.locator("#materials");
+    // Three records, each with a document-specific request and no file.
+    const requests = materials.getByRole("link", { name: "Request this document" });
+    await expect(requests).toHaveCount(3);
+    const subjects = new Set<string>();
+    for (const request of await requests.all()) {
+      const href = (await request.getAttribute("href")) ?? "";
+      expect(href).toMatch(/^mailto:invest@lifesupply\.com\?subject=/);
+      subjects.add(href);
+    }
+    expect(subjects.size).toBe(3);
+    await expect(materials).toContainText("May 2022");
+    await expect(materials).toContainText("Historical");
+    await expect(materials).not.toContainText("Not stated");
     await expect(main.locator('a[href$=".pdf"], a[download]')).toHaveCount(0);
-    // The corporate overview added in round three offers the same action, so
-    // check every instance rather than assuming a single one.
-    const requests = await main.getByRole("link", { name: "Request investor materials" }).all();
-    expect(requests.length).toBeGreaterThan(0);
-    for (const request of requests) {
+    const general = await main.getByRole("link", { name: "Request investor materials" }).all();
+    expect(general.length).toBeGreaterThan(0);
+    for (const request of general) {
       await expect(request).toHaveAttribute("href", /^mailto:invest@lifesupply\.com\?subject=/);
     }
-    await page.goto("/investor-relations/disclosures");
+    // The figures once, with their basis directly beneath, and the disclosures on their anchor.
+    const financials = page.locator("#financial-information");
+    await expect(financials).toContainText("C$6.75M");
+    await expect(financials).toContainText(
+      "Unaudited, and not the subject of an audit or a review engagement.",
+    );
+    await expect(main.getByText("C$6.75M")).toHaveCount(1);
     await expect(
-      page
-        .locator("main")
-        .getByText("Unaudited consolidated financial information", { exact: false })
-        .first(),
+      page.locator("#disclosures").getByText("Forward-looking statements"),
     ).toBeVisible();
-    await expect(
-      page.locator("main").getByText("Forward-looking statements").first(),
-    ).toBeVisible();
+    // The retired addresses land on their sections.
+    for (const [from, anchor] of [
+      ["/investor-relations/growth-strategy", "growth-strategy"],
+      ["/investor-relations/advanced-therapeutics", "advanced-therapeutics"],
+      ["/investor-relations/disclosures", "disclosures"],
+    ] as const) {
+      const response = await page.request.get(from, { maxRedirects: 0 });
+      expect(response.status(), from).toBe(308);
+      expect(response.headers()["location"], from).toBe(`/investor-relations#${anchor}`);
+    }
   });
 
   test("shows the leader and the board on About, each profile as a dialog, and redirects the withdrawn ones", async ({
@@ -1249,11 +1265,10 @@ test.describe("LifeSupply public site", () => {
     // than announcing itself as empty (website improvement program, 2026-09-09). With no
     // published records the page shows the round-three corporate overview, the investor
     // documents and the historical record.
-    await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-      "What LifeSupply is, in one place.",
-      "Investor documents",
-      "Historical releases",
-    ]);
+    // Announcements and the archive only since 2026-09-13: the introduction
+    // came off and the investor documents moved to the investor page.
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText(["Historical releases"]);
+    await expect(main.getByText("Investor materials", { exact: false }).first()).toBeVisible();
     await expect(
       main.getByText(/has been published on this site|have been published yet/),
     ).toHaveCount(0);
@@ -1352,7 +1367,7 @@ test.describe("LifeSupply public site", () => {
       ["/our-operations/lifesupply-clinics", /\/clinic-solutions$/],
       ["/our-operations/technology-fulfilment", /\/medical-supply-solutions$/],
       ["/clinic-solutions/design-build", /\/clinic-solutions$/],
-      ["/investor-relations/documents", /\/news$/],
+      ["/investor-relations/documents", /\/investor-relations#materials$/],
       ["/investor-relations/shareholder-services", /\/investor-relations$/],
     ] as const) {
       const withdrawn = await page.request.get(source, { maxRedirects: 0 });
@@ -1368,14 +1383,14 @@ test.describe("LifeSupply public site", () => {
     expect(sitemap.ok()).toBe(true);
     const xml = await sitemap.text();
     const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
-    // 16 canonical URLs: the Medical Supplies consolidation retired three
-    // store pages and the suppliers page on 2026-09-12. Before that: 41, less
-    // four in stage 1,
-    // eleven in stage 2, the Partners hub in stage 3, the four leadership
-    // profiles in stage 4, and the team page in stage 5, which About
-    // absorbed on 2026-09-11. Each
-    // redirects and is therefore absent from the map rather than dropped.
-    expect(locs.length).toBe(16);
+    // 13 canonical URLs: the Investors consolidation retired Growth Strategy,
+    // Advanced Therapeutics and Disclosures on 2026-09-13; the Medical
+    // Supplies consolidation retired three store pages and the suppliers page
+    // on 2026-09-12. Before that: 41, less four in stage 1, eleven in stage
+    // 2, the Partners hub in stage 3, the four leadership profiles in stage
+    // 4, and the team page in stage 5. Each redirects and is therefore absent
+    // from the map rather than dropped.
+    expect(locs.length).toBe(13);
     for (const retired of [
       "/shop",
       "/clinic-solutions/equipment",

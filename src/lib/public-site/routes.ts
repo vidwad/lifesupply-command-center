@@ -129,6 +129,23 @@ export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
     "balkowitsch",
   ],
   [STAGE_3_ROUTES.clinicSolutions]: ["planning", "equipment", "ongoing-supplies", "collaboration"],
+  /*
+   * Investor relations, consolidated on 2026-09-13: Growth Strategy,
+   * Advanced Therapeutics and Disclosures became sections, and the
+   * document directory moved here from Company News. The three retired
+   * addresses redirect to their sections.
+   */
+  [LIFE_SUPPLY_ROUTES.investorRelations]: [
+    "business",
+    "financial-information",
+    "business-model",
+    "growth-strategy",
+    "execution",
+    "advanced-therapeutics",
+    "materials",
+    "contact",
+    "disclosures",
+  ],
   [PHARMACY_ROUTES.hub]: ["partner-program"],
   // The eight pathway anchors are the eight slugs, so a retired pathway
   // address and its anchor can never drift apart.
@@ -170,7 +187,8 @@ export const WITHDRAWN_ROUTES = {
   technology: "/our-operations/technology-fulfilment/",
   designBuild: "/clinic-solutions/design-build/",
   // 2026-09-09 (product owner): the investor documents index merged into
-  // News & resources, and Shareholder services withdrawn.
+  // News & resources, and Shareholder services withdrawn. Since 2026-09-13
+  // the documents address lands on the investor page's materials section.
   investorDocuments: "/investor-relations/documents/",
   shareholderServices: "/investor-relations/shareholder-services/",
 } as const;
@@ -293,9 +311,16 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "redirect",
     navGroup: null,
   },
+  /*
+   * Investors is one page and a direct menu link since 2026-09-13 (product
+   * owner). Growth Strategy, Advanced Therapeutics and Disclosures became
+   * its sections and their addresses redirect to them; Acquisitions and
+   * Company News stay live as supporting pages, reached from the investor
+   * page, Contact, About and the footer rather than from a dropdown.
+   */
   {
     path: "/investor-relations/",
-    label: "Investor relations",
+    label: "Investors",
     stage: 5,
     status: "live",
     navGroup: "investors",
@@ -304,35 +329,30 @@ export const ROUTES: readonly RouteRecord[] = [
     path: "/investor-relations/growth-strategy/",
     label: "Growth strategy",
     stage: 5,
-    status: "live",
-    navGroup: "investors",
+    status: "redirect",
+    navGroup: null,
   },
   {
-    // Acquisitions moved into the Investors group, where the reader who wants
-    // it already is, and sits directly after Growth strategy because it is
-    // how that strategy is executed (product owner, 2026-09-12).
     path: "/partners/acquisitions/",
-    label: "Acquisitions & Strategic Transactions",
+    label: "Acquisitions & Strategic Opportunities",
     stage: 5,
     status: "live",
-    navGroup: "investors",
+    navGroup: null,
   },
   {
     path: "/investor-relations/advanced-therapeutics/",
     label: "Advanced therapeutics",
     stage: 5,
-    status: "live",
-    navGroup: "investors",
+    status: "redirect",
+    navGroup: null,
   },
-  // News & resources sits in the Investors group since 2026-09-09, where the
-  // documents index used to be; it keeps its legacy address.
-  { path: "/news/", label: "News & resources", stage: 5, status: "live", navGroup: "investors" },
+  { path: "/news/", label: "Company News", stage: 5, status: "live", navGroup: null },
   {
     path: "/investor-relations/disclosures/",
     label: "Disclosures",
     stage: 5,
-    status: "live",
-    navGroup: "investors",
+    status: "redirect",
+    navGroup: null,
   },
   // Absorbed into About on 2026-09-11 (product owner): the title, the
   // leadership card and the board now sit under the "Since inception"
@@ -423,10 +443,11 @@ export interface NavGroup {
 /**
  * Primary navigation:
  *
- *   Home | About | Medical Supplies | Solutions | Investors | Contact
+ *   About | Medical Supplies | Solutions | Investors | Contact
  *
- * Set by the owner on 2026-09-10 and amended on 2026-09-11 to put Home back
- * as a menu item alongside the logo. Clinic, Pharmacy and Metabolic stopped
+ * Set by the owner on 2026-09-10; Home was a menu item from 2026-09-11 to
+ * 2026-09-13, when the owner settled on the logo as the only link home and
+ * Investors as a direct link with no dropdown. Clinic, Pharmacy and Metabolic stopped
  * being top-level categories and became the three entries under Solutions;
  * Partners was retired as a category and its hub with it. Contact is last, a
  * direct link, with no dropdown — so it leaves the utility strip, where it
@@ -438,7 +459,6 @@ export interface NavGroup {
  * dead link.
  */
 const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string | null }[] = [
-  { key: "home", label: "Home", hub: LIFE_SUPPLY_ROUTES.home },
   { key: "about", label: "About", hub: "/about-us/" },
   { key: "businesses", label: "Medical Supplies", hub: LIFE_SUPPLY_ROUTES.operations },
   // No `/solutions` page exists; this is a menu only.
@@ -485,7 +505,9 @@ export function buildPrimaryNavigation(): NavGroup[] {
  * the same destination. The login is rendered by `CommandCenterLoginLink`.
  */
 export function buildUtilityNavigation(): NavLink[] {
-  return [{ label: "Shop Stores", href: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores") }];
+  return [
+    { label: "Shop Our Stores", href: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores") },
+  ];
 }
 
 /** Policy links for the footer: privacy, terms, accessibility, once each page is live. */
@@ -506,9 +528,10 @@ export const LIFE_SUPPLY_NAVIGATION: readonly NavLink[] = LIVE_ROUTES.filter(
     route.navGroup === "about" ||
     route.navGroup === "solutions" ||
     // Top-level pages that are no longer in a menu but must stay reachable:
-    // Contact and the legacy news address.
+    // Contact, Company News, and the Acquisitions page (2026-09-13).
     route.path === LIFE_SUPPLY_ROUTES.contact ||
-    route.path === LIFE_SUPPLY_ROUTES.news,
+    route.path === LIFE_SUPPLY_ROUTES.news ||
+    route.path === STAGE_5_ROUTES.partnerAcquisitions,
 ).map((route) => ({ label: route.label, href: route.path }));
 
 /**

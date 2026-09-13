@@ -257,7 +257,6 @@ describe("route registry", () => {
     }
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
-      "Home",
       "About",
       "Medical Supplies",
       "Solutions",
@@ -294,17 +293,18 @@ describe("route registry", () => {
     // the owner's direction, alongside the logo rather than instead of it).
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
-      "Home",
       "About",
       "Medical Supplies",
       "Solutions",
       "Investors",
       "Contact",
     ]);
-    // Home is a direct link with no dropdown.
-    const home = groups[0]!;
-    expect(home.href).toBe(LIFE_SUPPLY_ROUTES.home);
-    expect(home.links).toEqual([]);
+    // Home left the menu on 2026-09-13: the logo is the link home. Investors
+    // is a direct link with no dropdown since the same day.
+    expect(groups.some((group) => group.key === "home")).toBe(false);
+    const investors = groups.find((group) => group.key === "investors")!;
+    expect(investors.href).toBe(LIFE_SUPPLY_ROUTES.investorRelations);
+    expect(investors.links).toEqual([]);
 
     // Solutions is a menu of exactly three, and no `/solutions` page exists.
     const solutions = groups.find((group) => group.key === "solutions")!;
@@ -338,7 +338,7 @@ describe("route registry", () => {
     // Shop Stores is the only utility link; Contact left the strip, where it
     // was a second control to the same destination.
     expect(buildUtilityNavigation()).toEqual([
-      { label: "Shop Stores", href: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores") },
+      { label: "Shop Our Stores", href: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "stores") },
     ]);
     expect(isLiveSection(buildUtilityNavigation()[0]!.href)).toBe(true);
   });
@@ -356,8 +356,12 @@ describe("route registry", () => {
     expect(isLiveRoute(STAGE_5_ROUTES.partnerAcquisitions)).toBe(true);
     // Suppliers became a section of Medical Supply Solutions on 2026-09-12.
     expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerSuppliers)?.status).toBe("redirect");
-    expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerAcquisitions)?.navGroup).toBe(
-      "investors",
+    // Acquisitions left the Investors dropdown on 2026-09-13 when Investors
+    // became a direct link; it is reached from the investor page, Contact
+    // and the footer instead.
+    expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerAcquisitions)?.navGroup).toBeNull();
+    expect(LIFE_SUPPLY_NAVIGATION.map((link) => link.href)).toContain(
+      STAGE_5_ROUTES.partnerAcquisitions,
     );
     // And suppliers stays reachable without a menu: the footer links to the
     // section rather than to the address that now redirects to it, so a
@@ -389,23 +393,51 @@ describe("route registry", () => {
     }
   });
 
-  it("makes the Stage 5 pages live: Investors with five entries, three policy pages", () => {
-    for (const path of Object.values(STAGE_5_ROUTES)) {
-      // Suppliers retired into Medical Supply Solutions on 2026-09-12.
-      if (path === STAGE_5_ROUTES.partnerSuppliers) continue;
-      expect(isLiveRoute(path), path).toBe(true);
-    }
-    const groups = buildPrimaryNavigation();
-    // Acquisitions joined the Investors menu when Partners was retired, and
-    // moved directly below Growth strategy on 2026-09-12 at the product
-    // owner's instruction: it is how that strategy is executed.
-    expect(groups.find((g) => g.key === "investors")!.links.map((l) => l.href)).toEqual([
+  it("makes Investors one live page with its sections, and the three policy pages live", () => {
+    // Growth Strategy, Advanced Therapeutics and Disclosures became sections
+    // of the investor page on 2026-09-13 (product owner); each old address
+    // is a redirect row landing on its section. Suppliers retired into
+    // Medical Supply Solutions on 2026-09-12.
+    const retired = [
       STAGE_5_ROUTES.growthStrategy,
-      STAGE_5_ROUTES.partnerAcquisitions,
       STAGE_5_ROUTES.advancedTherapeutics,
-      LIFE_SUPPLY_ROUTES.news,
       STAGE_5_ROUTES.disclosures,
-    ]);
+      STAGE_5_ROUTES.partnerSuppliers,
+    ];
+    for (const path of Object.values(STAGE_5_ROUTES)) {
+      if ((retired as readonly string[]).includes(path)) {
+        expect(isLiveRoute(path), path).toBe(false);
+        expect(ROUTES.find((r) => r.path === path)?.status, path).toBe("redirect");
+      } else {
+        expect(isLiveRoute(path), path).toBe(true);
+      }
+    }
+    for (const anchor of [
+      "business",
+      "financial-information",
+      "business-model",
+      "growth-strategy",
+      "execution",
+      "advanced-therapeutics",
+      "materials",
+      "contact",
+      "disclosures",
+    ]) {
+      expect(
+        isLiveSection(sectionRoute(LIFE_SUPPLY_ROUTES.investorRelations, anchor)),
+        anchor,
+      ).toBe(true);
+    }
+    // The actions that used to open the retired pages open their sections.
+    expect(actionHref("growth_strategy")).toBe(
+      sectionRoute(LIFE_SUPPLY_ROUTES.investorRelations, "growth-strategy"),
+    );
+    expect(actionHref("advanced_therapeutics")).toBe(
+      sectionRoute(LIFE_SUPPLY_ROUTES.investorRelations, "advanced-therapeutics"),
+    );
+    const groups = buildPrimaryNavigation();
+    // Investors is a direct link: no dropdown, no children.
+    expect(groups.find((g) => g.key === "investors")!.links).toEqual([]);
     // 2026-09-09: News & resources moved from the About group into Investors, replacing the
     // documents index; Shareholder services withdrawn. Both old addresses are redirect rows.
     // The About group's one child was Our team, which became sections of
@@ -470,10 +502,13 @@ describe("route registry", () => {
   });
 
   it("keeps investor documents at a request step with no hosted file, and every figure scoped", () => {
-    for (const record of news.documents.records) {
-      expect(record.href, record.title).toBeNull();
+    // The directory is the investor page's materials section since 2026-09-13.
+    for (const record of investorRelations.materials.records) {
       expect(record.date, record.title).toBeTruthy();
-      expect(["Public", "Restricted, on request", "Historical"]).toContain(record.category);
+      expect(["Restricted, on request", "Historical"]).toContain(record.category);
+      // A document-specific request, never a file.
+      expect(record.action, record.title).toMatch(/^request_/);
+      expect(ACTIONS[record.action].destination.kind, record.title).toBe("mailto");
     }
     expect(investorRelations.currentReport.entity).toContain("LifeSupply Health Inc.");
     expect(investorRelations.currentReport.status).toMatch(/unaudited/i);
@@ -482,9 +517,9 @@ describe("route registry", () => {
     for (const highlight of investorRelations.currentReport.highlights) {
       expect(highlight.value, highlight.label).toMatch(/^C\$/);
     }
-    for (const option of investorRelations.advancedTherapeutics.options) {
+    for (const option of investorRelations.longerTerm.options) {
       expect(option.status, option.title).toBe("Under evaluation");
-      expect(option.dependencies.length, option.title).toBeGreaterThan(0);
+      expect(option.dependencies, option.title).toBeTruthy();
     }
   });
 
@@ -492,7 +527,7 @@ describe("route registry", () => {
     // Contact moved into the primary menu as its last item on 2026-09-10, so
     // keeping it in the utility strip would be a second control to the same
     // destination.
-    expect(buildUtilityNavigation().map((link) => link.label)).toEqual(["Shop Stores"]);
+    expect(buildUtilityNavigation().map((link) => link.label)).toEqual(["Shop Our Stores"]);
   });
 
   it("uses trailing-slash paths throughout", () => {
@@ -608,11 +643,16 @@ describe("action registry", () => {
       ...metabolic.collaboration.actions,
       ...partners.suppliers.actions,
       ...partners.acquisitions.actions,
-      ...investorRelations.hub.actions,
-      ...investorRelations.growthStrategy.actions,
-      ...investorRelations.advancedTherapeutics.actions,
-      ...news.documents.actions,
-      ...investorRelations.disclosures.actions,
+      // The one investor page since 2026-09-13: every action it declares.
+      investorRelations.actions.primary,
+      ...investorRelations.business.links.map((link) => link.action),
+      ...investorRelations.growth.priorities.flatMap((priority) =>
+        "link" in priority ? [priority.link.action] : priority.links.map((link) => link.action),
+      ),
+      ...investorRelations.materials.records.map((record) => record.action),
+      investorRelations.contactSection.primary,
+      ...investorRelations.contactSection.secondary.map((link) => link.action),
+      news.materials.action,
       ...Object.values(policies).map((p) => p.action),
     ];
     for (const key of declared) {

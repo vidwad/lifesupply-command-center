@@ -1,23 +1,21 @@
 /**
- * Partners copy for Stage 5 (guide §3: `/partners/` and its four children).
+ * The Acquisitions & Strategic Opportunities page (`/partners/acquisitions/`).
  *
- * The hub was retired on 2026-09-10 (website consolidation, stage 3): it only
- * routed by relationship, two of its four relationships had already moved to
- * the pages that carry their subject, and routing an enquiry by intent is
- * what Contact does. Two pages remain, each reached from the page or the
- * footer that carries its subject rather than from a menu.
+ * The Partners hub was retired on 2026-09-10 (website consolidation, stage
+ * 3), Suppliers & Manufacturers became a section of Medical Supply Solutions
+ * on 2026-09-12, and this page was rewritten on 2026-09-13 (product owner)
+ * as a focused outreach page for business owners and transaction advisers,
+ * reached from the investor page, Contact and the footer rather than from a
+ * menu. It keeps its address.
  *
- * Each one distinguishes itself from ordinary procurement (a clinic that buys supplies is a customer, not a program
- * partner) and ends on an approved directory channel, because no inquiry
- * intake exists before Stage 7 (WEB-07). Clinic collaboration and the
- * pharmacy partner programme left this file on 2026-09-10: each is a section
- * of the page that already carried its subject, and each one's copy now lives
- * beside the rest of that subject's material, in `content/clinics.ts` and
- * `content/pharmacy.ts` respectively. Nothing here names a
- * partner, a pilot, a signed agreement, a transaction, or a counterparty:
- * the register holds no such approved fact (S-63, S-72). Statuses are
- * stated per relationship; "proposed" means LifeSupply is inviting the
- * conversation, not that a program is operating.
+ * Nothing here names a counterparty, a transaction, a pilot, or a signed
+ * agreement: the register holds no such approved fact (S-63, S-72). Nothing
+ * implies financing is committed or that terms are predetermined; every
+ * structure is one that could be considered, and any terms depend on board
+ * approval, financing, diligence, and applicable regulatory and disclosure
+ * requirements. The `suppliers` block is the wording the retired supplier
+ * page carried, kept on the record; Medical Supply Solutions renders its
+ * own supplier section.
  */
 export const partners = {
   suppliers: {
@@ -25,82 +23,73 @@ export const partners = {
     title: "Supplying the operating stores.",
     intro:
       "LifeSupply's operating stores carry health, safety, medical, and related categories in Canada and the United States. This page sets out what a supplier or manufacturer conversation covers and what is needed to start one.",
-    fit: {
-      eyebrow: "Suitable categories and regions",
-      title: "Where a new supplier fits.",
-      text: "Categories that the stores already publish, or adjacent categories that serve the same clinic, home-care, or professional buyers. Canada and the United States are served by different stores with different currencies and accounts, so distribution rights and regions are discussed per store.",
-    },
-    requirements: {
-      title: "What a conversation needs",
-      items: [
-        "Company, product range, and the categories and regions proposed.",
-        "Distribution rights held for those regions, and any exclusivity that applies.",
-        "Product data: descriptions, images, specifications, regulatory identifiers where applicable, and pricing structure.",
-        "Commercial terms: lead times, minimums, returns, and support arrangements.",
-      ],
-    },
-    process: {
-      title: "Onboarding",
-      items: [
-        {
-          index: "01",
-          title: "Inquiry",
-          text: "A written introduction through the corporate channel below.",
-        },
-        {
-          index: "02",
-          title: "Review",
-          text: "Fit against the stores' categories, regions, and buyers, and a check of product data and regulatory identifiers.",
-        },
-        {
-          index: "03",
-          title: "Commercial terms",
-          text: "Terms agreed with the operating store that will list the products.",
-        },
-        {
-          index: "04",
-          title: "Listing",
-          text: "Products are listed on the relevant store through that store's own catalogue process.",
-        },
-      ],
-    },
     actions: ["supplier_inquiry", "explore_businesses"],
   },
 
   acquisitions: {
-    eyebrow: "Partners · Acquisitions and strategic transactions",
-    title: "Selective transactions that fit the platform.",
-    intro:
-      "LifeSupply's public strategy includes complementary acquisitions. This page describes the fit criteria, the general structures considered, and the confidential process. It does not announce, describe, or imply any transaction.",
-    criteria: {
-      eyebrow: "Fit criteria",
-      title: "What LifeSupply looks for.",
+    eyebrow: "Acquisitions & Strategic Opportunities",
+    title: "Complementary businesses. A clear reason to come together.",
+    intro: [
+      "LifeSupply welcomes discussions with owners and advisers of businesses that could complement its medical, health, and related supply operations in Canada and the United States.",
+      "Our interest is in transactions with a clear commercial rationale: relevant customers, product breadth, supplier relationships, geographic reach, or capabilities that strengthen the operating business.",
+    ],
+    /** 1. The kinds of business and capability of interest. */
+    interests: {
+      eyebrow: "Of interest",
+      title: "Businesses and capabilities that could add to the operating stores.",
       items: [
         {
-          title: "Complementary categories or customers",
-          text: "Medical, health, safety, or related supply businesses whose customers, categories, or suppliers extend the operating stores.",
+          title: "Medical, health, and home-care supply businesses",
+          text: "Online or catalogue supply businesses whose customers, categories, or suppliers extend what the operating stores already carry.",
         },
         {
-          title: "Integration rationale",
-          text: "A clear operating reason: shared fulfilment, catalogue, sourcing, or clinic relationships, rather than scale alone.",
+          title: "Clinic, pharmacy, and home-care customer bases",
+          text: "Businesses that serve clinics, pharmacies, rehabilitation practices, or home-care buyers in Canada or the United States.",
         },
         {
-          title: "Clinic and program adjacency",
-          text: "Businesses that serve clinics, pharmacies, or home-care buyers in Canada or the United States.",
+          title: "Supplier relationships and product lines",
+          text: "Distribution rights, brand relationships, or product ranges that broaden the categories the stores can offer.",
+        },
+        {
+          title: "Operational capabilities",
+          text: "Fulfilment, sourcing, catalogue, or service capabilities that the operating business could use across its stores.",
         },
       ],
     },
-    structures: {
-      title: "General structures",
-      text: "Asset purchases, share purchases, and strategic arrangements are all considered. Structure follows the business and the counterparty; nothing is standard. Strategic or public-market counterparties are welcome to start the same confidential conversation.",
+    /** 2. What makes a fit, and what integration would have to be true. */
+    fit: {
+      eyebrow: "Strategic fit",
+      title: "What a good fit looks like.",
+      items: [
+        {
+          title: "An operating reason",
+          text: "Shared fulfilment, catalogue, sourcing, or customer relationships that the combined business would actually use, rather than scale alone.",
+        },
+        {
+          title: "Customers and categories that extend the stores",
+          text: "A customer base or product range the operating stores can serve better together than apart.",
+        },
+        {
+          title: "A credible integration path",
+          text: "Systems, people, and supplier arrangements that can be brought together without disrupting either business's customers.",
+        },
+      ],
     },
+    /** 3. Structures that could be considered; none is standard. */
+    structures: {
+      eyebrow: "Structures",
+      title: "Structures considered, case by case.",
+      text: "Asset purchases, share purchases, and strategic arrangements can all be considered. Structure follows the business and the counterparty, and no terms are standard or predetermined. Strategic and public-market counterparties are welcome to start the same confidential conversation.",
+    },
+    /** 4. The confidential process, and what to include in an introduction. */
     process: {
-      title: "Confidential process",
+      eyebrow: "Process",
+      title: "A confidential introduction and evaluation.",
       items: [
         {
           index: "01",
           title: "Introduction",
-          text: "A short written introduction through the channel below.",
+          text: "A short written introduction to the channel below. Sensitive documents should wait until confidentiality is arranged.",
         },
         {
           index: "02",
@@ -115,9 +104,25 @@ export const partners = {
         {
           index: "04",
           title: "Terms",
-          text: "Any terms are subject to board approval, financing, diligence, and applicable regulatory and disclosure requirements.",
+          text: "Any terms depend on board approval, financing, diligence, and applicable regulatory and disclosure requirements.",
         },
       ],
+    },
+    introduction: {
+      title: "What to include in an introduction",
+      items: [
+        "A description of the business and what it does.",
+        "Where it operates and the markets it serves.",
+        "Its product and customer focus.",
+        "The reason for making contact.",
+      ],
+      note: "Please arrange confidentiality before providing sensitive documents.",
+    },
+    /** 5. Direct contact. */
+    contact: {
+      eyebrow: "Contact",
+      title: "Start the conversation with Abdul Ladha.",
+      text: "Acquisition and strategic enquiries go directly to the Chairman & Chief Executive Officer.",
     },
     actions: ["acquisition_inquiry", "investor_information"],
   },

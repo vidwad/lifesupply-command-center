@@ -530,9 +530,9 @@ describe("routes and content governance", () => {
       "src/app/clinic-solutions/page.tsx",
       "src/app/metabolic-health/page.tsx",
       "src/app/partners/acquisitions/page.tsx",
-      "src/app/investor-relations/growth-strategy/page.tsx",
-      "src/app/investor-relations/advanced-therapeutics/page.tsx",
-      "src/app/investor-relations/disclosures/page.tsx",
+      // Growth Strategy, Advanced Therapeutics and Disclosures became sections
+      // of the investor page on 2026-09-13; their route files are gone and
+      // the addresses redirect.
       "src/app/privacy/page.tsx",
       "src/app/terms/page.tsx",
       // The three store pages and the suppliers page became sections of
@@ -687,7 +687,9 @@ describe("design-pass graphics and section primitives", () => {
       // pages render none: the homepage since the 2026-09-11 restructure, and
       // Medical Supply Solutions since the 2026-09-12 consolidation, whose
       // sections are carried by photographs, rules and numerals instead.
-      if (name !== "home" && name !== "operations") {
+      // Since 2026-09-13 neither the investor page nor Acquisitions renders
+      // a content icon either: numerals, rules, tables and status labels.
+      if (!["home", "operations", "partners", "investors"].includes(name)) {
         expect(page, name).toMatch(/@\/components\/public-site\/(sections|icons)/);
       }
       // Only interface affordances may come straight from lucide.
@@ -801,8 +803,12 @@ describe("round four: consolidation, precision and available actions", () => {
   it("opens the investor section with the business, not the access policy", () => {
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
     const opening = investors.slice(0, investors.indexOf("currentReport:"));
-    expect(opening).toContain("sells health, safety, medical and industrial products online");
-    expect(opening).toContain("C$6.75M");
+    // Since 2026-09-13 the hero states the business and the plan; the figures
+    // follow in their own section rather than crowding the hero.
+    expect(opening).toContain("brings together online medical and home-care supply businesses");
+    expect(opening).toContain("A focused plan for expansion.");
+    expect(opening).not.toContain("C$");
+    expect(investors).toContain("C$6.75M");
     // The classification scheme is not the first thing a reader meets.
     expect(opening).not.toMatch(/disclosed information, forward-looking statements/i);
   });
@@ -842,15 +848,18 @@ describe("round four: consolidation, precision and available actions", () => {
   });
 
   it("advertises no empty document category and no download that does not exist", () => {
-    const news = stripComments(read("src/lib/public-site/content/news.ts"));
-    const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
+    // The directory is the investor page's materials section since 2026-09-13.
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
     // The three access-class tiles are gone; one of them held nothing at all.
-    expect(page).not.toContain("d.classes.map");
-    expect(news).toContain("None is downloadable here");
-    // Every record still shows where it stands.
+    expect(page).not.toContain("classes.map");
+    expect(investors).toContain("none is downloadable here");
+    // Every record still shows where it stands, and asks for the document by name.
     for (const category of ["Restricted, on request", "Historical"]) {
-      expect(news).toContain(category);
+      expect(investors).toContain(category);
     }
+    expect(investors).not.toContain("Version: Not stated");
+    expect(page).not.toContain("Not stated");
   });
 });
 
@@ -964,25 +973,27 @@ describe("round three: architecture, placement and voice", () => {
   it("gives the investor pages a planned sequence with no date, count or target", () => {
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
     expect(investors).toContain("execution:");
+    // The four phases since 2026-09-13: Define, Pilot, Launch, Expand, each
+    // with the evidence it needs before the next, and every one planned.
     for (const stage of [
-      "Design and de-risk",
-      "Controlled pilot",
-      "Launch and integrate",
-      "Replicate and scale",
+      'title: "Define"',
+      'title: "Pilot"',
+      'title: "Launch"',
+      'title: "Expand"',
     ]) {
       expect(investors).toContain(stage);
     }
-    // Planned, never achieved. The gate and "Where it stands" cards were
-    // removed from the page on 2026-09-12 (product owner) and their sentences
-    // kept unpublished, so what carries the status now is the section's own
-    // title and intro and the label on every stage card.
     const investorsPage = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
-    expect(investorsPage).not.toContain("{e.gate.text}");
-    expect(investorsPage).not.toContain("{e.status}");
-    expect(investors).toContain('stageLabel: "Planned step"');
-    expect(investorsPage).toContain("{e.stageLabel} {stage.index}");
-    expect(investors).toContain("The sequence, and where it currently stands.");
+    expect(investors).toContain('statusLabel: "Planned"');
+    expect(investorsPage).toContain("{ir.execution.statusLabel} {phase.index}");
+    expect(investorsPage).toContain("{phase.evidence}");
+    expect(investors).toContain("A phased approach to development.");
     expect(investors).toContain("no launch date is published");
+    // What development would require, in kind only: no target, allocation or valuation.
+    expect(investors).toContain(
+      "The amount and form of any financing are not published on this site.",
+    );
+    expect(investors).not.toMatch(/use of (funds|proceeds)|allocat\w+ \d|\d+\s?%/i);
     // No schedule or scale target reaches the sequence.
     const execution = investors.slice(investors.indexOf("execution:"));
     expect(execution).not.toMatch(/\b\d+\s*(days?|weeks?|months?|clinics?|partners?|patients?)\b/i);
@@ -1060,11 +1071,12 @@ describe("round three: architecture, placement and voice", () => {
     for (const figure of ["C$6.75M", "C$2.20M", "C$284K"]) {
       expect(newsContent, figure).not.toContain(figure);
     }
-    // And it routes to the pages that do own those facts.
+    // The introduction came off the page on 2026-09-13 (product owner) and is
+    // kept unpublished; Company News is announcements and the archive, with
+    // one line pointing at the investor materials.
     const page = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
-    expect(page).not.toContain("overview.facts.map");
-    expect(page).toContain("overview.action");
-    expect(page).toContain('<ActionLink action="investor_information"');
+    expect(page).not.toContain("overview.");
+    expect(page).toContain("materials.action");
     expect(newsContent).toContain('action: "about_group"');
   });
 
@@ -1301,13 +1313,38 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
     }
   });
 
-  it("replaces the generic investor link label with a described destination", () => {
+  it("answers the five investor questions in order, on one page, with described destinations", () => {
     const page = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
     expect(page).not.toContain('linkLabel: "Open"');
-    expect(page).toContain("linkLabel: section.linkLabel");
+    // The one page since 2026-09-13, in the order an investor asks.
+    const order = [
+      'id="business"',
+      'id="financial-information"',
+      'id="business-model"',
+      'id="growth-strategy"',
+      'id="execution"',
+      'id="advanced-therapeutics"',
+      'id="materials"',
+      'id="contact"',
+      'id="disclosures"',
+    ];
+    for (let index = 1; index < order.length; index += 1) {
+      expect(page.indexOf(order[index]!), order[index]).toBeGreaterThan(
+        page.indexOf(order[index - 1]!),
+      );
+    }
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
-    expect(investors).toContain("The business today");
-    expect(investors).toContain("Conditions for execution");
+    expect(investors).toContain("An operating foundation across two markets.");
+    expect(investors).toContain("How the business operates, and how it could expand.");
+    expect(investors).toContain("Grow the core business. Extend the customer relationship.");
+    expect(investors).toContain("Additional healthcare capabilities under evaluation.");
+    expect(investors).toContain("Supporting information for investors.");
+    // The figures appear once, and no chart is drawn from one period.
+    expect((page.match(/currentReport\.highlights/g) ?? []).length).toBe(1);
+    expect(page).not.toMatch(/CountUp|<Chart|recharts/);
+    // Repeat purchasing is never contracted revenue; no fee is assumed.
+    expect(investors).toContain("different from contractual recurring revenue");
+    expect(investors).not.toMatch(/subscription revenue|recurring revenue of|portal fee(s)? of/i);
   });
 });
 
@@ -1657,8 +1694,10 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     ]) {
       expect(config, source).toContain(`source: "${source}"`);
     }
-    // 2026-09-09: the documents index merged into News & resources; Shareholder services withdrawn.
-    expect(config).toContain('destination: "/news"');
+    // 2026-09-09: the documents index merged into News & resources; since
+    // 2026-09-13 it is the investor page's materials section, in one hop.
+    expect(config).toContain('destination: "/investor-relations#materials"');
+    expect(config).not.toContain('destination: "/news"');
     for (const code of publicComponents()) {
       expect(code).not.toMatch(/shareholder/i);
       expect(code).not.toContain("RelatedActions");
@@ -2202,12 +2241,13 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
 
   it("keeps static documents at a request step and downloads only through the published read model", () => {
     expect(stage5Content()).not.toMatch(/\.pdf/i);
-    // The documents index lives on the News & resources page since 2026-09-09.
+    // The documents index lived on News & resources from 2026-09-09; it is the
+    // investor page's materials section since 2026-09-13.
     const newsPage = stripComments(read(`${PUBLIC_DIR}/pages/news.tsx`));
     const investors = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
     // The only download link is built from a published record's same-origin path; never a literal file.
-    expect(newsPage).toContain("publishedDocumentUrl(doc.downloadPath)");
-    expect(investors).not.toContain("publishedDocumentUrl");
+    expect(investors).toContain("publishedDocumentUrl(doc.downloadPath)");
+    expect(newsPage).not.toContain("publishedDocumentUrl");
     for (const code of [newsPage, investors]) {
       expect(code).not.toMatch(/\bdownload=/);
     }
@@ -2239,7 +2279,7 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(page).toContain("resources.data.map");
     // A section that fetched cleanly and returned nothing is left out rather than
     // announcing itself as empty (2026-09-09); an outage still says so.
-    expect((page.match(/isEmpty\(/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect((page.match(/isEmpty\(/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(page).toContain("sections.current.unavailable");
     expect(page).toContain("sections.resources.unavailable");
   });
@@ -2338,11 +2378,24 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
   });
 
-  it("carries the forward-looking qualification beside the investor claims", () => {
+  it("carries the forward-looking qualification on a permanent anchor, and a status beside every claim", () => {
     const page = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
-    expect((page.match(/<ForwardLooking /g) ?? []).length).toBeGreaterThanOrEqual(3);
-    expect(page).toContain("d.forwardLooking.text");
-    expect(page).toContain("<StatusTag status=");
+    expect(page).toContain('id="disclosures"');
+    expect(page).toContain("ir.disclosures.forwardLooking.text");
+    expect(page).toContain("ir.disclosures.figures");
+    expect(page).toContain("ir.disclosures.offering");
+    expect((page.match(/<StatusTag status=/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    // Every proposed activity says so where it is described.
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    expect(investors).toContain(
+      "These activities are under evaluation and are not currently offered by LifeSupply.",
+    );
+    expect(investors).toContain(
+      "None of these capabilities is offered until its implementation is confirmed.",
+    );
+    expect(investors).not.toMatch(
+      /predicts? shortages|integrated portals? (is|are) (available|live)|dynamic pricing/i,
+    );
   });
 });
 
@@ -2376,8 +2429,9 @@ describe("Stage 6 governed publishing on the public site", () => {
     expect(page).toContain("sections.current.unavailable");
     expect(page).toContain("sections.resources.unavailable");
     expect(page).toContain("export function PublishedUnavailablePage");
-    // The published document list, merged into the news page on 2026-09-09.
-    expect(page).toContain("copy.unavailable");
+    // The published document list: on the news page from 2026-09-09, and on
+    // the investor page since 2026-09-13.
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`))).toContain("copy.unavailable");
     for (const route of ["src/app/news/[slug]/page.tsx", "src/app/resources/[slug]/page.tsx"]) {
       expect(read(route), route).toContain("if (!result.ok) return <PublishedUnavailablePage />;");
       expect(read(route), route).toContain("robots: { index: false }");
@@ -2498,6 +2552,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
     [METABOLIC_ROUTES.hub]: `${PUBLIC_DIR}/pages/metabolic.tsx`,
     [LIFE_SUPPLY_ROUTES.contact]: `${PUBLIC_DIR}/pages/contact.tsx`,
     [LIFE_SUPPLY_ROUTES.about]: `${PUBLIC_DIR}/pages/team-sections.tsx`,
+    [LIFE_SUPPLY_ROUTES.investorRelations]: `${PUBLIC_DIR}/pages/investors.tsx`,
   };
 
   it("renders every section anchor the registry declares", () => {
@@ -2506,7 +2561,10 @@ describe("website consolidation: sections, redirects and deep links", () => {
       // A page that declares anchors but has no component here would sail
       // through the loop silently, so the mapping is asserted, not assumed.
       expect(file, route).toBeTruthy();
-      const source = stripComments(read(file!));
+      // Attribute lines wrap under the formatter, so the check reads the
+      // source with its whitespace collapsed: the rule is that the anchor is
+      // on the section, not that it fits on one line.
+      const source = stripComments(read(file!)).replace(/\s+/g, " ");
       for (const anchor of anchors) {
         // The whole section is the target, not a heading floating above its
         // own content, so a reader who follows a redirect lands on the block.

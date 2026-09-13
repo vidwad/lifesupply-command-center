@@ -48,6 +48,13 @@ export type ActionKey =
   | "growth_strategy"
   | "advanced_therapeutics"
   | "news_resources"
+  | "acquisitions_page"
+  | "investor_materials_section"
+  | "institutional_purchasing_section"
+  | "supply_planning_section"
+  | "request_annual_report"
+  | "request_financing_presentation"
+  | "request_historical_presentation"
   | "supplier_inquiry"
   | "supplier_page"
   | "us_business_inquiry"
@@ -292,27 +299,67 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     ownerChannel: null,
     verifiedAt: null,
   },
+  /*
+   * The investor section is one page since 2026-09-13 (product owner):
+   * Growth Strategy, Advanced Therapeutics and Disclosures are sections of
+   * it, so these three navigate to anchors rather than to the retired
+   * addresses, and never through a redirect.
+   */
   growth_strategy: {
     key: "growth_strategy",
-    label: "Growth strategy",
+    label: "Explore the growth strategy",
     intent: "navigation",
-    destination: internal(STAGE_5_ROUTES.growthStrategy),
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.investorRelations, "growth-strategy")),
     ownerChannel: null,
     verifiedAt: null,
   },
   advanced_therapeutics: {
     key: "advanced_therapeutics",
-    label: "Advanced therapeutics",
+    label: "Longer-term opportunities under evaluation",
     intent: "navigation",
-    destination: internal(STAGE_5_ROUTES.advancedTherapeutics),
+    destination: internal(
+      sectionRoute(LIFE_SUPPLY_ROUTES.investorRelations, "advanced-therapeutics"),
+    ),
     ownerChannel: null,
     verifiedAt: null,
   },
   news_resources: {
     key: "news_resources",
-    label: "News & resources",
+    label: "Company News",
     intent: "navigation",
     destination: internal(LIFE_SUPPLY_ROUTES.news),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  investor_materials_section: {
+    key: "investor_materials_section",
+    label: "Investor materials",
+    intent: "navigation",
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.investorRelations, "materials")),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  acquisitions_page: {
+    key: "acquisitions_page",
+    label: "Acquisitions & Strategic Opportunities",
+    intent: "navigation",
+    destination: internal(STAGE_5_ROUTES.partnerAcquisitions),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  institutional_purchasing_section: {
+    key: "institutional_purchasing_section",
+    label: "Clinic and institutional purchasing",
+    intent: "navigation",
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "professional-buyers")),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  supply_planning_section: {
+    key: "supply_planning_section",
+    label: "Proposed supply-planning capabilities",
+    intent: "navigation",
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "technology")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -361,6 +408,41 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Investor relations",
     intent: "investor",
     destination: internal(LIFE_SUPPLY_ROUTES.investorRelations),
+    ownerChannel: "Investor relations",
+    verifiedAt: null,
+  },
+  /*
+   * Document-specific requests from the investor materials section
+   * (2026-09-13): the subject names the document, so an arriving mail is
+   * routable without a form. Same channel, same recipient checks.
+   */
+  request_annual_report: {
+    key: "request_annual_report",
+    label: "Request this document",
+    intent: "investor",
+    destination: mail(
+      "invest@lifesupply.com",
+      "Request: annual-report narrative, year ended December 31, 2025",
+    ),
+    ownerChannel: "Investor relations",
+    verifiedAt: null,
+  },
+  request_financing_presentation: {
+    key: "request_financing_presentation",
+    label: "Request this document",
+    intent: "investor",
+    destination: mail("invest@lifesupply.com", "Request: financing presentation, August 25, 2026"),
+    ownerChannel: "Investor relations",
+    verifiedAt: null,
+  },
+  request_historical_presentation: {
+    key: "request_historical_presentation",
+    label: "Request this document",
+    intent: "investor",
+    destination: mail(
+      "invest@lifesupply.com",
+      "Request: investor presentation, May 2022 (historical)",
+    ),
     ownerChannel: "Investor relations",
     verifiedAt: null,
   },

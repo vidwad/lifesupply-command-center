@@ -5,9 +5,9 @@ import { publicMetadata } from "@/lib/public-site/seo";
 import { PartnerAcquisitionsPage } from "@/components/public-site/lifesupply-pages";
 
 export const metadata: Metadata = publicMetadata({
-  title: "Partners: Acquisitions and strategic transactions",
+  title: "Acquisitions & Strategic Opportunities",
   description:
-    "Fit criteria, general structures, and a confidential process. No transaction is announced or implied.",
+    "Businesses and capabilities that could complement LifeSupply's supply operations, what a fit looks like, the structures that could be considered, and a confidential process. No transaction is announced or implied.",
   path: "/partners/acquisitions/",
 });
 
