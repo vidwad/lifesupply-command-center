@@ -425,53 +425,57 @@ export function InvestorRelationsPage({
               description={ir.execution.intro}
             />
           </Reveal>
-          <div
-            aria-hidden="true"
-            className="mt-12 hidden grid-cols-[6rem_1fr_1.2fr] gap-8 border-b border-[var(--lsh-rule-strong)] pb-3 md:grid"
-          >
-            <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">
-              {ir.execution.labels.phase}
-            </span>
-            <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">
-              {ir.execution.labels.purpose}
-            </span>
-            <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">
-              {ir.execution.labels.evidence}
-            </span>
-          </div>
-          <Stagger as="ol" className="mt-12 divide-y divide-[var(--lsh-rule)] md:mt-0">
-            {ir.execution.phases.map((phase) => (
-              <StaggerItem
-                key={phase.index}
-                as="li"
-                className="grid gap-3 py-6 md:grid-cols-[6rem_1fr_1.2fr] md:gap-8"
-              >
-                <div className="flex items-start gap-4 md:block">
+          {/*
+           * The four phases as a stepper: numbered nodes on one rail, the
+           * phase and its purpose above the rail, and beneath each node the
+           * gate it has to pass, drawn as a checkpoint. Every node reads
+           * "Planned", and no node is drawn as reached: the sequence shows the
+           * order of the work, not progress along it. Horizontal from lg,
+           * a vertical rail below it. Real text throughout.
+           */}
+          <ol className="relative mt-14 grid gap-12 lg:grid-cols-4 lg:gap-8">
+            <span
+              aria-hidden="true"
+              className="absolute left-6 top-0 h-full w-px bg-[var(--lsh-rule-strong)] lg:left-6 lg:right-[calc(25%-3rem)] lg:top-6 lg:h-px lg:w-auto"
+            />
+            {ir.execution.phases.map((phase, index) => (
+              <li key={phase.index} className="relative pl-20 lg:pl-0">
+                {/* The node: the phase number in a red ring on the rail. */}
+                <span className="lsh-display absolute left-0 top-0 grid h-12 w-12 place-items-center rounded-full border-2 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] text-[13px] text-[var(--lsh-brand-red)] lg:static lg:mb-6">
+                  {phase.index}
+                </span>
+                <div className="flex flex-wrap items-center gap-3">
                   <IconBadge icon={iconForTitle(phase.title)} size={18} />
-                  <div className="md:mt-3">
-                    <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                      {ir.execution.statusLabel} {phase.index}
-                    </span>
-                    <h3 className="lsh-display mt-1 text-xl leading-tight text-[var(--lsh-charcoal)]">
-                      {phase.title}
-                    </h3>
-                  </div>
+                  <StatusTag status={ir.execution.statusLabel} />
                 </div>
-                <p className="text-sm leading-6 text-[var(--lsh-charcoal)]">
-                  <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-muted)] md:sr-only">
+                <h3 className="lsh-display mt-4 text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                  {phase.title}
+                </h3>
+                <p className="mt-2 leading-7 text-[var(--lsh-muted)]">
+                  <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-brand-red)]">
                     {ir.execution.labels.purpose}
                   </span>
                   {phase.purpose}
                 </p>
-                <p className="text-sm leading-6 text-[var(--lsh-muted)]">
-                  <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-muted)] md:sr-only">
+                {/* The gate beneath the phase: what has to be shown before the next begins. */}
+                <div className="mt-6 border-l-2 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-4">
+                  <p className="lsh-display flex items-center gap-2 text-[10px] text-[var(--lsh-charcoal)]">
+                    <IconBadge icon="badge" size={14} />
                     {ir.execution.labels.evidence}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{phase.evidence}</p>
+                </div>
+                {index < ir.execution.phases.length - 1 ? (
+                  <span
+                    aria-hidden="true"
+                    className="lsh-display absolute -right-5 top-3 hidden text-lg text-[var(--lsh-rule-strong)] lg:block"
+                  >
+                    →
                   </span>
-                  {phase.evidence}
-                </p>
-              </StaggerItem>
+                ) : null}
+              </li>
             ))}
-          </Stagger>
+          </ol>
           <Reveal className="mt-8 grid gap-6 border-t border-[var(--lsh-rule-strong)] pt-8 lg:grid-cols-2 lg:gap-16">
             <p className="text-sm leading-6 text-[var(--lsh-muted)]">{ir.execution.status}</p>
             <div>
