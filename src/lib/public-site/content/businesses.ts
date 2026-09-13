@@ -20,150 +20,160 @@ export const businesses = {
    * three online stores. Corporate material (entities, capabilities,
    * developing programs) moved to About.
    */
+  /**
+   * Medical Supply Solutions, consolidated on 2026-09-12 (product owner).
+   *
+   * The three brand pages and the suppliers page were folded in as sections,
+   * so the page answers three questions in order: where should I shop, who
+   * helps with professional purchasing, and how do I introduce my products.
+   *
+   * Repetition went with the consolidation. "This corporate site does not
+   * sell products", "this site cannot see or change orders" and "each store
+   * has its own catalogue, accounts, currency, prices and support" were said
+   * in several places; Ordering and support now explains each once.
+   */
   hub: {
     eyebrow: "Medical Supply Solutions",
-    title: "Three online stores for medical, health, and home-care supply.",
-    description:
-      "LifeSupply, Wellmart Medical, and Balkowitsch Worldwide each keep their own catalogue, accounts, currency, prices, and support. This section introduces each store and where its emphasis lies; buying happens on the store.",
-    /**
-     * The stores section, at the `#stores` anchor. Shop & Services merged
-     * into it on 2026-09-10 (website consolidation, stage 1): that page
-     * existed to answer "which destination, in which currency, and who
-     * handles my order", which is the same question this section already
-     * raised one click earlier. Its geography and support-boundary copy
-     * moved here verbatim in substance, and the clinic destination it
-     * listed fourth is the Clinic Solutions call-out below.
-     */
+    title: "Medical and home-care supplies. Choose the store that fits your needs.",
+    description: [
+      "Explore LifeSupply’s online stores serving Canada and the United States, with products for home care, everyday health, and professional practice.",
+      "Shop directly with a store, discuss purchasing for your organization, or introduce your products to our supply businesses.",
+    ],
+    actions: {
+      stores: "Explore our stores",
+      professional: "Buying for a practice?",
+      suppliers: "Supplier & manufacturer enquiries",
+    },
+    /** The in-page navigation, and the order the sections run in. */
+    sections: [
+      { href: "#stores", label: "Our stores" },
+      { href: "#professional-buyers", label: "Professional purchasing" },
+      { href: "#ordering-support", label: "Ordering & support" },
+      { href: "#suppliers", label: "Suppliers" },
+    ],
     stores: {
-      eyebrow: "The stores",
-      title: "Each store keeps its own site, accounts, currency, and support.",
-      intro:
-        "This corporate site does not sell products or take orders. Each destination below has its own catalogue, accounts, currency, prices, and customer support.",
-      /** Card actions: the store first, the brand page second (round three, outcome 7). */
-      shopLabel: "Shop",
-      aboutLabel: "About",
-      /**
-       * Both blocks unpublished on 2026-09-12 (product owner). What they
-       * carried is still on the page: every store card shows its country and
-       * currency, and the section's own intro says this site sells nothing
-       * and takes no orders.
-       */
-      geography: {
-        title: "Geography and currency",
-        text: "The Canadian stores price in Canadian dollars and ship within Canada. Balkowitsch Worldwide prices in U.S. dollars and ships from the United States. Shipping thresholds, delivery times, and returns are published on each store.",
-      },
-      support: {
-        title: "Support boundary",
-        text: "For an existing order, contact the store that took it: this site cannot see or change store orders. For a clinic project, an equipment quote or a supply program, write to us on the Contact page, where each kind of enquiry has its own address.",
-      },
-    },
-    /**
-     * A distinct route for professional buyers (round three, outcome 7). What a
-     * supply review covers is described from verified capability only: the
-     * categories the stores actually carry, account setup on the store that
-     * carries them, and equipment planning where a British Columbia clinic
-     * project is involved. No credit terms, consolidated billing, system
-     * integration or named account management is offered, because none is
-     * established.
-     */
-    procurement: {
-      eyebrow: "Buying for a practice",
-      title: "A supply review for clinics, pharmacies, and other professional buyers.",
-      text: "Professional buyers do not have to work out which of three stores carries what. Start a conversation and it covers the ground below. Where a clinic project in British Columbia is involved, equipment is part of the same conversation.",
-      covers: [
-        "The categories a practice orders routinely, and which store carries each.",
-        "How accounts work on that store, in its own currency and on its own terms.",
-        "Equipment for a British Columbia clinic project, where there is one.",
+      eyebrow: "Our online stores",
+      title: "Three stores. A clear place to start.",
+      intro: [
+        "LifeSupply and Wellmart Medical serve Canadian customers. Balkowitsch Worldwide serves the U.S. market. Explore each store’s focus and product categories below.",
+        "Each store manages its own catalogue, pricing, accounts, and customer service. Purchases are completed on the store’s website.",
       ],
-      limit:
-        "Orders, prices, shipping and returns stay with the store that fulfils them. A review does not create credit terms, consolidated billing, or a connection between a practice's systems and the stores.",
+      shopLabel: "Shop",
+    },
+    professional: {
+      eyebrow: "For professional buyers",
+      title: "Start with what your practice needs.",
+      paragraphs: [
+        "Buying for a clinic, pharmacy, or another healthcare business? Tell us the categories you purchase and where you operate. A supply review can help identify relevant products and the appropriate operating store.",
+        "For clinic projects in British Columbia, we can also direct equipment enquiries to LifeSupply Clinics.",
+      ],
+      checklistTitle: "What to bring to the conversation",
+      checklist: [
+        "Your organization, location, and type of practice.",
+        "The product categories you purchase regularly.",
+        "Any specific equipment or product requirements.",
+        "Your purchasing frequency and delivery requirements.",
+      ],
+      action: "clinic_supply_review",
+      actionLabel: "Request a supply review",
+      supportingAction: "clinic_ongoing_supplies",
+      supportingLabel: "Explore clinic supplies & equipment",
       /**
-       * The full ongoing-procurement explanation lives on Clinic Solutions
-       * (website consolidation, stage 1). This page introduces professional
-       * buying and points there rather than repeating it in two places.
+       * What the conversation is, and is not. It starts a purchasing
+       * discussion; it does not create pricing, credit, billing, integration,
+       * replenishment or a subscription, none of which is offered.
        */
-      clinicPointer:
-        "A clinic that is already open has more to work through than a store account: categories, repeat ordering, and what is and is not offered. That is set out in full under Clinic Solutions.",
-      actions: ["clinic_supply_review", "clinic_ongoing_supplies"],
+      note: "Orders follow the supplying store’s terms. Any additional purchasing or service arrangements must be agreed separately.",
     },
-    /**
-     * Suppliers & Manufacturers lost its menu category on 2026-09-10 (website
-     * consolidation, stage 3) and keeps its page. A supplier arrives through
-     * the stores, so the link belongs here and in the footer rather than in a
-     * primary menu most visitors are not looking through.
-     */
+    ordering: {
+      eyebrow: "Ordering & support",
+      title: "Ordering and support, through your store.",
+      intro:
+        "Browse and purchase on the operating store’s website. For an existing order, contact the store where you purchased.",
+      disclosures: [
+        {
+          question: "Where do I place an order?",
+          answer:
+            "Follow a store or product-category link above to browse and purchase. Checkout takes place on that store’s website.",
+        },
+        {
+          question: "Which currency and delivery terms apply?",
+          answer:
+            "LifeSupply and Wellmart Medical price in Canadian dollars. Balkowitsch Worldwide prices in U.S. dollars. Check the selected store for delivery availability, shipping charges, returns, and current policies.",
+        },
+        {
+          question: "Who can help with an existing order?",
+          answer:
+            "The store that accepted your order handles delivery questions, returns, and order support.",
+        },
+      ],
+      supportLabel: "Support",
+      supportLinks: [
+        { brand: "lifesupply", label: "LifeSupply support" },
+        { brand: "wellmart", label: "Wellmart support" },
+        { brand: "balkowitsch", label: "Balkowitsch support" },
+      ],
+    },
     suppliers: {
-      eyebrow: "Selling to LifeSupply",
-      title: "Suppliers and manufacturers.",
-      text: "Categories, regions, product data, and how onboarding works are set out on their own page.",
-      action: "supplier_page",
+      eyebrow: "Suppliers & manufacturers",
+      title: "Introduce your products to our supply businesses.",
+      paragraphs: [
+        "We welcome enquiries from suppliers and manufacturers whose products complement the medical, health, home-care, safety, and related categories carried by our operating stores.",
+        "Tell us what you supply, the markets you serve, and where you hold distribution rights. Product fit and commercial arrangements are reviewed with the relevant operating business.",
+      ],
+      requirementsTitle: "What to include",
+      requirements: [
+        {
+          title: "Your business and products",
+          text: "Your company, product range, intended customers, and the categories you would like us to consider.",
+        },
+        {
+          title: "Markets and distribution rights",
+          text: "The countries or regions you can supply, your distribution rights, and any exclusivity arrangements.",
+        },
+        {
+          title: "Product information",
+          text: "Descriptions, images, specifications, applicable regulatory identifiers, and your pricing structure.",
+        },
+        {
+          title: "Commercial requirements",
+          text: "Lead times, minimum order quantities, return arrangements, and product-support terms.",
+        },
+      ],
+      processTitle: "From introduction to listing.",
+      process: [
+        {
+          index: "01",
+          title: "Introduce",
+          text: "Send a short overview of your business, products, and proposed markets.",
+        },
+        {
+          index: "02",
+          title: "Review",
+          text: "The relevant business reviews category fit, distribution rights, product information, and applicable requirements.",
+        },
+        {
+          index: "03",
+          title: "Agree",
+          text: "Commercial terms and supply responsibilities are agreed with the operating store.",
+        },
+        {
+          index: "04",
+          title: "List",
+          text: "Approved products are added through the store’s catalogue process.",
+        },
+      ],
+      action: "supplier_inquiry",
+      actionLabel: "Submit a supplier enquiry",
+      /** An introduction is reviewed for fit; it is not an acceptance. */
+      note: "Initial enquiries are reviewed for fit; submitting information does not establish a supply agreement.",
     },
-    clinics: {
-      eyebrow: "Clinic projects and clinic supply",
-      title: "Clinic planning, equipment, and ongoing supply have their own section.",
-      text: "Clinic Solutions covers LifeSupply Clinics: planning, design, construction and fit-out, equipment quotes, and keeping an open clinic supplied through the stores.",
-      action: "clinic_solutions",
-    },
-  },
-
-  /** Brand pages. `actions` are registry keys; categories and store links come from the registry. */
-  pages: {
-    lifesupply: {
-      eyebrow: "Operating brand · Canada",
-      title: "LifeSupply: Canadian medical and home-care supply, online.",
-      intro:
-        "LifeSupply.ca is a Canadian online store for medical, health, and home-care supplies, with clinic-supply categories for professional buyers. It serves patients, caregivers, and professionals through one storefront.",
-      audience: {
-        title: "Who it serves",
-        text: "Patients, caregivers, and medical professionals alike, including buyers purchasing for a clinic. There is one LifeSupply.ca storefront for all of them, with no separate professional portal.",
-      },
-      categories: {
-        title: "Categories",
-        text: "A selection of the store's published categories. Prices, availability, shipping thresholds, and delivery times are published on the store.",
-      },
-      channels: {
-        title: "Service channels",
-        text: "Customer service by phone and email during the store's published hours. Order, delivery, and return questions go to the store.",
-      },
-      actions: ["shop_lifesupply", "clinic_supply_review"],
-    },
-    wellmart: {
-      eyebrow: "Operating brand · Canada",
-      title: "Wellmart Medical: home medical equipment and supplies for Canada.",
-      intro:
-        "Wellmart Medical is a Canadian online store for home medical equipment and supplies, from mobility and bath safety to incontinence, ostomy, respiratory, and diabetic categories.",
-      audience: {
-        title: "Who it serves",
-        text: "Home-care buyers first, and professional buyers are equally welcome. This corporate site presents Wellmart Medical with a home-care emphasis; the store itself serves both.",
-      },
-      categories: {
-        title: "Categories",
-        text: "A selection of the store's published categories. Prices, availability, shipping thresholds, and delivery times are published on the store.",
-      },
-      channels: {
-        title: "Service channels",
-        text: "Customer service by phone and email during the store's published hours. Order, delivery, and return questions go to the store.",
-      },
-      actions: ["shop_wellmart"],
-    },
-    balkowitsch: {
-      eyebrow: "Operating brand · United States",
-      title: "Balkowitsch Worldwide: a U.S. online store, priced in U.S. dollars.",
-      intro:
-        "Balkowitsch Worldwide sells medical, health, wellness, and related categories to U.S. customers from the United States, priced and supported in its own market.",
-      audience: {
-        title: "Its place on this site",
-        text: "Balkowitsch Worldwide is one of the group's four operating businesses. Its catalogue, accounts, currency, prices, and customer support are its own.",
-      },
-      categories: {
-        title: "Categories",
-        text: "A selection of the store's published categories. Prices, availability, shipping, and returns are published on the store in U.S. dollars.",
-      },
-      channels: {
-        title: "Service channels",
-        text: "Toll-free and international phone support and email during the store's published hours. Order questions go to the store.",
-      },
-      actions: ["shop_balkowitsch", "us_business_inquiry"],
+    closing: {
+      title: "Need help finding the right starting point?",
+      text: "Contact LifeSupply about a business enquiry, or return to the store comparison to browse products.",
+      action: "contact_directory",
+      actionLabel: "Contact LifeSupply",
+      backLabel: "Back to our stores",
     },
   },
 } as const;

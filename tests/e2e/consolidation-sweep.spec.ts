@@ -18,9 +18,6 @@ const RETAINED = [
   "/",
   "/about-us",
   "/medical-supply-solutions",
-  "/medical-supply-solutions/lifesupply",
-  "/medical-supply-solutions/wellmart-medical",
-  "/medical-supply-solutions/balkowitsch",
   "/clinic-solutions",
   "/pharmacy-solutions",
   "/metabolic-health",
@@ -30,7 +27,6 @@ const RETAINED = [
   "/investor-relations/growth-strategy",
   "/investor-relations/advanced-therapeutics",
   "/investor-relations/disclosures",
-  "/partners/suppliers",
   "/partners/acquisitions",
   "/privacy",
   "/terms",
@@ -69,9 +65,9 @@ const REDIRECTS: [string, string][] = [
 const LEGACY: [string, string][] = [
   ["/contact-2", "/contact"],
   ["/our-operations", "/medical-supply-solutions"],
-  ["/our-operations/lifesupply", "/medical-supply-solutions/lifesupply"],
-  ["/our-operations/wellmart-medical", "/medical-supply-solutions/wellmart-medical"],
-  ["/our-operations/balkowitsch", "/medical-supply-solutions/balkowitsch"],
+  ["/our-operations/lifesupply", "/medical-supply-solutions#lifesupply"],
+  ["/our-operations/wellmart-medical", "/medical-supply-solutions#wellmart-medical"],
+  ["/our-operations/balkowitsch", "/medical-supply-solutions#balkowitsch"],
   ["/our-operations/lifesupply-clinics", "/clinic-solutions"],
   ["/our-operations/technology-fulfilment", "/medical-supply-solutions"],
   ["/clinic-solutions/design-build", "/clinic-solutions"],
@@ -86,7 +82,7 @@ const LEGACY: [string, string][] = [
 
 test("A. every retained page answers 200 and the count is 20", async ({ page }) => {
   // Twenty-one until 2026-09-11, when About absorbed the team.
-  expect(RETAINED).toHaveLength(20);
+  expect(RETAINED).toHaveLength(16);
   for (const route of RETAINED) {
     const response = await page.request.get(route, { maxRedirects: 0 });
     expect(response.status(), route).toBe(200);

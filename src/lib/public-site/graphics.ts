@@ -52,7 +52,18 @@ const ABOUT_HERO_PROVENANCE =
 const CLINIC_ROUTE_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the three next-step routes on Clinic Solutions; monochrome brief, no person, no text, no logo, no brand mark; scaled to 1600×900 and converted to neutral greyscale with ffmpeg; conceptual, not operational photography, and not a LifeSupply project.";
 
+const MEDICAL_SUPPLIES_PROVENANCE =
+  "Gamma image generation (photo mode), commissioned 2026-09-12 for the Balkowitsch Worldwide profile on the consolidated Medical Supply Solutions page; monochrome brief, no person, no facility, no logo, no text, no legible reading on any screen; scaled to 1800×1012 and converted to neutral greyscale with ffmpeg. It is conceptual, not operational photography: not a LifeSupply facility, not a photograph of a listed product, and no item in it is a confirmed SKU. It replaced the warehouse photograph on this page, which showed a person packing and could be read as an employee or an operating site.";
+
 export const GRAPHICS = {
+  /** The Balkowitsch Worldwide store profile on Medical Supply Solutions. */
+  balkowitschProducts: {
+    src: "/lsh/graphics/medical-supplies/balkowitsch-products-greyscale-v1.jpg",
+    alt: "Conceptual arrangement of home-health monitoring equipment and wound-care supplies.",
+    width: 1800,
+    height: 1012,
+    provenance: MEDICAL_SUPPLIES_PROVENANCE,
+  },
   /** Beside "Opening, renovating, or expanding?" on Clinic Solutions. */
   clinicPlans: {
     src: "/lsh/graphics/clinic-plans.jpg",

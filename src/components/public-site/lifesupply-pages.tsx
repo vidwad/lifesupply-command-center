@@ -12,7 +12,6 @@
  * News and resources, and the policy pages (Stage 5).
  */
 export { AboutPage } from "@/components/public-site/pages/about";
-export { StoreBrandPage } from "@/components/public-site/pages/brands";
 export { ClinicSolutionsPage } from "@/components/public-site/pages/clinic-solutions";
 export { PharmacySolutionsPage } from "@/components/public-site/pages/pharmacy";
 export { ContactPage } from "@/components/public-site/pages/contact";
@@ -31,8 +30,5 @@ export {
   ResourceView,
 } from "@/components/public-site/pages/news";
 export { MedicalSupplySolutionsPage } from "@/components/public-site/pages/operations";
-export {
-  PartnerAcquisitionsPage,
-  PartnerSuppliersPage,
-} from "@/components/public-site/pages/partners";
+export { PartnerAcquisitionsPage } from "@/components/public-site/pages/partners";
 export { PolicyPage } from "@/components/public-site/pages/policies";

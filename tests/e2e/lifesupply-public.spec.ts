@@ -46,12 +46,8 @@ test.describe("LifeSupply public site", () => {
       "/investor-relations",
       "/news",
       "/contact",
-      "/medical-supply-solutions/lifesupply",
-      "/medical-supply-solutions/wellmart-medical",
-      "/medical-supply-solutions/balkowitsch",
       "/clinic-solutions",
       "/metabolic-health",
-      "/partners/suppliers",
       "/partners/acquisitions",
       "/investor-relations/growth-strategy",
       "/investor-relations/advanced-therapeutics",
@@ -407,43 +403,32 @@ test.describe("LifeSupply public site", () => {
     expect(new URL((await links.first().getAttribute("href"))!).origin).toBe(RENDER_ORIGIN);
   });
 
-  test("opens the grouped desktop navigation from the keyboard and lists the three stores", async ({
+  test("makes Medical Supplies a direct link and keeps the Solutions menu grouped", async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, "desktop navigation only");
     await page.goto("/");
-    const trigger = page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", {
-      name: "Medical Supplies",
-    });
-    await trigger.focus();
-    // Focus inside the group reveals the dropdown, so Tab reaches every row.
-    const menu = page.locator("#lsh-menu-businesses");
-    await expect(menu).toBeVisible();
-    const brandLinks = menu.locator("a");
-    // The group's own page leads the dropdown, then the three stores.
-    await expect(brandLinks).toHaveCount(4);
-    await expect(brandLinks.first()).toHaveText("Overview");
-    const paths = await brandLinks.evaluateAll((links) =>
-      links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, "")),
-    );
-    expect(paths).toEqual([
-      "/medical-supply-solutions",
-      "/medical-supply-solutions/lifesupply",
-      "/medical-supply-solutions/wellmart-medical",
-      "/medical-supply-solutions/balkowitsch",
-    ]);
-    // The chevron is a real button for touch and assistive technology.
-    const chevron = page.getByRole("button", { name: "Open Medical Supplies menu" });
-    await chevron.click();
-    await expect(page.getByRole("button", { name: "Close Medical Supplies menu" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-    await page.keyboard.press("Escape");
-    await expect(chevron).toHaveAttribute("aria-expanded", "false");
-  });
+    const nav = page.getByRole("navigation", { name: "Primary navigation" });
 
+    // The three store pages became anchors on 2026-09-12, so the group has no
+    // children left and renders as a plain link to the page itself.
+    const medicalSupplies = nav.getByRole("link", { name: "Medical Supplies" });
+    await expect(medicalSupplies).toHaveCount(1);
+    await expect(medicalSupplies).toHaveAttribute("href", /\/medical-supply-solutions\/?$/);
+    await medicalSupplies.focus();
+    await expect(page.locator("#lsh-menu-businesses")).toHaveCount(0);
+    for (const gone of ["LifeSupply", "Wellmart Medical", "Balkowitsch Worldwide"]) {
+      await expect(nav.getByRole("link", { name: gone, exact: true }), gone).toHaveCount(0);
+    }
+
+    // A group that still has children still opens from the keyboard, so the
+    // pattern itself is intact rather than quietly removed with the menu.
+    await nav.getByRole("button", { name: /Solutions menu/i }).focus();
+    const solutions = page.locator("#lsh-menu-solutions");
+    await expect(solutions).toBeVisible();
+    expect(await solutions.locator("a").count()).toBeGreaterThan(0);
+  });
   test("opens the Solutions menu from the keyboard, with three entries and no page of its own", async ({
     page,
     isMobile,
@@ -489,16 +474,22 @@ test.describe("LifeSupply public site", () => {
     expect(url.pathname.replace(/\/$/, "")).toBe("/contact");
     expect(url.hash).toBe("#business-inquiries");
     await expect(page.locator("#business-inquiries")).toBeVisible();
-    // The hazard: an exact-path rule, so the children are untouched.
-    for (const retained of ["/partners/suppliers", "/partners/acquisitions"]) {
-      const child = await page.goto(retained);
-      expect(child?.ok(), retained).toBe(true);
-      expect(new URL(page.url()).pathname.replace(/\/$/, ""), retained).toBe(retained);
-    }
-    // Suppliers keeps a prominent route in from Medical Supplies.
+    // The hazard: every rule is exact, so retiring one child never takes a
+    // sibling with it. Acquisitions is still its own page.
+    const acquisitions = await page.goto("/partners/acquisitions");
+    expect(acquisitions?.ok()).toBe(true);
+    expect(new URL(page.url()).pathname.replace(/\/$/, "")).toBe("/partners/acquisitions");
+    // Suppliers became a section of Medical Supply Solutions on 2026-09-12
+    // and lands on that section, not at the top of the page.
+    await page.goto("/partners/suppliers");
+    expect(new URL(page.url()).pathname.replace(/\/$/, "")).toBe("/medical-supply-solutions");
+    expect(new URL(page.url()).hash).toBe("#suppliers");
+    await expect(page.locator("#suppliers")).toBeVisible();
+    // And it keeps a prominent route in: the footer links to the section
+    // rather than to the address that now redirects to it.
     await page.goto("/medical-supply-solutions");
     await expect(
-      page.locator("main").locator('a[href^="/partners/suppliers"]').first(),
+      page.locator("footer").locator('a[href*="/medical-supply-solutions#suppliers"]').first(),
     ).toBeVisible();
   });
 
@@ -522,10 +513,11 @@ test.describe("LifeSupply public site", () => {
     await expect(panel.getByRole("button", { name: "Solutions", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Solutions", exact: true })).toHaveCount(0);
     const chevrons = panel.locator('button[aria-label^="Expand"], button[aria-label^="Collapse"]');
-    // One per group that has children: Medical Supplies, Solutions, Investors.
-    // About lost its only child on 2026-09-11, when it absorbed the team, so
-    // it is a plain link with no chevron.
-    await expect(chevrons).toHaveCount(3);
+    // One per group that has children: Solutions and Investors. About lost
+    // its only child on 2026-09-11 when it absorbed the team, and Medical
+    // Supplies lost its three on 2026-09-12 when the store pages became
+    // anchors, so both are plain links with no chevron.
+    await expect(chevrons).toHaveCount(2);
     const sizes = await chevrons.evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
@@ -547,9 +539,9 @@ test.describe("LifeSupply public site", () => {
       "About",
       "News & resources",
       "Contact",
-      "LifeSupply",
-      "Wellmart Medical",
-      "Balkowitsch Worldwide",
+      // The three store names left the panel on 2026-09-12: they are anchored
+      // profiles on Medical Supply Solutions, which is a direct link now.
+      "Medical Supplies",
     ]) {
       // Collapsed rows are display:none, so the role query must include hidden nodes.
       const link = panel.getByRole("link", { name, exact: true, includeHidden: true }).first();
@@ -707,17 +699,10 @@ test.describe("LifeSupply public site", () => {
     }
   });
 
-  test("sends each store brand page to its own store, and the Clinics page to the Clinics site", async ({
-    page,
-  }) => {
+  test("sends the Clinics page to the Clinics site", async ({ page }) => {
+    // The three store pages became profiles on Medical Supply Solutions on
+    // 2026-09-12; their shop links are asserted with the stores section.
     for (const [route, host, action] of [
-      ["/medical-supply-solutions/lifesupply", "lifesupply.ca", "Shop LifeSupply"],
-      [
-        "/medical-supply-solutions/wellmart-medical",
-        "wellmartmedical.com",
-        "Shop Wellmart Medical",
-      ],
-      ["/medical-supply-solutions/balkowitsch", "balkowitsch.com", "Shop Balkowitsch Worldwide"],
       ["/clinic-solutions", "www.lifesupplyclinics.com", "Book a consultation"],
     ] as const) {
       await page.goto(route);
@@ -804,12 +789,11 @@ test.describe("LifeSupply public site", () => {
       await expect(target, `${from} target`).toHaveCount(1);
       await expect(target).toBeVisible();
     }
-    // The `/partners` hazard: the retired child must not take its siblings.
-    for (const retained of ["/partners/suppliers", "/partners/acquisitions"]) {
-      const response = await page.goto(retained);
-      expect(response?.ok(), retained).toBe(true);
-      expect(new URL(page.url()).pathname.replace(/\/$/, ""), retained).toBe(retained);
-    }
+    // The `/partners` hazard: retiring a child must not take its siblings.
+    // Acquisitions stays a page of its own; suppliers is a section now.
+    const response = await page.goto("/partners/acquisitions");
+    expect(response?.ok()).toBe(true);
+    expect(new URL(page.url()).pathname.replace(/\/$/, "")).toBe("/partners/acquisitions");
   });
 
   test("routes Clinic Solutions from one control that names every section", async ({ page }) => {
@@ -875,7 +859,10 @@ test.describe("LifeSupply public site", () => {
     await expect(stores).toBeVisible();
     await expect(stores.getByText("Canada · CAD")).toHaveCount(2);
     await expect(stores.getByText("United States · USD")).toHaveCount(1);
-    await expect(stores).toContainText("does not sell products or take orders");
+    // The near-identical warnings went with the 2026-09-12 consolidation.
+    // The section says it once, where a visitor is choosing a store.
+    await expect(stores).toContainText("Purchases are completed on the store’s website.");
+    await expect(stores).not.toContainText(/add to cart|checkout here/i);
     // The "Geography and currency" and "Support boundary" blocks came off on
     // 2026-09-12 (product owner). Every card still shows its own country and
     // currency, asserted above, and the section still says this site sells
@@ -889,10 +876,14 @@ test.describe("LifeSupply public site", () => {
     for (const host of ["lifesupply.ca", "wellmartmedical.com", "balkowitsch.com"]) {
       expect(hosts, host).toContain(host);
     }
-    // The fourth destination is the clinic section, which has its own page.
+    // Clinic supplies and equipment keep a route in, from the professional
+    // purchasing section, and it points at the section that answers it.
     await expect(
-      page.locator("main").getByRole("link", { name: "Clinic Solutions" }).first(),
-    ).toHaveAttribute("href", /clinic-solutions/);
+      page
+        .locator("main")
+        .getByRole("link", { name: /Explore clinic supplies/i })
+        .first(),
+    ).toHaveAttribute("href", /clinic-solutions.*ongoing-supplies/);
   });
 
   test("routes contact intents to verified pages or approved channels without a form", async ({
@@ -1073,10 +1064,13 @@ test.describe("LifeSupply public site", () => {
     await expect(
       page.locator("main").getByRole("link", { name: "Acquisition or strategic inquiry" }).first(),
     ).toHaveAttribute("href", /^mailto:abdul@lifesupply\.com\?subject=/);
-    await page.goto("/partners/suppliers");
+    await page.goto("/medical-supply-solutions#suppliers");
     await expect(
-      page.locator("main").getByRole("link", { name: "Supplier inquiry" }).first(),
-    ).toHaveAttribute("href", /^mailto:/);
+      page
+        .locator("main")
+        .getByRole("link", { name: /Submit a supplier enquiry/i })
+        .first(),
+    ).toHaveAttribute("href", /^mailto:info@lifesupply\.com\?subject=/);
   });
 
   test("never scrolls sideways: no public page is wider than the viewport", async ({ page }) => {
@@ -1324,7 +1318,7 @@ test.describe("LifeSupply public site", () => {
     // Product owner, 2026-09-09: the "Related" rows are gone from every page.
     for (const route of [
       "/metabolic-health",
-      "/medical-supply-solutions/lifesupply",
+      "/medical-supply-solutions",
       "/clinic-solutions",
       "/pharmacy-solutions",
     ]) {
@@ -1354,7 +1348,7 @@ test.describe("LifeSupply public site", () => {
     // Withdrawn addresses send their visitors to the replacement section.
     for (const [source, target] of [
       ["/our-operations", /\/medical-supply-solutions$/],
-      ["/our-operations/lifesupply", /\/medical-supply-solutions\/lifesupply$/],
+      ["/our-operations/lifesupply", /\/medical-supply-solutions#lifesupply$/],
       ["/our-operations/lifesupply-clinics", /\/clinic-solutions$/],
       ["/our-operations/technology-fulfilment", /\/medical-supply-solutions$/],
       ["/clinic-solutions/design-build", /\/clinic-solutions$/],
@@ -1374,12 +1368,14 @@ test.describe("LifeSupply public site", () => {
     expect(sitemap.ok()).toBe(true);
     const xml = await sitemap.text();
     const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]!);
-    // 20 canonical URLs: 41 before the consolidation, less four in stage 1,
+    // 16 canonical URLs: the Medical Supplies consolidation retired three
+    // store pages and the suppliers page on 2026-09-12. Before that: 41, less
+    // four in stage 1,
     // eleven in stage 2, the Partners hub in stage 3, the four leadership
     // profiles in stage 4, and the team page in stage 5, which About
     // absorbed on 2026-09-11. Each
     // redirects and is therefore absent from the map rather than dropped.
-    expect(locs.length).toBe(20);
+    expect(locs.length).toBe(16);
     for (const retired of [
       "/shop",
       "/clinic-solutions/equipment",

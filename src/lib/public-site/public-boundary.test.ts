@@ -527,18 +527,17 @@ describe("routes and content governance", () => {
       "src/app/investor-relations/page.tsx",
       "src/app/news/page.tsx",
       "src/app/contact/page.tsx",
-      "src/app/medical-supply-solutions/lifesupply/page.tsx",
-      "src/app/medical-supply-solutions/wellmart-medical/page.tsx",
-      "src/app/medical-supply-solutions/balkowitsch/page.tsx",
       "src/app/clinic-solutions/page.tsx",
       "src/app/metabolic-health/page.tsx",
-      "src/app/partners/suppliers/page.tsx",
       "src/app/partners/acquisitions/page.tsx",
       "src/app/investor-relations/growth-strategy/page.tsx",
       "src/app/investor-relations/advanced-therapeutics/page.tsx",
       "src/app/investor-relations/disclosures/page.tsx",
       "src/app/privacy/page.tsx",
       "src/app/terms/page.tsx",
+      // The three store pages and the suppliers page became sections of
+      // Medical Supply Solutions on 2026-09-12; their route files are gone
+      // and the addresses redirect.
       "src/app/accessibility/page.tsx",
       "src/app/news/[slug]/page.tsx",
       "src/app/resources/[slug]/page.tsx",
@@ -603,7 +602,6 @@ describe("design-pass graphics and section primitives", () => {
     // the legacy About bands, or the hero footage.
     for (const name of [
       "operations",
-      "brands",
       "pharmacy",
       "metabolic",
       "partners",
@@ -638,8 +636,13 @@ describe("design-pass graphics and section primitives", () => {
     for (const source of publicComponents()) {
       expect(source).not.toMatch(/GraphicBackdrop graphic="brandBalkowitsch"/);
     }
-    const brands = stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
-    expect(brands).toContain('balkowitsch: "warehouse"');
+    // The Balkowitsch brand photograph shows a synthetic person packing in a
+    // warehouse. Medical Supply Solutions replaced it with a product still
+    // life on 2026-09-12, so this page never shows it; the shared asset is
+    // untouched and still serves the pages that use it.
+    const stores = stripComments(read(`${PUBLIC_DIR}/pages/operations.tsx`));
+    expect(stores).toContain('getGraphic("balkowitschProducts")');
+    expect(stores).not.toContain("brandBalkowitsch");
   });
 
   it("renders conceptual graphics only through the registry, labelled conceptual, never as a raw file path", () => {
@@ -670,7 +673,6 @@ describe("design-pass graphics and section primitives", () => {
       "home",
       "about",
       "operations",
-      "brands",
       "clinic-solutions",
       "metabolic",
       "partners",
@@ -681,12 +683,18 @@ describe("design-pass graphics and section primitives", () => {
       // 2026-09-11 restructure; its lucide imports are the two affordances
       // checked below, and the sections it shares with About resolve theirs
       // through the registry in `about-sections.tsx`.
-      if (name !== "home") {
+      // A page that renders a content icon takes it from the shared set. Two
+      // pages render none: the homepage since the 2026-09-11 restructure, and
+      // Medical Supply Solutions since the 2026-09-12 consolidation, whose
+      // sections are carried by photographs, rules and numerals instead.
+      if (name !== "home" && name !== "operations") {
         expect(page, name).toMatch(/@\/components\/public-site\/(sections|icons)/);
       }
       // Only interface affordances may come straight from lucide.
       const lucide = /import \{([^}]*)\} from "lucide-react"/.exec(page)?.[1] ?? "";
       const AFFORDANCES = [
+        // The marker on a native disclosure, which several pages now use.
+        "ChevronDown",
         "ArrowRight",
         "ArrowUp",
         "ExternalLink",
@@ -1002,17 +1010,30 @@ describe("round three: architecture, placement and voice", () => {
     // The cards used to offer only an internal "About" link, so a visitor who
     // wanted to buy had to pass through a corporate page (round three, outcome 7).
     const page = stripComments(read(`${PUBLIC_DIR}/pages/operations.tsx`));
-    const shop = page.indexOf("hub.stores.shopLabel");
-    const about = page.indexOf("hub.stores.aboutLabel");
-    expect(shop).toBeGreaterThan(-1);
-    expect(about).toBeGreaterThan(shop);
-    expect(page).toContain("record.canonicalUrl");
+    // The "About <brand>" link went with the brand pages it led to on
+    // 2026-09-12; their content is the profile the visitor is already
+    // reading. What must survive is that buying is the card's own action and
+    // that it goes to the store, not through a corporate page.
+    expect(page).toContain("SHOP_ACTIONS[key]");
+    expect(page).not.toContain("hub.stores.aboutLabel");
+    // The three shop actions are the registry's, so the button can only ever
+    // go to the store the registry publishes.
+    for (const action of ["shop_lifesupply", "shop_wellmart", "shop_balkowitsch"]) {
+      expect(page, action).toContain(action);
+    }
     // No card-covering overlay, so both links stay reachable.
     expect(page).not.toContain("after:absolute after:inset-0");
     // The professional route says what it covers and what it does not create.
     const businesses = stripComments(read("src/lib/public-site/content/businesses.ts"));
-    expect(businesses).toContain("procurement:");
-    expect(businesses).toContain("Start a conversation and it covers the ground below");
+    // The professional route is its own section since 2026-09-12, and it says
+    // what to bring rather than listing what a review covers. What it must
+    // still not do is promise a commercial arrangement, which the banned
+    // patterns below check.
+    expect(businesses).toContain("professional:");
+    expect(businesses).toContain("What to bring to the conversation");
+    expect(businesses).toContain(
+      "Any additional purchasing or service arrangements must be agreed separately.",
+    );
     for (const banned of [
       /credit terms (are|is) (available|offered)/i,
       /consolidated billing (is|are) (available|offered)/i,
@@ -1179,7 +1200,17 @@ describe("round two: independent review corrections", () => {
   it("implies no account, checkout, or inventory shared between the brands", () => {
     const businesses = stripComments(read("src/lib/public-site/content/businesses.ts"));
     expect(businesses).not.toMatch(/the same account|shared (account|inventory|checkout)/i);
-    expect(businesses).toContain("no separate professional portal");
+    // LifeSupply is not a business-only store and Wellmart is not a
+    // consumer-only one. The store profiles say so in their own words since
+    // 2026-09-12; this is the same rule, checked against the brand registry
+    // where the profiles now live.
+    const brandRegistry = stripComments(read("src/lib/public-site/brands.ts"));
+    expect(brandRegistry).toContain(
+      "serves individuals, caregivers, and professional buyers through one online storefront",
+    );
+    expect(brandRegistry).toContain(
+      "serves people purchasing for home care, as well as professional buyers",
+    );
   });
 });
 
@@ -1547,8 +1578,12 @@ describe("Stage 2 registries and navigation", () => {
     }
     const code = siteScreen();
     expect(code).toContain("getSiteScreen(site)");
-    const brands = stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
-    expect(brands).toContain("<SiteScreen site={brandKey}");
+    // The laptop-style site screens went with the brand pages on 2026-09-12.
+    // The consolidated page gives a visitor the shop link itself, so a
+    // picture of a website adds nothing; no public page renders one now.
+    for (const source of publicComponents()) {
+      expect(source).not.toContain("<SiteScreen");
+    }
     // Project photography goes through its own registry on the same terms.
     for (const source of publicComponents()) {
       expect(source).not.toContain("/lsh/graphics/projects/");
@@ -1912,7 +1947,6 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     expect(body, name).not.toBe("");
     return body;
   };
-  const brandPages = () => stripComments(read(`${PUBLIC_DIR}/pages/brands.tsx`));
   // Shop & Services merged into the Medical Supplies stores section on
   // 2026-09-10, so the rules that were about that page now read this one.
   const storesPage = () => stripComments(read(`${PUBLIC_DIR}/pages/operations.tsx`));
@@ -2000,8 +2034,10 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
   });
 
   it("reads categories, support channels, and project links from the registries and content", () => {
-    expect(brandPages()).toContain("record.categories.map");
-    expect(brandPages()).toContain("record.storeLinks.map");
+    // The three brand pages became the three store profiles on 2026-09-12,
+    // so the categories are read from the registry on the stores page.
+    expect(storesPage()).toContain("record.categories.map");
+    expect(storesPage()).toContain("category.url");
     expect(clinicPages()).toContain("projects.items");
     expect(contactPage()).toContain("contact.intents.map");
     expect(contactPage()).toContain("contact.existingOrder");
@@ -2013,14 +2049,18 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
     // says this site sells nothing and takes no orders.
     expect(storesPage()).toContain("stores.map");
     expect(storesPage()).toContain("brandGeography(record)");
-    expect(storesPage()).toContain("record.supportEmail");
+    // The store's own support page, rather than its address repeated on
+    // this one: the store publishes current hours and channels, and a page
+    // that copies them goes stale (product owner, 2026-09-12).
+    expect(storesPage()).toContain("record.supportUrl");
+    expect(storesPage()).not.toContain("record.supportPhone");
     expect(storesPage()).not.toContain("{hub.stores.support.text}");
     expect(storesPage()).not.toContain("{hub.stores.geography.text}");
     expect(storesPage()).toContain("{hub.stores.intro}");
   });
 
   it("gives every Stage 3 page one PublicHero and the shared layout", () => {
-    for (const source of [clinicPages(), brandPages(), storesPage(), contactPage()]) {
+    for (const source of [clinicPages(), storesPage(), contactPage()]) {
       const exported = (source.match(/^export function \w+Page\b/gm) ?? []).length;
       expect(exported).toBeGreaterThan(0);
       expect((source.match(/<PublicHero\b/g) ?? []).length).toBe(exported);
@@ -2464,7 +2504,11 @@ describe("website consolidation: sections, redirects and deep links", () => {
         // own content, so a reader who follows a redirect lands on the block.
         // The eight pathway anchors come from one mapped component rather
         // than eight literals, so that form counts too.
-        const literal = source.includes(`<AnchoredSection id="${anchor}"`);
+        const literal =
+          source.includes(`<AnchoredSection id="${anchor}"`) ||
+          // A store profile on Medical Supply Solutions is an <article> with
+          // its own anchor, inside the stores section (2026-09-12).
+          source.includes(`<article id={anchor}`);
         const mapped =
           ((KIT_SLUGS as readonly string[]).includes(anchor) &&
             source.includes("id={kit.slug}") &&
@@ -2544,10 +2588,15 @@ describe("website consolidation: sections, redirects and deep links", () => {
     // `/partners/suppliers` and `/partners/acquisitions` are retained pages.
     expect(config).not.toMatch(/source: "\/partners\/?(:path\*|\*)/);
     expect(config).not.toContain('source: "/clinic-solutions/:path*"');
-    for (const retained of ["suppliers", "acquisitions"]) {
-      expect(config, retained).not.toContain(`source: "/partners/${retained}"`);
-      expect(existsSync(join(ROOT, `src/app/partners/${retained}/page.tsx`)), retained).toBe(true);
-    }
+    // Acquisitions is a retained page and must never be swept up by a rule
+    // aimed at one of its siblings. Suppliers became a section of Medical
+    // Supply Solutions on 2026-09-12 and redirects by its own exact path, so
+    // the rule that retires it must name it and nothing else.
+    expect(config).not.toContain('source: "/partners/acquisitions"');
+    expect(existsSync(join(ROOT, "src/app/partners/acquisitions/page.tsx"))).toBe(true);
+    expect(config).toContain('source: "/partners/suppliers"');
+    expect(config).toContain('destination: "/medical-supply-solutions#suppliers"');
+    expect(existsSync(join(ROOT, "src/app/partners/suppliers/page.tsx"))).toBe(false);
     // And the retired route files are actually gone, so nothing serves a 200
     // at an address that is supposed to redirect.
     for (const gone of [
@@ -2599,9 +2648,13 @@ describe("website consolidation: sections, redirects and deep links", () => {
     expect(
       bodyOf(stripComments(read(`${PUBLIC_DIR}/pages/clinic-solutions.tsx`)), "PlanningSection"),
     ).toContain("{hub.planning.partnershipStatus}");
-    // Shop & Services: the two blocks are unpublished but kept on the record,
-    // and the sentence that matters most is still on the page.
-    expect(businesses).toContain("This corporate site does not sell products or take orders.");
+    // Nothing is sold on this site. The sentence that said so was one of
+    // several near-identical warnings the consolidation removed on
+    // 2026-09-12; the page now says it once, where a visitor is choosing a
+    // store, and again where ordering is explained.
+    expect(businesses).toContain("Purchases are completed on the store’s website.");
+    expect(businesses).toContain("Checkout takes place on that store’s website.");
+    expect(businesses).toContain("the store where you purchased");
   });
 
   it("keeps every pathway whole after the eight pages became eight sections", () => {
