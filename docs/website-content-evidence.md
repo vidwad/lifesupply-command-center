@@ -33,6 +33,8 @@ Material public claims touched by the website improvement program, with their so
 | www.lifesupplyclinics.com, verified | S-04 | Clinic Solutions | Operating | Approved | Canonical host uses `www.` |
 | Corporate entity name "LifeSupply Health Supplies Inc." | Repository approved name (S-13) | Footer, About | Operating | Approved | The "Lifesupply Health Inc." variant seen on a store page is not quoted (S-11) |
 | Corporate office, 6911 King George Highway, Surrey, British Columbia V3W 5A1 | Approved content model | Footer, Contact | Operating | Approved | |
+| Brands carried across the stores (29 marks in the footer band) | The brands directories of lifesupply.ca and wellmartmedical.com, observed 2026-09-13 (S-176) | Footer, every page | Operating | Approved with qualification | Stated as "carried", never as partners, contracts, or endorsements; each mark is listed only because the store lists the brand |
+| Investor relations and business development contact: Vid Wadhwani, invest@lifesupply.com, 604-677-4146 | Product owner, 2026-09-13 | Home contact section, Contact | Operating | Approved | The channel's address and number are unchanged; the name and the wider remit were supplied by the owner |
 
 ## Services
 

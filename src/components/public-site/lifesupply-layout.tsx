@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 import { CommandCenterLoginLink, Eyebrow } from "@/components/public-site/lifesupply-primitives";
 import { ScrollToTop } from "@/components/public-site/scroll-to-top";
+import { SupplierMarquee } from "@/components/public-site/supplier-marquee";
 import { OPERATING_BRANDS, brandGeography } from "@/lib/public-site/brands";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 import { measurementAttributes } from "@/lib/public-site/measurement";
@@ -517,6 +518,13 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
       <ScrollToTop />
 
       <footer className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)] text-white">
+        {/*
+         * The brand band (product owner, 2026-09-13): the logos of brands the
+         * stores carry, on light grey at the top of the footer, looping
+         * slowly. The label says carried, which is what the store pages
+         * verify; it never says partners.
+         */}
+        <SupplierMarquee label="Brands carried across our stores" />
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_0.8fr_1fr] lg:px-8">
           <div>
             <Image

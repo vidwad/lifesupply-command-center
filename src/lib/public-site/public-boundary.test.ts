@@ -2842,3 +2842,44 @@ describe("Medical Supply Solutions as the commercial proposition (2026-09-13)", 
     expect(actions).toContain('"Dedicated supply portal (proposed capability)"');
   });
 });
+
+describe("footer brand band (2026-09-13)", () => {
+  const marquee = () => stripComments(read(`${PUBLIC_DIR}/supplier-marquee.tsx`));
+  const css = () => read("src/styles/globals.css");
+
+  it("renders the registry through next/image, announces each brand once, and says carried rather than partners", () => {
+    expect(marquee()).toContain('from "next/image"');
+    expect(marquee()).not.toMatch(/<img[\s>]/);
+    expect(marquee()).toContain("SUPPLIER_LOGOS.map(");
+    // The looping copy is hidden from assistive technology and its images
+    // carry empty alt text, so a screen reader hears each brand once.
+    expect(marquee()).toContain('aria-hidden={hidden ? "true" : undefined}');
+    expect(marquee()).toContain('alt={hidden ? "" : logo.name}');
+    expect((marquee().match(/<Track/g) ?? []).length).toBe(2);
+    // The label is the layout's, and it never claims a partnership.
+    expect(layout()).toContain('label="Brands carried across our stores"');
+    for (const source of [marquee(), layout()]) {
+      expect(source).not.toMatch(/supply partners|our partners|partner(ed|ship) with/i);
+    }
+    // At the top of the footer, before its columns.
+    const footer = layout().slice(layout().indexOf("<footer"));
+    expect(footer.indexOf("<SupplierMarquee")).toBeGreaterThan(-1);
+    expect(footer.indexOf("<SupplierMarquee")).toBeLessThan(footer.indexOf("Operating brands"));
+  });
+
+  it("loops by CSS only when motion is welcome, and wraps still otherwise", () => {
+    // The animation lives inside the no-preference query, so a reduced-motion
+    // visitor gets a static, wrapped list and never a hidden second copy.
+    const block = css().slice(css().indexOf(".lsh-marquee-copy"));
+    expect(css()).toMatch(
+      /@media \(prefers-reduced-motion: no-preference\)\s*\{[\s\S]{0,400}\.lsh-marquee-belt\s*\{[^}]*animation: lsh-marquee/,
+    );
+    expect(css()).toContain("@keyframes lsh-marquee");
+    expect(css()).toMatch(/\.lsh-marquee-copy\s*\{\s*display: none;/);
+    expect(block).toContain("translate3d(-50%, 0, 0)");
+    // Pauses under the pointer or keyboard focus.
+    expect(css()).toMatch(
+      /\.lsh-marquee:hover \.lsh-marquee-belt,\s*\.lsh-marquee:focus-within \.lsh-marquee-belt\s*\{\s*animation-play-state: paused;/,
+    );
+  });
+});

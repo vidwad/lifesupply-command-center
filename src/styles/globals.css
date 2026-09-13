@@ -916,6 +916,62 @@
     }
   }
 
+  /*
+   * The footer brand band (2026-09-13). The belt holds the logo list twice
+   * and travels half its own width, so the second copy takes over exactly
+   * where the first leaves off and the loop has no seam. That only happens
+   * under a no-preference motion setting: otherwise the copy is not shown at
+   * all, the belt is as wide as the band, and the single list wraps into
+   * rows. A pointer or keyboard focus on the band pauses it.
+   */
+  .lsh-marquee-belt {
+    width: 100%;
+  }
+
+  /* The track's display is set here rather than by a utility class, so the
+     copy below can actually be hidden: a utility would win the cascade. */
+  .lsh-marquee-track {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 1.5rem;
+  }
+
+  .lsh-marquee-copy {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .lsh-marquee-belt {
+      width: max-content;
+      animation: lsh-marquee 90s linear infinite;
+      will-change: transform;
+    }
+
+    .lsh-marquee-track {
+      flex-wrap: nowrap;
+      flex-shrink: 0;
+    }
+
+    .lsh-marquee-copy {
+      display: flex;
+    }
+
+    .lsh-marquee:hover .lsh-marquee-belt,
+    .lsh-marquee:focus-within .lsh-marquee-belt {
+      animation-play-state: paused;
+    }
+  }
+
+  @keyframes lsh-marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
   /* Back-to-top control: rises in once it is needed; static under reduced motion. */
   @media (prefers-reduced-motion: no-preference) {
     .lsh-scroll-top {
