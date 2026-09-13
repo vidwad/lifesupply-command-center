@@ -286,17 +286,25 @@ export function MedicalSupplySolutionsPage() {
         </Container>
       </AnchoredSection>
 
-      {/* Ordering and support: quieter than the profiles, rules instead of an image. */}
+      {/*
+       * Ordering and support: quieter than the profiles, rules instead of an
+       * image. The three store support links sit under the sentence that
+       * tells a visitor to use them, rather than in a full-width row of their
+       * own: that row put four short items under the left half of a rule
+       * spanning the whole container, which read as unfinished.
+       */}
       <AnchoredSection id="ordering-support" offset="sectionNav" className="px-5 py-20 lg:px-8">
-        <Container className="border-y border-[var(--lsh-rule)] py-12">
+        <Container className="border-y border-[var(--lsh-rule)] py-10">
           <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
-            <Reveal>
-              <SectionHeading
-                eyebrow={hub.ordering.eyebrow}
-                title={hub.ordering.title}
-                description={hub.ordering.intro}
-              />
-            </Reveal>
+            <div>
+              <Reveal>
+                <SectionHeading
+                  eyebrow={hub.ordering.eyebrow}
+                  title={hub.ordering.title}
+                  description={hub.ordering.intro}
+                />
+              </Reveal>
+            </div>
             <div className="divide-y divide-[var(--lsh-rule)] border-y border-[var(--lsh-rule)]">
               {hub.ordering.disclosures.map((item) => (
                 <details key={item.question} className="lsh-disclosure group py-4">
@@ -313,23 +321,32 @@ export function MedicalSupplySolutionsPage() {
                   </p>
                 </details>
               ))}
+              {/*
+               * The three stores' own support pages, directly under "Who can
+               * help with an existing order?", which is the question they
+               * answer. An inline row rather than a stack, so the column does
+               * not outgrow the questions above it.
+               */}
+              <div className="pt-5">
+                <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                  {hub.ordering.supportLabel}
+                </p>
+                <ul className="mt-2 flex flex-wrap gap-x-8">
+                  {hub.ordering.supportLinks.map((link) => (
+                    <li key={link.brand}>
+                      <a
+                        href={getBrand(link.brand as OperatingBrandKey).supportUrl ?? undefined}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="lsh-display inline-flex min-h-11 items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors hover:text-[var(--lsh-brand-red)]"
+                      >
+                        {link.label} <ExternalLink size={13} aria-hidden="true" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-[var(--lsh-rule)] pt-6">
-            <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-              {hub.ordering.supportLabel}
-            </span>
-            {hub.ordering.supportLinks.map((link) => (
-              <a
-                key={link.brand}
-                href={getBrand(link.brand as OperatingBrandKey).supportUrl ?? undefined}
-                target="_blank"
-                rel="noreferrer"
-                className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors hover:text-[var(--lsh-brand-red)]"
-              >
-                {link.label} <ExternalLink size={13} aria-hidden="true" />
-              </a>
-            ))}
           </div>
         </Container>
       </AnchoredSection>
