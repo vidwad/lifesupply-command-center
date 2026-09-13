@@ -92,3 +92,19 @@ and the footer's Suppliers & Manufacturers link is the section, not the
 retired address.
 
 Retained pages: 20 → 16. Canonical sitemap URLs: 20 → 16.
+
+## Investors consolidation (2026-09-13)
+
+The investor section became one page at the product owner's direction: the overview, Growth Strategy, Advanced Therapeutics, Disclosures and the investor-document directory are sections of `/investor-relations`; Acquisitions & Strategic Opportunities and Company News stay live as supporting pages, and Investors is a direct main-menu link with no dropdown. Content moved first; these rules retired the addresses afterwards.
+
+| From | To |
+| --- | --- |
+| `/investor-relations/growth-strategy` | `/investor-relations#growth-strategy` |
+| `/investor-relations/advanced-therapeutics` | `/investor-relations#advanced-therapeutics` |
+| `/investor-relations/disclosures` | `/investor-relations#disclosures` |
+
+**Re-pointed, no chain.** `/investor-relations/documents` went to `/news` from 2026-09-09; the directory is the investor page's materials section now, so the rule lands on `/investor-relations#materials` in one hop. `/investor-relations/shareholder-services` still lands on `/investor-relations`.
+
+**Internal links.** The `growth_strategy` and `advanced_therapeutics` actions open the sections directly; About's growth and longer-term links use them. The program-architecture record's link to the advanced-therapeutics page points at the section. No page links to a retired address, which the consolidation sweep asserts.
+
+**Anchors.** `SECTION_ANCHORS` declares `business`, `financial-information`, `business-model`, `growth-strategy`, `execution`, `advanced-therapeutics`, `materials`, `contact` and `disclosures`, all cleared of the sticky header and the in-page navigation. The sitemap is 13 canonical URLs.

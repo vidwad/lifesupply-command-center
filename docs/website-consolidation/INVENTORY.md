@@ -33,11 +33,11 @@ Excluded from the count, as the brief directs: `news/[slug]` and `resources/[slu
 | 10 | `/metabolic-health` | One complete page including all eight pathways |
 | 11 | `/partners/suppliers` | Path keeps `/partners/`; navigation placement changes |
 | 12 | `/partners/acquisitions` | Path keeps `/partners/`; moves into Investors |
-| 13 | `/investor-relations` | |
-| 14 | `/investor-relations/growth-strategy` | |
-| 15 | `/investor-relations/advanced-therapeutics` | |
-| 16 | `/investor-relations/disclosures` | |
-| 17 | `/news` | News & resources |
+| 13 | `/investor-relations` | The one investor page since 2026-09-13; absorbs 14 to 16 and the document directory from 17 |
+| 14 | `/investor-relations/growth-strategy` | **Retired 2026-09-13**, `#growth-strategy` |
+| 15 | `/investor-relations/advanced-therapeutics` | **Retired 2026-09-13**, `#advanced-therapeutics` |
+| 16 | `/investor-relations/disclosures` | **Retired 2026-09-13**, `#disclosures` |
+| 17 | `/news` | Company News since 2026-09-13; announcements and the historical archive |
 | 18 | `/contact` | Last primary item; gains `#business-inquiries` |
 | 19 | `/privacy` | |
 | 20 | `/terms` | |

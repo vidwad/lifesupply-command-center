@@ -1,6 +1,7 @@
-import { Mail, Phone } from "lucide-react";
+import { ArrowRight, Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
+import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
@@ -9,449 +10,624 @@ import {
   PublicHero,
   SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import { renderIcon } from "@/components/public-site/icons";
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { BentoGrid, IconBadge, IconFeatureGrid } from "@/components/public-site/sections";
-import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
+import { AnchoredSection } from "@/components/public-site/on-this-page";
+import { SectionNav } from "@/components/public-site/section-nav";
 import type { ActionKey } from "@/lib/public-site/actions";
-import { investorRelations, type BusinessStatus } from "@/lib/public-site/content/investors";
-import { iconForTitle } from "@/lib/public-site/icon-map";
-import {
-  LIFE_SUPPLY_ROUTES,
-  METABOLIC_ROUTES,
-  STAGE_3_ROUTES,
-  STAGE_5_ROUTES,
-} from "@/lib/public-site/routes";
+import { investorRelations } from "@/lib/public-site/content/investors";
+import { measurementAttributes } from "@/lib/public-site/measurement";
+import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
+import type { PublishedDocumentDto } from "@/server/public-web/contracts";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
 
-const SECTION_ROUTES = {
-  growthStrategy: STAGE_5_ROUTES.growthStrategy,
-  advancedTherapeutics: STAGE_5_ROUTES.advancedTherapeutics,
-  news: LIFE_SUPPLY_ROUTES.news,
-  operations: LIFE_SUPPLY_ROUTES.operations,
-  disclosures: STAGE_5_ROUTES.disclosures,
-} as const;
-
-const STRAND_ROUTES = {
-  operations: LIFE_SUPPLY_ROUTES.operations,
-  clinicSolutions: STAGE_3_ROUTES.clinicSolutions,
-  metabolic: METABOLIC_ROUTES.hub,
-  advancedTherapeutics: STAGE_5_ROUTES.advancedTherapeutics,
-  acquisitions: STAGE_5_ROUTES.partnerAcquisitions,
-} as const;
+const HERO_SECONDARY =
+  "lsh-display inline-flex items-center gap-2 border border-white/40 px-5 py-3 text-[11px] text-white transition-colors hover:border-white";
 
 /** Business-availability status, stated beside the claim it qualifies. */
-function StatusTag({ status }: { status: BusinessStatus }) {
+function StatusTag({ status, tone = "onLight" }: { status: string; tone?: "onLight" | "onDark" }) {
   const operating = status === "Operating";
+  const classes =
+    tone === "onDark"
+      ? operating
+        ? "border-white/40 text-white"
+        : "border-[var(--lsh-red-on-ink)] text-[var(--lsh-red-on-ink)]"
+      : operating
+        ? "border-[var(--lsh-charcoal)] text-[var(--lsh-charcoal)]"
+        : "border-[var(--lsh-brand-red)] text-[var(--lsh-brand-red)]";
   return (
     <span
-      className={`lsh-display inline-flex border px-2 py-0.5 text-[10px] ${
-        operating
-          ? "border-[var(--lsh-charcoal)] text-[var(--lsh-charcoal)]"
-          : "border-[var(--lsh-brand-red)] text-[var(--lsh-brand-red)]"
-      }`}
+      className={`lsh-display inline-flex border px-2 py-0.5 text-left text-[10px] leading-4 ${classes}`}
     >
       {status}
     </span>
   );
 }
 
-/** The forward-looking qualification, beside the claims it qualifies. */
-function ForwardLooking({ text }: { text: string }) {
+/** Governed public documents from the published read model; fails closed when unreachable. */
+function PublishedDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
+  const copy = investorRelations.materials.published;
+  // A list that fetched cleanly and returned nothing is left out rather than
+  // announcing itself as empty; an outage says so.
+  if (published.ok && published.data.length === 0) return null;
   return (
-    <Reveal className="mx-auto mt-10 flex max-w-7xl gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-      <IconBadge icon="shield" />
-      <div>
-        <div className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
-          Forward-looking statements
-        </div>
-        <p className="mt-2 leading-7 text-[var(--lsh-muted)]">{text}</p>
-      </div>
-    </Reveal>
-  );
-}
-
-function InvestorContact() {
-  const { contact } = investorRelations;
-  return (
-    <div className="flex flex-wrap gap-3">
-      <a
-        href={`mailto:${contact.email}`}
-        className="lsh-primary-action lsh-display inline-flex items-center gap-2 px-5 py-3 text-[11px] transition-all duration-200 hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-      >
-        <Mail size={16} aria-hidden="true" /> {contact.email}
-      </a>
-      <a
-        href={telHref(contact.phone)}
-        className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-5 py-3 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
-      >
-        <Phone size={16} aria-hidden="true" /> {contact.phone}
-      </a>
-    </div>
-  );
-}
-
-function ActionRow({ actions }: { actions: readonly string[] }) {
-  return (
-    <Reveal className="mx-auto mt-12 flex max-w-7xl flex-wrap gap-3">
-      {actions.map((action, index) => (
-        <ActionLink
-          key={action}
-          action={action as ActionKey}
-          variant={index === 0 ? "primary" : "onLight"}
-        />
-      ))}
-    </Reveal>
-  );
-}
-
-/** The three approved figures with their full scope. */
-function ReportedFigures() {
-  const { currentReport } = investorRelations;
-  return (
-    <>
-      <Reveal>
-        <SectionHeading
-          eyebrow={currentReport.period}
-          title="Current report context"
-          description={`${currentReport.status}. ${currentReport.entity}.`}
-        />
-      </Reveal>
-      <Stagger className="mt-8 grid gap-3 sm:grid-cols-3">
-        {currentReport.highlights.map((item) => (
-          <StaggerItem key={item.label} className="h-full">
-            <EditorialStat value={item.value} label={item.label} />
-          </StaggerItem>
-        ))}
-      </Stagger>
-    </>
-  );
-}
-
-/** `/investor-relations/` */
-export function InvestorRelationsPage() {
-  const investor = investorRelations;
-  const { hub } = investor;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        media={<GraphicBackdrop graphic="boardroom" position="70% 50%" />}
-        eyebrow={hub.eyebrow}
-        title={investor.title}
-        description={investor.description}
-      />
-
-      {/* The business today, each strand with its status. */}
-      <IconFeatureGrid
-        columns={4}
-        eyebrow={hub.rationale.eyebrow}
-        title={hub.rationale.title}
-        items={hub.rationale.items.map((item) => ({
-          title: item.title,
-          text: item.text,
-          status: item.status,
-          icon: iconForTitle(item.title),
-        }))}
-      />
-      <section className="px-5 pb-20 lg:px-8">
-        <Container>
-          <ForwardLooking text={hub.forwardLooking} />
-        </Container>
-      </section>
-
-      <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <ReportedFigures />
-          </div>
-          <Reveal className="flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-6 lg:self-start">
-            <IconBadge icon="file" />
-            <div>
-              <div className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
-                {investor.expansionContext.title}
-              </div>
-              <p className="lsh-display mt-2 text-[10px] text-[var(--lsh-muted)]">
-                {investor.expansionContext.date}
+    <Reveal className="mt-12">
+      <Eyebrow as="h3">{copy.title}</Eyebrow>
+      {!published.ok ? (
+        <p
+          role="status"
+          className="mt-4 border-l-2 border-[var(--lsh-brand-red)] pl-4 text-sm leading-6 text-[var(--lsh-muted)]"
+        >
+          {copy.unavailable}
+        </p>
+      ) : (
+        <ul className="mt-6 grid gap-4 md:grid-cols-2">
+          {published.data.map((doc) => (
+            <li key={doc.id} className="border-t border-[var(--lsh-rule-strong)] pt-5">
+              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                {doc.documentType.replace("_", " ")}
+                {doc.periodLabel ? ` · ${doc.periodLabel}` : ""}
               </p>
-              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">
-                {investor.expansionContext.description}
+              <h4 className="lsh-display mt-2 text-xl text-[var(--lsh-charcoal)]">{doc.title}</h4>
+              {doc.disclosureText ? (
+                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
+                  {doc.disclosureText}
+                </p>
+              ) : null}
+              <p className="mt-4">
+                {doc.downloadPath ? (
+                  <a
+                    {...measurementAttributes("public_document_download", {
+                      documentType: doc.documentType,
+                    })}
+                    href={publishedDocumentUrl(doc.downloadPath)}
+                    className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-4 py-2 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
+                  >
+                    {copy.download} <ArrowRight size={14} aria-hidden="true" />
+                  </a>
+                ) : (
+                  <span className="text-xs text-[var(--lsh-muted)]">On request</span>
+                )}
               </p>
-            </div>
-          </Reveal>
-        </Container>
-      </section>
-
-      {/* The four sections, around one conceptual graphic. */}
-      <BentoGrid
-        tiles={[
-          { title: hub.eyebrow, eyebrow: "In this section", graphic: "boardroom" },
-          ...hub.sections.map((section) => ({
-            title: section.title,
-            text: section.text,
-            icon: iconForTitle(section.title),
-            href: SECTION_ROUTES[section.route],
-            linkLabel: section.linkLabel,
-          })),
-        ]}
-      />
-      <section className="px-5 pb-20 lg:px-8">
-        <Container>
-          <Reveal className="flex flex-wrap items-center gap-4">
-            <InvestorContact />
-            <ActionLink action="growth_strategy" variant="text" />
-          </Reveal>
-        </Container>
-      </section>
-    </LifeSupplyLayout>
-  );
-}
-
-/** `/investor-relations/growth-strategy/` */
-export function GrowthStrategyPage() {
-  const g = investorRelations.growthStrategy;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        media={<GraphicBackdrop graphic="facade" position="70% 40%" />}
-        eyebrow={g.eyebrow}
-        title={g.title}
-        description={g.intro}
-      />
-      <IconFeatureGrid
-        items={g.strands.map((strand) => ({
-          title: strand.title,
-          text: strand.text,
-          status: strand.status,
-          icon: iconForTitle(strand.title),
-          href: STRAND_ROUTES[strand.route],
-          linkLabel: "Read more",
-        }))}
-      />
-      <DevelopmentCase />
-      <ExecutionSequence />
-      <section className="px-5 pb-20 lg:px-8">
-        <Container>
-          <ForwardLooking text={investorRelations.hub.forwardLooking} />
-        </Container>
-      </section>
-      <section className="bg-[var(--lsh-ink)] px-5 py-20 text-white lg:px-8">
-        <Container>
-          <Reveal>
-            <SectionHeading
-              tone="onDark"
-              eyebrow={g.record.eyebrow}
-              title={g.record.title}
-              description={g.record.note}
-            />
-          </Reveal>
-          <Stagger as="ul" className="mt-10 grid gap-px bg-white/15 md:grid-cols-2 xl:grid-cols-3">
-            {g.record.items.map((item) => (
-              <StaggerItem
-                key={`${item.date}-${item.text}`}
-                as="li"
-                className="flex gap-4 bg-[var(--lsh-charcoal)] p-6"
-              >
-                <IconBadge icon="scroll" tone="onDark" size={18} />
-                <div>
-                  <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
-                    {item.date}
-                  </p>
-                  <p className="mt-2 leading-7 text-white/80">{item.text}</p>
-                </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </section>
-      <section className="px-5 pb-20 lg:px-8">
-        <ActionRow actions={g.actions} />
-      </section>
-    </LifeSupplyLayout>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Reveal>
   );
 }
 
 /**
- * How the developing work is intended to reach scale (round three, outcome 6).
+ * `/investor-relations/` — the one investor page (product owner, 2026-09-13).
  *
- * The investor pages explained prerequisites well and sequence badly: a reader
- * could see what had to be true but not the order management intends to work
- * in. Four numbered steps, each written as planned rather than achieved, with
- * the gate that governs scaling stated separately so it is not mistaken for a
- * schedule. No date, duration, count or target appears.
+ * The investor overview, Growth Strategy, Advanced Therapeutics, Disclosures
+ * and the document directory became sections of this page, in the order an
+ * investor asks the questions:
+ *
+ *   1. #business               what the group operates today
+ *   2. #financial-information  what it has reported, once, with its basis
+ *   3. #business-model         how it earns revenue and how it could extend
+ *   4. #growth-strategy        where growth can come from, five priorities
+ *   5. #execution              the phased approach and what it would require
+ *   6. #advanced-therapeutics  longer-term regulated opportunities, restrained
+ *   7. #materials              the document directory, moved from Company News
+ *   8. #contact                the next action, and the two supporting pages
+ *   9. #disclosures            the full qualification, on a permanent anchor
+ *
+ * The three retired addresses redirect to their sections. No figure counts
+ * up, no chart is drawn from a single period, no phase reads as achieved,
+ * and no proposed activity reads as offered.
  */
-function ExecutionSequence() {
-  const e = investorRelations.growthStrategy.execution;
-  return (
-    <section className="px-5 py-20 lg:px-8">
-      <Container className="min-w-0">
-        <Reveal>
-          <SectionHeading eyebrow={e.eyebrow} title={e.title} description={e.intro} />
-        </Reveal>
-        <Stagger
-          as="ol"
-          className="mt-10 grid gap-px bg-[var(--lsh-rule)] md:grid-cols-2 xl:grid-cols-4"
-        >
-          {e.stages.map((stage) => (
-            <StaggerItem
-              as="li"
-              key={stage.index}
-              className="flex h-full flex-col bg-[var(--lsh-paper)] p-6"
-            >
-              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                {e.stageLabel} {stage.index}
-              </p>
-              <h3 className="lsh-display mt-2 text-xl leading-tight text-[var(--lsh-charcoal)]">
-                {stage.title}
-              </h3>
-              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">{stage.text}</p>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </Container>
-    </section>
-  );
-}
-
-/** The business case for each opportunity being developed, on the growth-strategy page. */
-function DevelopmentCase() {
-  const d = investorRelations.growthStrategy.development;
-  return (
-    <section className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8">
-      <Container>
-        <Reveal>
-          <SectionHeading eyebrow={d.eyebrow} title={d.title} description={d.intro} />
-        </Reveal>
-        <Stagger as="ul" className="mt-10 grid gap-5 lg:grid-cols-2">
-          {d.items.map((item) => (
-            <StaggerItem as="li" key={item.title} className="h-full">
-              <article className="flex h-full flex-col border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] p-7">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">{item.title}</h3>
-                  <StatusTag status={item.status} />
-                </div>
-                <dl className="mt-5 grid gap-4">
-                  {(
-                    [
-                      [d.labels.customer, item.customer],
-                      [d.labels.proposal, item.proposal],
-                      [d.labels.capability, item.capability],
-                      [d.labels.conditions, item.conditions],
-                    ] as const
-                  ).map(([label, value]) => (
-                    <div key={label}>
-                      <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                        {label}
-                      </dt>
-                      <dd className="mt-1 text-sm leading-6 text-[var(--lsh-muted)]">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </article>
-            </StaggerItem>
-          ))}
-        </Stagger>
-        <Reveal className="mt-8 border-l-4 border-[var(--lsh-rule-strong)] pl-5 text-sm leading-6 text-[var(--lsh-muted)]">
-          {d.note}
-        </Reveal>
-      </Container>
-    </section>
-  );
-}
-
-/** `/investor-relations/advanced-therapeutics/` */
-export function AdvancedTherapeuticsPage() {
-  const t = investorRelations.advancedTherapeutics;
+export function InvestorRelationsPage({
+  documents,
+}: {
+  documents: Published<PublishedDocumentDto[]>;
+}) {
+  const ir = investorRelations;
   return (
     <LifeSupplyLayout>
       <PublicHero
-        media={<GraphicBackdrop graphic="equipment" position="75% 50%" />}
-        eyebrow={t.eyebrow}
-        title={t.title}
-        description={t.intro}
+        media={<GraphicBackdrop graphic="boardroom" position="70% 50%" />}
+        eyebrow={ir.eyebrow}
+        title={ir.title}
+        description={ir.description}
+        actions={
+          <>
+            <ActionLink action={ir.actions.primary as ActionKey} />
+            <a href={ir.actions.secondaryHref} className={HERO_SECONDARY}>
+              {ir.actions.secondaryLabel}
+            </a>
+          </>
+        }
       />
-      <section className="px-5 py-20 lg:px-8">
+
+      <SectionNav items={ir.sections} />
+
+      {/* 1. The operating foundation: three columns, two links out. */}
+      <AnchoredSection id="business" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
-          <Stagger className="grid gap-5 md:grid-cols-2">
-            {t.options.map((option) => (
+          <Reveal>
+            <SectionHeading
+              eyebrow={ir.business.eyebrow}
+              title={ir.business.title}
+              description={ir.business.intro}
+            />
+          </Reveal>
+          <Stagger as="ul" className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+            {ir.business.items.map((item, index) => (
               <StaggerItem
-                key={option.title}
-                as="article"
-                className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-7"
+                key={item.title}
+                as="li"
+                className="border-t-4 border-[var(--lsh-brand-red)] pt-5"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <IconBadge icon={iconForTitle(option.title)} />
-                  <StatusTag status={option.status} />
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <StatusTag status={item.status} />
                 </div>
-                <h2 className="lsh-display mt-6 text-2xl text-[var(--lsh-charcoal)]">
-                  {option.title}
-                </h2>
-                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{option.text}</p>
-                <Eyebrow as="h3" className="mt-6">
-                  Depends on
-                </Eyebrow>
-                <ul className="mt-3 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                  {option.dependencies.map((dependency) => (
-                    <li key={dependency} className="lsh-bullet">
-                      {dependency}
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="lsh-display mt-4 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                  {item.title}
+                </h3>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
               </StaggerItem>
             ))}
           </Stagger>
-          <ForwardLooking text={t.qualification} />
-          <ActionRow actions={t.actions} />
+          <Reveal className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-[var(--lsh-rule)] pt-6">
+            {ir.business.links.map((link, index) => (
+              <ActionLink
+                key={link.action}
+                action={link.action as ActionKey}
+                variant={index === 0 ? "primary" : "onLight"}
+              >
+                {link.label}
+              </ActionLink>
+            ))}
+          </Reveal>
         </Container>
-      </section>
-    </LifeSupplyLayout>
-  );
-}
+      </AnchoredSection>
 
-/** `/investor-relations/disclosures/` */
-export function DisclosuresPage() {
-  const d = investorRelations.disclosures;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        media={<GraphicBackdrop graphic="facade" position="70% 40%" />}
-        eyebrow={d.eyebrow}
-        title={d.title}
-        description={d.intro}
-      />
-      <section className="px-5 py-20 lg:px-8">
-        <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <ReportedFigures />
-          </div>
-          <Reveal className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-7 lg:self-start">
-            <div className="flex items-start justify-between gap-4">
-              <Eyebrow as="h2">Basis of the figures</Eyebrow>
-              <IconBadge icon="chart" size={18} />
+      {/* 2. The three figures, once, on a quiet ground, with the basis beneath. */}
+      <AnchoredSection
+        id="financial-information"
+        offset="sectionNav"
+        className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
+      >
+        <Container>
+          <Reveal>
+            <SectionHeading eyebrow={ir.financials.eyebrow} title={ir.financials.title} />
+          </Reveal>
+          <Stagger className="mt-10 grid gap-4 sm:grid-cols-3">
+            {ir.currentReport.highlights.map((item) => (
+              <StaggerItem key={item.label} className="h-full">
+                <EditorialStat value={item.value} label={item.label} />
+              </StaggerItem>
+            ))}
+          </Stagger>
+          <Reveal className="mt-10 grid gap-6 border-t border-[var(--lsh-rule-strong)] pt-6 lg:grid-cols-[0.6fr_1.4fr] lg:gap-16">
+            <Eyebrow as="h3">{ir.financials.basisTitle}</Eyebrow>
+            <div>
+              <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                {ir.financials.basis.map((line) => (
+                  <li key={line} className="lsh-bullet">
+                    {line}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 text-sm leading-6 text-[var(--lsh-muted)]">{ir.financials.note}</p>
             </div>
-            <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-              {d.basis.map((line) => (
-                <li key={line} className="lsh-bullet">
-                  {line}
+          </Reveal>
+        </Container>
+      </AnchoredSection>
+
+      {/* 3. The business model: a real table, status in words, repeat demand told apart from contracted revenue. */}
+      <AnchoredSection id="business-model" offset="sectionNav" className="px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={ir.model.eyebrow}
+              title={ir.model.title}
+              description={ir.model.intro}
+            />
+          </Reveal>
+          <Reveal className="mt-10">
+            {/* Phones: one stacked block per activity, so the status is never off screen. */}
+            <ul className="divide-y divide-[var(--lsh-rule)] border-y border-[var(--lsh-rule-strong)] md:hidden">
+              {ir.model.rows.map((row) => (
+                <li key={row.activity} className="py-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="lsh-display text-base leading-tight text-[var(--lsh-charcoal)]">
+                      {row.activity}
+                    </h3>
+                    <StatusTag status={row.status} />
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{row.role}</p>
                 </li>
               ))}
             </ul>
+            {/* Tablet and desktop: the same rows as a table. */}
+            <div className="hidden md:block">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="lsh-display text-[10px] text-[var(--lsh-muted)]">
+                    <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-6">
+                      {ir.model.labels.activity}
+                    </th>
+                    <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-6">
+                      {ir.model.labels.role}
+                    </th>
+                    <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3">
+                      {ir.model.labels.status}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ir.model.rows.map((row) => (
+                    <tr key={row.activity} className="align-top">
+                      <th
+                        scope="row"
+                        className="lsh-display border-b border-[var(--lsh-rule)] py-5 pr-6 text-base leading-tight text-[var(--lsh-charcoal)]"
+                      >
+                        {row.activity}
+                      </th>
+                      <td className="border-b border-[var(--lsh-rule)] py-5 pr-6 text-sm leading-6 text-[var(--lsh-muted)]">
+                        {row.role}
+                      </td>
+                      <td className="border-b border-[var(--lsh-rule)] py-5 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                        {row.status}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-6 text-sm leading-6 text-[var(--lsh-muted)]">{ir.model.note}</p>
           </Reveal>
         </Container>
+      </AnchoredSection>
+
+      {/* 4. Growth priorities: a numbered editorial list with varied rows, and one typeset visual for technology. */}
+      <AnchoredSection
+        id="growth-strategy"
+        offset="sectionNav"
+        className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
+      >
         <Container>
-          <Reveal className="mt-10 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-            <IconBadge icon="shield" />
+          <Reveal>
+            <SectionHeading
+              eyebrow={ir.growth.eyebrow}
+              title={ir.growth.title}
+              description={ir.growth.intro}
+            />
+          </Reveal>
+          <ol className="mt-12 divide-y divide-[var(--lsh-rule-strong)] border-y border-[var(--lsh-rule-strong)]">
+            {ir.growth.priorities.map((priority) => (
+              <li key={priority.index}>
+                <Reveal className="grid gap-6 py-10 lg:grid-cols-[4rem_1fr_1fr] lg:gap-10">
+                  <span className="lsh-display text-3xl leading-none text-[var(--lsh-brand-red)]">
+                    {priority.index}
+                  </span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                        {priority.title}
+                      </h3>
+                      <StatusTag status={priority.status} />
+                    </div>
+                    <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{priority.text}</p>
+                    {"secondary" in priority ? (
+                      <p className="mt-4 leading-7 text-[var(--lsh-muted)]">{priority.secondary}</p>
+                    ) : null}
+                  </div>
+                  <div className="lg:pt-1">
+                    {priority.points.length > 0 ? (
+                      <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
+                        {priority.points.map((point) => (
+                          <li key={point} className="lsh-bullet">
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    <div
+                      className={`flex flex-wrap items-center gap-x-6 gap-y-2 ${
+                        priority.points.length > 0 ? "mt-6" : ""
+                      }`}
+                    >
+                      {"link" in priority ? (
+                        <ActionLink action={priority.link.action as ActionKey} variant="text">
+                          {priority.link.label}
+                        </ActionLink>
+                      ) : null}
+                      {"links" in priority
+                        ? priority.links.map((link) => (
+                            <ActionLink
+                              key={link.action}
+                              action={link.action as ActionKey}
+                              variant="text"
+                            >
+                              {link.label}
+                            </ActionLink>
+                          ))
+                        : null}
+                    </div>
+                  </div>
+                </Reveal>
+              </li>
+            ))}
+          </ol>
+
+          {/*
+           * The one visual for the technology priority: three plain steps
+           * from information to a better decision, typeset in real text.
+           * No circuitry, no brain, no warehouse.
+           */}
+          <Reveal className="mt-12">
+            <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
+              {ir.growth.technology.title}
+            </h3>
+            <ol className="mt-6 grid gap-px bg-[var(--lsh-rule-strong)] md:grid-cols-3">
+              {ir.growth.technology.steps.map((step, index) => (
+                <li key={step.title} className="flex flex-col bg-[var(--lsh-paper)] p-6">
+                  <span className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
+                    {String(index + 1).padStart(2, "0")}
+                    {index < ir.growth.technology.steps.length - 1 ? (
+                      <span aria-hidden="true" className="ml-2 text-[var(--lsh-rule-strong)]">
+                        →
+                      </span>
+                    ) : null}
+                  </span>
+                  <p className="lsh-display mt-3 text-lg leading-tight text-[var(--lsh-charcoal)]">
+                    {step.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{step.text}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-4 text-sm leading-6 text-[var(--lsh-muted)]">
+              {ir.growth.technology.note}
+            </p>
+          </Reveal>
+        </Container>
+      </AnchoredSection>
+
+      {/* 5. Execution: four planned phases, each with the evidence it needs, and what development would require. */}
+      <AnchoredSection id="execution" offset="sectionNav" className="px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={ir.execution.eyebrow}
+              title={ir.execution.title}
+              description={ir.execution.intro}
+            />
+          </Reveal>
+          <div
+            aria-hidden="true"
+            className="mt-12 hidden grid-cols-[6rem_1fr_1.2fr] gap-8 border-b border-[var(--lsh-rule-strong)] pb-3 md:grid"
+          >
+            <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">
+              {ir.execution.labels.phase}
+            </span>
+            <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">
+              {ir.execution.labels.purpose}
+            </span>
+            <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">
+              {ir.execution.labels.evidence}
+            </span>
+          </div>
+          <Stagger as="ol" className="mt-12 divide-y divide-[var(--lsh-rule)] md:mt-0">
+            {ir.execution.phases.map((phase) => (
+              <StaggerItem
+                key={phase.index}
+                as="li"
+                className="grid gap-3 py-6 md:grid-cols-[6rem_1fr_1.2fr] md:gap-8"
+              >
+                <div>
+                  <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                    {ir.execution.statusLabel} {phase.index}
+                  </span>
+                  <h3 className="lsh-display mt-1 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                    {phase.title}
+                  </h3>
+                </div>
+                <p className="text-sm leading-6 text-[var(--lsh-charcoal)]">
+                  <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-muted)] md:sr-only">
+                    {ir.execution.labels.purpose}
+                  </span>
+                  {phase.purpose}
+                </p>
+                <p className="text-sm leading-6 text-[var(--lsh-muted)]">
+                  <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-muted)] md:sr-only">
+                    {ir.execution.labels.evidence}
+                  </span>
+                  {phase.evidence}
+                </p>
+              </StaggerItem>
+            ))}
+          </Stagger>
+          <Reveal className="mt-8 grid gap-6 border-t border-[var(--lsh-rule-strong)] pt-8 lg:grid-cols-2 lg:gap-16">
+            <p className="text-sm leading-6 text-[var(--lsh-muted)]">{ir.execution.status}</p>
             <div>
-              <div className="lsh-display flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-                {renderIcon("shield", { size: 16 })} {d.forwardLooking.title}
-              </div>
-              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.forwardLooking.text}</p>
-              <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{d.materials}</p>
+              <Eyebrow as="h3">{ir.execution.capital.title}</Eyebrow>
+              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+                {ir.execution.capital.text}
+              </p>
             </div>
           </Reveal>
         </Container>
-        <ActionRow actions={d.actions} />
-      </section>
+      </AnchoredSection>
+
+      {/* 6. Longer-term regulated opportunities: a restrained four-row list, no laboratory. */}
+      <AnchoredSection
+        id="advanced-therapeutics"
+        offset="sectionNav"
+        className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
+      >
+        <Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <Reveal className="lg:sticky lg:top-44 lg:self-start">
+            <SectionHeading
+              eyebrow={ir.longerTerm.eyebrow}
+              title={ir.longerTerm.title}
+              description={ir.longerTerm.intro}
+            />
+            <p className="mt-6 border-t border-[var(--lsh-rule-strong)] pt-5 text-sm leading-6 text-[var(--lsh-charcoal)]">
+              {ir.longerTerm.statement}
+            </p>
+          </Reveal>
+          <Stagger as="ul" className="grid gap-8">
+            {ir.longerTerm.options.map((option) => (
+              <StaggerItem
+                key={option.title}
+                as="li"
+                className="border-t border-[var(--lsh-rule-strong)] pt-5"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
+                    {option.title}
+                  </h3>
+                  <StatusTag status={option.status} />
+                </div>
+                <dl className="mt-4 grid gap-3 text-sm leading-6 sm:grid-cols-2 sm:gap-8">
+                  <div>
+                    <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      {ir.longerTerm.labels.role}
+                    </dt>
+                    <dd className="mt-1 text-[var(--lsh-charcoal)]">{option.role}</dd>
+                  </div>
+                  <div>
+                    <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      {ir.longerTerm.labels.dependencies}
+                    </dt>
+                    <dd className="mt-1 text-[var(--lsh-muted)]">{option.dependencies}</dd>
+                  </div>
+                </dl>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </AnchoredSection>
+
+      {/* 7. Investor materials: one record per row, a document-specific request, and the governed published list. */}
+      <AnchoredSection id="materials" offset="sectionNav" className="px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow={ir.materials.eyebrow}
+              title={ir.materials.title}
+              description={ir.materials.intro}
+            />
+          </Reveal>
+          <Stagger
+            as="ul"
+            className="mt-10 divide-y divide-[var(--lsh-rule)] border-y border-[var(--lsh-rule-strong)]"
+          >
+            {ir.materials.records.map((record) => (
+              <StaggerItem
+                key={record.title}
+                as="li"
+                className="grid gap-4 py-6 lg:grid-cols-[1.4fr_1fr_auto] lg:items-start lg:gap-10"
+              >
+                <div>
+                  <h3 className="lsh-display text-xl leading-tight text-[var(--lsh-charcoal)]">
+                    {record.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{record.note}</p>
+                </div>
+                <dl className="grid gap-2 text-sm leading-6">
+                  <div className="flex gap-3">
+                    <dt className="lsh-display w-24 shrink-0 text-[10px] leading-6 text-[var(--lsh-brand-red)]">
+                      {ir.materials.labels.date}
+                    </dt>
+                    <dd className="text-[var(--lsh-charcoal)]">{record.date}</dd>
+                  </div>
+                  <div className="flex gap-3">
+                    <dt className="lsh-display w-24 shrink-0 text-[10px] leading-6 text-[var(--lsh-brand-red)]">
+                      {ir.materials.labels.access}
+                    </dt>
+                    <dd className="text-[var(--lsh-muted)]">{record.category}</dd>
+                  </div>
+                </dl>
+                <div className="lg:pt-1">
+                  <ActionLink action={record.action as ActionKey} variant="onLight" />
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+          <PublishedDocuments published={documents} />
+          <Reveal>
+            <p className="mt-8 text-sm leading-6 text-[var(--lsh-muted)]">
+              {ir.materials.requestNote}
+            </p>
+          </Reveal>
+        </Container>
+      </AnchoredSection>
+
+      {/* 8. Investor contact: the channel, the primary action, and the two supporting pages. */}
+      <AnchoredSection
+        id="contact"
+        offset="sectionNav"
+        className="bg-[var(--lsh-charcoal)] px-5 py-20 text-white lg:px-8"
+      >
+        <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+          <Reveal>
+            <SectionHeading
+              tone="onDark"
+              eyebrow={ir.contactSection.eyebrow}
+              title={ir.contactSection.title}
+              description={ir.contactSection.text}
+            />
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <ActionLink action={ir.contactSection.primary as ActionKey} />
+              {ir.contactSection.secondary.map((link) => (
+                <ActionLink key={link.action} action={link.action as ActionKey} variant="onDark">
+                  {link.label}
+                </ActionLink>
+              ))}
+            </div>
+          </Reveal>
+          <Reveal
+            delay={0.05}
+            className="border-t border-white/25 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
+          >
+            <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+              {ir.contactSection.channel}
+            </p>
+            <div className="mt-4 grid gap-2 text-sm text-white/80">
+              <a
+                href={`mailto:${ir.contact.email}`}
+                className="inline-flex w-fit items-center gap-2 transition-colors hover:text-white"
+              >
+                <Mail size={15} aria-hidden="true" /> {ir.contact.email}
+              </a>
+              <a
+                href={telHref(ir.contact.phone)}
+                className="inline-flex w-fit items-center gap-2 transition-colors hover:text-white"
+              >
+                <Phone size={15} aria-hidden="true" /> {ir.contact.phone}
+              </a>
+            </div>
+          </Reveal>
+        </Container>
+      </AnchoredSection>
+
+      {/* 9. Disclosures, on a permanent anchor: the figures' basis, the forward-looking statement, no offering. */}
+      <AnchoredSection id="disclosures" offset="sectionNav" className="px-5 py-16 lg:px-8">
+        <Container className="grid gap-8 lg:grid-cols-[0.6fr_1.4fr] lg:gap-16">
+          <Reveal>
+            <SectionHeading eyebrow={ir.disclosures.eyebrow} title={ir.disclosures.title} />
+          </Reveal>
+          <Reveal delay={0.05} className="grid gap-5 text-sm leading-6 text-[var(--lsh-muted)]">
+            <p>{ir.disclosures.figures}</p>
+            <div>
+              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                {ir.disclosures.forwardLooking.title}
+              </p>
+              <p className="mt-2">{ir.disclosures.forwardLooking.text}</p>
+            </div>
+            <p>{ir.disclosures.offering}</p>
+          </Reveal>
+        </Container>
+      </AnchoredSection>
     </LifeSupplyLayout>
   );
 }

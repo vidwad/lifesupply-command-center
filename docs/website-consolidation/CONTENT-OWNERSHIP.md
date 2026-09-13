@@ -144,3 +144,16 @@ change store orders" and "each store has its own catalogue, accounts, currency,
 prices and support" appeared in several places. `#stores` now says purchases
 are completed on the store's website, and `#ordering-support` answers where to
 order, which currency applies, and who handles an existing order.
+
+## Investors consolidation (2026-09-13)
+
+| Retired or changed destination | Where its content went |
+| --- | --- |
+| `/investor-relations` (rebuilt) | One page in the order an investor asks: investment overview; operating foundation with the three approved figures once and their basis directly beneath (`#financial-information`); the business model as a table with a status per activity, and the note that repeat demand is not contractual recurring revenue (`#business-model`); five growth priorities (`#growth-strategy`); the four-phase execution roadmap, all planned, with what development would require in kind only (`#execution`); investor materials (`#materials`); investor contact with links to Acquisitions and Company News (`#contact`); and the full disclosure text (`#disclosures`). |
+| `/investor-relations/growth-strategy` | The five strands became the five growth priorities, reframed from status to commercial purpose; the business case for the two developing programs is priority 4 with links to the Solutions pages; the execution sequence became the phased roadmap. The dated public record came off: the 2022 announcements are on Company News with their sources, and the two later records sit under Financials and Materials. Kept unpublished in `investors.ts` as `record`. |
+| `/investor-relations/advanced-therapeutics` | The four regulated options became the longer-term opportunities section, one restrained row each with its potential role and principal dependencies, under one visible statement that none is offered. |
+| `/investor-relations/disclosures` | The reporting basis sits under the figures; the forward-looking statement and the no-offering line are the `#disclosures` section. The figures are no longer repeated across two pages. |
+| `/news` (Company News) | The investor-document directory moved to `#materials` on the investor page, each record with a document-specific request subject and no "Version: Not stated" column; Company News keeps one line pointing there. The "New here?" introduction came off the page and is kept unpublished in `news.ts`. The four 2022 releases are labelled a historical archive, newest first. |
+| `/partners/acquisitions` (rebuilt) | Rewritten as a focused outreach page: businesses and capabilities of interest, what a fit looks like, structures considered case by case, the confidential process with what to include in an introduction, and direct contact. The "Partners" eyebrow became "Acquisitions & Strategic Opportunities"; the address is unchanged. |
+
+**Navigation.** About | Medical Supplies | Solutions ▾ | Investors | Contact, with Shop Our Stores as the utility button and the logo as the link home; Home left the menu. The Solutions dropdown is Clinic, Pharmacy and Metabolic Health Solutions only. Acquisitions and Company News are reached from the investor page, Contact and the footer.

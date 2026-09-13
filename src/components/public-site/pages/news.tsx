@@ -8,21 +8,14 @@ import {
   Eyebrow,
   PrimaryAction,
   PublicHero,
-  SectionHeading,
 } from "@/components/public-site/lifesupply-primitives";
-import { Reveal, SpotlightCard, Stagger, StaggerItem } from "@/components/public-site/motion";
-import { IconBadge } from "@/components/public-site/sections";
+import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { ACTIONS, type ActionKey } from "@/lib/public-site/actions";
 import { news } from "@/lib/public-site/content/news";
-import { measurementAttributes } from "@/lib/public-site/measurement";
-import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
+import type { Published } from "@/lib/public-site/published";
 import { LIFE_SUPPLY_ROUTES, newsItemRoute, resourceRoute } from "@/lib/public-site/routes";
-import type {
-  PublicNewsItemDto,
-  PublicResourceDto,
-  PublishedDocumentDto,
-} from "@/server/public-web/contracts";
+import type { PublicNewsItemDto, PublicResourceDto } from "@/server/public-web/contracts";
 
 /**
  * A governed section is shown when it has records, and when it could not be
@@ -62,198 +55,24 @@ export function displayDate(iso: string) {
   });
 }
 
-/** Governed public documents from the published read model; fails closed when unreachable. */
-function PublishedDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
-  const copy = news.documents.published;
-  if (isEmpty(published)) return null;
-  return (
-    <Reveal className="mt-12">
-      <Eyebrow as="h3">{copy.title}</Eyebrow>
-      {!published.ok ? (
-        <Note text={copy.unavailable} tone="unavailable" />
-      ) : (
-        <ul className="mt-6 grid gap-4 md:grid-cols-2">
-          {published.data.map((doc) => (
-            <li
-              key={doc.id}
-              className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6"
-            >
-              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                {doc.documentType.replace("_", " ")}
-                {doc.periodLabel ? ` · ${doc.periodLabel}` : ""}
-              </p>
-              <h4 className="lsh-display mt-2 text-xl text-[var(--lsh-charcoal)]">{doc.title}</h4>
-              {doc.disclosureText ? (
-                <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">
-                  {doc.disclosureText}
-                </p>
-              ) : null}
-              <p className="mt-4">
-                {doc.downloadPath ? (
-                  <a
-                    {...measurementAttributes("public_document_download", {
-                      documentType: doc.documentType,
-                    })}
-                    href={publishedDocumentUrl(doc.downloadPath)}
-                    className="lsh-display inline-flex items-center gap-2 border border-[var(--lsh-rule-strong)] px-4 py-2 text-[11px] text-[var(--lsh-charcoal)] transition-colors hover:border-black hover:bg-black hover:text-white"
-                  >
-                    {copy.download} <ArrowRight size={14} aria-hidden="true" />
-                  </a>
-                ) : (
-                  <span className="text-xs text-[var(--lsh-muted)]">On request</span>
-                )}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Reveal>
-  );
-}
-
-/** The record's fields after its title, in one place for the phone list and the table. */
-const DOCUMENT_FIELDS = ["Date", "Access", "Version", "Status"] as const;
-
-function documentFields(record: (typeof news.documents.records)[number]) {
-  return [
-    record.date,
-    record.category,
-    record.version ?? "Not stated",
-    record.href ? "Available" : "On request",
-  ];
-}
-
 /**
- * The investor documents index, merged into this page on 2026-09-09: access
- * classes, the dated records at a request step, the governed published list,
- * and the request note. No file is ever linked by literal.
+ * `/news/` — Company News: governed current announcements, the static
+ * historical archive, and governed resources.
  *
- * The records are a five-column table from md up. On a phone that table
- * needed 40rem and pushed the whole page sideways (product owner,
- * 2026-09-09), so below md each record is a stacked card with its fields as
- * a definition list instead. `min-w-0` keeps this block shrinkable inside
- * the page's grid, so the table's scroller can contain it rather than the
- * page widening around it.
- */
-function InvestorDocuments({ published }: { published: Published<PublishedDocumentDto[]> }) {
-  const d = news.documents;
-  return (
-    <div className="min-w-0">
-      <Reveal>
-        <div className="flex items-center gap-4">
-          <IconBadge icon="landmark" size={18} />
-          <Eyebrow as="h2">{d.eyebrow}</Eyebrow>
-        </div>
-        <p className="lsh-display mt-4 max-w-3xl text-2xl leading-tight text-[var(--lsh-charcoal)]">
-          {d.title}
-        </p>
-        <p className="mt-3 max-w-3xl leading-7 text-[var(--lsh-muted)]">{d.intro}</p>
-      </Reveal>
-      {/*
-       * The three access-class tiles were removed in round four, change 9.
-       * They described a classification scheme rather than anything a visitor
-       * could act on, and one of the three, "Public", held nothing at all.
-       * Each record still shows its access label in the table below.
-       */}
-      {/* Phones: one stacked card per record. */}
-      <Stagger as="ul" className="mt-8 grid gap-4 md:hidden">
-        {d.records.map((record) => (
-          <StaggerItem
-            key={record.title}
-            as="li"
-            className="border-t-2 border-[var(--lsh-rule-strong)] bg-[var(--lsh-surface)] p-5"
-          >
-            <p className="font-medium leading-6 text-[var(--lsh-charcoal)]">{record.title}</p>
-            <p className="mt-1 text-xs leading-5 text-[var(--lsh-muted)]">{record.note}</p>
-            <dl className="mt-4 grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-2 text-xs leading-5">
-              {documentFields(record).map((value, index) => (
-                <div key={DOCUMENT_FIELDS[index]} className="contents">
-                  <dt className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                    {DOCUMENT_FIELDS[index]}
-                  </dt>
-                  <dd className="text-[var(--lsh-muted)]">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </StaggerItem>
-        ))}
-      </Stagger>
-      {/* Tablet and desktop: the same records as a table. */}
-      <Reveal className="mt-10 hidden min-w-0 overflow-x-auto md:block">
-        <table className="w-full border-collapse text-left text-sm">
-          <thead>
-            <tr className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-              <th scope="col" className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4">
-                Title
-              </th>
-              {DOCUMENT_FIELDS.map((field) => (
-                <th
-                  key={field}
-                  scope="col"
-                  className="border-b border-[var(--lsh-rule-strong)] py-3 pr-4"
-                >
-                  {field}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {d.records.map((record) => (
-              <tr key={record.title} className="align-top">
-                <th
-                  scope="row"
-                  className="border-b border-[var(--lsh-rule)] py-4 pr-4 font-medium text-[var(--lsh-charcoal)]"
-                >
-                  {record.title}
-                  <span className="mt-1 block text-xs font-normal leading-5 text-[var(--lsh-muted)]">
-                    {record.note}
-                  </span>
-                </th>
-                {documentFields(record).map((value, index) => (
-                  <td
-                    key={DOCUMENT_FIELDS[index]}
-                    className="border-b border-[var(--lsh-rule)] py-4 pr-4 text-[var(--lsh-muted)]"
-                  >
-                    {value}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Reveal>
-      <PublishedDocuments published={published} />
-      <Reveal className="mt-10 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-        <IconBadge icon="mail" />
-        <p className="leading-7 text-[var(--lsh-muted)]">{d.requestNote}</p>
-      </Reveal>
-      <Reveal className="mt-8 flex flex-wrap gap-3">
-        {d.actions.map((action, index) => (
-          <ActionLink
-            key={action}
-            action={action as ActionKey}
-            variant={index === 0 ? "primary" : "onLight"}
-          />
-        ))}
-      </Reveal>
-    </div>
-  );
-}
-
-/**
- * `/news/` — governed current news, the investor documents index, the static
- * historical releases, and governed resources.
+ * Renamed from News & resources on 2026-09-13 (product owner). The "New
+ * here?" company introduction came off, and the investor documents
+ * directory moved to the investor page's materials section; this page keeps
+ * one line pointing there. A clean editorial list: four historical releases
+ * need no image cards, filters, or pagination.
  */
 export function NewsPage({
   current,
-  documents,
   resources,
 }: {
   current: Published<PublicNewsItemDto[]>;
-  documents: Published<PublishedDocumentDto[]>;
   resources: Published<PublicResourceDto[]>;
 }) {
-  const { hero, sections, historical, overview } = news;
+  const { hero, sections, historical, materials } = news;
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -263,59 +82,34 @@ export function NewsPage({
         description={hero.description}
       />
 
-      {/*
-       * A short orientation for anyone who arrives here first (round three,
-       * outcome 9, shortened by the website consolidation on 2026-09-10).
-       *
-       * This block restated the whole company in six facts that About,
-       * Medical Supplies and Investor Relations each already carried. Six
-       * copies of a fact is six places for it to drift, so it points at the
-       * pages that own each one instead.
-       */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-        <Container className="min-w-0">
-          <Reveal className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <SectionHeading
-              eyebrow={overview.eyebrow}
-              title={overview.title}
-              description={overview.intro}
-            />
-            <div className="flex flex-wrap gap-3 lg:justify-end">
-              <ActionLink action={overview.action as ActionKey} />
-              <ActionLink action="investor_information" variant="onLight" />
-            </div>
-          </Reveal>
-        </Container>
-      </section>
-
       <section className="px-5 py-20 lg:px-8">
         <Container className="grid gap-16">
           {isEmpty(current) ? null : (
             <Reveal>
-              <div className="flex items-center gap-4">
-                <IconBadge icon="file" size={18} />
-                <Eyebrow as="h2">{sections.current.title}</Eyebrow>
-              </div>
+              <Eyebrow as="h2">{sections.current.title}</Eyebrow>
               {!current.ok ? (
                 <Note text={sections.current.unavailable} tone="unavailable" />
               ) : (
-                <ul className="mt-6 grid gap-4">
+                <ul className="mt-6 divide-y divide-[var(--lsh-rule)] border-y border-[var(--lsh-rule-strong)]">
                   {current.data.map((item) => (
                     <li key={item.slug}>
-                      <SpotlightCard className="lsh-lift border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                        <Link href={newsItemRoute(item.slug)} className="group grid gap-3 p-7">
-                          <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                            {displayDate(item.date)}
-                          </p>
-                          <h3 className="lsh-display text-2xl text-[var(--lsh-charcoal)]">
+                      <Link
+                        href={newsItemRoute(item.slug)}
+                        className="group grid gap-3 py-7 sm:grid-cols-[10rem_1fr] sm:gap-8"
+                      >
+                        <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                          {displayDate(item.date)}
+                        </p>
+                        <div>
+                          <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
                             {item.title}
                           </h3>
-                          <p className="leading-7 text-[var(--lsh-muted)]">{item.summary}</p>
-                          <span className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
+                          <p className="mt-2 leading-7 text-[var(--lsh-muted)]">{item.summary}</p>
+                          <span className="lsh-display mt-3 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
                             Read <ArrowRight size={15} aria-hidden="true" />
                           </span>
-                        </Link>
-                      </SpotlightCard>
+                        </div>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -323,44 +117,34 @@ export function NewsPage({
             </Reveal>
           )}
 
-          <InvestorDocuments published={documents} />
-
           <div>
             <Reveal className="flex flex-wrap items-end justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <IconBadge icon="scroll" size={18} />
-                <Eyebrow as="h2">{sections.historical.title}</Eyebrow>
-              </div>
+              <Eyebrow as="h2">{sections.historical.title}</Eyebrow>
               <p className="text-xs text-[var(--lsh-muted)]">{sections.historical.note}</p>
             </Reveal>
-            <Stagger className="mt-6 grid gap-4">
+            <Stagger
+              as="ul"
+              className="mt-6 divide-y divide-[var(--lsh-rule)] border-y border-[var(--lsh-rule-strong)]"
+            >
               {historical.map((item) => (
-                <StaggerItem key={item.href}>
-                  <SpotlightCard className="lsh-lift border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group grid gap-4 p-7 sm:grid-cols-[1fr_auto] sm:items-end"
-                    >
-                      <div>
-                        <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                          {item.date} · {item.source}
-                        </p>
-                        <h3 className="lsh-display mt-3 text-2xl text-[var(--lsh-charcoal)]">
-                          {item.title}
-                        </h3>
-                      </div>
-                      <span className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-brand-red)]">
-                        Read source{" "}
-                        <ExternalLink
-                          size={15}
-                          aria-hidden="true"
-                          className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none"
-                        />
-                      </span>
-                    </a>
-                  </SpotlightCard>
+                <StaggerItem key={item.href} as="li">
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group grid gap-3 py-7 sm:grid-cols-[10rem_1fr_auto] sm:items-baseline sm:gap-8"
+                  >
+                    <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                      {item.date}
+                    </p>
+                    <h3 className="lsh-display text-2xl leading-tight text-[var(--lsh-charcoal)]">
+                      {item.title}
+                    </h3>
+                    <span className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors group-hover:text-[var(--lsh-brand-red)]">
+                      {item.source}
+                      <ExternalLink size={14} aria-hidden="true" />
+                    </span>
+                  </a>
                 </StaggerItem>
               ))}
             </Stagger>
@@ -368,35 +152,36 @@ export function NewsPage({
 
           {isEmpty(resources) ? null : (
             <Reveal>
-              <div className="flex items-center gap-4">
-                <IconBadge icon="clipboardList" size={18} />
-                <Eyebrow as="h2">{sections.resources.title}</Eyebrow>
-              </div>
+              <Eyebrow as="h2">{sections.resources.title}</Eyebrow>
               {!resources.ok ? (
                 <Note text={sections.resources.unavailable} tone="unavailable" />
               ) : (
                 <ul className="mt-6 grid gap-4 md:grid-cols-2">
                   {resources.data.map((item) => (
-                    <li key={item.slug}>
-                      <SpotlightCard className="lsh-lift h-full border border-[var(--lsh-rule)] bg-[var(--lsh-paper)]">
-                        <Link href={resourceRoute(item.slug)} className="group grid gap-3 p-7">
-                          <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                            Reviewed {displayDate(item.reviewed)}
-                          </p>
-                          <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">
-                            {item.title}
-                          </h3>
-                          <p className="text-sm leading-6 text-[var(--lsh-muted)]">
-                            {item.summary}
-                          </p>
-                        </Link>
-                      </SpotlightCard>
+                    <li key={item.slug} className="border-t border-[var(--lsh-rule-strong)] pt-5">
+                      <Link href={resourceRoute(item.slug)} className="group grid gap-2">
+                        <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+                          Reviewed {displayDate(item.reviewed)}
+                        </p>
+                        <h3 className="lsh-display text-xl text-[var(--lsh-charcoal)]">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm leading-6 text-[var(--lsh-muted)]">{item.summary}</p>
+                      </Link>
                     </li>
                   ))}
                 </ul>
               )}
             </Reveal>
           )}
+
+          {/* Where the investor materials went. */}
+          <Reveal className="flex flex-col gap-4 border-t border-[var(--lsh-rule)] pt-8 lg:flex-row lg:items-center lg:justify-between">
+            <p className="max-w-2xl text-sm leading-6 text-[var(--lsh-muted)]">{materials.text}</p>
+            <div className="shrink-0">
+              <ActionLink action={materials.action as ActionKey} variant="onLight" />
+            </div>
+          </Reveal>
         </Container>
       </section>
     </LifeSupplyLayout>

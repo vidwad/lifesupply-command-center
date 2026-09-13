@@ -3,16 +3,12 @@ import type { Metadata } from "next";
 import { publicMetadata } from "@/lib/public-site/seo";
 
 import { NewsPage } from "@/components/public-site/lifesupply-pages";
-import {
-  fetchPublishedDocuments,
-  fetchPublishedNews,
-  fetchPublishedResources,
-} from "@/lib/public-site/published";
+import { fetchPublishedNews, fetchPublishedResources } from "@/lib/public-site/published";
 
 export const metadata: Metadata = publicMetadata({
-  title: "News & resources",
+  title: "Company News",
   description:
-    "Company news with its date, investor documents by access class, the historical public record, and practical resources with a named author and reviewer.",
+    "LifeSupply Health company announcements with their dates and sources, the historical 2022 releases, and practical resources with a named author and reviewer.",
   path: "/news/",
 });
 
@@ -20,10 +16,6 @@ export const metadata: Metadata = publicMetadata({
 export const revalidate = 300;
 
 export default async function Page() {
-  const [current, documents, resources] = await Promise.all([
-    fetchPublishedNews(),
-    fetchPublishedDocuments(),
-    fetchPublishedResources(),
-  ]);
-  return <NewsPage current={current} documents={documents} resources={resources} />;
+  const [current, resources] = await Promise.all([fetchPublishedNews(), fetchPublishedResources()]);
+  return <NewsPage current={current} resources={resources} />;
 }

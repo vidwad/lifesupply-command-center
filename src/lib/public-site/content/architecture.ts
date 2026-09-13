@@ -69,7 +69,7 @@ export const architecture = {
         {
           title: "Licensed pharmacy operations",
           text: "Whether LifeSupply should hold licensed pharmacy operations of its own, rather than supply pharmacies that others run.",
-          href: "/investor-relations/advanced-therapeutics",
+          href: "/investor-relations#advanced-therapeutics",
         },
         {
           title: "Specialty and compounding",

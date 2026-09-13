@@ -17,12 +17,7 @@ export { PharmacySolutionsPage } from "@/components/public-site/pages/pharmacy";
 export { ContactPage } from "@/components/public-site/pages/contact";
 export { LifeSupplyHome } from "@/components/public-site/pages/home";
 export { MetabolicHealthPage } from "@/components/public-site/pages/metabolic";
-export {
-  AdvancedTherapeuticsPage,
-  DisclosuresPage,
-  GrowthStrategyPage,
-  InvestorRelationsPage,
-} from "@/components/public-site/pages/investors";
+export { InvestorRelationsPage } from "@/components/public-site/pages/investors";
 export {
   NewsItemView,
   NewsPage,

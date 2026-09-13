@@ -93,10 +93,34 @@ const nextConfig: NextConfig = {
       },
       // 2026-09-09 (product owner): the documents index merged into News &
       // resources; Shareholder services withdrawn.
-      { source: "/investor-relations/documents", destination: "/news", permanent: true },
+      // Since 2026-09-13 the documents directory is the investor page's
+      // materials section, so the old address lands there in one hop.
+      {
+        source: "/investor-relations/documents",
+        destination: "/investor-relations#materials",
+        permanent: true,
+      },
       {
         source: "/investor-relations/shareholder-services",
         destination: "/investor-relations",
+        permanent: true,
+      },
+      // Investors consolidation (2026-09-13, product owner): Growth Strategy,
+      // Advanced Therapeutics and Disclosures became sections of the one
+      // investor page. Content moved first; each address lands on its section.
+      {
+        source: "/investor-relations/growth-strategy",
+        destination: "/investor-relations#growth-strategy",
+        permanent: true,
+      },
+      {
+        source: "/investor-relations/advanced-therapeutics",
+        destination: "/investor-relations#advanced-therapeutics",
+        permanent: true,
+      },
+      {
+        source: "/investor-relations/disclosures",
+        destination: "/investor-relations#disclosures",
         permanent: true,
       },
       // Website consolidation, stage 1 (2026-09-10): Shop & Services merged
