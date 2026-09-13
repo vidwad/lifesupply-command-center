@@ -25,6 +25,7 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import {
   BRAND_ROUTES,
   CONSOLIDATED_ROUTES,
+  FOOTER_SECTION_LINKS,
   LIFE_SUPPLY_NAVIGATION,
   LIFE_SUPPLY_ROUTES,
   LIVE_ROUTES,
@@ -212,10 +213,13 @@ describe("route registry", () => {
       expect(ROUTES.find((route) => route.path === from)?.status, from).toBe("redirect");
       expect(isLiveSection(to), to).toBe(true);
     }
-    // The `/partners` hazard: retiring the clinic child must never take its
-    // siblings with it. Both are retained pages and must stay live.
-    expect(isLiveRoute(STAGE_5_ROUTES.partnerSuppliers)).toBe(true);
+    // The `/partners` hazard: retiring one child must never take its
+    // siblings with it. Acquisitions is a retained page and stays live.
+    // Suppliers became a section of Medical Supply Solutions on 2026-09-12
+    // and retires by its own exact path, which is the hazard's point.
     expect(isLiveRoute(STAGE_5_ROUTES.partnerAcquisitions)).toBe(true);
+    expect(isLiveRoute(STAGE_5_ROUTES.partnerSuppliers)).toBe(false);
+    expect(isLiveSection("/medical-supply-solutions/#suppliers")).toBe(true);
   });
 
   it("accepts only section anchors a page actually declares", () => {
@@ -233,8 +237,19 @@ describe("route registry", () => {
   });
 
   it("makes the Stage 3 pages live under their groups", () => {
-    for (const path of [...Object.values(BRAND_ROUTES), ...Object.values(STAGE_3_ROUTES)]) {
+    // The three store pages became anchors on 2026-09-12; the Clinics brand
+    // is the Clinic Solutions page and stays live.
+    expect(isLiveRoute(BRAND_ROUTES.clinics)).toBe(true);
+    for (const path of Object.values(STAGE_3_ROUTES)) {
       expect(isLiveRoute(path), path).toBe(true);
+    }
+    for (const [key, anchor] of [
+      ["lifesupply", "lifesupply"],
+      ["wellmart", "wellmart-medical"],
+      ["balkowitsch", "balkowitsch"],
+    ] as const) {
+      expect(isLiveRoute(BRAND_ROUTES[key]), key).toBe(false);
+      expect(isLiveSection(`/medical-supply-solutions/#${anchor}`), key).toBe(true);
     }
     const groups = buildPrimaryNavigation();
     expect(groups.map((group) => group.label)).toEqual([
@@ -245,13 +260,12 @@ describe("route registry", () => {
       "Investors",
       "Contact",
     ]);
+    // Medical Supplies is a direct link since the 2026-09-12 consolidation:
+    // its three children became anchors on the page itself, so the group has
+    // no dropdown left to open.
     const businesses = groups.find((group) => group.key === "businesses")!;
-    expect(businesses.links.map((link) => link.href)).toEqual([
-      BRAND_ROUTES.lifesupply,
-      BRAND_ROUTES.wellmart,
-      BRAND_ROUTES.balkowitsch,
-    ]);
-    expect(businesses.links.every((link) => !link.external)).toBe(true);
+    expect(businesses.links).toEqual([]);
+    expect(businesses.href).toBe(LIFE_SUPPLY_ROUTES.operations);
     // The LifeSupply Clinics brand is the Clinic Solutions section itself.
     expect(BRAND_ROUTES.clinics).toBe(STAGE_3_ROUTES.clinicSolutions);
     expect(SECTION_ANCHORS[STAGE_3_ROUTES.clinicSolutions]).toEqual([
@@ -334,18 +348,21 @@ describe("route registry", () => {
       true,
     );
     // The hazard the plan names: retiring the hub must not take its children.
-    for (const path of [STAGE_5_ROUTES.partnerSuppliers, STAGE_5_ROUTES.partnerAcquisitions]) {
-      expect(isLiveRoute(path), path).toBe(true);
-    }
-    // Suppliers keeps its page and loses its category; Acquisitions moved to
-    // the Investors menu, where a reader who wants it already is.
-    expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerSuppliers)?.navGroup).toBeNull();
+    // Acquisitions is still a page of its own.
+    expect(isLiveRoute(STAGE_5_ROUTES.partnerAcquisitions)).toBe(true);
+    // Suppliers became a section of Medical Supply Solutions on 2026-09-12.
+    expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerSuppliers)?.status).toBe("redirect");
     expect(ROUTES.find((r) => r.path === STAGE_5_ROUTES.partnerAcquisitions)?.navGroup).toBe(
       "investors",
     );
-    // And Suppliers stays reachable without a menu: the footer carries it.
-    expect(LIFE_SUPPLY_NAVIGATION.map((link) => link.href)).toContain(
+    // And suppliers stays reachable without a menu: the footer links to the
+    // section rather than to the address that now redirects to it, so a
+    // visitor following it never takes an extra hop.
+    expect(LIFE_SUPPLY_NAVIGATION.map((link) => link.href)).not.toContain(
       STAGE_5_ROUTES.partnerSuppliers,
+    );
+    expect(FOOTER_SECTION_LINKS.map((link) => link.href)).toContain(
+      "/medical-supply-solutions/#suppliers",
     );
   });
 
@@ -369,7 +386,11 @@ describe("route registry", () => {
   });
 
   it("makes the Stage 5 pages live: Investors with five entries, three policy pages", () => {
-    for (const path of Object.values(STAGE_5_ROUTES)) expect(isLiveRoute(path), path).toBe(true);
+    for (const path of Object.values(STAGE_5_ROUTES)) {
+      // Suppliers retired into Medical Supply Solutions on 2026-09-12.
+      if (path === STAGE_5_ROUTES.partnerSuppliers) continue;
+      expect(isLiveRoute(path), path).toBe(true);
+    }
     const groups = buildPrimaryNavigation();
     // Acquisitions joined the Investors menu when Partners was retired, and
     // moved directly below Growth strategy on 2026-09-12 at the product
@@ -558,13 +579,16 @@ describe("action registry", () => {
   it("backs every action the content model declares", () => {
     const { clinics, businesses, contact } = LIFE_SUPPLY_CONTENT;
     const declared: string[] = [
-      ...Object.values(businesses.pages).flatMap((page) => [...page.actions]),
       ...clinics.hub.actions,
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[0],
       LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[1],
-      LIFE_SUPPLY_CONTENT.businesses.hub.clinics.action,
-      LIFE_SUPPLY_CONTENT.businesses.hub.suppliers.action,
-      ...LIFE_SUPPLY_CONTENT.businesses.hub.procurement.actions,
+      // Medical Supply Solutions since the 2026-09-12 consolidation: the
+      // three brand pages and the suppliers page became sections, so the
+      // actions the hub declares are the section actions.
+      businesses.hub.professional.action,
+      businesses.hub.professional.supportingAction,
+      businesses.hub.suppliers.action,
+      businesses.hub.closing.action,
       ...clinics.equipment.actions,
       ...clinics.ongoingSupplies.actions,
       ...clinics.collaboration.actions,

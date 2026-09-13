@@ -1,26 +1,12 @@
 import { ActionLink } from "@/components/public-site/action-link";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
-import { Container, Eyebrow, PublicHero } from "@/components/public-site/lifesupply-primitives";
+import { Container, PublicHero } from "@/components/public-site/lifesupply-primitives";
 import { Reveal } from "@/components/public-site/motion";
 import { IconFeatureGrid, ProcessSteps, SplitSection } from "@/components/public-site/sections";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { partners } from "@/lib/public-site/content/partners";
 import { iconForTitle } from "@/lib/public-site/icon-map";
-
-/** Bulleted rules in the house style. */
-function RuleList({ items, tone = "red" }: { items: readonly string[]; tone?: "red" | "ink" }) {
-  const border = tone === "red" ? "border-[var(--lsh-brand-red)]" : "border-[var(--lsh-charcoal)]";
-  return (
-    <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-      {items.map((item) => (
-        <li key={item} className={`border-l-2 ${border} pl-3`}>
-          {item}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 /** Numbered steps on ink, with icons. */
 function Steps({
@@ -62,31 +48,6 @@ function ActionsClose({ actions }: { actions: readonly string[] }) {
         </Reveal>
       </Container>
     </section>
-  );
-}
-
-/** `/partners/suppliers/` */
-export function PartnerSuppliersPage() {
-  const s = partners.suppliers;
-  return (
-    <LifeSupplyLayout>
-      <PublicHero
-        media={<GraphicBackdrop graphic="shipping" position="75% 55%" />}
-        eyebrow={s.eyebrow}
-        title={s.title}
-        description={s.intro}
-        actions={<ActionLink action="supplier_inquiry" />}
-      />
-      <SplitSection eyebrow={s.fit.eyebrow} title={s.fit.title} graphic="warehouse">
-        <p>{s.fit.text}</p>
-        <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-          <Eyebrow as="h3">{s.requirements.title}</Eyebrow>
-          <RuleList items={s.requirements.items} />
-        </div>
-      </SplitSection>
-      <Steps eyebrow="Process" title={s.process.title} items={s.process.items} />
-      <ActionsClose actions={s.actions} />
-    </LifeSupplyLayout>
   );
 }
 

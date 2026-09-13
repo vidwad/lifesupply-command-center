@@ -109,3 +109,25 @@ nothing after them but the footer.
 | Developing opportunities | The homepage, same file |
 | Corporate structure statement | **Not rendered.** "One parent company, three wholly-owned subsidiaries" is still in `content/about.ts`, and Contact still names all three entities with their acquisition detail, but the sentence itself is unpublished. Flagged to the product owner. |
 | The two architecture notes | **Published on About since 2026-09-12.** "The two meanings of pharmacy" and "How participation works" were unpublished from 2026-09-11, when the product owner took them off the homepage and About then lost the section that carried them. The product owner moved the whole program-architecture section to About on 2026-09-12, between the "Since inception" band and the team, and the notes render again beneath the tiers there. The section renders on that page only. |
+
+## Medical Supplies consolidation (2026-09-12)
+
+| Retired page | Where its content went |
+| --- | --- |
+| `/medical-supply-solutions/lifesupply` | The LifeSupply profile in `#stores`: positioning, description, the nine verified category links, the shop link and the store's own support page. The "who it serves" paragraph became the profile's second sentence, which still says the store serves individuals, caregivers and professional buyers alike. |
+| `/medical-supply-solutions/wellmart-medical` | The Wellmart Medical profile, on the same terms, with its ten verified categories. Its "home-care emphasis, both welcome" wording is preserved in the profile. |
+| `/medical-supply-solutions/balkowitsch` | The Balkowitsch Worldwide profile with its four verified categories. The page uses a commissioned product still life rather than the shared brand photograph, which shows a person packing in a warehouse. |
+| `/partners/suppliers` | `#suppliers`: the requirements became the four "What to include" rows, and the onboarding steps became the Introduce → Review → Agree → List graphic. |
+
+**Not carried forward.** The laptop-style site screens (`SiteScreen`) went with
+the brand pages: a visitor now has the shop link itself, so a picture of a
+website adds nothing. No public page renders one. The `businesses.pages` block
+and the hub's `procurement`, `clinics` and `suppliers` callouts were replaced
+by the new sections and are no longer in the content model.
+
+**Repetition removed, and where each distinction is now made once.** "This
+corporate site does not sell products or take orders", "this site cannot see or
+change store orders" and "each store has its own catalogue, accounts, currency,
+prices and support" appeared in several places. `#stores` now says purchases
+are completed on the store's website, and `#ordering-support` answers where to
+order, which currency applies, and who handles an existing order.

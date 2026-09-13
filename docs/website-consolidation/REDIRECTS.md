@@ -66,3 +66,29 @@ No authorized analytics or backlink data is available for this site; it is `noin
 ## Internal links
 
 Internal links are updated to point at the **final destination directly**, not at a redirect. The QA sweep crawls every retained page and fails if an internal link targets any of the 20 retired paths.
+
+## Medical Supplies consolidation (2026-09-12)
+
+Four more addresses retired into `/medical-supply-solutions`, each landing on
+its own anchor rather than at the top of the page:
+
+| From | To |
+| --- | --- |
+| `/medical-supply-solutions/lifesupply` | `/medical-supply-solutions#lifesupply` |
+| `/medical-supply-solutions/wellmart-medical` | `/medical-supply-solutions#wellmart-medical` |
+| `/medical-supply-solutions/balkowitsch` | `/medical-supply-solutions#balkowitsch` |
+| `/partners/suppliers` | `/medical-supply-solutions#suppliers` |
+
+**The `/partners` hazard, restated.** `/partners/suppliers` retires by its own
+exact source. `/partners/acquisitions` stays live, and `/partners` keeps its
+own exact-path rule. None of the three may ever become a wildcard.
+
+**No chains.** The three 2026-09-08 legacy addresses under `/our-operations/`
+pointed at the store pages that now redirect themselves, so they were
+re-pointed at the anchors and still resolve in one hop. `/shop` already
+pointed at `#stores` and is unchanged. Internal links were re-pointed too:
+`supplier_page` and the three `brand_*` actions name the sections directly,
+and the footer's Suppliers & Manufacturers link is the section, not the
+retired address.
+
+Retained pages: 20 → 16. Canonical sitemap URLs: 20 → 16.

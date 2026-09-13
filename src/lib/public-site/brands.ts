@@ -29,6 +29,12 @@ export type BrandAvailability =
 
 export interface VerifiedLink {
   label: string;
+  /**
+   * How the label reads on a page, where the registry's own wording is
+   * terser than a visitor needs ("Diabetic" for diabetes supplies). The
+   * URL is unchanged and is still the verified one.
+   */
+  displayLabel?: string;
   url: string;
 }
 
@@ -51,6 +57,19 @@ export interface BrandRecord {
     descriptor: string;
     summary: string;
     cta: string;
+  };
+  /**
+   * The store's profile on the consolidated Medical Supply Solutions page
+   * (product owner, 2026-09-12), where the three retired brand pages were
+   * folded in. `positioning` is one line under the name; `description` is the
+   * two paragraphs beneath it.
+   */
+  profile?: {
+    positioning: string;
+    description: readonly string[];
+    categoriesLabel: string;
+    shopLabel: string;
+    supportLabel: string;
   };
   country: "CA" | "US";
   currency: "CAD" | "USD" | null;
@@ -110,6 +129,16 @@ export const BRANDS: readonly BrandRecord[] = [
   },
   {
     key: "lifesupply",
+    profile: {
+      positioning: "Medical supplies for home and professional practice.",
+      description: [
+        "Shop medical, health, and home-care products, including clinic and dental supplies, monitoring equipment, first aid, and mobility aids.",
+        "LifeSupply.ca serves individuals, caregivers, and professional buyers through one online storefront.",
+      ],
+      categoriesLabel: "Explore product categories",
+      shopLabel: "Shop LifeSupply",
+      supportLabel: "LifeSupply Customer Support",
+    },
     name: "LifeSupply",
     legalEntity: null,
     relationship: null,
@@ -132,7 +161,11 @@ export const BRANDS: readonly BrandRecord[] = [
       { label: "Clinic supplies", url: "https://lifesupply.ca/clinic-supplies/" },
       { label: "Dental clinic supplies", url: "https://lifesupply.ca/dental-clinic-supplies/" },
       { label: "Needles and syringes", url: "https://lifesupply.ca/needles-syringes/" },
-      { label: "Diabetic", url: "https://lifesupply.ca/diabetic/" },
+      {
+        label: "Diabetic",
+        displayLabel: "Diabetes supplies",
+        url: "https://lifesupply.ca/diabetic/",
+      },
       { label: "Blood glucose meters", url: "https://lifesupply.ca/blood-glucose-meters/" },
       { label: "Biometric monitors", url: "https://lifesupply.ca/biometric-monitors/" },
       { label: "Medical thermometers", url: "https://lifesupply.ca/medical-thermometers/" },
@@ -152,6 +185,16 @@ export const BRANDS: readonly BrandRecord[] = [
   },
   {
     key: "wellmart",
+    profile: {
+      positioning: "Home medical equipment and everyday care supplies.",
+      description: [
+        "Explore products for mobility, bathroom safety, incontinence, ostomy, respiratory care, diabetes, and home monitoring.",
+        "Wellmart Medical serves people purchasing for home care, as well as professional buyers sourcing equipment and supplies.",
+      ],
+      categoriesLabel: "Explore product categories",
+      shopLabel: "Shop Wellmart Medical",
+      supportLabel: "Wellmart Customer Support",
+    },
     name: "Wellmart Medical",
     legalEntity: null,
     relationship: null,
@@ -175,14 +218,26 @@ export const BRANDS: readonly BrandRecord[] = [
         url: "https://wellmartmedical.com/home-medical-equipment/",
       },
       { label: "Mobility", url: "https://wellmartmedical.com/mobility/" },
-      { label: "Bath safety", url: "https://wellmartmedical.com/bath-safety/" },
+      {
+        label: "Bath safety",
+        displayLabel: "Bathroom safety",
+        url: "https://wellmartmedical.com/bath-safety/",
+      },
       { label: "Incontinence", url: "https://wellmartmedical.com/incontinence/" },
       { label: "Ostomy", url: "https://wellmartmedical.com/ostomy/" },
       { label: "Respiratory", url: "https://wellmartmedical.com/respiratory/" },
-      { label: "Diabetic", url: "https://wellmartmedical.com/diabetic/" },
+      {
+        label: "Diabetic",
+        displayLabel: "Diabetes supplies",
+        url: "https://wellmartmedical.com/diabetic/",
+      },
       { label: "Health monitors", url: "https://wellmartmedical.com/health-monitors/" },
       { label: "Needles and syringes", url: "https://wellmartmedical.com/needles-and-syringes/" },
-      { label: "Skin and wound", url: "https://wellmartmedical.com/skin-and-wound/" },
+      {
+        label: "Skin and wound",
+        displayLabel: "Skin and wound care",
+        url: "https://wellmartmedical.com/skin-and-wound/",
+      },
     ],
     storeLinks: [],
     asset: null,
@@ -230,6 +285,16 @@ export const BRANDS: readonly BrandRecord[] = [
   },
   {
     key: "balkowitsch",
+    profile: {
+      positioning: "Medical, health, and wellness supplies for the U.S. market.",
+      description: [
+        "Browse medical, health, wellness, and related products, including measuring devices, wound-care products, and daily living aids.",
+        "The store operates in U.S. dollars, with its own ordering, shipping, and customer-support arrangements.",
+      ],
+      categoriesLabel: "Explore product categories",
+      shopLabel: "Shop Balkowitsch",
+      supportLabel: "Balkowitsch Customer Support",
+    },
     name: "Balkowitsch Worldwide",
     legalEntity: null,
     relationship: null,

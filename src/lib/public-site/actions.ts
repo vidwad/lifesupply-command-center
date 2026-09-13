@@ -283,7 +283,10 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "supplier_page",
     label: "Supplier information",
     intent: "navigation",
-    destination: internal(STAGE_5_ROUTES.partnerSuppliers),
+    // The suppliers page became a section of Medical Supply Solutions on
+    // 2026-09-12, so this points at the section rather than at the redirect
+    // that now answers the old address: no link on the site costs a hop.
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "suppliers")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -424,7 +427,9 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "brand_lifesupply",
     label: "About LifeSupply.ca",
     intent: "navigation",
-    destination: internal(BRAND_ROUTES.lifesupply),
+    // The three store pages became anchors on Medical Supply Solutions on
+    // 2026-09-12; these point straight at them.
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "lifesupply")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -432,7 +437,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "brand_wellmart",
     label: "About Wellmart Medical",
     intent: "navigation",
-    destination: internal(BRAND_ROUTES.wellmart),
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "wellmart-medical")),
     ownerChannel: null,
     verifiedAt: null,
   },
@@ -448,7 +453,7 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     key: "brand_balkowitsch",
     label: "About Balkowitsch Worldwide",
     intent: "navigation",
-    destination: internal(BRAND_ROUTES.balkowitsch),
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "balkowitsch")),
     ownerChannel: null,
     verifiedAt: null,
   },

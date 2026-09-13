@@ -106,7 +106,20 @@ export const CONSOLIDATED_ROUTES = {
  * this same table, so the two cannot drift.
  */
 export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
-  [LIFE_SUPPLY_ROUTES.operations]: ["stores"],
+  /*
+   * Medical Supply Solutions, consolidated on 2026-09-12: four section
+   * anchors, and one per store so a retired brand page lands on its own
+   * profile rather than at the top of the comparison.
+   */
+  [LIFE_SUPPLY_ROUTES.operations]: [
+    "stores",
+    "professional-buyers",
+    "ordering-support",
+    "suppliers",
+    "lifesupply",
+    "wellmart-medical",
+    "balkowitsch",
+  ],
   [STAGE_3_ROUTES.clinicSolutions]: ["planning", "equipment", "ongoing-supplies", "collaboration"],
   [PHARMACY_ROUTES.hub]: ["partner-program"],
   // The eight pathway anchors are the eight slugs, so a retired pathway
@@ -209,26 +222,32 @@ export const ROUTES: readonly RouteRecord[] = [
     status: "live",
     navGroup: "businesses",
   },
+  /*
+   * The three store pages became sections of Medical Supply Solutions on
+   * 2026-09-12 (product owner). They stay in the registry as redirect rows so
+   * the sitemap and the menus keep being derived rather than hand-kept, and
+   * each one lands on its own anchor.
+   */
   {
     path: BRAND_ROUTES.lifesupply,
     label: "LifeSupply",
     stage: 3,
-    status: "live",
-    navGroup: "businesses",
+    status: "redirect",
+    navGroup: null,
   },
   {
     path: BRAND_ROUTES.wellmart,
     label: "Wellmart Medical",
     stage: 3,
-    status: "live",
-    navGroup: "businesses",
+    status: "redirect",
+    navGroup: null,
   },
   {
     path: BRAND_ROUTES.balkowitsch,
     label: "Balkowitsch Worldwide",
     stage: 3,
-    status: "live",
-    navGroup: "businesses",
+    status: "redirect",
+    navGroup: null,
   },
   {
     path: STAGE_3_ROUTES.clinicSolutions,
@@ -254,12 +273,16 @@ export const ROUTES: readonly RouteRecord[] = [
     navGroup: "solutions",
   },
   {
-    // Suppliers & Manufacturers keeps its page and loses its category: it is
-    // linked from Medical Supplies and the footer rather than from a menu.
+    /*
+     * Suppliers & Manufacturers became the `#suppliers` section of Medical
+     * Supply Solutions on 2026-09-12 (product owner). `/partners/acquisitions`
+     * is unaffected and stays live, so the `/partners` rule must remain
+     * exact-path and must never become a wildcard.
+     */
     path: "/partners/suppliers/",
     label: "Suppliers & Manufacturers",
     stage: 5,
-    status: "live",
+    status: "redirect",
     navGroup: null,
   },
   {
@@ -475,8 +498,20 @@ export const LIFE_SUPPLY_NAVIGATION: readonly NavLink[] = LIVE_ROUTES.filter(
     route.navGroup === "about" ||
     route.navGroup === "solutions" ||
     // Top-level pages that are no longer in a menu but must stay reachable:
-    // the suppliers page, Contact, and the legacy news address.
-    route.path === "/partners/suppliers/" ||
+    // Contact and the legacy news address.
     route.path === LIFE_SUPPLY_ROUTES.contact ||
     route.path === LIFE_SUPPLY_ROUTES.news,
 ).map((route) => ({ label: route.label, href: route.path }));
+
+/**
+ * Section destinations the footer links to directly. Suppliers & Manufacturers
+ * was a page of its own until 2026-09-12; it is now a section of Medical
+ * Supply Solutions, and the footer points at the section rather than at a
+ * redirect, so the link never costs a visitor an extra hop.
+ */
+export const FOOTER_SECTION_LINKS: readonly NavLink[] = [
+  {
+    label: "Suppliers & Manufacturers",
+    href: sectionRoute(LIFE_SUPPLY_ROUTES.operations, "suppliers"),
+  },
+];

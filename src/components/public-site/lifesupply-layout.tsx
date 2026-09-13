@@ -12,6 +12,7 @@ import { OPERATING_BRANDS, brandGeography } from "@/lib/public-site/brands";
 import { LIFE_SUPPLY_CONTENT, LIFE_SUPPLY_ROUTES } from "@/lib/public-site/lifesupply-content";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 import {
+  FOOTER_SECTION_LINKS,
   LIFE_SUPPLY_NAVIGATION,
   buildPrimaryNavigation,
   buildLegalNavigation,
@@ -564,7 +565,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
               Explore
             </Eyebrow>
             <ul className="mt-4 grid justify-items-start gap-1">
-              {[...LIFE_SUPPLY_NAVIGATION, ...UTILITY_NAV].map((item) => (
+              {[...LIFE_SUPPLY_NAVIGATION, ...FOOTER_SECTION_LINKS, ...UTILITY_NAV].map((item) => (
                 <li key={item.href}>
                   <NavItem href={item.href} label={item.label} />
                 </li>

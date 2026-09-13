@@ -22,24 +22,58 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/contact-2", destination: "/contact", permanent: true },
+      /*
+       * Medical Supplies consolidation (2026-09-12, product owner). The three
+       * store pages and the suppliers page became sections of
+       * /medical-supply-solutions, each landing on its own anchor.
+       *
+       * `/partners/suppliers` is an exact source. `/partners/acquisitions`
+       * stays live and `/partners` keeps its own exact-path rule; none of
+       * these may become a wildcard.
+       */
+      {
+        source: "/medical-supply-solutions/lifesupply",
+        destination: "/medical-supply-solutions#lifesupply",
+        permanent: true,
+      },
+      {
+        source: "/medical-supply-solutions/wellmart-medical",
+        destination: "/medical-supply-solutions#wellmart-medical",
+        permanent: true,
+      },
+      {
+        source: "/medical-supply-solutions/balkowitsch",
+        destination: "/medical-supply-solutions#balkowitsch",
+        permanent: true,
+      },
+      {
+        source: "/partners/suppliers",
+        destination: "/medical-supply-solutions#suppliers",
+        permanent: true,
+      },
       // Restructure of 2026-09-08 (product owner): Our Businesses became
       // Medical Supply Solutions; the LifeSupply Clinics brand page is the
       // Clinic Solutions section; Design & build merged into its hub;
       // Technology & fulfilment was withdrawn.
       { source: "/our-operations", destination: "/medical-supply-solutions", permanent: true },
+      /*
+       * Re-pointed on 2026-09-12: these used to land on the three store
+       * pages, which now redirect themselves. They go straight to the
+       * anchors, so a legacy address still resolves in one hop.
+       */
       {
         source: "/our-operations/lifesupply",
-        destination: "/medical-supply-solutions/lifesupply",
+        destination: "/medical-supply-solutions#lifesupply",
         permanent: true,
       },
       {
         source: "/our-operations/wellmart-medical",
-        destination: "/medical-supply-solutions/wellmart-medical",
+        destination: "/medical-supply-solutions#wellmart-medical",
         permanent: true,
       },
       {
         source: "/our-operations/balkowitsch",
-        destination: "/medical-supply-solutions/balkowitsch",
+        destination: "/medical-supply-solutions#balkowitsch",
         permanent: true,
       },
       {
