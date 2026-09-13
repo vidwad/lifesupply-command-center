@@ -687,9 +687,9 @@ describe("design-pass graphics and section primitives", () => {
       // pages render none: the homepage since the 2026-09-11 restructure, and
       // Medical Supply Solutions since the 2026-09-12 consolidation, whose
       // sections are carried by photographs, rules and numerals instead.
-      // Since 2026-09-13 neither the investor page nor Acquisitions renders
-      // a content icon either: numerals, rules, tables and status labels.
-      if (!["home", "operations", "partners", "investors"].includes(name)) {
+      // Since 2026-09-13 Acquisitions renders no content icon either:
+      // numerals, rules and status labels.
+      if (!["home", "operations", "partners"].includes(name)) {
         expect(page, name).toMatch(/@\/components\/public-site\/(sections|icons)/);
       }
       // Only interface affordances may come straight from lucide.

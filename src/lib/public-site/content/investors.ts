@@ -67,6 +67,28 @@ export const investorRelations = {
       "A financing presentation of this date sets out proposed metabolic-health and therapeutics expansion themes. Those themes depend on board approval, regulatory requirements, investor suitability, and final terms. No offering is made on this site, and no terms are published here.",
   },
 
+  /**
+   * Two photographic divider bands (product owner, 2026-09-13): one after
+   * the figures, closing the operating half of the page, and one before the
+   * materials, opening the supporting-information half. Each statement is
+   * drawn from facts already on the page; the photographs are conceptual and
+   * decorative.
+   */
+  bands: {
+    foundation: {
+      graphic: "warehouse",
+      eyebrow: "The operating base",
+      statement:
+        "Three online supply stores and a clinic-development business. Every priority that follows builds on them.",
+    },
+    materials: {
+      graphic: "facade",
+      eyebrow: "Supporting information",
+      statement:
+        "Reported figures with their basis. Plans with their status. Materials shared on request.",
+    },
+  },
+
   /** 1. What the group operates today. */
   business: {
     eyebrow: "Operating foundation",
