@@ -2,7 +2,6 @@ import Image from "next/image";
 import { ChevronDown, ExternalLink } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
-import { BrandImage } from "@/components/public-site/brand-image";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
@@ -18,7 +17,7 @@ import { SupplierProcess } from "@/components/public-site/supplier-process";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS, brandGeography, getBrand } from "@/lib/public-site/brands";
 import type { BrandRecord, OperatingBrandKey } from "@/lib/public-site/brands";
-import { getGraphic } from "@/lib/public-site/graphics";
+import { BRAND_GRAPHICS, getGraphic } from "@/lib/public-site/graphics";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 
@@ -55,27 +54,26 @@ export function StoreProfile({ record }: { record: BrandRecord }) {
   // warehouse, which could be read as an employee or an operating site, so
   // this page uses a product still life instead. The shared asset is
   // untouched and still serves the pages that use it.
-  const replacement = record.key === "balkowitsch" ? getGraphic("balkowitschProducts") : null;
+  //
+  // Both come from the registry and both fill the same 3:2 frame. Rendering
+  // one through `BrandImage` and one directly put a 16:9 figure inside a 3:2
+  // box, which showed as a black band under the two Canadian photographs.
+  const picture =
+    record.key === "balkowitsch"
+      ? getGraphic("balkowitschProducts")
+      : getGraphic(BRAND_GRAPHICS[key]);
   return (
     <article id={anchor} className="flex h-full scroll-mt-40 flex-col">
-      <div className="group relative aspect-[3/2] overflow-hidden bg-[var(--lsh-charcoal)]">
-        {replacement ? (
-          <Image
-            src={replacement.src}
-            alt={replacement.alt}
-            fill
-            sizes="(min-width: 768px) 33vw, 100vw"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-          />
-        ) : (
-          <BrandImage
-            brand={record.key as OperatingBrandKey}
-            presentation="landscape"
-            decorative
-            className="transition-transform duration-700 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-          />
-        )}
-      </div>
+      <figure className="group relative aspect-[3/2] overflow-hidden bg-[var(--lsh-charcoal)]">
+        <Image
+          src={picture.src}
+          alt={picture.alt}
+          fill
+          sizes="(min-width: 1280px) 400px, (min-width: 768px) 33vw, 100vw"
+          style={{ objectPosition: picture.position ?? "50% 50%" }}
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        />
+      </figure>
       <span aria-hidden="true" className="block h-0.5 w-full bg-[var(--lsh-brand-red)]" />
 
       <p className="lsh-display mt-5 text-[10px] text-[var(--lsh-brand-red)]">
@@ -93,57 +91,61 @@ export function StoreProfile({ record }: { record: BrandRecord }) {
         </p>
       ))}
 
-      <div className="mt-6">
-        <ActionLink action={SHOP_ACTIONS[key]}>{profile.shopLabel}</ActionLink>
-      </div>
-
       {/*
-       * Native disclosure: the category links are in the document whether it
-       * is open or shut, several may be open at once, it works with the
-       * keyboard and with JavaScript off, and the browser draws its own
-       * expanded state which the marker rotation follows.
+       * Shop, categories and support sit together at the foot of the column,
+       * so the three read as one comparison row rather than stepping down
+       * wherever a description happens to end. The descriptions keep their
+       * own length; only the controls line up.
        */}
-      {record.categories.length > 0 ? (
-        <details className="lsh-disclosure group mt-6 border-t border-[var(--lsh-rule)] pt-4">
-          <summary className="lsh-display flex cursor-pointer list-none items-center justify-between gap-4 text-[11px] text-[var(--lsh-charcoal)]">
-            {profile.categoriesLabel}
-            <ChevronDown
-              size={16}
-              aria-hidden="true"
-              className="shrink-0 text-[var(--lsh-brand-red)] transition-transform duration-300 group-open:rotate-180 motion-reduce:transition-none"
-            />
-          </summary>
-          <ul className="mt-4 grid gap-1">
-            {record.categories.map((category) => (
-              <li key={category.url}>
-                <a
-                  href={category.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-h-11 items-center gap-2 py-1 text-sm leading-6 text-[var(--lsh-muted)] underline decoration-[var(--lsh-rule-strong)] underline-offset-4 transition-colors hover:text-[var(--lsh-brand-red)] hover:decoration-[var(--lsh-brand-red)]"
-                >
-                  {category.displayLabel ?? category.label}
-                  <ExternalLink size={13} aria-hidden="true" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
+      <div className="mt-auto pt-6">
+        <ActionLink action={SHOP_ACTIONS[key]}>{profile.shopLabel}</ActionLink>
 
-      {record.supportUrl ? (
-        <div className="mt-auto pt-5">
+        {/*
+         * Native disclosure: the category links are in the document whether it
+         * is open or shut, several may be open at once, it works with the
+         * keyboard and with JavaScript off, and the browser draws its own
+         * expanded state which the marker rotation follows.
+         */}
+        {record.categories.length > 0 ? (
+          <details className="lsh-disclosure group mt-6 border-t border-[var(--lsh-rule)] pt-4">
+            <summary className="lsh-display flex cursor-pointer list-none items-center justify-between gap-4 text-[11px] text-[var(--lsh-charcoal)]">
+              {profile.categoriesLabel}
+              <ChevronDown
+                size={16}
+                aria-hidden="true"
+                className="shrink-0 text-[var(--lsh-brand-red)] transition-transform duration-300 group-open:rotate-180 motion-reduce:transition-none"
+              />
+            </summary>
+            <ul className="mt-4 grid gap-1">
+              {record.categories.map((category) => (
+                <li key={category.url}>
+                  <a
+                    href={category.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-11 items-center gap-2 py-1 text-sm leading-6 text-[var(--lsh-muted)] underline decoration-[var(--lsh-rule-strong)] underline-offset-4 transition-colors hover:text-[var(--lsh-brand-red)] hover:decoration-[var(--lsh-brand-red)]"
+                  >
+                    {category.displayLabel ?? category.label}
+                    <ExternalLink size={13} aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+
+        {record.supportUrl ? (
           <a
             {...measurementAttributes("brand_destination_click", { brand: record.key })}
             href={record.supportUrl}
             target="_blank"
             rel="noreferrer"
-            className="lsh-display inline-flex items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors hover:text-[var(--lsh-brand-red)]"
+            className="lsh-display mt-5 inline-flex items-center gap-2 text-[11px] text-[var(--lsh-muted)] transition-colors hover:text-[var(--lsh-brand-red)]"
           >
             {profile.supportLabel} <ExternalLink size={14} aria-hidden="true" />
           </a>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </article>
   );
 }
@@ -214,7 +216,7 @@ export function MedicalSupplySolutionsPage() {
       <SectionNav items={hub.sections} />
 
       {/* Our stores: the one three-across grid on the page. */}
-      <AnchoredSection id="stores" className="px-5 py-20 lg:px-8">
+      <AnchoredSection id="stores" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
           <Reveal className="max-w-3xl">
             <SectionHeading
@@ -236,6 +238,7 @@ export function MedicalSupplySolutionsPage() {
       {/* Professional purchasing: asymmetric, on pale grey, no photograph. */}
       <AnchoredSection
         id="professional-buyers"
+        offset="sectionNav"
         className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
       >
         <Container className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
@@ -284,7 +287,7 @@ export function MedicalSupplySolutionsPage() {
       </AnchoredSection>
 
       {/* Ordering and support: quieter than the profiles, rules instead of an image. */}
-      <AnchoredSection id="ordering-support" className="px-5 py-20 lg:px-8">
+      <AnchoredSection id="ordering-support" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container className="border-y border-[var(--lsh-rule)] py-12">
           <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
             <Reveal>
@@ -332,10 +335,16 @@ export function MedicalSupplySolutionsPage() {
       </AnchoredSection>
 
       {/* Suppliers: a narrow column beside four rows, then the process. */}
-      <AnchoredSection id="suppliers" className="bg-[var(--lsh-paper)] px-5 py-20 lg:px-8">
+      <AnchoredSection
+        id="suppliers"
+        offset="sectionNav"
+        className="bg-[var(--lsh-paper)] px-5 py-20 lg:px-8"
+      >
         <Container>
           <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-            <Reveal>
+            {/* Sticky below both bars, so the introduction stays with the
+                requirements a reader is working down. */}
+            <Reveal className="lg:sticky lg:top-44 lg:self-start">
               <SectionHeading
                 eyebrow={hub.suppliers.eyebrow}
                 title={hub.suppliers.title}
