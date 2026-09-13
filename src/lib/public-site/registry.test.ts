@@ -21,6 +21,7 @@ import { news } from "@/lib/public-site/content/news";
 import { partners } from "@/lib/public-site/content/partners";
 import { policies } from "@/lib/public-site/content/policies";
 import { legacyTitle, team } from "@/lib/public-site/content/team";
+import { getGraphic } from "@/lib/public-site/graphics";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import {
   BRAND_ROUTES,
@@ -591,7 +592,11 @@ describe("action registry", () => {
       businesses.hub.professional.action,
       businesses.hub.professional.supportingAction,
       businesses.hub.suppliers.action,
-      businesses.hub.closing.action,
+      // Expanded on 2026-09-13: the portal enquiry and the two
+      // audience-specific closes.
+      businesses.hub.portal.action,
+      businesses.hub.closing.purchasingAction,
+      businesses.hub.closing.portalAction,
       ...clinics.equipment.actions,
       ...clinics.ongoingSupplies.actions,
       ...clinics.collaboration.actions,
@@ -642,6 +647,49 @@ describe("action registry", () => {
         project.href.startsWith("https://www.lifesupplyclinics.com/portfolio/"),
         project.title,
       ).toBe(true);
+    }
+  });
+});
+
+describe("Medical Supply Solutions category explorer (2026-09-13)", () => {
+  const { categories } = LIFE_SUPPLY_CONTENT.businesses.hub;
+
+  it("names only registry categories, so every tile link is a verified store page", () => {
+    expect(categories.items).toHaveLength(8);
+    for (const item of categories.items) {
+      expect(item.stores.length, item.slug).toBeGreaterThan(0);
+      for (const entry of item.stores) {
+        for (const label of entry.categories) {
+          // Throws on a label the registry does not hold.
+          const link = getBrandCategory(entry.brand, label);
+          expect(link.url, `${item.slug} ${entry.brand} ${label}`).toMatch(/^https:\/\//);
+        }
+      }
+    }
+  });
+
+  it("keeps every category in at least one filter group, and every group is a filter", () => {
+    const groups = categories.filters.map((filter) => filter.key).filter((key) => key !== "all");
+    for (const item of categories.items) {
+      expect(item.groups.length, item.slug).toBeGreaterThan(0);
+      for (const group of item.groups as readonly string[]) {
+        expect(groups, `${item.slug} ${group}`).toContain(group);
+      }
+    }
+    // Both groups are used, so neither filter shows an empty grid.
+    for (const group of groups) {
+      expect(
+        categories.items.some((item) => (item.groups as readonly string[]).includes(group)),
+        group,
+      ).toBe(true);
+    }
+  });
+
+  it("illustrates every tile from the conceptual registry", () => {
+    for (const item of categories.items)
+      expect(getGraphic(item.graphic).alt).toMatch(/^Conceptual/);
+    for (const panel of LIFE_SUPPLY_CONTENT.businesses.hub.customers.panels) {
+      expect(getGraphic(panel.graphic).alt).toMatch(/^Conceptual/);
     }
   });
 });

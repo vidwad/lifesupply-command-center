@@ -2037,9 +2037,15 @@ describe("Stage 3 brands, Clinic Solutions, and Shop & Services", () => {
 
   it("reads categories, support channels, and project links from the registries and content", () => {
     // The three brand pages became the three store profiles on 2026-09-12,
-    // so the categories are read from the registry on the stores page.
-    expect(storesPage()).toContain("record.categories.map");
+    // and on 2026-09-13 the category explorer took over the category links:
+    // every one is resolved from the registry by label, so the page can only
+    // render a category page the registry observed on the store, and the
+    // content model never carries a store URL of its own.
+    expect(storesPage()).toContain("getBrandCategory(entry.brand, label)");
     expect(storesPage()).toContain("category.url");
+    expect(stripComments(read("src/lib/public-site/content/businesses.ts"))).not.toMatch(
+      /https?:\/\//,
+    );
     expect(clinicPages()).toContain("projects.items");
     expect(contactPage()).toContain("contact.intents.map");
     expect(contactPage()).toContain("contact.existingOrder");
@@ -2692,5 +2698,147 @@ describe("website consolidation: sections, redirects and deep links", () => {
     const content = stripComments(read("src/lib/public-site/content/metabolic.ts"));
     expect(content).toMatch(/configurable starting point rather than a product/);
     expect(page).not.toMatch(/add to cart|buy now|subscribe/i);
+  });
+});
+
+describe("Medical Supply Solutions as the commercial proposition (2026-09-13)", () => {
+  const content = () => stripComments(read("src/lib/public-site/content/businesses.ts"));
+  const page = () => stripComments(read(`${PUBLIC_DIR}/pages/operations.tsx`));
+  const explorer = () => stripComments(read(`${PUBLIC_DIR}/category-explorer.tsx`));
+  const chart = () => stripComments(read(`${PUBLIC_DIR}/demographic-chart.tsx`));
+  const portal = () => stripComments(read(`${PUBLIC_DIR}/portal-concept.tsx`));
+  /** One top-level block of the hub, by key, for section-scoped assertions. */
+  const blockOf = (name: string) => {
+    const source = content();
+    const from = source.indexOf(`\n    ${name}: {`);
+    expect(from, name).toBeGreaterThan(-1);
+    const rest = source.slice(from + 1);
+    const next = rest.slice(1).search(/\n {4}[a-zA-Z]+: \{/);
+    return next === -1 ? rest : rest.slice(0, next + 1);
+  };
+
+  it("states the current-versus-proposed status once, and renders it once", () => {
+    // One clear statement, rendered on the band between the operating
+    // stores and the proposed material; nothing else on the page restates it.
+    const statement = "none is offered until its implementation is confirmed";
+    expect((content().match(new RegExp(statement, "g")) ?? []).length).toBe(1);
+    expect((page().match(/hub\.status\.text/g) ?? []).length).toBe(1);
+    expect(page().indexOf("hub.status.text")).toBeGreaterThan(page().indexOf('id="stores"'));
+    expect(page().indexOf("hub.status.text")).toBeLessThan(
+      page().indexOf('id="professional-buyers"'),
+    );
+  });
+
+  it("writes every technology and portal capability conditionally, and never as a guarantee", () => {
+    for (const name of ["technology", "portal", "professional"]) {
+      const block = blockOf(name);
+      expect(block, name).toMatch(/\b(would|could|aim to|propose|proposed|looking to)\b/);
+    }
+    for (const banned of [
+      /predicts? shortages/i,
+      /never runs? out/i,
+      /\bensures?\b/i,
+      /\bguarantee/i,
+      /lowest price/i,
+      /guaranteed savings/i,
+      /dynamic pricing/i,
+      /portals? (is|are) (available|live|offered)/i,
+      /\bsubscription\b/i,
+      /\bAI\b/,
+      /dedicated account (manager|management)/i,
+    ]) {
+      expect(content(), String(banned)).not.toMatch(banned);
+    }
+    // Pricing is disciplined management, never a function of a customer's
+    // urgency or vulnerability.
+    expect(blockOf("technology")).not.toMatch(/vulnerab|urgen(t|cy)/i);
+    expect(blockOf("technology")).toContain("Pricing intelligence and purchasing efficiency.");
+  });
+
+  it("names target organization types, never existing contracts or customers", () => {
+    const customers = blockOf("customers");
+    expect(customers).toContain("clinic groups, rehabilitation practices");
+    expect(content()).not.toMatch(/our (institutional |clinic )?(customers|clients) include/i);
+    expect(content()).not.toMatch(/\b(signed|under contract|contracted with)\b/i);
+    expect(content()).not.toMatch(/testimonial|case study/i);
+  });
+
+  it("carries only the published demographic figures, and no market growth or forecast", () => {
+    // The five percentages and two population counts on the chart are the
+    // ones recorded in docs/website-content-evidence.md, "Market context".
+    const market = blockOf("market");
+    const percentages = [...market.matchAll(/(\d+(?:\.\d+)?)\s?%/g)].map((m) => m[1]);
+    for (const value of percentages) expect(["19.5", "38.6", "16.8"], value).toContain(value);
+    const values = [...market.matchAll(/value: (\d+(?:\.\d+)?)/g)].map((m) => m[1]);
+    expect(values.sort()).toEqual(["16.9", "19.0", "19.5", "40.3", "55.8"].sort());
+    for (const banned of [
+      /\bCAGR\b/,
+      /\bbillion\b/i,
+      /market (size|growth|value)/i,
+      /\brevenue\b/i,
+      /sales growth/i,
+      /(will|would|projected to) (grow|increase|reach) (by|to) \d/i,
+    ]) {
+      expect(market, String(banned)).not.toMatch(banned);
+    }
+    // Geography, date and source on the chart; historical and projection told apart.
+    for (const required of ["Canada", "United States", "Statistics Canada", "U.S. Census Bureau"]) {
+      expect(market).toContain(required);
+    }
+    expect(market).toContain("Historical: census counts and population estimates");
+    expect(market).toContain("Projection: direction only");
+    // The projection is a dashed outline with no number in it.
+    expect(chart()).toContain("border-dashed");
+    const projection = market.match(/projection: \{[^}]*\}/)?.[0] ?? "";
+    expect(projection).not.toBe("");
+    expect(projection).not.toMatch(/value:|\d+(\.\d+)?\s?%/);
+  });
+
+  it("resolves every explorer category from the registry, in the document, without a details list on the profiles", () => {
+    // All eight tiles are rendered whichever filter is on; the filter only
+    // sets `hidden`, and the buttons carry their pressed state.
+    expect(explorer()).toContain("hidden={!isShown(item)}");
+    expect(explorer()).toContain("aria-pressed={pressed}");
+    expect(explorer()).toContain('aria-live="polite"');
+    expect(explorer()).not.toMatch(/https?:\/\//);
+    // The store profile no longer expands a category list of its own.
+    expect(bodyOf(page(), "StoreProfile")).not.toContain("<details");
+    // Pictures illustrate a category and are never a product for sale.
+    expect(blockOf("categories")).toContain("They are not specific products");
+  });
+
+  it("labels the portal concept as a concept, shows no money and no patient, and keeps its views in the document", () => {
+    expect(content()).toContain("Illustrative portal concept — proposed capabilities");
+    expect(page()).toContain("label={hub.portal.concept.label}");
+    expect(portal()).toContain('role="tablist"');
+    expect((portal().match(/role="tabpanel"/g) ?? []).length).toBe(3);
+    expect((portal().match(/hidden=\{view !== "/g) ?? []).length).toBe(3);
+    for (const banned of [
+      /\$\s?\d/,
+      /patient/i,
+      /\bDr\.?\b/,
+      /<form[\s>]/,
+      /<select\b/,
+      /<input\b/,
+    ]) {
+      expect(portal(), String(banned)).not.toMatch(banned);
+    }
+    // The portal is a digital service, told apart from clinic construction.
+    expect(blockOf("portal")).toContain(
+      "separate from the physical clinic design and construction",
+    );
+    expect(blockOf("portal")).toContain("would be developed and agreed separately");
+  });
+
+  it("closes on three audience-specific actions, with the portal enquiry marked as proposed", () => {
+    const closing = blockOf("closing");
+    expect(closing).toContain('shopHref: "#stores"');
+    expect(closing).toContain('purchasingAction: "institutional_purchasing"');
+    expect(closing).toContain('portalAction: "portal_inquiry"');
+    expect(closing).toContain(
+      "A portal enquiry concerns a proposed capability, not an existing product.",
+    );
+    const actions = stripComments(read("src/lib/public-site/actions.ts"));
+    expect(actions).toContain('"Dedicated supply portal (proposed capability)"');
   });
 });

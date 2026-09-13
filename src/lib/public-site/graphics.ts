@@ -52,6 +52,12 @@ const ABOUT_HERO_PROVENANCE =
 const CLINIC_ROUTE_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the three next-step routes on Clinic Solutions; monochrome brief, no person, no text, no logo, no brand mark; scaled to 1600×900 and converted to neutral greyscale with ffmpeg; conceptual, not operational photography, and not a LifeSupply project.";
 
+const AUDIENCE_PROVENANCE =
+  "Gamma image generation (photo mode), commissioned 2026-09-13 for the two audience panels on Medical Supply Solutions; monochrome brief, no person, no logo, no text, no legible screen; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment; conceptual, not operational photography, and not a LifeSupply premises, customer, or project.";
+
+const CATEGORY_PROVENANCE =
+  "Gamma image generation (photo mode), commissioned 2026-09-13 for the category explorer on Medical Supply Solutions; monochrome brief, no person, no logo, no packaging text, no product branding; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment; conceptual, not operational photography, and never a specific product offered for sale.";
+
 const MEDICAL_SUPPLIES_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the Balkowitsch Worldwide profile on the consolidated Medical Supply Solutions page; monochrome brief, no person, no facility, no logo, no text, no legible reading on any screen; scaled to 1800×1012 and converted to neutral greyscale with ffmpeg, then given a midtone lift (lutyuv gamma 1.75) so it sits with the two Canadian store photographs rather than reading as a much darker frame beside them; no highlight is clipped. It is conceptual, not operational photography: not a LifeSupply facility, not a photograph of a listed product, and no item in it is a confirmed SKU. It replaced the warehouse photograph on this page, which showed a person packing and could be read as an employee or an operating site.";
 
@@ -69,6 +75,81 @@ export const GRAPHICS = {
     height: 900,
     provenance:
       'Gamma image generation (photo mode), commissioned 2026-09-13 for the homepage "Who are we and what we do" section; monochrome brief, no person, no facility, no logo, no legible text on the plans; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment; conceptual, not operational photography, and not a LifeSupply premises or project.',
+  },
+  /**
+   * The two audience panels on Medical Supply Solutions (product owner,
+   * 2026-09-13): a home-care setting for individuals and caregivers, a
+   * clinic stock room for organizations. Neither shows a person, and the
+   * stock room is a generic room, not a LifeSupply premises or a customer's.
+   */
+  audienceHome: {
+    src: "/lsh/graphics/medical-supplies/audience-home-greyscale-v1.jpg",
+    alt: "Conceptual photograph of a walking frame beside an armchair, with a blood-pressure monitor on a side table in a daylit living room.",
+    width: 1600,
+    height: 900,
+    provenance: AUDIENCE_PROVENANCE,
+  },
+  audienceClinic: {
+    src: "/lsh/graphics/medical-supplies/audience-clinic-greyscale-v1.jpg",
+    alt: "Conceptual photograph of an empty clinic supply room: wire shelving stacked with plain cartons and sealed packs, and a steel cart in front.",
+    width: 1600,
+    height: 900,
+    provenance: AUDIENCE_PROVENANCE,
+  },
+  /**
+   * The category explorer tiles on Medical Supply Solutions (product owner,
+   * 2026-09-13). Each illustrates a category and none is a specific product:
+   * cartons are blank, screens are blank, and no packaging carries text.
+   * Mobility & Daily Living reuses `brandWellmart`, the rollator.
+   */
+  categoryBathroom: {
+    src: "/lsh/graphics/medical-supplies/category-bathroom-greyscale-v1.jpg",
+    alt: "Conceptual photograph of a wall-mounted grab bar and a shower chair against a tiled wall in raking light.",
+    width: 1600,
+    height: 900,
+    provenance: CATEGORY_PROVENANCE,
+  },
+  categoryMonitoring: {
+    src: "/lsh/graphics/medical-supplies/category-monitoring-greyscale-v1.jpg",
+    alt: "Conceptual still life of a blood-pressure monitor with its cuff, a digital thermometer, and a glucose meter with a test-strip vial on a concrete surface.",
+    width: 1600,
+    height: 900,
+    provenance: CATEGORY_PROVENANCE,
+  },
+  categoryWound: {
+    src: "/lsh/graphics/medical-supplies/category-wound-greyscale-v1.jpg",
+    alt: "Conceptual still life of sealed dressing packs, a roll of gauze bandage, and adhesive strips on a white table.",
+    width: 1600,
+    height: 900,
+    provenance: CATEGORY_PROVENANCE,
+  },
+  categoryClinicDental: {
+    src: "/lsh/graphics/medical-supplies/category-clinic-dental-greyscale-v1.jpg",
+    alt: "Conceptual still life of a steel tray holding a tissue box, folded gauze, a sealed pack of dental instruments, cotton rolls, and a stack of paper cups.",
+    width: 1600,
+    height: 900,
+    provenance: CATEGORY_PROVENANCE,
+  },
+  categoryInjection: {
+    src: "/lsh/graphics/medical-supplies/category-injection-greyscale-v1.jpg",
+    alt: "Conceptual still life of plain unmarked cartons beside a sharps container on a concrete block.",
+    width: 1600,
+    height: 900,
+    provenance: CATEGORY_PROVENANCE,
+  },
+  categoryIncontinence: {
+    src: "/lsh/graphics/medical-supplies/category-incontinence-greyscale-v1.jpg",
+    alt: "Conceptual still life of a folded stack of absorbent pads, a plain carton, and a folded towel on a concrete shelf.",
+    width: 1600,
+    height: 900,
+    provenance: CATEGORY_PROVENANCE,
+  },
+  categoryRespiratory: {
+    src: "/lsh/graphics/medical-supplies/category-respiratory-greyscale-v1.jpg",
+    alt: "Conceptual photograph of a compact nebulizer with coiled tubing and a mask on a bedside table in sunlight.",
+    width: 1600,
+    height: 900,
+    provenance: CATEGORY_PROVENANCE,
   },
   /** The Balkowitsch Worldwide store profile on Medical Supply Solutions. */
   balkowitschProducts: {

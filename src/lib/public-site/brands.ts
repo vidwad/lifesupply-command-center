@@ -62,12 +62,14 @@ export interface BrandRecord {
    * The store's profile on the consolidated Medical Supply Solutions page
    * (product owner, 2026-09-12), where the three retired brand pages were
    * folded in. `positioning` is one line under the name; `description` is the
-   * two paragraphs beneath it.
+   * two paragraphs beneath it. The profile carried an expandable list of the
+   * store's category links until 2026-09-13, when the page's category
+   * explorer took over that detail; the links themselves stay in
+   * `categories`, resolved by label through `getBrandCategory`.
    */
   profile?: {
     positioning: string;
     description: readonly string[];
-    categoriesLabel: string;
     shopLabel: string;
     supportLabel: string;
   };
@@ -135,7 +137,6 @@ export const BRANDS: readonly BrandRecord[] = [
         "Shop medical, health, and home-care products, including clinic and dental supplies, monitoring equipment, first aid, and mobility aids.",
         "LifeSupply.ca serves individuals, caregivers, and professional buyers through one online storefront.",
       ],
-      categoriesLabel: "Explore product categories",
       shopLabel: "Shop LifeSupply",
       supportLabel: "LifeSupply Customer Support",
     },
@@ -191,7 +192,6 @@ export const BRANDS: readonly BrandRecord[] = [
         "Explore products for mobility, bathroom safety, incontinence, ostomy, respiratory care, diabetes, and home monitoring.",
         "Wellmart Medical serves people purchasing for home care, as well as professional buyers sourcing equipment and supplies.",
       ],
-      categoriesLabel: "Explore product categories",
       shopLabel: "Shop Wellmart Medical",
       supportLabel: "Wellmart Customer Support",
     },
@@ -291,7 +291,6 @@ export const BRANDS: readonly BrandRecord[] = [
         "Browse medical, health, wellness, and related products, including measuring devices, wound-care products, and daily living aids.",
         "The store operates in U.S. dollars, with its own ordering, shipping, and customer-support arrangements.",
       ],
-      categoriesLabel: "Explore product categories",
       shopLabel: "Shop Balkowitsch",
       supportLabel: "Balkowitsch Customer Support",
     },

@@ -65,6 +65,8 @@ export type ActionKey =
   | "brand_wellmart"
   | "brand_clinics"
   | "brand_balkowitsch"
+  | "institutional_purchasing"
+  | "portal_inquiry"
   | "contact_directory";
 
 export type ActionDestination =
@@ -455,6 +457,29 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     intent: "navigation",
     destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "balkowitsch")),
     ownerChannel: null,
+    verifiedAt: null,
+  },
+  /*
+   * The two audience-specific closes on Medical Supply Solutions (product
+   * owner, 2026-09-13). Both are conversations about proposed arrangements,
+   * so both go to the corporate office rather than to a store, and the
+   * portal subject says so: a portal is a proposed capability, and the mail
+   * that arrives must never read as an order for an existing product.
+   */
+  institutional_purchasing: {
+    key: "institutional_purchasing",
+    label: "Discuss clinic or institutional purchasing",
+    intent: "ongoing_procurement",
+    destination: mail("info@lifesupply.com", "Clinic or institutional purchasing"),
+    ownerChannel: "Corporate office",
+    verifiedAt: null,
+  },
+  portal_inquiry: {
+    key: "portal_inquiry",
+    label: "Discuss a dedicated supply portal",
+    intent: "ongoing_procurement",
+    destination: mail("info@lifesupply.com", "Dedicated supply portal (proposed capability)"),
+    ownerChannel: "Corporate office",
     verifiedAt: null,
   },
   contact_directory: {

@@ -107,14 +107,22 @@ export const CONSOLIDATED_ROUTES = {
  */
 export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
   /*
-   * Medical Supply Solutions, consolidated on 2026-09-12: four section
-   * anchors, and one per store so a retired brand page lands on its own
-   * profile rather than at the top of the comparison.
+   * Medical Supply Solutions, consolidated on 2026-09-12 and expanded on
+   * 2026-09-13: the nine navigable sections in page order, the compact
+   * ordering block inside the stores section, and one anchor per store so
+   * a retired brand page lands on its own profile rather than at the top of
+   * the comparison.
    */
   [LIFE_SUPPLY_ROUTES.operations]: [
+    "customers",
+    "categories",
+    "market",
     "stores",
-    "professional-buyers",
     "ordering-support",
+    "professional-buyers",
+    "technology",
+    "portals",
+    "foundation",
     "suppliers",
     "lifesupply",
     "wellmart-medical",
