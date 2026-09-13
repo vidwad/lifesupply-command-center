@@ -47,6 +47,8 @@ Material public claims touched by the website improvement program, with their so
 | Dispensing, diagnosis, prescribing, medication recommendation | — | — | — | Withheld | The site states it does none of these |
 | Manufacturing of regulated products | — | — | — | Withheld | No authoritative support |
 | Contracts, certifications, testimonials, service levels, savings, project results | — | — | — | Withheld | None are invented |
+| Proposed purchasing arrangements, supply-planning capabilities, pricing management, and dedicated supply portals for clinics and healthcare organizations | Product owner's Medical Supplies brief, September 13, 2026 | Medical Supplies | In development | Approved with qualification | Presented as a development direction under one status statement, in conditional wording; no savings, availability, service level, price position, or shortage guarantee is claimed. The portal is an illustrative concept with fictional data, labelled as such |
+| Target organization types for institutional purchasing: clinic groups, rehabilitation practices, home-care organizations, senior-care operators | Same | Medical Supplies | In development | Approved with qualification | Types of organization, never named accounts or existing contracts |
 
 ## Leadership and history
 
@@ -55,6 +57,18 @@ Material public claims touched by the website improvement program, with their so
 | Abdul Ladha, Chairman & CEO; board of Abdul Ladha, Keith Dolo, Barrett Sleeman, Dr. David Vogt | Prior lifesupplyhealth.com team pages, copied 2026-09-09 (S-100, S-153 to S-155) | Our team, profiles | Operating | Approved | Titles and biographies as published on the prior site |
 | Four dated 2022 announcements | Newswire and Yahoo, original dates | About, News | Historical | Approved | Always with date and source link |
 | Dr. Margaret Clarke appointed to the board, April 21, 2022 | Yahoo Finance | About milestones | Historical | Approved | A dated record, not a current roster entry |
+
+## Market context
+
+Added 2026-09-13 for the Medical Supplies page. Each figure is a published statistical measure of population, quoted with its geography and date. None is a market size, a growth rate for medical supplies, or a forecast of the business, and the page says so beneath the chart. The Statistics Canada projection is published as a direction only; no projected figure is carried.
+
+| Claim | Source and date | Page | Status | Release | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Canada: 19.0% of the population aged 65 and older in 2021, up from 16.9% in 2016 | Statistics Canada, The Daily, April 27, 2022 (2021 Census): "The 7 million people aged 65 and older now account for nearly one-fifth of the total population (19.0%), up from 16.9% in 2016." | Medical Supplies, market context | Historical | Approved | Census counts |
+| Canada: 19.5% aged 65 and older on July 1, 2025; about 8.1 million people | Statistics Canada, The Daily, September 24, 2025, "Canada's population estimates: Age and gender, July 1, 2025": "almost one in five people (19.5%) were aged 65 and older on July 1, 2025"; the subject page states 8,108,467 persons | Same | Historical | Approved | A population estimate, labelled as such |
+| Canada: the 65-and-older share would continue to increase under every projection scenario | Statistics Canada, The Daily, January 21, 2025, "Population projections for Canada, provinces and territories, 2024 to 2074": "Population aging would continue regardless of the projection scenario considered" | Same | Projection | Approved with qualification | Direction only. No projected share, count or year figure is published on the site |
+| United States: 55.8 million aged 65 and older in 2020, 16.8% of the population, up 38.6% from 40.3 million in 2010 | U.S. Census Bureau, May 25, 2023, "U.S. Older Population Grew From 2010 to 2020 at Fastest Rate Since 1880 to 1890" | Same | Historical | Approved with qualification | A historical demographic measure, stated as such; never a medical-supply sales growth rate |
+| Any market-growth percentage, market size, or revenue forecast derived from population aging | — | — | — | Withheld | Demographic change supports the relevance of the categories; it does not establish future sales. A canary keeps every other percentage off the market block |
 
 ## Unresolved
 

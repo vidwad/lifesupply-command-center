@@ -119,6 +119,19 @@ nothing after them but the footer.
 | `/medical-supply-solutions/balkowitsch` | The Balkowitsch Worldwide profile with its four verified categories. The page uses a commissioned product still life rather than the shared brand photograph, which shows a person packing in a warehouse. |
 | `/partners/suppliers` | `#suppliers`: the requirements became the four "What to include" rows, and the onboarding steps became the Introduce → Review → Agree → List graphic. |
 
+**Expanded 2026-09-13.** The page became the commercial explanation of the
+supply business (product owner). The expandable category lists on the three
+store profiles moved into the category explorer (`#categories`), which
+organizes the same verified category pages by need, names the stores that
+carry each one with their country and currency, and resolves every link from
+the brand registry by label; the profiles keep their picture, market and
+currency, positioning, description, shop action and support link. The
+"Ordering & support" block stays, compact, at the foot of `#stores` with its
+`#ordering-support` anchor. New sections: `#customers`, `#market`,
+`#technology`, `#portals` and `#foundation`. Everything from business
+purchasing onward is a development direction under one status statement,
+recorded in `docs/website-content-evidence.md`.
+
 **Not carried forward.** The laptop-style site screens (`SiteScreen`) went with
 the brand pages: a visitor now has the shop link itself, so a picture of a
 website adds nothing. No public page renders one. The `businesses.pages` block
