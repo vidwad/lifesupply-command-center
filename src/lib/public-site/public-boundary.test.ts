@@ -350,7 +350,11 @@ describe("motion", () => {
     // a visitor ends on is the number that was approved, decimals included.
     const code = motionPrimitives();
     expect(code).toContain("latest.toFixed(decimals)");
-    expect(code).toMatch(/if \(!parsed \|\| reduce\)[\s\S]*?\{value\}/);
+    // The approved text stands until the count starts: on the server, for a
+    // visitor without JavaScript, and under reduced motion (2026-09-13).
+    expect(code).toMatch(/if \(!parsed \|\| reduce \|\| !inView\)[\s\S]*?\{value\}/);
+    // A grouped figure keeps its thousands separator while it counts.
+    expect(code).toContain('toLocaleString("en-CA")');
   });
 
   it("keeps the hero readable before any animation runs", () => {
