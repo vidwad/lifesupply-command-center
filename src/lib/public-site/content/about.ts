@@ -12,8 +12,11 @@ export const about = {
   // Approved (moved from JSX).
   hero: {
     eyebrow: "About LifeSupply",
-    /** Rewritten 2026-09-12: what the business is, and what it is building. */
-    title: "An established supply business. Building broader healthcare capabilities.",
+    /**
+     * Rewritten 2026-09-12: what the business is, and what it is building.
+     * Shortened 2026-09-13 (product owner).
+     */
+    title: "Established in supply. Building broader capabilities.",
   },
   labels: { mission: "Mission", vision: "Vision" },
   /**
@@ -42,6 +45,11 @@ export const about = {
   video: {
     eyebrow: "A message from our Chairman & CEO",
     title: "Meet LifeSupply.",
+    /** The introduction the hero carried until 2026-09-13, above the video (product owner). */
+    intro: [
+      "LifeSupply Health Inc. is a Canadian company bringing together online medical and home-care supply businesses in Canada and the United States, alongside clinic planning, development, and equipment services in British Columbia.",
+      "Our operating businesses provide the foundation for the next phase of growth: improving how customers purchase supplies, developing new services for clinics and pharmacies, and pursuing complementary acquisitions.",
+    ],
     description:
       "Abdul Ladha introduces LifeSupply Health, its operating businesses, and the company’s direction.",
     playLabel: "Watch the company introduction",
@@ -73,9 +81,9 @@ export const about = {
    * building on that. `heroSummary` is kept because the page previously read
    * from it; the hero now renders `heroParagraphs`.
    */
+  /** One sentence since 2026-09-13 (product owner); the fuller introduction moved to `video.intro`. */
   heroParagraphs: [
-    "LifeSupply Health Inc. is a Canadian company bringing together online medical and home-care supply businesses in Canada and the United States, alongside clinic planning, development, and equipment services in British Columbia.",
-    "Our operating businesses provide the foundation for the next phase of growth: improving how customers purchase supplies, developing new services for clinics and pharmacies, and pursuing complementary acquisitions.",
+    "A Canadian company bringing together online medical and home-care supply businesses in Canada and the United States, with clinic planning, development, and equipment services in British Columbia.",
   ],
   /** Unpublished since 2026-09-12; kept on the record. */
   heroSummary:

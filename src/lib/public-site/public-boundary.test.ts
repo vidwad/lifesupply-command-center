@@ -580,7 +580,7 @@ describe("routes and content governance", () => {
       "Information on this site is current at the date published and may be updated.",
       "Health, safety, medical, and industrial supplies, sold online across Canada",
       "The scale of our operating businesses.",
-      "An established supply business. Building broader healthcare capabilities.",
+      "Established in supply. Building broader capabilities.",
       "The operating websites behind the group.",
     ];
     const c = content();

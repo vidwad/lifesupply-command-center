@@ -97,7 +97,12 @@ export function AboutPage() {
             <p className="lsh-display mt-5 text-2xl leading-[1.15] text-[var(--lsh-charcoal)] lg:text-3xl lg:leading-[1.1]">
               {about.video.title}
             </p>
-            <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
+            {about.video.intro.map((paragraph) => (
+              <p key={paragraph.slice(0, 40)} className="mt-4 leading-7 text-[var(--lsh-muted)]">
+                {paragraph}
+              </p>
+            ))}
+            <p className="mt-4 text-sm leading-6 text-[var(--lsh-muted)]">
               {about.video.description}
             </p>
             <VideoEmbed video={ABOUT_VIDEO} playLabel={about.video.playLabel} className="mt-6" />
