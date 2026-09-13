@@ -15,9 +15,13 @@ import { Container } from "@/components/public-site/lifesupply-primitives";
  * The mark is an underline and a weight change, never colour alone, so it
  * survives a colour-vision difference and a high-contrast mode.
  *
- * Sticky below the header on desktop only. `scroll-mt` on each target section
- * is what keeps the header and this bar from covering a heading a visitor has
- * just jumped to; this component does not scroll anything itself.
+ * Sticky below the header on desktop only, at whatever height the header
+ * currently occupies: the shell publishes `--lsh-header-offset`, which is
+ * the header's height while it is shown and zero once it has hidden on the
+ * way down, and the bar transitions between the two at the header's own
+ * pace so the two move together. `scroll-mt` on each target section is what
+ * keeps the header and this bar from covering a heading a visitor has just
+ * jumped to; this component does not scroll anything itself.
  *
  * Observing sections does not touch the address bar, so the back button still
  * goes back a page rather than through every section the visitor scrolled by.
@@ -55,7 +59,7 @@ export function SectionNav({
   return (
     <nav
       aria-label={label}
-      className="border-y border-[var(--lsh-rule)] bg-[var(--lsh-paper)] px-5 py-4 lg:sticky lg:top-[4.5rem] lg:z-40 lg:px-8"
+      className="border-y border-[var(--lsh-rule)] bg-[var(--lsh-paper)] px-5 py-4 transition-[top] duration-300 ease-out motion-reduce:transition-none lg:sticky lg:top-[var(--lsh-header-offset,4.5rem)] lg:z-40 lg:px-8"
     >
       <Container className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
         <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{label}</span>

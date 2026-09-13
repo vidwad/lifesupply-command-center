@@ -314,7 +314,18 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="lsh-shell min-h-screen bg-[var(--lsh-paper)] text-[var(--lsh-charcoal)]">
+    <div
+      className="lsh-shell min-h-screen bg-[var(--lsh-paper)] text-[var(--lsh-charcoal)]"
+      /*
+       * The space the header occupies at the top of the viewport right now:
+       * its full height while it is shown, nothing while it has hidden on
+       * the way down. A sticky in-page navigation reads it, so it sits flush
+       * under the header when the header is there and flush to the top when
+       * it is not, instead of leaving a header-sized gap (product owner,
+       * 2026-09-13).
+       */
+      style={{ "--lsh-header-offset": headerHidden ? "0px" : "4.5rem" } as React.CSSProperties}
+    >
       <a
         href="#lsh-main"
         className="lsh-primary-action lsh-display sr-only px-4 py-2 text-[11px] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]"
