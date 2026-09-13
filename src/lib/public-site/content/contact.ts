@@ -25,10 +25,15 @@ export const contact = {
        * wording (product owner, 2026-09-12). The address, email and phone
        * stay here and are rendered from here on both pages, so there is one
        * place to change a contact detail.
+       *
+       * The channel names its person since 2026-09-13 (product owner): it
+       * covers business development as well as investor relations, and Vid
+       * Wadhwani answers it.
        */
-      homeLabel: "Investor Relations",
+      homeLabel: "Investor Relations and Business Development",
+      homeShowsName: true,
       blurb: "For financial information, corporate reporting, and investor enquiries.",
-      name: "Investor Relations",
+      name: "Vid Wadhwani",
       email: "invest@lifesupply.com",
       phone: "604-677-4146",
     },
