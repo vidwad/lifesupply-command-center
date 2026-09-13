@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
@@ -14,6 +15,7 @@ import { IconBadge } from "@/components/public-site/sections";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { actionBehaviour, type ActionKey } from "@/lib/public-site/actions";
 import { OPERATING_BRANDS } from "@/lib/public-site/brands";
+import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -27,6 +29,8 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  */
 export function ContactPage() {
   const { contact } = LIFE_SUPPLY_CONTENT;
+  const directoryPicture = getGraphic("facade");
+  const intentsPicture = getGraphic("suppliesAndPlans");
   return (
     <LifeSupplyLayout>
       <PublicHero
@@ -91,35 +95,25 @@ export function ContactPage() {
                 </StaggerItem>
               );
             })}
+            {/*
+             * Nine choices in a five-column grid left a tenth cell blank,
+             * which read as unfinished (product owner, 2026-09-13). A small
+             * conceptual photograph fills it: decorative, from the registry.
+             */}
+            <StaggerItem
+              as="li"
+              className="relative min-h-52 overflow-hidden bg-[var(--lsh-charcoal)]"
+            >
+              <Image
+                src={intentsPicture.src}
+                alt={intentsPicture.alt}
+                fill
+                sizes="(min-width: 1280px) 20vw, (min-width: 640px) 50vw, 100vw"
+                className="object-cover"
+              />
+            </StaggerItem>
           </Stagger>
 
-          {/* The preparation guidance, below the choices it prepares for. */}
-          <Reveal delay={0.05} className="mt-10 grid gap-5 lg:grid-cols-2">
-            <div className="border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
-              <Eyebrow as="h3">{contact.routing.guide.title}</Eyebrow>
-              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                {contact.routing.guide.intro}
-              </p>
-              <ul className="mt-4 grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                {contact.routing.guide.items.map((item) => (
-                  <li key={item} className="lsh-bullet">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="grid content-start gap-5">
-              <div className="border-t-4 border-[var(--lsh-charcoal)] bg-[var(--lsh-surface)] p-6">
-                <Eyebrow as="h3">What happens next</Eyebrow>
-                <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                  {contact.routing.guide.next}
-                </p>
-              </div>
-              <p className="flex gap-4 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-5 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                {contact.routing.sensitive}
-              </p>
-            </div>
-          </Reveal>
           <Reveal className="mt-8 flex gap-5 border-l-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-6">
             <IconBadge icon={iconForTitle(contact.existingOrder.title)} />
             <div>
@@ -193,6 +187,23 @@ export function ContactPage() {
                 </SpotlightCard>
               </StaggerItem>
             ))}
+            {/*
+             * Three channels in a two-column grid left a fourth cell empty,
+             * which read as unfinished. A small conceptual photograph fills
+             * it (product owner, 2026-09-13): decorative, from the registry,
+             * under the same red rule the three cards carry.
+             */}
+            <StaggerItem className="h-full">
+              <figure className="relative h-full min-h-56 overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)]">
+                <Image
+                  src={directoryPicture.src}
+                  alt={directoryPicture.alt}
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </figure>
+            </StaggerItem>
           </Stagger>
         </div>
       </section>

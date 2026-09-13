@@ -115,6 +115,12 @@ export const contact = {
     eyebrow: "Start with what you need",
     title: "Routed to the right conversation.",
     text: "Choose the route that matches the inquiry. Most open an email with the subject already set; two open a consultation page on the Clinics site. Each route names its destination.",
+    /**
+     * Unpublished since 2026-09-13 (product owner): the preparation
+     * guidance, the "What happens next" line and the sensitive-data notice
+     * came off the page. Kept here so the wording is on record; the page
+     * renders none of it, which a canary checks.
+     */
     guide: {
       title: "What to include",
       intro:

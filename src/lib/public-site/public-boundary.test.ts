@@ -747,11 +747,20 @@ describe("round two: qualified inquiries and policy accuracy", () => {
     expect(actions).not.toContain('"Supply program inquiry"');
   });
 
-  it("tells a visitor what to include, without asking for anything sensitive", () => {
+  it("keeps the preparation guidance on the record and off the page, and asks for nothing sensitive", () => {
     const contact = stripComments(read("src/lib/public-site/content/contact.ts"));
     expect(contact).toContain("What to include");
     expect(contact).toContain("A first exchange is about fit");
     expect(contact).toContain("do not send health information");
+    // Off the page since 2026-09-13 (product owner): the guidance, the
+    // "What happens next" line and the sensitive-data notice.
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
+    expect(page).not.toContain("routing.guide");
+    expect(page).not.toContain("routing.sensitive");
+    expect(page).not.toContain("What happens next");
+    // The directory's fourth cell is a registry photograph, not a blank.
+    expect(page).toContain('getGraphic("facade")');
+    expect(page).toContain("directoryPicture.alt");
     // Nothing personal, clinical or financial is requested.
     for (const banned of [
       /date of birth|health card|patient (name|record)|prescription number/i,
@@ -864,12 +873,15 @@ describe("round four: consolidation, precision and available actions", () => {
 });
 
 describe("round four: presentation and interaction", () => {
-  it("puts the contact choices above the preparation guidance", () => {
+  it("leads with the contact choices, with no preparation guidance after them", () => {
+    // The guidance sat above the choices, then below them (round four,
+    // change 7), and came off the page on 2026-09-13 (product owner).
     const page = stripComments(read(`${PUBLIC_DIR}/pages/contact.tsx`));
     const choices = page.indexOf("contact.intents.map");
-    const guide = page.indexOf("contact.routing.guide.title");
     expect(choices).toBeGreaterThan(-1);
-    expect(guide).toBeGreaterThan(choices);
+    expect(page).not.toContain("contact.routing.guide");
+    // The tenth cell of the nine-choice grid is a registry photograph.
+    expect(page).toContain('getGraphic("suppliesAndPlans")');
   });
 
   it("labels every contact action with what it actually does", () => {
