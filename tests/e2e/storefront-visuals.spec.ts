@@ -214,6 +214,44 @@ test.describe("Medical Supplies storefront visual system", () => {
     expect(bandTop).toBeLessThan(buyersTop);
   });
 
+  test("keeps the in-page navigation flush under the header, and flush to the top once the header hides", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!!isMobile, "the in-page navigation is sticky on desktop only");
+    await page.goto("/medical-supply-solutions");
+    const nav = page.getByRole("navigation", { name: "On this page" });
+    const header = page.locator("header");
+    const top = (locator: typeof nav) =>
+      locator.evaluate((el) => Math.round(el.getBoundingClientRect().top));
+    // Deep enough into the page that the bar is stuck rather than in flow,
+    // reading down: the header hides and the bar follows it up to the top,
+    // leaving no header-sized gap above it.
+    await page.mouse.move(700, 450);
+    for (let step = 0; step < 6; step += 1) {
+      await page.mouse.wheel(0, 300);
+      await page.waitForTimeout(60);
+    }
+    await expect
+      .poll(async () => {
+        await page.mouse.wheel(0, 120);
+        await page.waitForTimeout(80);
+        return top(header);
+      })
+      .toBeLessThan(0);
+    await expect.poll(() => top(nav)).toBe(0);
+    // Reading up, still deep in the page: the header returns and the bar
+    // sits flush under it again, with nothing between them.
+    await expect
+      .poll(async () => {
+        await page.mouse.wheel(0, -60);
+        await page.waitForTimeout(80);
+        return top(header);
+      })
+      .toBe(0);
+    await expect.poll(() => top(nav)).toBe(72);
+  });
+
   test("removes decorative motion when reduced motion is requested", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/medical-supply-solutions");
