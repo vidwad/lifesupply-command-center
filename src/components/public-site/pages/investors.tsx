@@ -439,7 +439,7 @@ export function InvestorRelationsPage({
               className="absolute left-6 top-0 h-full w-px bg-[var(--lsh-rule-strong)] lg:left-6 lg:right-[calc(25%-3rem)] lg:top-6 lg:h-px lg:w-auto"
             />
             {ir.execution.phases.map((phase, index) => (
-              <li key={phase.index} className="relative pl-20 lg:pl-0">
+              <li key={phase.index} className="relative flex flex-col pl-20 lg:pl-0">
                 {/* The node: the phase number in a red ring on the rail. */}
                 <span className="lsh-display absolute left-0 top-0 grid h-12 w-12 place-items-center rounded-full border-2 border-[var(--lsh-brand-red)] bg-[var(--lsh-paper)] text-[13px] text-[var(--lsh-brand-red)] lg:static lg:mb-6">
                   {phase.index}
@@ -451,14 +451,14 @@ export function InvestorRelationsPage({
                 <h3 className="lsh-display mt-4 text-2xl leading-tight text-[var(--lsh-charcoal)]">
                   {phase.title}
                 </h3>
-                <p className="mt-2 leading-7 text-[var(--lsh-muted)]">
+                <p className="mt-2 leading-7 text-[var(--lsh-muted)] lg:min-h-[5.5rem]">
                   <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-brand-red)]">
                     {ir.execution.labels.purpose}
                   </span>
                   {phase.purpose}
                 </p>
                 {/* The gate beneath the phase: what has to be shown before the next begins. */}
-                <div className="mt-6 border-l-2 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-4">
+                <div className="mt-6 flex-1 border-l-2 border-[var(--lsh-brand-red)] bg-[var(--lsh-surface)] p-4">
                   <p className="lsh-display flex items-center gap-2 text-[10px] text-[var(--lsh-charcoal)]">
                     <IconBadge icon="badge" size={14} />
                     {ir.execution.labels.evidence}
