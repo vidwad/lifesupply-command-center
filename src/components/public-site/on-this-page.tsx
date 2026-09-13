@@ -41,19 +41,31 @@ export function OnThisPage({
 }
 
 /**
- * A section a fragment link can land on. `scroll-mt-24` clears the sticky
- * header so the heading is not hidden under it after a jump, and the id is
+ * A section a fragment link can land on. The scroll margin clears whatever is
+ * sticky above it, so the heading is not hidden after a jump, and the id is
  * on the section itself so the whole block is the target rather than a
  * heading floating above its own content.
  */
 export function AnchoredSection({
   id,
   className = "",
+  offset = "header",
   backTo,
   children,
 }: {
   id: string;
   className?: string;
+  /**
+   * What has to be cleared above the section:
+   *
+   *   header      the sticky site header alone
+   *   sectionNav  the header and a sticky in-page navigation beneath it
+   *
+   * Medical Supply Solutions carries both since 2026-09-12. The header-only
+   * margin cleared 75px and the second bar ends at 135, so every section
+   * anchor on that page arrived underneath it.
+   */
+  offset?: "header" | "sectionNav";
   /**
    * A way back to the index this section belongs to.
    *
@@ -66,7 +78,10 @@ export function AnchoredSection({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className={`scroll-mt-24 ${className}`.trim()}>
+    <section
+      id={id}
+      className={`${offset === "sectionNav" ? "scroll-mt-44" : "scroll-mt-24"} ${className}`.trim()}
+    >
       {children}
       {backTo ? (
         <p className="mx-auto mt-10 max-w-7xl px-5 lg:px-8">

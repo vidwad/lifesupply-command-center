@@ -31,7 +31,7 @@ export function SupplierProcess({
         {/* The connector: one rule across the row of numbers on desktop. */}
         <span
           aria-hidden="true"
-          className="absolute left-0 right-0 top-5 hidden h-px bg-[var(--lsh-rule-strong)] lg:block"
+          className="absolute left-[12.5%] right-[12.5%] top-5 hidden h-px bg-[var(--lsh-rule-strong)] lg:block"
         />
         {steps.map((step, index) => (
           <Reveal
