@@ -210,7 +210,7 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
             <li>
               <NavItem
                 href={group.href}
-                label="Overview"
+                label={group.hubLabel ?? "Overview"}
                 variant="menu"
                 neverCurrent
                 onNavigate={() => setOpen(false)}
@@ -482,7 +482,7 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                         <li>
                           <NavItem
                             href={group.href}
-                            label="Overview"
+                            label={group.hubLabel ?? "Overview"}
                             variant="menu"
                             neverCurrent
                             onNavigate={closeMenu}

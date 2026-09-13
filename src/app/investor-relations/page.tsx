@@ -5,7 +5,7 @@ import { InvestorRelationsPage } from "@/components/public-site/lifesupply-pages
 import { fetchPublishedDocuments } from "@/lib/public-site/published";
 
 export const metadata: Metadata = publicMetadata({
-  title: "Investors",
+  title: "Investor Info",
   description:
     "LifeSupply Health investor information: the operating business, the reported 2025 figures with their basis, the growth priorities and phased approach, longer-term opportunities under evaluation, investor materials, and disclosures.",
   path: "/investor-relations/",

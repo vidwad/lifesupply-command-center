@@ -457,6 +457,17 @@ test.describe("LifeSupply public site", () => {
     await expect(menu.getByRole("link", { name: "Overview" })).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    // Investors opens on its own page under its own name, then Company News.
+    const investorsTrigger = nav.getByRole("button", { name: /Investors menu$/ });
+    await investorsTrigger.focus();
+    await investorsTrigger.press("Enter");
+    const investorsMenu = page.locator("#lsh-menu-investors");
+    await expect(investorsMenu).toBeVisible();
+    expect(
+      await investorsMenu
+        .locator("a")
+        .evaluateAll((links) => links.map((link) => link.textContent?.trim() ?? "")),
+    ).toEqual(["Investor Info", "Company News"]);
     // Contact is last and has no dropdown at all.
     await expect(nav.getByRole("link", { name: "Contact", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: /Contact menu$/ })).toHaveCount(0);
@@ -511,11 +522,11 @@ test.describe("LifeSupply public site", () => {
     await expect(panel.getByRole("button", { name: "Solutions", exact: true })).toBeVisible();
     await expect(panel.getByRole("link", { name: "Solutions", exact: true })).toHaveCount(0);
     const chevrons = panel.locator('button[aria-label^="Expand"], button[aria-label^="Collapse"]');
-    // One per group that has children, which is Solutions alone: About lost
-    // its only child on 2026-09-11, Medical Supplies its three on 2026-09-12,
-    // and Investors its five on 2026-09-13 when it became one page, so every
-    // other item is a plain link with no chevron.
-    await expect(chevrons).toHaveCount(1);
+    // One per group that has children: Solutions, and Investors, whose menu
+    // is Investor Info and Company News since 2026-09-13. About lost its only
+    // child on 2026-09-11 and Medical Supplies its three on 2026-09-12, so
+    // both are plain links with no chevron.
+    await expect(chevrons).toHaveCount(2);
     const sizes = await chevrons.evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
@@ -530,11 +541,13 @@ test.describe("LifeSupply public site", () => {
       "Metabolic Health Solutions",
       "Pharmacy Solutions",
       "Investors",
+      "Investor Info",
+      "Company News",
       "About",
       "Contact",
-      // The three store names left the panel on 2026-09-12, and the five
-      // investor children on 2026-09-13; Acquisitions and Company News are
-      // reached from the investor page and the footer rather than the menu.
+      // The three store names left the panel on 2026-09-12, and the retired
+      // investor pages on 2026-09-13; Acquisitions is reached from the
+      // investor page, Contact and the footer rather than the menu.
       "Medical Supplies",
     ]) {
       // Collapsed rows are display:none, so the role query must include hidden nodes.
@@ -569,8 +582,6 @@ test.describe("LifeSupply public site", () => {
     await expect(
       panel.getByRole("link", { name: "Pharmacy Solutions", exact: true }),
     ).toHaveAttribute("aria-current", "page");
-    // Investors is a plain link with no group to expand.
-    await expect(panel.getByRole("button", { name: /Investors/ })).toHaveCount(0);
     await expect(panel.getByRole("link", { name: "Investors", exact: true })).toHaveAttribute(
       "href",
       /^\/investor-relations\/?$/,
@@ -586,6 +597,19 @@ test.describe("LifeSupply public site", () => {
       "Pharmacy Solutions",
       "Metabolic Health Solutions",
     ]);
+    // Investors is a group again (product owner, 2026-09-13): its first row is
+    // the consolidated page under its own name, then Company News. One group
+    // open at a time, so expanding it collapses Solutions.
+    await panel.getByRole("button", { name: "Expand Investors" }).click();
+    await expect(panel.getByRole("link", { name: "Investor Info", exact: true })).toHaveAttribute(
+      "href",
+      /^\/investor-relations\/?$/,
+    );
+    await expect(panel.getByRole("link", { name: "Company News", exact: true })).toHaveAttribute(
+      "href",
+      /^\/news\/?$/,
+    );
+    await expect(panel.getByRole("link", { name: "Pharmacy Solutions", exact: true })).toBeHidden();
   });
 
   test("loads nothing from YouTube until the About video is played, then embeds the privacy-enhanced player", async ({
