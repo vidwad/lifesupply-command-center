@@ -13,6 +13,7 @@
  */
 export { AboutPage } from "@/components/public-site/pages/about";
 export { ClinicSolutionsPage } from "@/components/public-site/pages/clinic-solutions";
+export { ConnectedCarePage } from "@/components/public-site/pages/connected-care";
 export { PharmacySolutionsPage } from "@/components/public-site/pages/pharmacy";
 export { ContactPage } from "@/components/public-site/pages/contact";
 export { LifeSupplyHome } from "@/components/public-site/pages/home";

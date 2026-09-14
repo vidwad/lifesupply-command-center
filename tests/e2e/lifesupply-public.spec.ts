@@ -48,6 +48,7 @@ test.describe("LifeSupply public site", () => {
       "/contact",
       "/clinic-solutions",
       "/metabolic-health",
+      "/connected-care",
       "/partners/acquisitions",
       "/privacy",
       "/terms",
@@ -426,7 +427,7 @@ test.describe("LifeSupply public site", () => {
     await expect(solutions).toBeVisible();
     expect(await solutions.locator("a").count()).toBeGreaterThan(0);
   });
-  test("opens the Solutions menu from the keyboard, with three entries and no page of its own", async ({
+  test("opens the Solutions menu from the keyboard, with four entries and no page of its own", async ({
     page,
     isMobile,
   }) => {
@@ -452,7 +453,10 @@ test.describe("LifeSupply public site", () => {
       "Clinic Solutions",
       "Pharmacy Solutions",
       "Metabolic Health Solutions",
+      "Connected Care Vision",
     ]);
+    // Connected Care Vision is set apart from the three service pages by a rule (2026-09-13).
+    await expect(menu.locator("li").last()).toHaveClass(/border-t/);
     // No "Overview" row, because there is nothing to overview.
     await expect(menu.getByRole("link", { name: "Overview" })).toHaveCount(0);
     await page.keyboard.press("Escape");
@@ -540,6 +544,7 @@ test.describe("LifeSupply public site", () => {
       "Clinic Solutions",
       "Metabolic Health Solutions",
       "Pharmacy Solutions",
+      "Connected Care Vision",
       "Investors",
       "Investor Info",
       "Company News",
@@ -596,6 +601,7 @@ test.describe("LifeSupply public site", () => {
       "Clinic Solutions",
       "Pharmacy Solutions",
       "Metabolic Health Solutions",
+      "Connected Care Vision",
     ]);
     // Investors is a group again (product owner, 2026-09-13): its first row is
     // the consolidated page under its own name, then Company News. One group
@@ -899,6 +905,49 @@ test.describe("LifeSupply public site", () => {
       ),
     ).toBeVisible();
     await expect(main.getByText("Pharmacy-related operations, under evaluation.")).toHaveCount(0);
+  });
+
+  test("explains the Connected Care Vision with a status on every part and an interactive model", async ({
+    page,
+  }) => {
+    await page.goto("/connected-care");
+    const main = page.locator("main");
+    await expect(
+      main.getByRole("heading", { level: 1, name: "A vision for more connected care." }),
+    ).toBeVisible();
+    await expect(main.getByText("A long-term development vision.")).toBeVisible();
+    // The model: six participants around the person; selecting one shows its detail.
+    const model = page.locator("#model");
+    const buttons = model
+      .getByRole("group", { name: "Participants in the connected-care model" })
+      .getByRole("button");
+    await expect(buttons).toHaveCount(6);
+    await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
+    await buttons.nth(2).click();
+    await expect(buttons.nth(2)).toHaveAttribute("aria-pressed", "true");
+    await expect(buttons.first()).toHaveAttribute("aria-pressed", "false");
+    await expect(
+      model.getByText("Compounding is a conditional capability, not the default destination."),
+    ).toBeVisible();
+    // One illustrative journey of five steps, compounding a branch off the third.
+    await expect(page.locator("#example ol > li")).toHaveCount(5);
+    await expect(
+      page.locator("#example").getByText("Conditional branch: eligible compounding"),
+    ).toBeVisible();
+    await expect(
+      page
+        .locator("#compounding")
+        .getByText(
+          "LifeSupply does not currently offer compounded medications, peptide-compounding services, or advanced therapeutics.",
+        ),
+    ).toBeVisible();
+    await expect(page.locator("#sequence ol > li")).toHaveCount(6);
+    // The one enquiry on the page is the partner conversation.
+    const mailtos = await main
+      .locator('a[href^="mailto:"]')
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+    expect(mailtos.length).toBeGreaterThan(0);
+    for (const href of mailtos) expect(href).toMatch(/subject=Partner%20inquiry$/);
   });
 
   test("stays readable on Clinic Solutions with JavaScript disabled", async ({ browser }) => {
@@ -1495,8 +1544,9 @@ test.describe("LifeSupply public site", () => {
     // on 2026-09-12. Before that: 41, less four in stage 1, eleven in stage
     // 2, the Partners hub in stage 3, the four leadership profiles in stage
     // 4, and the team page in stage 5. Each redirects and is therefore absent
-    // from the map rather than dropped.
-    expect(locs.length).toBe(13);
+    // from the map rather than dropped. Connected Care Vision was added on
+    // 2026-09-13 (product owner), the first page added since the consolidation.
+    expect(locs.length).toBe(14);
     for (const retired of [
       "/shop",
       "/clinic-solutions/equipment",

@@ -218,7 +218,10 @@ function NavGroupMenu({ group }: { group: NavGroup }) {
             </li>
           )}
           {group.links.map((link) => (
-            <li key={link.href}>
+            <li
+              key={link.href}
+              className={link.separated ? "mt-2 border-t border-white/15 pt-2" : undefined}
+            >
               <NavItem
                 href={link.href}
                 label={link.label}
@@ -501,7 +504,12 @@ export function LifeSupplyLayout({ children }: { children: React.ReactNode }) {
                         </li>
                       )}
                       {group.links.map((link) => (
-                        <li key={link.href}>
+                        <li
+                          key={link.href}
+                          className={
+                            link.separated ? "mt-2 border-t border-white/15 pt-2" : undefined
+                          }
+                        >
                           <NavItem
                             href={link.href}
                             label={link.label}

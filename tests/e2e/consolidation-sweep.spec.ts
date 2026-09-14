@@ -21,6 +21,7 @@ const RETAINED = [
   "/clinic-solutions",
   "/pharmacy-solutions",
   "/metabolic-health",
+  "/connected-care",
   "/contact",
   "/news",
   "/investor-relations",
@@ -81,10 +82,11 @@ const LEGACY: [string, string][] = [
   ["/john-anderson-2", "/about-us"],
 ];
 
-test("A. every retained page answers 200 and the count is 13", async ({ page }) => {
+test("A. every retained page answers 200 and the count is 14", async ({ page }) => {
   // Twenty-one until 2026-09-11 (About absorbed the team), sixteen until
-  // 2026-09-13 (Medical Supplies on 2026-09-12, then Investors).
-  expect(RETAINED).toHaveLength(13);
+  // 2026-09-13 (Medical Supplies on 2026-09-12, then Investors), thirteen
+  // until Connected Care Vision was added later on 2026-09-13.
+  expect(RETAINED).toHaveLength(14);
   for (const route of RETAINED) {
     const response = await page.request.get(route, { maxRedirects: 0 });
     expect(response.status(), route).toBe(200);

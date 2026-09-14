@@ -327,8 +327,11 @@ export function AboutPage() {
             <p className="max-w-3xl text-sm leading-6 text-[var(--lsh-muted)]">
               {about.longerTerm.note}
             </p>
-            <div className="shrink-0">
+            <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3">
               <ActionLink action="advanced_therapeutics">{about.longerTerm.cta}</ActionLink>
+              <ActionLink action="connected_care" variant="onLight">
+                {about.longerTerm.visionCta}
+              </ActionLink>
             </div>
           </Reveal>
         </Container>

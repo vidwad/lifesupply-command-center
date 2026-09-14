@@ -109,6 +109,8 @@ export const homepage = {
         text: "Our ambition is to build lasting supply relationships with clinics, pharmacies, and the patients they support. Over time, we aim to connect the group’s commerce, clinic-development, and equipment capabilities with new patient-supply and fulfilment services.",
       },
     ],
+    /** The page that explains how those capabilities could work together (2026-09-13). */
+    link: { action: "connected_care", label: "See the Connected Care Vision" },
   },
 
   // Approved (moved from JSX in PR #61). Verified proof, with source context.

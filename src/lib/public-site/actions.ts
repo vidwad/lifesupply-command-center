@@ -41,6 +41,8 @@ export type ActionKey =
   | "pharmacy_products"
   | "pharmacy_purchasing_inquiry"
   | "pharmacy_strategic_inquiry"
+  | "connected_care"
+  | "connected_care_model"
   | "metabolic_hub"
   | "explore_kits"
   | "refills_information"
@@ -289,6 +291,23 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Discuss a strategic pharmacy opportunity",
     intent: "pharmacy",
     destination: mail("info@lifesupply.com", "Strategic pharmacy opportunity"),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  /** Connected Care Vision (2026-09-13): the page, and its model section from the page's own hero. */
+  connected_care: {
+    key: "connected_care",
+    label: "Connected Care Vision",
+    intent: "navigation",
+    destination: internal(LIFE_SUPPLY_ROUTES.connectedCare),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  connected_care_model: {
+    key: "connected_care_model",
+    label: "Explore the connected care model",
+    intent: "navigation",
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.connectedCare, "model")),
     ownerChannel: null,
     verifiedAt: null,
   },

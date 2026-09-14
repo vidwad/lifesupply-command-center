@@ -45,6 +45,12 @@ Excluded from the count, as the brief directs: `news/[slug]` and `resources/[slu
 
 **`/partners/suppliers` and `/partners/acquisitions` stay live while `/partners` itself redirects.** No wildcard redirect may capture them; the `/partners` rule is an exact-path rule for that reason, and a regression test asserts both children still answer 200.
 
+## Added after the consolidation — 1
+
+| # | Route | Note |
+| --- | --- | --- |
+| 22 | `/connected-care` | **Connected Care Vision**, added 2026-09-13 at the product owner's direction: the one page that explains how the businesses and the proposed capabilities could work together. Last in the Solutions menu, set apart from the three service pages. Fourteen live pages since. |
+
 ## Retired and redirected — 20
 
 | # | Route | Retired because |

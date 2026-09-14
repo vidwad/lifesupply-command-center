@@ -307,7 +307,7 @@ export const metabolic = {
         "How complaints and recalls are handled, and by whom.",
       ],
     },
-    actions: ["discuss_program"],
+    actions: ["discuss_program", "connected_care"],
   },
 
   kits: [

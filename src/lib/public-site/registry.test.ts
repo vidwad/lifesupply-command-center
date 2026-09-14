@@ -308,19 +308,33 @@ describe("route registry", () => {
     expect(investors.hubLabel).toBe("Investor Info");
     expect(investors.links).toEqual([{ label: "Company News", href: LIFE_SUPPLY_ROUTES.news }]);
 
-    // Solutions is a menu of exactly three, and no `/solutions` page exists.
+    // Solutions is a menu of the three service pages and, set apart beneath
+    // them, Connected Care Vision (2026-09-13); no `/solutions` page exists.
     const solutions = groups.find((group) => group.key === "solutions")!;
     expect(solutions.href).toBeNull();
     expect(solutions.links.map((link) => link.href)).toEqual([
       STAGE_3_ROUTES.clinicSolutions,
       PHARMACY_ROUTES.hub,
       METABOLIC_ROUTES.hub,
+      LIFE_SUPPLY_ROUTES.connectedCare,
     ]);
     expect(solutions.links.map((link) => link.label)).toEqual([
       "Clinic Solutions",
       "Pharmacy Solutions",
       "Metabolic Health Solutions",
+      "Connected Care Vision",
     ]);
+    expect(solutions.links.map((link) => link.separated ?? false)).toEqual([
+      false,
+      false,
+      false,
+      true,
+    ]);
+    for (const anchor of SECTION_ANCHORS[LIFE_SUPPLY_ROUTES.connectedCare] ?? []) {
+      expect(isLiveSection(sectionRoute(LIFE_SUPPLY_ROUTES.connectedCare, anchor)), anchor).toBe(
+        true,
+      );
+    }
     expect(isLiveRoute("/solutions/")).toBe(false);
     expect(ROUTES.some((route) => route.path.startsWith("/solutions"))).toBe(false);
 
@@ -652,6 +666,15 @@ describe("action registry", () => {
       LIFE_SUPPLY_CONTENT.pharmacy.specialty.investorAction,
       ...LIFE_SUPPLY_CONTENT.pharmacy.closing.actions.map((item) => item.action),
       LIFE_SUPPLY_CONTENT.pharmacy.closing.storesAction,
+      LIFE_SUPPLY_CONTENT.pharmacy.specialty.visionAction,
+      // Connected Care Vision (2026-09-13): every action its sections declare.
+      ...LIFE_SUPPLY_CONTENT.connectedCare.hero.actions.map((item) => item.action),
+      LIFE_SUPPLY_CONTENT.connectedCare.model.outside.action,
+      LIFE_SUPPLY_CONTENT.connectedCare.acquisitions.action,
+      ...LIFE_SUPPLY_CONTENT.connectedCare.compounding.actions.map((item) => item.action),
+      LIFE_SUPPLY_CONTENT.connectedCare.value.action,
+      ...LIFE_SUPPLY_CONTENT.connectedCare.closing.actions.map((item) => item.action),
+      LIFE_SUPPLY_CONTENT.homepage.whoWeAre.link.action,
       ...metabolic.collaboration.actions,
       ...partners.suppliers.actions,
       ...partners.acquisitions.actions,

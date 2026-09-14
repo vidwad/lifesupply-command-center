@@ -19,6 +19,7 @@ import { architecture } from "@/lib/public-site/content/architecture";
 import { brand } from "@/lib/public-site/content/brand";
 import { businesses } from "@/lib/public-site/content/businesses";
 import { clinics } from "@/lib/public-site/content/clinics";
+import { connectedCare } from "@/lib/public-site/content/connected-care";
 import { contact } from "@/lib/public-site/content/contact";
 import { homepage } from "@/lib/public-site/content/home";
 import { investorRelations } from "@/lib/public-site/content/investors";
@@ -40,6 +41,7 @@ export const LIFE_SUPPLY_CONTENT = {
   operations,
   businesses,
   clinics,
+  connectedCare,
   metabolic,
   team,
   investorRelations,

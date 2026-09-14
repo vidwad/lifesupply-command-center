@@ -250,6 +250,7 @@ export const investorRelations = {
         links: [
           { action: "pharmacy_hub", label: "Pharmacy Solutions" },
           { action: "metabolic_hub", label: "Metabolic Health Solutions" },
+          { action: "connected_care", label: "Connected Care Vision" },
         ],
       },
       {

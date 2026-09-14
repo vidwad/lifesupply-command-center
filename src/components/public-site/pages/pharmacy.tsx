@@ -277,9 +277,12 @@ export function PharmacySolutionsPage() {
             </ul>
             <div className="mt-8 border-t border-[var(--lsh-rule)] pt-5">
               <p className="text-sm leading-6 text-[var(--lsh-muted)]">{specialty.investorNote}</p>
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
                 <ActionLink action={specialty.investorAction as ActionKey} variant="onLight">
                   {specialty.investorLabel}
+                </ActionLink>
+                <ActionLink action={specialty.visionAction as ActionKey} variant="onLight">
+                  {specialty.visionLabel}
                 </ActionLink>
               </div>
             </div>

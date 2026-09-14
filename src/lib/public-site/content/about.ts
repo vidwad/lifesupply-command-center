@@ -419,6 +419,8 @@ export const about = {
     ],
     note: "These activities are under evaluation and are not currently offered by LifeSupply. Any decision to proceed would depend on a viable business case, appropriate funding, qualified personnel, suitable facilities, and the required licences and authorizations.",
     cta: "Learn about advanced therapeutics opportunities",
+    /** How these could fit with the operating businesses (2026-09-13). */
+    visionCta: "See the Connected Care Vision",
   },
 
   approach: {

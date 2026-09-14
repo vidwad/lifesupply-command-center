@@ -44,6 +44,12 @@ Two distinctions are held here: **supplying independently operated pharmacies** 
 
 The pharmacy pathway on Metabolic Health stays a concise use case linking here.
 
+## Connected Care Vision — `/connected-care`
+
+Added September 13, 2026 (product owner). The one page that explains how the businesses and the proposed capabilities could work together: a long-term development vision, with what operates today, what is in development, and what would depend on partnerships, acquisitions and regulatory conditions each carrying its status.
+
+Covers: the central message and the point that a connected experience does not require owning every participating business; the problem being addressed, with the intended benefits as objectives; the interactive connected-care model (the person at the centre, six participants: access and coordination, physicians and specialists, pharmacy services, medical supplies, ongoing support, the digital platform) with research and advanced therapeutics outside the flow; one illustrative metabolic-health journey with compounding as a conditional branch; potential pharmacy acquisitions and partnerships; compounding and advanced therapeutics with the regulatory premise stated briefly and correctly; the technology in six practical layers, with the limits on information and on virtual care; the development sequence; the commercial value, never added together; and the closing actions. Linked from Home (the ambition column), About (longer-term opportunities), Investors (new supply services), Pharmacy Solutions (specialty) and Metabolic Health (collaboration). The detailed revenue model and the investment rationale stay on Investors.
+
 ## Metabolic Health Solutions — `/metabolic-health`
 
 Displayed as "Metabolic Health Solutions". Absorbs the care-kits hub, all eight pathway pages and refills.

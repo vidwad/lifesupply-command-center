@@ -272,6 +272,9 @@ export const pharmacy = {
       "Peptide synthesis, research, and manufacturing are separate activities from compounding and are described with the expansion strategy. The investment rationale and development dependencies are addressed separately in Investor Information.",
     investorAction: "advanced_therapeutics",
     investorLabel: "Investor Information",
+    /** How pharmacy capability would fit the wider model (2026-09-13). */
+    visionAction: "connected_care",
+    visionLabel: "Connected Care Vision",
     actions: ["pharmacy_strategic_inquiry", "growth_strategy"],
     actionLabels: ["Discuss a strategic pharmacy opportunity", "Explore the expansion strategy"],
   },

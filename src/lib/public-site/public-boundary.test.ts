@@ -613,6 +613,7 @@ describe("design-pass graphics and section primitives", () => {
       "clinic-solutions",
       "about",
       "home",
+      "connected-care",
     ]) {
       const page = stripComments(read(`${PUBLIC_DIR}/pages/${name}.tsx`));
       const heroes = page.match(/<PublicHero\b/g) ?? [];
@@ -2617,6 +2618,7 @@ describe("website consolidation: sections, redirects and deep links", () => {
     [LIFE_SUPPLY_ROUTES.operations]: `${PUBLIC_DIR}/pages/operations.tsx`,
     [STAGE_3_ROUTES.clinicSolutions]: `${PUBLIC_DIR}/pages/clinic-solutions.tsx`,
     [PHARMACY_ROUTES.hub]: `${PUBLIC_DIR}/pages/pharmacy.tsx`,
+    [LIFE_SUPPLY_ROUTES.connectedCare]: `${PUBLIC_DIR}/pages/connected-care.tsx`,
     [METABOLIC_ROUTES.hub]: `${PUBLIC_DIR}/pages/metabolic.tsx`,
     [LIFE_SUPPLY_ROUTES.contact]: `${PUBLIC_DIR}/pages/contact.tsx`,
     [LIFE_SUPPLY_ROUTES.about]: `${PUBLIC_DIR}/pages/team-sections.tsx`,
@@ -3012,6 +3014,99 @@ describe("footer brand band (2026-09-13)", () => {
     // Pauses under the pointer or keyboard focus.
     expect(css()).toMatch(
       /\.lsh-marquee:hover \.lsh-marquee-belt,\s*\.lsh-marquee:focus-within \.lsh-marquee-belt\s*\{\s*animation-play-state: paused;/,
+    );
+  });
+});
+
+describe("Connected Care Vision (2026-09-13)", () => {
+  const content = () => stripComments(read("src/lib/public-site/content/connected-care.ts"));
+  const page = () => stripComments(read(`${PUBLIC_DIR}/pages/connected-care.tsx`));
+  const model = () => stripComments(read(`${PUBLIC_DIR}/connected-care-model.tsx`));
+
+  it("states the vision with its status on every part, and offers nothing", () => {
+    const copy = content();
+    expect(copy).toContain("A long-term development vision.");
+    expect(copy).toContain("not currently offered by LifeSupply");
+    expect(copy).toContain(
+      "does not require LifeSupply to own every participating business or employ every professional",
+    );
+    // Every participant, sequence step and section carries a status.
+    expect((copy.match(/status: "/g) ?? []).length).toBeGreaterThanOrEqual(14);
+    expect(page()).toContain("status={hero.status}");
+    // Objectives, never demonstrated improvements; revenue never added together.
+    expect(copy).toContain("not proven improvements in outcomes, cost, or waiting times");
+    expect(copy).toContain("These opportunities are not additive");
+    expect(copy).not.toMatch(/\b(will|has|have) (improve|reduce|deliver|generate)/i);
+    expect(copy).not.toMatch(/\bwe (will|are going to) (launch|open|acquire)\b/i);
+    expect(copy).not.toMatch(/has acquired|have acquired|we are acquiring/i);
+    expect(copy).not.toMatch(/\bsynerg/i);
+  });
+
+  it("keeps professional decisions independent, access unguaranteed, and information limited", () => {
+    const copy = content();
+    expect(copy).toContain("Access does not guarantee a prescription or a particular treatment.");
+    expect(copy).toContain("Professional decisions remain independent.");
+    expect(copy).toContain("Product supply is separate from prescribing and dispensing.");
+    expect(copy).toContain(
+      "A connected interface does not mean unrestricted sharing of patient information.",
+    );
+    expect(copy).toContain("No connection would give a supply system a complete medical record.");
+    expect(copy).toContain("Virtual care would include appropriate in-person pathways.");
+    expect(copy).toContain("preserves professional judgment and patient choice");
+  });
+
+  it("makes compounding a conditional branch, states the premise correctly, and keeps research outside the flow", () => {
+    const copy = content();
+    expect(copy).toContain("Compounding is a conditional capability, not the default destination.");
+    expect(copy).toContain("Conditional branch: eligible compounding");
+    expect(copy).toContain(
+      "A pharmacy acquisition does not itself establish permission to compound",
+    );
+    expect(copy).toContain("Compounded preparations are not approved drugs");
+    expect(copy).toContain("A permission in one country is not a permission in the other.");
+    expect(copy).toContain(
+      "Peptide synthesis, research, and regulated manufacturing would be evaluated separately",
+    );
+    expect(copy).toContain("Research activity is not a route to commercially available treatment.");
+    expect(copy).not.toMatch(/when (Health Canada|the FDA) (allows|permits|approves)/i);
+    expect(copy).not.toMatch(/order peptides|join the waitlist/i);
+    // The branch renders inside the journey, attached to the pharmacy step.
+    expect(page()).toContain("index + 1 === example.branch.step");
+  });
+
+  it("draws the model from the content model as a ring with every detail in the document", () => {
+    expect(page()).toContain("<ConnectedCareModel");
+    expect(model()).toContain("aria-pressed={pressed}");
+    expect(model()).toContain("hidden={!shown}");
+    expect(model()).toContain('aria-live="polite"');
+    expect(model()).not.toMatch(/<img|next\/image|<form[\s>]|<input\b/);
+    // Six participants, one of each group, and the person in the centre.
+    const copy = content();
+    for (const group of ["access", "clinical", "pharmacy", "supply", "support", "technology"]) {
+      expect(copy).toContain(`group: "${group}"`);
+    }
+    expect(copy).toContain('title: "The person"');
+  });
+
+  it("is in the Solutions menu, set apart, and linked from Home, About, Investors, Pharmacy and Metabolic", () => {
+    const routes = stripComments(read(ROUTES_FILE));
+    expect(routes).toContain('connectedCare: "/connected-care/"');
+    expect(routes).toContain("navSeparated: true");
+    expect(layout()).toContain("link.separated");
+    expect(stripComments(read("src/lib/public-site/content/home.ts"))).toContain(
+      'action: "connected_care"',
+    );
+    expect(stripComments(read(`${PUBLIC_DIR}/pages/about.tsx`))).toContain(
+      'action="connected_care"',
+    );
+    expect(stripComments(read("src/lib/public-site/content/investors.ts"))).toContain(
+      'action: "connected_care"',
+    );
+    expect(stripComments(read("src/lib/public-site/content/pharmacy.ts"))).toContain(
+      'visionAction: "connected_care"',
+    );
+    expect(stripComments(read("src/lib/public-site/content/metabolic.ts"))).toContain(
+      '"connected_care"',
     );
   });
 });
