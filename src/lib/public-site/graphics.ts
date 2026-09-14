@@ -58,6 +58,9 @@ const AUDIENCE_PROVENANCE =
 const CATEGORY_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-13 for the category explorer on Medical Supply Solutions; monochrome brief, no person, no logo, no packaging text, no product branding; scaled to 1600×900 and converted to neutral greyscale with ffmpeg, no red treatment; conceptual, not operational photography, and never a specific product offered for sale.";
 
+const BUSINESS_ILLUSTRATION_PROVENANCE =
+  "Isometric illustration supplied by the product owner on 2026-09-13 for the operating-foundation columns of the investor page; served at its supplied size through next/image; conceptual, not operational photography, and not a LifeSupply premises, product, order, or person.";
+
 const MEDICAL_SUPPLIES_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the Balkowitsch Worldwide profile on the consolidated Medical Supply Solutions page; monochrome brief, no person, no facility, no logo, no text, no legible reading on any screen; scaled to 1800×1012 and converted to neutral greyscale with ffmpeg, then given a midtone lift (lutyuv gamma 1.75) so it sits with the two Canadian store photographs rather than reading as a much darker frame beside them; no highlight is clipped. It is conceptual, not operational photography: not a LifeSupply facility, not a photograph of a listed product, and no item in it is a confirmed SKU. It replaced the warehouse photograph on this page, which showed a person packing and could be read as an employee or an operating site.";
 
@@ -150,6 +153,35 @@ export const GRAPHICS = {
     width: 1600,
     height: 900,
     provenance: CATEGORY_PROVENANCE,
+  },
+  /**
+   * Three illustrations above the operating-foundation columns on the
+   * investor page, supplied by the product owner on 2026-09-13: an online
+   * supply store's goods with a laptop, a fulfilment box with a hand truck
+   * and an order list, and an examination room with a floor plan. Isometric
+   * renders, not photographs, and none shows a person, a real product, a
+   * real premises or a real order.
+   */
+  businessStores: {
+    src: "/lsh/graphics/investors/stores.png",
+    alt: "Conceptual illustration of a laptop showing a product grid beside a rollator, a blood-pressure monitor and sealed dressings on a grey base.",
+    width: 960,
+    height: 960,
+    provenance: BUSINESS_ILLUSTRATION_PROVENANCE,
+  },
+  businessUs: {
+    src: "/lsh/graphics/investors/us.png",
+    alt: "Conceptual illustration of an open shipping carton of supplies beside a hand truck of boxes and a tablet showing an order list, on a grey base.",
+    width: 960,
+    height: 960,
+    provenance: BUSINESS_ILLUSTRATION_PROVENANCE,
+  },
+  businessClinic: {
+    src: "/lsh/graphics/investors/clinic.png",
+    alt: "Conceptual isometric illustration of an examination room with an exam table, a stool, cabinetry and a rolled floor plan on the floor.",
+    width: 960,
+    height: 960,
+    provenance: BUSINESS_ILLUSTRATION_PROVENANCE,
   },
   /** The Balkowitsch Worldwide store profile on Medical Supply Solutions. */
   balkowitschProducts: {
