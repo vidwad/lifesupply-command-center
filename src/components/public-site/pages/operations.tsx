@@ -18,6 +18,7 @@ import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { PortalConcept } from "@/components/public-site/portal-concept";
 import { SectionNav } from "@/components/public-site/section-nav";
+import { IconBadge } from "@/components/public-site/sections";
 import { SupplierProcess } from "@/components/public-site/supplier-process";
 import type { ActionKey } from "@/lib/public-site/actions";
 import {
@@ -28,6 +29,7 @@ import {
 } from "@/lib/public-site/brands";
 import type { BrandRecord, OperatingBrandKey } from "@/lib/public-site/brands";
 import { BRAND_GRAPHICS, getGraphic } from "@/lib/public-site/graphics";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 
@@ -587,9 +589,13 @@ export function MedicalSupplySolutionsPage() {
                 as="li"
                 className="grid gap-3 py-6 md:grid-cols-[0.8fr_1.3fr_1fr] md:gap-8"
               >
-                <h3 className="lsh-display text-lg leading-tight text-[var(--lsh-charcoal)]">
-                  {row.name}
-                </h3>
+                {/* An icon beside each capability (product owner, 2026-09-14). */}
+                <div className="flex items-start gap-4">
+                  <IconBadge icon={iconForTitle(row.name)} />
+                  <h3 className="lsh-display pt-2.5 text-lg leading-tight text-[var(--lsh-charcoal)]">
+                    {row.name}
+                  </h3>
+                </div>
                 <p className="text-sm leading-6 text-[var(--lsh-muted)]">
                   <span className="lsh-display mb-1 block text-[10px] text-[var(--lsh-brand-red)] md:sr-only">
                     {hub.technology.whatLabel}
