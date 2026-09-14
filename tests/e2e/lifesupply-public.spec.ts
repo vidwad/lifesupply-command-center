@@ -830,6 +830,13 @@ test.describe("LifeSupply public site", () => {
     }
     // And there is only one such control on the page.
     await expect(page.getByRole("navigation", { name: "On this page" })).toHaveCount(0);
+    // Each route card opens on the owner's illustration, described as conceptual (2026-09-13).
+    const cards = nav.locator("ol > li");
+    await expect(cards).toHaveCount(3);
+    for (const card of await cards.all()) {
+      await expect(card.locator("img")).toHaveCount(1);
+      await expect(card.locator("img")).toHaveAttribute("alt", /^Conceptual/);
+    }
     // The reader who is already open must recognise themselves in the router.
     await expect(nav).toContainText("Already seeing patients");
     // The collaboration section says buying needs none of it, and every item

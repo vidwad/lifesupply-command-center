@@ -214,6 +214,7 @@ export const clinics = {
       routes: [
         {
           index: "01",
+          graphic: "clinicProject",
           title: "A clinic project",
           text: "Opening, renovating, or expanding a practice in British Columbia: planning, design, construction, and fit-out.",
           href: "#planning",
@@ -221,6 +222,7 @@ export const clinics = {
         },
         {
           index: "02",
+          graphic: "businessClinic",
           title: "Equipment for a clinic",
           text: "Rooms to equip or a device to replace. Planned room by room and priced by quote.",
           href: "#equipment",
@@ -228,6 +230,7 @@ export const clinics = {
         },
         {
           index: "03",
+          graphic: "businessStores",
           title: "Supplies for an open clinic",
           text: "Already seeing patients. Everyday supplies through the operating stores, with no construction project involved.",
           href: "#ongoing-supplies",
