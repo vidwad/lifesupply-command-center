@@ -643,12 +643,14 @@ describe("action registry", () => {
       ...metabolic.hub.actions,
       ...metabolic.kitsHub.actions,
       ...metabolic.refills.actions,
-      // Pharmacy Solutions since 2026-09-13: the tiles' link, the distinction
-      // link under the model, and the three closing actions.
-      LIFE_SUPPLY_CONTENT.pharmacy.supplies.action,
-      LIFE_SUPPLY_CONTENT.pharmacy.model.distinctionAction,
-      LIFE_SUPPLY_CONTENT.pharmacy.closing.action,
-      LIFE_SUPPLY_CONTENT.pharmacy.closing.secondary,
+      // Pharmacy Solutions since 2026-09-13: every action its sections declare.
+      LIFE_SUPPLY_CONTENT.pharmacy.products.action,
+      LIFE_SUPPLY_CONTENT.pharmacy.products.secondaryAction,
+      ...LIFE_SUPPLY_CONTENT.pharmacy.relationships.items.map((item) => item.action),
+      LIFE_SUPPLY_CONTENT.pharmacy.programs.action,
+      ...LIFE_SUPPLY_CONTENT.pharmacy.specialty.actions,
+      LIFE_SUPPLY_CONTENT.pharmacy.specialty.investorAction,
+      ...LIFE_SUPPLY_CONTENT.pharmacy.closing.actions.map((item) => item.action),
       LIFE_SUPPLY_CONTENT.pharmacy.closing.storesAction,
       ...metabolic.collaboration.actions,
       ...partners.suppliers.actions,

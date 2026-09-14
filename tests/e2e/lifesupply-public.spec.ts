@@ -847,38 +847,58 @@ test.describe("LifeSupply public site", () => {
     await expect(collaboration).toContainText(/no pilot is running today/);
   });
 
-  test("presents Pharmacy Solutions as a proposition in development with one enquiry subject", async ({
+  test("presents Pharmacy Solutions at three levels, with one subject per conversation", async ({
     page,
   }) => {
-    // Rebuilt 2026-09-13 (product owner): the proposition and its status in
-    // the hero, six representative categories with pictures, one four-step
-    // model, the labelled portal concept, and the pharmacy enquiry subject on
-    // every enquiry. The under-evaluation section moved to the investor page.
+    // Re-scoped 2026-09-13 (product owner): product access today through the
+    // stores, patient-supply programs and tools in development, and specialty
+    // pharmacy and compounding under evaluation, in that order, with each
+    // enquiry carrying the subject of its own conversation.
     await page.goto("/pharmacy-solutions");
     const main = page.locator("main");
     await expect(
       main.getByRole("heading", {
         level: 1,
-        name: "Help patients access the supplies that support their care.",
+        name: "Medical supplies for your pharmacy. New ways to support your customers.",
       }),
     ).toBeVisible();
-    await expect(main.getByText("Pharmacy supply programs are not yet available.")).toBeVisible();
+    await expect(
+      main.getByText("Products are available through the operating stores."),
+    ).toBeVisible();
     const mailtos = await main
       .locator('a[href^="mailto:"]')
       .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
-    expect(mailtos.length).toBeGreaterThan(1);
-    for (const href of mailtos) {
-      expect(href).toMatch(/subject=Pharmacy%20supply%20program$/);
-      expect(href).not.toMatch(/Metabolic/);
-    }
-    await expect(page.locator("#supplies li img")).toHaveCount(6);
-    await expect(page.locator("#partner-program li")).toHaveCount(4);
+    const subjects = new Set(mailtos.map((href) => href.split("subject=")[1] ?? ""));
+    expect([...subjects].sort()).toEqual([
+      "Pharmacy%20purchasing",
+      "Pharmacy%20supply%20program",
+      "Strategic%20pharmacy%20opportunity",
+    ]);
+    for (const href of mailtos) expect(href).not.toMatch(/Metabolic/);
+    // The eight explorer categories with their pictures, and the explorer itself as the destination.
+    await expect(page.locator("#products li img")).toHaveCount(8);
     await expect(
-      page.locator("#tools").getByText("Illustrative portal concept — proposed capabilities"),
+      page.locator("#products").getByRole("link", { name: "Browse medical supply categories" }),
+    ).toHaveAttribute("href", /\/medical-supply-solutions\/?#categories$/);
+    await expect(page.locator("#relationships li")).toHaveCount(3);
+    await expect(page.locator("#partner-program ul > li")).toHaveCount(4);
+    await expect(
+      page.locator("#partner-program").getByText("Pharmacy supply programs are not yet available."),
     ).toBeVisible();
-    await expect(page.locator("#tools").getByRole("tab")).toHaveCount(3);
+    const tools = page.locator("#tools");
+    await expect(
+      tools.getByText("Illustrative portal concept — proposed capabilities"),
+    ).toBeVisible();
+    await expect(tools.getByRole("tab")).toHaveCount(3);
+    await expect(tools.getByRole("group", { name: "Use" }).getByRole("button")).toHaveCount(3);
+    const specialty = page.locator("#specialty");
+    await expect(specialty.getByText("Under evaluation", { exact: true })).toBeVisible();
+    await expect(
+      specialty.getByText(
+        "LifeSupply does not currently offer compounded medications or peptide-compounding services.",
+      ),
+    ).toBeVisible();
     await expect(main.getByText("Pharmacy-related operations, under evaluation.")).toHaveCount(0);
-    await expect(main.getByText("addressed separately in Investor Information")).toBeVisible();
   });
 
   test("stays readable on Clinic Solutions with JavaScript disabled", async ({ browser }) => {

@@ -37,6 +37,12 @@ export const ICON_BY_TITLE: Record<string, string> = {
   "Build and hand over": "badge",
   // Pharmacy Solutions
   "For the pharmacy": "pill",
+  "For pharmacy operations": "building",
+  "For the retail assortment": "cart",
+  "For patient-supply programs": "repeat",
+  "Supply support": "package",
+  "Licensed pharmacy collaboration": "handshake",
+  "Future operating capabilities": "flask",
   "Clarify initial requirements": "clipboardList",
   "Simplify repeat purchasing": "repeat",
   "Establish clear responsibilities": "handshake",

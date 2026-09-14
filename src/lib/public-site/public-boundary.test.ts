@@ -1799,7 +1799,7 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(page).not.toContain("hub.direction");
     expect(page).not.toContain("hub.value");
     expect(page).not.toContain("CarePathwayDiagram");
-    expect(page).toContain("{model.distinction}");
+    expect(page).toContain("{specialty.investorNote}");
     expect(pharmacy).toContain("Pharmacy supply programs are not yet available.");
     expect(pharmacy).toContain("Medication and dispensing are outside the proposed scope.");
     // One enquiry destination: nothing on the page carries the metabolic subject.
@@ -1814,6 +1814,42 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     expect(page).toContain('demo="pharmacy"');
     expect(page).toContain("label={tools.concept.label}");
     expect(page.indexOf("{tools.status}")).toBeLessThan(page.indexOf("<PortalConcept"));
+    // Three levels of engagement (second brief, 2026-09-13), in order: what
+    // is available today through the stores, what is in development, and
+    // what is under evaluation; each conversation with its own subject.
+    for (const anchor of ["products", "relationships", "partner-program", "tools", "specialty"]) {
+      expect(page, anchor).toContain(`id="${anchor}"`);
+    }
+    expect(page.indexOf('id="products"')).toBeLessThan(page.indexOf('id="partner-program"'));
+    expect(page.indexOf('id="partner-program"')).toBeLessThan(page.indexOf('id="specialty"'));
+    expect(pharmacy).toContain("Products are available through the operating stores.");
+    expect(pharmacy).toContain(
+      "Availability, resale arrangements, pricing, and supply terms would be confirmed with the relevant operating business.",
+    );
+    expect(pharmacy).not.toMatch(/wholesale (program|pricing) (is|are) (available|offered)/i);
+    // Compounding as it stands in law: a lawful pathway and satisfied
+    // conditions, never a blanket authorization awaited, never one country's
+    // permission presented as the other's, and nothing offered today.
+    expect(pharmacy).toContain(
+      "where a lawful pathway exists and the required professional, operational, and regulatory conditions can be satisfied",
+    );
+    expect(pharmacy).toContain(
+      "A permission in one country is not a permission to supply another.",
+    );
+    expect(pharmacy).toContain(
+      "LifeSupply does not currently offer compounded medications or peptide-compounding services.",
+    );
+    expect(pharmacy).not.toMatch(/when (Health Canada|the FDA) (allows|permits|approves)/i);
+    expect(pharmacy).not.toMatch(/order peptides|join the waitlist/i);
+    // Compounding a preparation and synthesizing its ingredient stay distinct.
+    expect(pharmacy).toContain("separate activities from compounding");
+    for (const subject of [
+      '"Pharmacy purchasing"',
+      '"Pharmacy supply program"',
+      '"Strategic pharmacy opportunity"',
+    ]) {
+      expect(stripComments(read("src/lib/public-site/actions.ts")), subject).toContain(subject);
+    }
   });
 
   it("opens the homepage after the hero with the three-panel statement, stated as record, strategy, and ambition", () => {
@@ -2404,7 +2440,7 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(pharmacyContent).toContain("Medication and dispensing are outside the proposed scope");
     // The boundary is stated as what LifeSupply would and would not do,
     // rather than as a claim about what a prescription is touched by.
-    expect(pharmacyContent).toContain("pharmacist-selected, non-drug products");
+    expect(pharmacyContent).toContain("pharmacist-selected, non-drug supplies");
     expect(pharmacyContent).toContain("product supply and non-clinical fulfilment support");
     expect(c).not.toContain("Medication is excluded from every configuration");
     expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
@@ -2784,9 +2820,9 @@ describe("website consolidation: sections, redirects and deep links", () => {
     const pharmacyPage = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
     // One operating model since 2026-09-13 (product owner), four steps, with
     // the complaints-and-recalls block still unpublished.
-    expect(pharmacyPage).toContain("model.steps.map(");
+    expect(pharmacyPage).toContain("programs.steps.map(");
     expect(pharmacyPage).not.toContain(".responsibilities");
-    expect(pharmacyPage).toContain("closing.action");
+    expect(pharmacyPage).toContain("closing.actions.map(");
     // And a pathway is still never sold: it is a configurable starting point.
     const content = stripComments(read("src/lib/public-site/content/metabolic.ts"));
     expect(content).toMatch(/configurable starting point rather than a product/);

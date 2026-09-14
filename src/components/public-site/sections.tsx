@@ -252,10 +252,13 @@ export function ProcessSteps({
   steps,
   tone = "onDark",
   action,
+  status,
 }: {
   eyebrow: string;
   title: string;
-  description?: string;
+  description?: string | readonly string[];
+  /** A development status under the introduction, set apart from it (Pharmacy Solutions, 2026-09-13). */
+  status?: string;
   steps: readonly { index?: string; title: string; text: string; icon?: string }[];
   tone?: Tone;
   action?: React.ReactNode;
@@ -271,6 +274,17 @@ export function ProcessSteps({
             title={title}
             description={description}
           />
+          {status ? (
+            <p
+              className={`mt-6 max-w-2xl border-l-2 pl-4 text-sm leading-6 ${
+                dark
+                  ? "border-[var(--lsh-red-on-ink)] text-white/85"
+                  : "border-[var(--lsh-brand-red)] text-[var(--lsh-charcoal)]"
+              }`}
+            >
+              {status}
+            </p>
+          ) : null}
         </Reveal>
         <Stagger as="ul" className="relative mt-14 grid gap-10 md:grid-cols-2 xl:grid-cols-4">
           {/* Connecting rail on wide screens. */}
