@@ -402,6 +402,16 @@ export function InvestorRelationsPage({
             <ol className="mt-6 grid gap-px bg-[var(--lsh-rule-strong)] md:grid-cols-3">
               {ir.growth.technology.steps.map((step, index) => (
                 <li key={step.title} className="flex flex-col bg-[var(--lsh-paper)] p-6">
+                  {/* The owner's illustration for the step, above its number. */}
+                  <figure className="relative mb-5 aspect-square overflow-hidden">
+                    <Image
+                      src={getGraphic(step.graphic).src}
+                      alt={getGraphic(step.graphic).alt}
+                      fill
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      className="object-contain mix-blend-multiply"
+                    />
+                  </figure>
                   <span className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
                     {String(index + 1).padStart(2, "0")}
                     {index < ir.growth.technology.steps.length - 1 ? (

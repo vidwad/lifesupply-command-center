@@ -61,6 +61,9 @@ const CATEGORY_PROVENANCE =
 const BUSINESS_ILLUSTRATION_PROVENANCE =
   "Isometric illustration supplied by the product owner on 2026-09-13 for the operating-foundation columns of the investor page; served at its supplied size through next/image; conceptual, not operational photography, and not a LifeSupply premises, product, order, or person.";
 
+const TECHNOLOGY_ILLUSTRATION_PROVENANCE =
+  "Isometric illustration supplied by the product owner on 2026-09-13 for the technology steps of the investor page; resized to 960×960 and saved as JPEG; conceptual, not operational photography, and not a LifeSupply system, product, order, or person.";
+
 const MEDICAL_SUPPLIES_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the Balkowitsch Worldwide profile on the consolidated Medical Supply Solutions page; monochrome brief, no person, no facility, no logo, no text, no legible reading on any screen; scaled to 1800×1012 and converted to neutral greyscale with ffmpeg, then given a midtone lift (lutyuv gamma 1.75) so it sits with the two Canadian store photographs rather than reading as a much darker frame beside them; no highlight is clipped. It is conceptual, not operational photography: not a LifeSupply facility, not a photograph of a listed product, and no item in it is a confirmed SKU. It replaced the warehouse photograph on this page, which showed a person packing and could be read as an employee or an operating site.";
 
@@ -197,6 +200,33 @@ export const GRAPHICS = {
     height: 1000,
     provenance:
       "Illustration supplied by the product owner on 2026-09-13: a monitor render of the page's own illustrative portal concept, resized to 1500×1000 and saved as JPEG; conceptual, not operational photography, and not a live product, account, or order.",
+  },
+  /**
+   * Three illustrations above the technology steps on the investor page,
+   * supplied by the product owner on 2026-09-13. Isometric renders on a
+   * white ground, resized to 960 px and saved as JPEG; none shows a person,
+   * a real product, a real system or a real order.
+   */
+  technologyInformation: {
+    src: "/lsh/graphics/investors/information.jpg",
+    alt: "Conceptual illustration of three product record cards, showing a blister pack, a bottle and a supply carton, beside a database cylinder.",
+    width: 960,
+    height: 960,
+    provenance: TECHNOLOGY_ILLUSTRATION_PROVENANCE,
+  },
+  technologyMonitoring: {
+    src: "/lsh/graphics/investors/monitoring.jpg",
+    alt: "Conceptual illustration of a chart panel with a rising and falling line, a magnifier over a dotted projection, and a warning light.",
+    width: 960,
+    height: 960,
+    provenance: TECHNOLOGY_ILLUSTRATION_PROVENANCE,
+  },
+  technologyOrdering: {
+    src: "/lsh/graphics/investors/ordering.jpg",
+    alt: "Conceptual illustration of an order list of three cartons with a red confirm bar, beside a calendar with a marked date.",
+    width: 960,
+    height: 960,
+    provenance: TECHNOLOGY_ILLUSTRATION_PROVENANCE,
   },
   /** The Balkowitsch Worldwide store profile on Medical Supply Solutions. */
   balkowitschProducts: {

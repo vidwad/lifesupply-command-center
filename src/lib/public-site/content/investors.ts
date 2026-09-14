@@ -258,14 +258,17 @@ export const investorRelations = {
       title: "From information to better purchasing decisions",
       steps: [
         {
+          graphic: "technologyInformation",
           title: "Better information",
           text: "Product data, purchasing history, supplier availability, and lead times.",
         },
         {
+          graphic: "technologyMonitoring",
           title: "Planning and monitoring",
           text: "Demand estimates and earlier sight of potential supply risks.",
         },
         {
+          graphic: "technologyOrdering",
           title: "Easier ordering",
           text: "Replenishment reminders, draft orders, and, for organizations, dedicated portals.",
         },
