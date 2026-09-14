@@ -185,6 +185,9 @@ export function LifeSupplyHome() {
           </Reveal>
           {/*
            * Each entry is reversed so the figure reads first and the label
+           * sits under it; `justify-end` packs the reversed column to its top,
+           * so the three figures share a top edge whatever the length of the
+           * label beneath each (product owner, 2026-09-13).
            * sits under it, while the source keeps the term before its
            * description. The label is the `dt` itself rather than a hidden
            * copy, so a screen reader announces it once, not twice.
@@ -193,7 +196,7 @@ export function LifeSupplyHome() {
             {homepage.publicMetrics.map((metric) => (
               <StaggerItem
                 key={metric.label}
-                className="flex flex-col-reverse border-t border-white/20 pt-6"
+                className="flex flex-col-reverse justify-end border-t border-white/20 pt-6"
               >
                 <dt className="mt-6 max-w-[18rem] text-sm leading-6 text-white/60">
                   {metric.label}

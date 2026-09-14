@@ -183,6 +183,21 @@ export const GRAPHICS = {
     height: 960,
     provenance: BUSINESS_ILLUSTRATION_PROVENANCE,
   },
+  /**
+   * Beside the "A supply portal built around your organization" heading on
+   * Medical Supply Solutions (product owner, 2026-09-13): a desktop monitor
+   * showing the page's own illustrative portal concept. The screen carries
+   * the concept's label and its fictional-data note; it is a render of the
+   * concept, not a product.
+   */
+  portalMonitor: {
+    src: "/lsh/graphics/medical-supplies/supply-portal.jpg",
+    alt: "Conceptual illustration of a desktop monitor showing the illustrative portal concept: an approved catalogue with units and approval status, and saved order lists, labelled as proposed capabilities with fictional data.",
+    width: 1500,
+    height: 1000,
+    provenance:
+      "Illustration supplied by the product owner on 2026-09-13: a monitor render of the page's own illustrative portal concept, resized to 1500×1000 and saved as JPEG; conceptual, not operational photography, and not a live product, account, or order.",
+  },
   /** The Balkowitsch Worldwide store profile on Medical Supply Solutions. */
   balkowitschProducts: {
     src: "/lsh/graphics/medical-supplies/balkowitsch-products-greyscale-v1.jpg",
