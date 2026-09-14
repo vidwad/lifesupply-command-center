@@ -7,7 +7,7 @@ import { PharmacySolutionsPage } from "@/components/public-site/lifesupply-pages
 export const metadata: Metadata = publicMetadata({
   title: "Pharmacy Solutions",
   description:
-    "Non-drug supply programs for pharmacies in development, and the stated direction for pharmacy-related operations, with their status.",
+    "Proposed non-drug supply and fulfilment arrangements for pharmacies, in development: the pharmacy’s needs, representative supplies, the operating model, proposed ordering tools, and how to take part.",
   path: "/pharmacy-solutions/",
 });
 

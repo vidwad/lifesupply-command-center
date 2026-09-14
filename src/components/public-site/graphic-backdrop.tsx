@@ -22,6 +22,7 @@ export function GraphicBackdrop({
   graphic,
   position = "70% 50%",
   dim = false,
+  accent = true,
 }: {
   graphic: GraphicKey;
   position?: string;
@@ -31,6 +32,8 @@ export function GraphicBackdrop({
    * subject cannot be moved out from under the heading; it is dimmed instead.
    */
   dim?: boolean;
+  /** The short red rule at the lower right; off when an illustration sits there (Pharmacy Solutions, 2026-09-13). */
+  accent?: boolean;
 }) {
   const image = getGraphic(graphic);
   return (
@@ -49,7 +52,7 @@ export function GraphicBackdrop({
         className={`lsh-graphic-backdrop-image object-cover ${dim ? "opacity-50" : "opacity-80"}`}
         draggable={false}
       />
-      <span className="lsh-graphic-backdrop-accent" />
+      {accent ? <span className="lsh-graphic-backdrop-accent" /> : null}
     </div>
   );
 }

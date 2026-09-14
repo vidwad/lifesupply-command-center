@@ -37,6 +37,7 @@ export type ActionKey =
   | "view_clinic_projects"
   | "discuss_program"
   | "pharmacy_program_inquiry"
+  | "pharmacy_model"
   | "metabolic_hub"
   | "explore_kits"
   | "refills_information"
@@ -252,6 +253,15 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
    * the enquiry routing it offered is what Contact does, with the destination
    * named on every choice.
    */
+  /** The hero's second action on Pharmacy Solutions (2026-09-13): down the page to the operating model. */
+  pharmacy_model: {
+    key: "pharmacy_model",
+    label: "Explore the proposed model",
+    intent: "navigation",
+    destination: internal(sectionRoute(PHARMACY_ROUTES.hub, "partner-program")),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
   business_inquiries: {
     key: "business_inquiries",
     label: "Start a business conversation",
