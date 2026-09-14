@@ -2862,7 +2862,7 @@ describe("Medical Supply Solutions as the commercial proposition (2026-09-13)", 
   it("states the current-versus-proposed status once, and renders it once", () => {
     // One clear statement, rendered on the band between the operating
     // stores and the proposed material; nothing else on the page restates it.
-    const statement = "none is offered until its implementation is confirmed";
+    const statement = "are proposed capabilities in development";
     expect((content().match(new RegExp(statement, "g")) ?? []).length).toBe(1);
     expect((page().match(/hub\.status\.text/g) ?? []).length).toBe(1);
     expect(page().indexOf("hub.status.text")).toBeGreaterThan(page().indexOf('id="stores"'));

@@ -43,7 +43,7 @@ export const businesses = {
      */
     status: {
       eyebrow: "Where things stand",
-      text: "Our three online stores are operating today. The purchasing arrangements, supply-planning tools, and dedicated portals described below are proposed capabilities in development, and none is offered until its implementation is confirmed.",
+      text: "Our three online stores are operating today. The purchasing arrangements, supply-planning tools, and dedicated portals described below are proposed capabilities in development.",
     },
     /** The in-page navigation, and the order the sections run in. */
     sections: [
