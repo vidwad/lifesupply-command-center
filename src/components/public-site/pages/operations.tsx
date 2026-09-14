@@ -166,6 +166,7 @@ export function StoreProfile({ record }: { record: BrandRecord }) {
  */
 export function MedicalSupplySolutionsPage() {
   const { hub } = LIFE_SUPPLY_CONTENT.businesses;
+  const portalMonitor = getGraphic("portalMonitor");
   const stores = OPERATING_BRANDS.filter((record) =>
     STORE_KEYS.includes(record.key as OperatingBrandKey),
   );
@@ -628,13 +629,32 @@ export function MedicalSupplySolutionsPage() {
         className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
       >
         <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow={hub.portal.eyebrow}
-              title={hub.portal.title}
-              description={hub.portal.paragraphs}
-            />
-          </Reveal>
+          <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-16">
+            <Reveal>
+              <SectionHeading
+                eyebrow={hub.portal.eyebrow}
+                title={hub.portal.title}
+                description={hub.portal.paragraphs}
+              />
+            </Reveal>
+            {/*
+             * The owner's monitor render of the concept below, in the right
+             * column (product owner, 2026-09-13). Its white ground multiplies
+             * into the section's grey, so it sits on the page rather than in a
+             * white box; the screen carries the concept's own label.
+             */}
+            <Reveal delay={0.1}>
+              <figure className="relative aspect-[3/2] overflow-hidden">
+                <Image
+                  src={portalMonitor.src}
+                  alt={portalMonitor.alt}
+                  fill
+                  sizes="(min-width: 1024px) 600px, 100vw"
+                  className="object-contain mix-blend-multiply"
+                />
+              </figure>
+            </Reveal>
+          </div>
           <Reveal delay={0.05} className="mt-12">
             <PortalConcept
               label={hub.portal.concept.label}
