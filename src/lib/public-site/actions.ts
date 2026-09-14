@@ -43,6 +43,7 @@ export type ActionKey =
   | "pharmacy_strategic_inquiry"
   | "connected_care"
   | "connected_care_model"
+  | "connected_care_example"
   | "metabolic_hub"
   | "explore_kits"
   | "refills_information"
@@ -308,6 +309,15 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Explore the connected care model",
     intent: "navigation",
     destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.connectedCare, "model")),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  /** From the professional-care node of the diagram to the illustrative journey below it. */
+  connected_care_example: {
+    key: "connected_care_example",
+    label: "How a pathway could work",
+    intent: "navigation",
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.connectedCare, "example")),
     ownerChannel: null,
     verifiedAt: null,
   },

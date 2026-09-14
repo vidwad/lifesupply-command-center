@@ -916,19 +916,38 @@ test.describe("LifeSupply public site", () => {
       main.getByRole("heading", { level: 1, name: "A vision for more connected care." }),
     ).toBeVisible();
     await expect(main.getByText("A long-term development vision.")).toBeVisible();
-    // The model: six participants around the person; selecting one shows its detail.
+    // The diagram: the patient hub, four nodes with written statuses, and the
+    // technology foundation. Selecting a node presses it and highlights the
+    // capabilities that could support it; a capability shows its sentence;
+    // Escape clears; every node's detail is a native disclosure.
     const model = page.locator("#model");
-    const buttons = model
-      .getByRole("group", { name: "Participants in the connected-care model" })
-      .getByRole("button");
-    await expect(buttons).toHaveCount(6);
-    await expect(buttons.first()).toHaveAttribute("aria-pressed", "true");
-    await buttons.nth(2).click();
-    await expect(buttons.nth(2)).toHaveAttribute("aria-pressed", "true");
-    await expect(buttons.first()).toHaveAttribute("aria-pressed", "false");
-    await expect(
-      model.getByText("Compounding is a conditional capability, not the default destination."),
-    ).toBeVisible();
+    await expect(model.getByRole("heading", { name: "Patient needs", exact: true })).toBeVisible();
+    const nodeButtons = model.locator(".lsh-cc-node h3 button");
+    await expect(nodeButtons).toHaveCount(4);
+    for (const status of [
+      "Existing operations",
+      "Proposed connections",
+      "Under evaluation",
+      "Proposed platform",
+    ]) {
+      await expect(model.getByText(status, { exact: true }).first()).toBeVisible();
+    }
+    await expect(model.getByText("Prescription when clinically appropriate")).toBeVisible();
+    await nodeButtons.first().click();
+    await expect(nodeButtons.first()).toHaveAttribute("aria-pressed", "true");
+    const capabilityButtons = model.locator(".lsh-cc-caps button");
+    await expect(capabilityButtons).toHaveCount(4);
+    await expect(capabilityButtons.nth(2)).toHaveAttribute("data-state", "highlighted");
+    await capabilityButtons.nth(0).click();
+    await expect(capabilityButtons.nth(0)).toHaveAttribute("aria-pressed", "true");
+    await expect(nodeButtons.first()).toHaveAttribute("aria-pressed", "false");
+    await expect(model.getByText("it would not decide who sees them")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(capabilityButtons.nth(0)).toHaveAttribute("aria-pressed", "false");
+    await expect(model.locator(".lsh-cc-node details")).toHaveCount(4);
+    await model.locator(".lsh-cc-node details summary").first().click();
+    await expect(model.locator(".lsh-cc-node details").first()).toHaveAttribute("open", "");
+    await expect(model.getByText("Illustrative development vision.")).toBeVisible();
     // One illustrative journey of five steps, compounding a branch off the third.
     await expect(page.locator("#example ol > li")).toHaveCount(5);
     await expect(

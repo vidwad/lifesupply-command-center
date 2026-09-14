@@ -85,116 +85,146 @@ export const connectedCare = {
   },
 
   /**
-   * C. The connected-care model: the person at the centre, six participants
-   * around them, and for each one what it would do, what it would need, who
-   * remains responsible, and whether the capability exists today or is
-   * proposed. Research and advanced therapeutics sit outside the flow.
+   * C. The Connected Care diagram (product owner, 2026-09-13): one typed
+   * configuration that the desktop network, the tablet grid and the mobile
+   * sequence all read. The patient's needs at the centre; the two existing
+   * businesses on the left with their written status; the two proposed
+   * capabilities on the right; the technology foundation beneath, its four
+   * capabilities mapped to the nodes they could support as a conceptual
+   * mapping and never an integration; one expandable item on emerging
+   * therapies, with research, synthesis and manufacturing kept outside the
+   * patient-care flow; and one note. A connector never implies ownership or
+   * data exchange, and nothing here is offered.
    */
-  model: {
-    eyebrow: "The connected-care model",
-    title: "Different expertise. A coordinated experience.",
+  diagram: {
+    eyebrow: "Connected Care Vision",
+    title: "Connected care, built around patient needs.",
     intro:
-      "Select a participant to see what it would do, what it would need, who remains responsible, and whether the capability exists today or is proposed.",
-    selectLabel: "Participants in the connected-care model",
-    centre: {
-      title: "The person",
-      text: "Their needs, their choices, and their consent are the centre of the model.",
+      "Our vision is to connect medical supplies, clinic infrastructure, professional care and pharmacy services through technology that makes each step easier to coordinate.",
+    statusNote:
+      "Existing businesses provide the foundation. Professional-care connections, pharmacy expansion and an integrated platform are proposed capabilities.",
+    hub: {
+      icon: "patient",
+      title: "Patient needs",
+      tagline: "Access. Choice. Continuity.",
+      text: "Appropriate care and supplies, with clear next steps and ongoing support.",
     },
-    groups: {
-      access: "Access",
-      clinical: "Clinical care",
-      pharmacy: "Pharmacy services",
-      supply: "Supply operations",
-      support: "Ongoing support",
-      technology: "Technology",
-    },
-    labels: {
-      role: "What they would do",
-      needs: "What they would need",
-      responsible: "Who remains responsible",
-      status: "Status",
-      distinction: "Important distinction",
-    },
-    participants: [
+    nodes: [
       {
-        key: "access",
-        group: "access",
-        title: "Access and coordination",
-        role: "Help people identify and connect with participating healthcare providers, and understand the next step.",
-        needs:
-          "Which providers participate, how they can be reached, and what each access channel is for.",
-        responsible:
-          "The participating provider decides whether and how to see a person. LifeSupply would coordinate access, not care.",
-        status: "Proposed",
-        distinction: "Access does not guarantee a prescription or a particular treatment.",
+        key: "supplies",
+        side: "left",
+        icon: "supplies",
+        status: "Existing operations",
+        statusKind: "existing",
+        title: "Medical supplies",
+        text: "Medical, health and home-care products for individuals, caregivers and professional buyers.",
+        businesses: ["LifeSupply", "Wellmart Medical", "Balkowitsch Worldwide"],
+        detail:
+          "Canadian and U.S. supply operations provide a foundation for equipment, consumables and ongoing purchasing needs. Product supply is separate from prescribing and dispensing.",
+        relationship: "Products and ongoing supplies",
+        link: { action: "medical_supply_stores", label: "The three stores on Medical Supplies" },
       },
       {
-        key: "clinical",
-        group: "clinical",
-        title: "Physicians and specialists",
-        role: "Assess needs, recommend investigations, determine treatment, and arrange follow-up.",
-        needs: "The person’s history and consent, and any results the person chooses to share.",
-        responsible:
-          "The treating clinician. Professional decisions remain independent of LifeSupply.",
-        status: "Independent professionals; relationships proposed",
-        distinction: "Professional decisions remain independent.",
+        key: "clinic",
+        side: "left",
+        icon: "clinic",
+        status: "Existing operations",
+        statusKind: "existing",
+        title: "Clinic spaces and equipment",
+        text: "Clinic planning, design, build and equipment support in British Columbia.",
+        businesses: ["LifeSupply Clinics"],
+        detail:
+          "Clinic-development projects bring equipment, opening supplies and potential ongoing procurement needs into view. The practices that open in those spaces provide their own patient care.",
+        relationship: "Spaces and equipment for care",
+        link: { action: "clinic_solutions", label: "Clinic Solutions" },
+      },
+      {
+        key: "care",
+        side: "right",
+        icon: "care",
+        status: "Proposed connections",
+        statusKind: "proposed",
+        title: "Professional care",
+        text: "Connections with physicians, specialists and other qualified health professionals.",
+        detail:
+          "The proposed model could support assessment, referral and follow-up, including virtual care where appropriate and in-person services when needed. Clinical decisions remain with qualified professionals; access does not guarantee a prescription or a particular treatment.",
+        relationship: "Assessment and follow-up",
+        link: { action: "connected_care_example", label: "How a pathway could work" },
       },
       {
         key: "pharmacy",
-        group: "pharmacy",
-        title: "Pharmacy services",
-        role: "Review prescriptions, dispense where appropriate, provide counselling, and evaluate eligible compounding needs.",
-        needs:
-          "A valid prescription where one is issued, the professional standards that apply, and the permitted scope of the pharmacy.",
-        responsible:
-          "The licensed pharmacy and its pharmacists, whether independent, partnered, or acquired.",
-        status: "Proposed, through partnerships or acquisitions",
-        distinction: "Compounding is a conditional capability, not the default destination.",
-      },
-      {
-        key: "supply",
-        group: "supply",
-        title: "Medical supplies",
-        role: "Provide appropriate equipment, accessories, and consumables through agreed channels.",
-        needs:
-          "Which products suit the person, confirmed with appropriate professional input, and where to send them.",
-        responsible:
-          "LifeSupply’s operating stores for the products they supply; the professional for suitability.",
-        status: "Operating today",
-        distinction: "Product supply is separate from prescribing and dispensing.",
-      },
-      {
-        key: "support",
-        group: "support",
-        title: "Ongoing support",
-        role: "Coordinate appointments, order support, reminders, and supply replenishment.",
-        needs:
-          "Agreed contact points, the person’s preferences, and the replenishment pattern for consumables.",
-        responsible:
-          "Clinical follow-up stays with the provider; order support stays with the supplying business.",
-        status: "Order support operating; coordination proposed",
-        distinction:
-          "Clinical follow-up and commercial order support have different responsibilities.",
-      },
-      {
-        key: "technology",
-        group: "technology",
-        title: "Digital platform",
-        role: "Connect the relevant workflows, permissions, communications, and transactions.",
-        needs:
-          "Only the information each connection actually requires, with the person’s consent and the right permissions.",
-        responsible:
-          "LifeSupply for the platform it would operate; each participant for its own records and decisions.",
-        status: "Portals in development; the platform proposed",
-        distinction:
-          "A connected interface does not mean unrestricted sharing of patient information.",
+        side: "right",
+        icon: "pharmacy",
+        status: "Under evaluation",
+        statusKind: "evaluation",
+        title: "Pharmacy capabilities",
+        text: "Potential pharmacy acquisitions and collaborations to support coordinated pharmacy services.",
+        detail:
+          "Qualified pharmacists could support prescription review, dispensing, counselling and, where appropriate and permitted, patient-specific compounding. No acquisition has been made, and a person would remain free to use any pharmacy.",
+        relationship: "Pharmacy services and support",
+        incoming: "Prescription when clinically appropriate",
+        link: { action: "pharmacy_hub", label: "Pharmacy Solutions" },
       },
     ],
-    outside: {
-      title: "Outside the ordinary care flow",
-      text: "Research and advanced therapeutics are a separate future-development area, evaluated on their own terms. Research activity is not a route to commercially available treatment.",
+    prescription: {
+      from: "care",
+      to: "pharmacy",
+      label: "Prescription when clinically appropriate",
+    },
+    technology: {
+      icon: "technology",
+      title: "Technology connecting the experience",
+      status: "Proposed platform",
+      statusKind: "proposed",
+      text: "A shared digital layer could help coordinate access, authorized information exchange, ordering and ongoing support.",
+      capabilities: [
+        {
+          key: "access",
+          title: "Access and coordination",
+          text: "Appointments, care navigation and communications.",
+          supports: ["hub", "care"],
+          note: "Could help a person find a participating provider and understand the next step; it would not decide who sees them.",
+        },
+        {
+          key: "workflows",
+          title: "Care and pharmacy workflows",
+          text: "Authorized information exchange and agreed professional workflows.",
+          supports: ["care", "pharmacy"],
+          note: "Could carry authorized information between a clinician and a pharmacy under agreed workflows, with each professional’s decisions unchanged.",
+        },
+        {
+          key: "ordering",
+          title: "Ordering and fulfilment",
+          text: "Supply purchasing, organizational portals and order visibility.",
+          supports: ["supplies", "clinic", "pharmacy"],
+          note: "Could bring supply purchasing, organizational portals and order visibility into one place for the supplying businesses and the clinics or pharmacies they serve.",
+        },
+        {
+          key: "planning",
+          title: "Planning and automation",
+          text: "Demand estimates, replenishment reminders and draft orders.",
+          supports: ["supplies", "clinic"],
+          note: "Could estimate demand and prepare replenishment reminders and draft orders from purchasing history; nothing would be ordered without a person’s approval.",
+        },
+      ],
+    },
+    emerging: {
+      title: "Evolving with emerging therapies",
+      text: "The model could support future metabolic-health and other therapeutic programs as clinical evidence, professional requirements and applicable regulations allow.",
+      outside:
+        "Research, synthesis and manufacturing sit outside the ordinary patient-care flow and are evaluated separately, as the investor page describes. Research activity is not a route to commercially available treatment.",
       action: "advanced_therapeutics",
       label: "Advanced therapeutics on Investor Information",
+    },
+    note: "Illustrative development vision. Proposed services and integrations would be introduced only as the relevant capabilities and requirements are confirmed.",
+    labels: {
+      relationship: "Relationship",
+      businesses: "Businesses",
+      viewRole: "View role",
+      select: "show its connections",
+      clear: "Clear selection",
+      supports: "Could support:",
+      capabilitiesTitle: "Select a capability to see what it could support.",
     },
   },
 
@@ -282,7 +312,7 @@ export const connectedCare = {
 
   /** G. The technology, in practical layers, and the two limits that apply to it. */
   technology: {
-    eyebrow: "The technology connecting the participants",
+    eyebrow: "The technology, layer by layer",
     title: "One coordinated experience, with clear responsibilities.",
     intro:
       "The platform is described in practical layers. Each connection would be designed around the information actually required and the appropriate permissions.",

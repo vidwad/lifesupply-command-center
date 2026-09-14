@@ -548,6 +548,178 @@
     pointer-events: none;
   }
 
+  /*
+   * The Connected Care diagram: three layouts chosen by the component's own
+   * width, from one DOM. On a phone the technology wrapper dissolves so the
+   * header follows the hub and the capabilities follow the four cards; on a
+   * tablet the hub spans the top over a two-column grid; from 1100px the hub
+   * sits in the centre column with the existing businesses to its left, the
+   * proposed capabilities to its right, and the measured connectors shown.
+   */
+  .lsh-cc {
+    container-type: inline-size;
+  }
+
+  .lsh-cc-grid {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .lsh-cc-tech {
+    display: contents;
+  }
+
+  .lsh-cc-hub {
+    order: 0;
+  }
+
+  .lsh-cc-techhead {
+    order: 1;
+  }
+
+  .lsh-cc-node {
+    order: 2;
+  }
+
+  .lsh-cc-caps {
+    order: 3;
+  }
+
+  .lsh-cc-emerging {
+    order: 4;
+  }
+
+  .lsh-cc-note {
+    order: 5;
+  }
+
+  .lsh-cc-lines {
+    display: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .lsh-cc-line {
+    fill: none;
+    stroke: var(--lsh-charcoal);
+    stroke-width: 2;
+    opacity: 0.95;
+    transition:
+      stroke 0.2s,
+      stroke-width 0.2s,
+      opacity 0.2s;
+  }
+
+  .lsh-cc-line--proposed {
+    stroke-dasharray: 6 5;
+  }
+
+  .lsh-cc-line--tech {
+    stroke-dasharray: 3 5;
+    opacity: 0.6;
+  }
+
+  .lsh-cc-line--on {
+    stroke: var(--lsh-brand-red);
+    stroke-width: 2.5;
+    opacity: 1;
+  }
+
+  .lsh-cc-line--dim {
+    opacity: 0.18;
+  }
+
+  @container (min-width: 640px) {
+    .lsh-cc-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      grid-template-areas:
+        "hub hub"
+        "supplies clinic"
+        "care pharmacy"
+        "tech tech"
+        "emerging emerging"
+        "note note";
+    }
+
+    .lsh-cc-hub {
+      grid-area: hub;
+    }
+
+    .lsh-cc-node[data-key="supplies"] {
+      grid-area: supplies;
+    }
+
+    .lsh-cc-node[data-key="clinic"] {
+      grid-area: clinic;
+    }
+
+    .lsh-cc-node[data-key="care"] {
+      grid-area: care;
+    }
+
+    .lsh-cc-node[data-key="pharmacy"] {
+      grid-area: pharmacy;
+    }
+
+    .lsh-cc-tech {
+      display: grid;
+      grid-area: tech;
+      gap: 1px;
+      background: var(--lsh-rule-strong);
+    }
+
+    .lsh-cc-emerging {
+      grid-area: emerging;
+    }
+
+    .lsh-cc-note {
+      grid-area: note;
+    }
+  }
+
+  @container (min-width: 1100px) {
+    .lsh-cc-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(17rem, 20rem) minmax(0, 1fr);
+      column-gap: 4.5rem;
+      row-gap: 2rem;
+      grid-template-areas:
+        "supplies hub care"
+        "clinic hub pharmacy"
+        "tech tech tech"
+        "emerging emerging emerging"
+        "note note note";
+    }
+
+    .lsh-cc-hub {
+      align-self: center;
+    }
+
+    .lsh-cc-tech {
+      grid-template-columns: minmax(16rem, 0.9fr) 2.1fr;
+      margin-top: 2.5rem;
+    }
+
+    .lsh-cc-lines {
+      display: block;
+    }
+  }
+
+  @keyframes lsh-cc-reveal {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
   /* Shared retail composition: verified external links stay as content; visuals remain decorative. */
   .lsh-storefront-category-copy {
     border-left: 4px solid var(--lsh-brand-red);
@@ -807,6 +979,11 @@
   @media (prefers-reduced-motion: no-preference) {
     .lsh-graphic-backdrop-image {
       animation: lsh-hero-graphic-breathe 24s ease-in-out infinite alternate;
+    }
+
+    /* The Connected Care connectors appear once, and never move afterwards. */
+    .lsh-cc-lines {
+      animation: lsh-cc-reveal 0.9s ease-out both;
     }
 
     .lsh-graphic-backdrop-accent,

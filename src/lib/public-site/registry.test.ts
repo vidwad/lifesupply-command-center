@@ -669,7 +669,8 @@ describe("action registry", () => {
       LIFE_SUPPLY_CONTENT.pharmacy.specialty.visionAction,
       // Connected Care Vision (2026-09-13): every action its sections declare.
       ...LIFE_SUPPLY_CONTENT.connectedCare.hero.actions.map((item) => item.action),
-      LIFE_SUPPLY_CONTENT.connectedCare.model.outside.action,
+      LIFE_SUPPLY_CONTENT.connectedCare.diagram.emerging.action,
+      ...LIFE_SUPPLY_CONTENT.connectedCare.diagram.nodes.map((node) => node.link.action),
       LIFE_SUPPLY_CONTENT.connectedCare.acquisitions.action,
       ...LIFE_SUPPLY_CONTENT.connectedCare.compounding.actions.map((item) => item.action),
       LIFE_SUPPLY_CONTENT.connectedCare.value.action,

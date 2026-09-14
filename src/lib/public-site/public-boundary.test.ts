@@ -3021,7 +3021,10 @@ describe("footer brand band (2026-09-13)", () => {
 describe("Connected Care Vision (2026-09-13)", () => {
   const content = () => stripComments(read("src/lib/public-site/content/connected-care.ts"));
   const page = () => stripComments(read(`${PUBLIC_DIR}/pages/connected-care.tsx`));
-  const model = () => stripComments(read(`${PUBLIC_DIR}/connected-care-model.tsx`));
+  const section = () =>
+    stripComments(read(`${PUBLIC_DIR}/connected-care/connected-care-section.tsx`));
+  const node = () => stripComments(read(`${PUBLIC_DIR}/connected-care/business-node.tsx`));
+  const lines = () => stripComments(read(`${PUBLIC_DIR}/connected-care/connection-layer.tsx`));
 
   it("states the vision with its status on every part, and offers nothing", () => {
     const copy = content();
@@ -3044,12 +3047,10 @@ describe("Connected Care Vision (2026-09-13)", () => {
 
   it("keeps professional decisions independent, access unguaranteed, and information limited", () => {
     const copy = content();
-    expect(copy).toContain("Access does not guarantee a prescription or a particular treatment.");
-    expect(copy).toContain("Professional decisions remain independent.");
+    expect(copy).toContain("access does not guarantee a prescription or a particular treatment");
+    expect(copy).toContain("Clinical decisions remain with qualified professionals");
     expect(copy).toContain("Product supply is separate from prescribing and dispensing.");
-    expect(copy).toContain(
-      "A connected interface does not mean unrestricted sharing of patient information.",
-    );
+    expect(copy).toContain("a person would remain free to use any pharmacy");
     expect(copy).toContain("No connection would give a supply system a complete medical record.");
     expect(copy).toContain("Virtual care would include appropriate in-person pathways.");
     expect(copy).toContain("preserves professional judgment and patient choice");
@@ -3057,7 +3058,8 @@ describe("Connected Care Vision (2026-09-13)", () => {
 
   it("makes compounding a conditional branch, states the premise correctly, and keeps research outside the flow", () => {
     const copy = content();
-    expect(copy).toContain("Compounding is a conditional capability, not the default destination.");
+    expect(copy).toContain("where appropriate and permitted, patient-specific compounding");
+    expect(copy).toContain("No acquisition has been made");
     expect(copy).toContain("Conditional branch: eligible compounding");
     expect(copy).toContain(
       "A pharmacy acquisition does not itself establish permission to compound",
@@ -3074,18 +3076,52 @@ describe("Connected Care Vision (2026-09-13)", () => {
     expect(page()).toContain("index + 1 === example.branch.step");
   });
 
-  it("draws the model from the content model as a ring with every detail in the document", () => {
-    expect(page()).toContain("<ConnectedCareModel");
-    expect(model()).toContain("aria-pressed={pressed}");
-    expect(model()).toContain("hidden={!shown}");
-    expect(model()).toContain('aria-live="polite"');
-    expect(model()).not.toMatch(/<img|next\/image|<form[\s>]|<input\b/);
-    // Six participants, one of each group, and the person in the centre.
+  it("draws the diagram from one typed configuration, with written statuses, native disclosures and decorative connectors", () => {
     const copy = content();
-    for (const group of ["access", "clinical", "pharmacy", "supply", "support", "technology"]) {
-      expect(copy).toContain(`group: "${group}"`);
+    expect(page()).toContain("<ConnectedCareSection diagram={diagram} />");
+    expect(page()).not.toContain("ConnectedCareModel");
+    // The patient at the centre; two existing businesses on the left, two
+    // proposed capabilities on the right; the platform proposed; each status written.
+    expect(copy).toContain('title: "Patient needs"');
+    for (const key of ["supplies", "clinic", "care", "pharmacy"]) {
+      expect(copy).toContain(`key: "${key}"`);
     }
-    expect(copy).toContain('title: "The person"');
+    expect((copy.match(/status: "Existing operations"/g) ?? []).length).toBe(2);
+    expect(copy).toContain('status: "Proposed connections"');
+    expect(copy).toContain('status: "Under evaluation"');
+    expect(copy).toContain('status: "Proposed platform"');
+    expect(copy).toContain("Prescription when clinically appropriate");
+    // The three store names are the registry's, and the clinics business is named once.
+    for (const name of [
+      "LifeSupply",
+      "Wellmart Medical",
+      "Balkowitsch Worldwide",
+      "LifeSupply Clinics",
+    ]) {
+      expect(copy).toContain(`"${name}"`);
+    }
+    // Interaction is restrained and native: pressed buttons, details elements,
+    // a polite live region, Escape to clear, and no image, form or modal.
+    expect(node()).toContain("aria-pressed={selected}");
+    expect(node()).toContain("<details");
+    expect(section()).toContain('"Escape"');
+    expect(section()).toContain("<details");
+    expect(stripComments(read(`${PUBLIC_DIR}/connected-care/technology-foundation.tsx`))).toContain(
+      'aria-live="polite"',
+    );
+    for (const file of [section(), node(), lines()]) {
+      expect(file).not.toMatch(/<img|next\/image|<form[\s>]|<input\b|role="dialog"/);
+    }
+    // Connectors are measured from the real cards, hidden from assistive
+    // technology, dashed for anything proposed, and never routed through a card.
+    expect(lines()).toContain("ResizeObserver");
+    expect(lines()).toContain('aria-hidden="true"');
+    expect(stripComments(read(CSS))).toContain("stroke-dasharray: 6 5");
+    expect(stripComments(read(CSS))).toContain("@container (min-width: 1100px)");
+    expect(stripComments(read(CSS))).toContain("@container (min-width: 640px)");
+    // Research, synthesis and manufacturing stay outside the patient-care flow.
+    expect(copy).toContain("sit outside the ordinary patient-care flow");
+    expect(copy).toContain("Illustrative development vision.");
   });
 
   it("is in the Solutions menu, set apart, and linked from Home, About, Investors, Pharmacy and Metabolic", () => {

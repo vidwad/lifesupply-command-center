@@ -1,5 +1,5 @@
 import { ActionLink } from "@/components/public-site/action-link";
-import { ConnectedCareModel } from "@/components/public-site/connected-care-model";
+import { ConnectedCareSection } from "@/components/public-site/connected-care/connected-care-section";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
@@ -21,7 +21,9 @@ import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
  *   hero            the vision and its status
  *   the vision      the central message and the ownership point
  *   #challenge      the separate steps, and the intended benefits as objectives
- *   #model          the interactive ring: the person, six participants
+ *   #model          the Connected Care diagram: the patient's needs at the
+ *                   centre, two existing businesses, two proposed capabilities,
+ *                   the technology foundation beneath
  *   #example        one illustrative metabolic-health journey, compounding a branch
  *   #acquisitions   selective pharmacy acquisitions and partnerships
  *   #compounding    compounding and advanced therapeutics, the premise stated
@@ -53,7 +55,7 @@ export function ConnectedCarePage() {
     hero,
     vision,
     challenge,
-    model,
+    diagram,
     example,
     acquisitions,
     compounding,
@@ -136,7 +138,7 @@ export function ConnectedCarePage() {
         </Container>
       </AnchoredSection>
 
-      {/* C. The model: the interactive ring, and the area kept outside it. */}
+      {/* C. The Connected Care diagram: the principal explanation of how the businesses and proposed capabilities could work together. */}
       <AnchoredSection
         id="model"
         offset="sectionNav"
@@ -144,27 +146,14 @@ export function ConnectedCarePage() {
       >
         <Container>
           <Reveal className="max-w-3xl">
-            <SectionHeading eyebrow={model.eyebrow} title={model.title} description={model.intro} />
-          </Reveal>
-          <Reveal delay={0.05} className="mt-12">
-            <ConnectedCareModel
-              selectLabel={model.selectLabel}
-              centre={model.centre}
-              groups={model.groups}
-              labels={model.labels}
-              participants={model.participants}
+            <SectionHeading
+              eyebrow={diagram.eyebrow}
+              title={diagram.title}
+              description={diagram.intro}
             />
           </Reveal>
-          <Reveal className="mt-10 grid gap-4 border border-dashed border-[var(--lsh-rule-strong)] p-6 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
-            <div>
-              <p className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
-                {model.outside.title}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--lsh-muted)]">{model.outside.text}</p>
-            </div>
-            <ActionLink action={model.outside.action as ActionKey} variant="onLight">
-              {model.outside.label}
-            </ActionLink>
+          <Reveal delay={0.05} className="mt-10">
+            <ConnectedCareSection diagram={diagram} />
           </Reveal>
         </Container>
       </AnchoredSection>
