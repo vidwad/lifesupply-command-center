@@ -624,8 +624,7 @@ describe("action registry", () => {
     const { clinics, businesses, contact } = LIFE_SUPPLY_CONTENT;
     const declared: string[] = [
       ...clinics.hub.actions,
-      LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[0],
-      LIFE_SUPPLY_CONTENT.pharmacy.hub.actions[1],
+      ...LIFE_SUPPLY_CONTENT.pharmacy.hub.actions,
       // Medical Supply Solutions since the 2026-09-12 consolidation: the
       // three brand pages and the suppliers page became sections, so the
       // actions the hub declares are the section actions.
@@ -644,7 +643,13 @@ describe("action registry", () => {
       ...metabolic.hub.actions,
       ...metabolic.kitsHub.actions,
       ...metabolic.refills.actions,
-      ...LIFE_SUPPLY_CONTENT.pharmacy.partnerProgram.actions,
+      // Pharmacy Solutions since 2026-09-13: the tiles' link, the distinction
+      // link under the model, and the three closing actions.
+      LIFE_SUPPLY_CONTENT.pharmacy.supplies.action,
+      LIFE_SUPPLY_CONTENT.pharmacy.model.distinctionAction,
+      LIFE_SUPPLY_CONTENT.pharmacy.closing.action,
+      LIFE_SUPPLY_CONTENT.pharmacy.closing.secondary,
+      LIFE_SUPPLY_CONTENT.pharmacy.closing.storesAction,
       ...metabolic.collaboration.actions,
       ...partners.suppliers.actions,
       ...partners.acquisitions.actions,

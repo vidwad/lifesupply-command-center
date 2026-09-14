@@ -94,6 +94,8 @@ export function PublicHero({
   actions,
   media,
   scrim = "standard",
+  status,
+  aside,
 }: {
   eyebrow: string;
   title: string;
@@ -109,6 +111,17 @@ export function PublicHero({
    * dark enough for the copy; only the right half opens up.
    */
   scrim?: "standard" | "light";
+  /**
+   * A development status, set apart from the body so the headline, the copy
+   * and the status read as three things (Pharmacy Solutions, 2026-09-13).
+   */
+  status?: string;
+  /**
+   * An illustration beside the copy: on wide screens it takes the right
+   * third over the colour field, and the copy narrows to leave it room; on
+   * narrow screens it follows the actions. Decorative on both.
+   */
+  aside?: React.ReactNode;
 }) {
   const isHome = size === "home";
   return (
@@ -136,10 +149,18 @@ export function PublicHero({
         aria-hidden="true"
       />
       <RedRule className={`absolute bottom-0 left-0 ${isHome ? "w-40" : "w-28"}`} />
+      {aside ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 hidden w-[38%] items-center justify-center pr-6 lg:flex xl:pr-12"
+        >
+          {aside}
+        </div>
+      ) : null}
       <div className="relative mx-auto w-full max-w-7xl">
         <div
           className={`border-l-4 border-[var(--lsh-brand-red)] pl-5 sm:pl-7 ${
-            isHome ? "max-w-5xl" : "max-w-4xl"
+            isHome ? "max-w-5xl" : aside ? "max-w-3xl lg:max-w-[58%]" : "max-w-4xl"
           }`}
         >
           {/*
@@ -179,6 +200,15 @@ export function PublicHero({
               </p>
             ),
           )}
+          {status ? (
+            <div
+              className="lsh-enter mt-7 max-w-xl border-l-2 border-[var(--lsh-red-on-ink)] pl-4"
+              style={{ "--lsh-enter-delay": "0.24s" } as React.CSSProperties}
+            >
+              <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">Status</p>
+              <p className="mt-1 text-sm leading-6 text-white/85">{status}</p>
+            </div>
+          ) : null}
           {actions ? (
             <div
               className="lsh-enter mt-9 flex flex-wrap gap-3"

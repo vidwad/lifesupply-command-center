@@ -18,18 +18,34 @@ import { useId, useState } from "react";
  * Every view is in the document; the tabs set `hidden` on the two not
  * selected. With JavaScript disabled all three stack, which is also a
  * readable presentation.
+ *
+ * Two demonstration sets since 2026-09-13: the clinic one on Medical Supply
+ * Solutions, and a pharmacy purchasing example on Pharmacy Solutions with
+ * the same three views, non-drug supplies only, and nothing about any
+ * prescription, record, or dispensing.
  */
 const VIEW_KEYS = ["catalogue", "purchasing", "reporting"] as const;
 type ViewKey = (typeof VIEW_KEYS)[number];
 
-const LOCATIONS = [
-  { key: "north", label: "North clinic" },
-  { key: "east", label: "East clinic" },
-] as const;
-type LocationKey = (typeof LOCATIONS)[number]["key"];
+interface DemoData {
+  catalogue: readonly { name: string; unit: string; status: string }[];
+  lists: readonly { name: string; items: string }[];
+  approvals: readonly { ref: string; by: string; items: string; status: string }[];
+  history: readonly { ref: string; when: string; items: string; status: string }[];
+  reminders: readonly { item: string; note: string }[];
+  totals: readonly { label: string; value: string }[];
+  byCategory: readonly { label: string; share: number }[];
+}
 
-/** Fictional demonstration data, by location. Units, counts, and statuses only. */
-const DEMO = {
+interface DemoSet {
+  locations: readonly { key: string; label: string }[];
+  data: Readonly<Record<string, DemoData>>;
+}
+
+export type DemoKey = "clinic" | "pharmacy";
+
+/** Fictional demonstration data for the clinic example, by location. Units, counts, and statuses only. */
+const CLINIC_DEMO: Readonly<Record<string, DemoData>> = {
   north: {
     catalogue: [
       { name: "Nitrile examination gloves, medium", unit: "Box of 100", status: "Approved" },
@@ -107,7 +123,103 @@ const DEMO = {
       { label: "Other", share: 8 },
     ],
   },
-} as const;
+};
+
+/** The pharmacy purchasing example: non-drug supplies for a supported program, by location. */
+const PHARMACY_DEMO: Readonly<Record<string, DemoData>> = {
+  downtown: {
+    catalogue: [
+      { name: "Blood-glucose test strips", unit: "Box of 50", status: "Approved" },
+      { name: "Lancets, 30G", unit: "Box of 100", status: "Approved" },
+      { name: "Pen needles, 4 mm", unit: "Box of 100", status: "Approved" },
+      { name: "Alcohol prep pads", unit: "Box of 200", status: "Approved" },
+      { name: "Sharps container, 1.4 L", unit: "Each", status: "Approved" },
+      { name: "Supply organizer case", unit: "Each", status: "Needs approval" },
+    ],
+    lists: [
+      { name: "Program starter supplies", items: "5 items" },
+      { name: "Monthly consumables", items: "4 items" },
+      { name: "Sharps replacement", items: "2 items" },
+    ],
+    approvals: [
+      { ref: "Request 212", by: "Counter", items: "2 items", status: "Awaiting approval" },
+      { ref: "Request 211", by: "Front store", items: "1 item", status: "Approved" },
+    ],
+    history: [
+      { ref: "Order 3081", when: "Week 36", items: "5 items", status: "Delivered" },
+      { ref: "Order 3076", when: "Week 35", items: "4 items", status: "Delivered" },
+      { ref: "Order 3070", when: "Week 34", items: "3 items", status: "1 item backordered" },
+    ],
+    reminders: [
+      { item: "Test strips", note: "Review in 8 days" },
+      { item: "Pen needles", note: "Review in 15 days" },
+      { item: "Sharps container", note: "Reorder point reached" },
+    ],
+    totals: [
+      { label: "Orders this quarter", value: "19" },
+      { label: "Order lines", value: "96" },
+      { label: "Lines backordered", value: "2" },
+    ],
+    byCategory: [
+      { label: "Diabetes supplies", share: 41 },
+      { label: "Injection accessories", share: 24 },
+      { label: "Home monitoring", share: 16 },
+      { label: "Sharps containers", share: 12 },
+      { label: "Other", share: 7 },
+    ],
+  },
+  westside: {
+    catalogue: [
+      { name: "Blood-glucose test strips", unit: "Box of 50", status: "Approved" },
+      { name: "Lancets, 30G", unit: "Box of 100", status: "Approved" },
+      { name: "Blood-pressure monitor, upper arm", unit: "Each", status: "Approved" },
+      { name: "Alcohol prep pads", unit: "Box of 200", status: "Approved" },
+      { name: "Sharps container, 1.4 L", unit: "Each", status: "Needs approval" },
+    ],
+    lists: [
+      { name: "Program starter supplies", items: "4 items" },
+      { name: "Monthly consumables", items: "3 items" },
+    ],
+    approvals: [{ ref: "Request 87", by: "Counter", items: "1 item", status: "Awaiting approval" }],
+    history: [
+      { ref: "Order 914", when: "Week 36", items: "4 items", status: "Delivered" },
+      { ref: "Order 909", when: "Week 34", items: "3 items", status: "Delivered" },
+    ],
+    reminders: [
+      { item: "Test strips", note: "Review in 11 days" },
+      { item: "Blood-pressure monitor", note: "No action needed" },
+    ],
+    totals: [
+      { label: "Orders this quarter", value: "11" },
+      { label: "Order lines", value: "48" },
+      { label: "Lines backordered", value: "0" },
+    ],
+    byCategory: [
+      { label: "Diabetes supplies", share: 47 },
+      { label: "Home monitoring", share: 22 },
+      { label: "Injection accessories", share: 18 },
+      { label: "Sharps containers", share: 8 },
+      { label: "Other", share: 5 },
+    ],
+  },
+};
+
+const DEMOS: Readonly<Record<DemoKey, DemoSet>> = {
+  clinic: {
+    locations: [
+      { key: "north", label: "North clinic" },
+      { key: "east", label: "East clinic" },
+    ],
+    data: CLINIC_DEMO,
+  },
+  pharmacy: {
+    locations: [
+      { key: "downtown", label: "Downtown pharmacy" },
+      { key: "westside", label: "Westside pharmacy" },
+    ],
+    data: PHARMACY_DEMO,
+  },
+};
 
 const CELL = "px-4 py-3 text-sm leading-6";
 const HEAD = "lsh-display px-4 py-2 text-left text-[10px] text-[var(--lsh-muted)]";
@@ -139,21 +251,26 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
 }
 
 export function PortalConcept({
+  demo = "clinic",
   label,
   note,
   viewsLabel,
   views,
 }: {
+  /** Which demonstration set the concept shows. */
+  demo?: DemoKey;
   label: string;
   note: string;
   viewsLabel: string;
   views: readonly { key: string; label: string }[];
 }) {
+  const set = DEMOS[demo];
   const [view, setView] = useState<ViewKey>("catalogue");
-  const [location, setLocation] = useState<LocationKey>("north");
+  const [location, setLocation] = useState<string>(set.locations[0]?.key ?? "");
   const id = useId();
-  const data = DEMO[location];
-  const here = LOCATIONS.find((option) => option.key === location)?.label ?? "";
+  const data = set.data[location] ?? set.data[set.locations[0]?.key ?? ""];
+  const here = set.locations.find((option) => option.key === location)?.label ?? "";
+  if (!data) return null;
 
   const onTabKey = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     const moves: Record<string, number> = {
@@ -186,7 +303,7 @@ export function PortalConcept({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">Location</span>
           <div role="group" aria-label="Location" className="flex flex-wrap gap-2">
-            {LOCATIONS.map((option) => {
+            {set.locations.map((option) => {
               const pressed = option.key === location;
               return (
                 <button

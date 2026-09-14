@@ -86,7 +86,6 @@ const BRAND_IMAGE = `${PUBLIC_DIR}/brand-image.tsx`;
 const SITE_SCREEN = `${PUBLIC_DIR}/site-screen.tsx`;
 const VIDEO_EMBED = `${PUBLIC_DIR}/video-embed.tsx`;
 const PARALLAX_BAND = `${PUBLIC_DIR}/parallax-band.tsx`;
-const CARE_PATHWAY = `${PUBLIC_DIR}/care-pathway-diagram.tsx`;
 const ON_THIS_PAGE = `${PUBLIC_DIR}/on-this-page.tsx`;
 const CONTENT = "src/lib/public-site/lifesupply-content.ts";
 // The content model is a barrel over focused modules; the routes registry
@@ -111,7 +110,6 @@ const brandImage = () => stripComments(read(BRAND_IMAGE));
 const siteScreen = () => stripComments(read(SITE_SCREEN));
 const videoEmbed = () => stripComments(read(VIDEO_EMBED));
 const parallaxBand = () => stripComments(read(PARALLAX_BAND));
-const carePathway = () => stripComments(read(CARE_PATHWAY));
 const onThisPage = () => stripComments(read(ON_THIS_PAGE));
 const content = () =>
   [CONTENT, ...CONTENT_MODULES, ROUTES_FILE].map((file) => stripComments(read(file))).join("\n");
@@ -138,7 +136,6 @@ const publicComponents = () => [
   siteScreen(),
   videoEmbed(),
   parallaxBand(),
-  carePathway(),
   onThisPage(),
 ];
 
@@ -1761,8 +1758,9 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     }
   });
 
-  it("presents Pharmacy Solutions with its status and no pharmacy operation, transaction, or dispensing claim", () => {
+  it("presents Pharmacy Solutions as a proposition in development, with one enquiry and no pharmacy operation, transaction, or dispensing claim", () => {
     const pharmacy = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
+    // The unpublished direction block keeps its status on record.
     expect(pharmacy).toContain('status: "Under evaluation"');
     // Boundaries blocks were internal guidance and left every page on 2026-09-09 (product owner);
     // the claims they guarded against stay banned below.
@@ -1776,39 +1774,46 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
       );
     }
     expect(pharmacy).not.toMatch(/\bour pharmac(y|ies)\b/i);
-    // Round three: the page must be able to say that holding licensed pharmacy
-    // operations is under evaluation, so the ban targets the claim of having or
-    // running one rather than the words themselves.
+    // The ban targets the claim of having or running a licensed pharmacy
+    // rather than the words themselves, so the page can still point to the
+    // investor page's evaluation of that question.
     expect(pharmacy).not.toMatch(/\b(our|its|the company's) licen[cs]ed pharmacy\b/i);
     expect(pharmacy).not.toMatch(
       /(operates?|owns?|runs?|holds?) an? licen[cs]ed pharmac(y|ies)\b/i,
     );
     expect(pharmacy).not.toMatch(/dispens(es|ing) (medication|prescriptions)/i);
-    // And it must state which of the two pharmacy businesses this page is.
+    // The two pharmacy businesses stay apart: the unpublished scope note keeps
+    // the distinction on record, and the page says it in one sentence that
+    // points to Investor Information (product owner, 2026-09-13).
     expect(pharmacy).toContain("This page is about supplying pharmacies");
     expect(pharmacy).toContain("Supplying pharmacies and running one are different businesses");
     expect(pharmacy).toContain("none of them is offered, licensed or operating");
+    expect(pharmacy).toContain("addressed separately in Investor Information");
     expect(pharmacy).not.toMatch(
       /(acquire|acquisition of|closing|signed|announce[sd]?) (a |the )?pharmacy/i,
     );
     const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
-    // The status line left the page on 2026-09-09 (product owner); the status still shows on each card.
-    expect(page).not.toContain("status.sentence");
-    expect(page).toContain('status: "In development"');
-    // The value block (2026-09-09) is design intent, never a result or an operation; its hub
-    // diagram is drawn from the registry and repeats the cards' copy.
-    expect(page).toContain("items={hub.value.items}");
-    expect(page).toContain(
-      "<CarePathwayDiagram centre={hub.value.centre} items={hub.value.items} />",
-    );
-    // The diagram is typeset from the content model: a semantic list, no raster, no hard-coded copy.
-    const diagram = carePathway();
-    expect(diagram).toContain("<ul");
-    expect(diagram).not.toMatch(/<img|next\/image|figcaption/);
-    expect(diagram).not.toMatch(/For the pharmacy|supply platform/);
-    expect(pharmacy).toContain("No pharmacy supply program is operating.");
+    // The hero carries the status; the page has no under-evaluation section
+    // of its own and no hub diagram; the distinction sentence renders.
+    expect(page).toContain("status={hub.status}");
+    expect(page).not.toContain("hub.direction");
+    expect(page).not.toContain("hub.value");
+    expect(page).not.toContain("CarePathwayDiagram");
+    expect(page).toContain("{model.distinction}");
+    expect(pharmacy).toContain("Pharmacy supply programs are not yet available.");
+    expect(pharmacy).toContain("Medication and dispensing are outside the proposed scope.");
+    // One enquiry destination: nothing on the page carries the metabolic subject.
+    expect(page).not.toContain("discuss_program");
+    expect(pharmacy).not.toContain("discuss_program");
+    // Consumables are replenished; nothing reads as a prescription refill.
+    expect(pharmacy).not.toMatch(/\brefills?\b/i);
     expect(pharmacy).not.toMatch(/\b(has|have) (helped|reduced|improved|delivered)\b/i);
     expect(pharmacy).not.toMatch(/subscription is available\b/i);
+    // The proposed tools are proposed, and the concept above them says so.
+    expect(pharmacy).toContain("not currently offered as a pharmacy portal");
+    expect(page).toContain('demo="pharmacy"');
+    expect(page).toContain("label={tools.concept.label}");
+    expect(page.indexOf("{tools.status}")).toBeLessThan(page.indexOf("<PortalConcept"));
   });
 
   it("opens the homepage after the hero with the three-panel statement, stated as record, strategy, and ambition", () => {
@@ -2396,11 +2401,11 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     // The pharmacy partner programme moved to Pharmacy Solutions on
     // 2026-09-10. Its non-drug rule travelled with it and is not left behind.
     const pharmacyContent = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
-    expect(pharmacyContent).toContain("Medication is excluded from every configuration");
+    expect(pharmacyContent).toContain("Medication and dispensing are outside the proposed scope");
     // The boundary is stated as what LifeSupply would and would not do,
     // rather than as a claim about what a prescription is touched by.
-    expect(pharmacyContent).toContain("it would not dispense");
-    expect(pharmacyContent).toContain("non-drug items only");
+    expect(pharmacyContent).toContain("pharmacist-selected, non-drug products");
+    expect(pharmacyContent).toContain("product supply and non-clinical fulfilment support");
     expect(c).not.toContain("Medication is excluded from every configuration");
     expect(c).not.toMatch(/referral (fee|bonus|incentive) (is|are) (offered|available)/i);
   });
@@ -2777,12 +2782,11 @@ describe("website consolidation: sections, redirects and deep links", () => {
     expect(page).toMatch(/eyebrow=\{refills\.eyebrow\}/);
     expect(page).not.toMatch(/subscription|auto-?ship|recurring order/i);
     const pharmacyPage = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
-    expect(pharmacyPage).toContain("partnerProgram.model.items.map");
-    // The complaints-and-recalls block came off on 2026-09-13 (product
-    // owner) and stays unpublished; the partner programme is its model and
-    // its two actions.
-    expect(pharmacyPage).not.toContain("partnerProgram.responsibilities");
-    expect(pharmacyPage).toContain("partnerProgram.actions.map");
+    // One operating model since 2026-09-13 (product owner), four steps, with
+    // the complaints-and-recalls block still unpublished.
+    expect(pharmacyPage).toContain("model.steps.map(");
+    expect(pharmacyPage).not.toContain(".responsibilities");
+    expect(pharmacyPage).toContain("closing.action");
     // And a pathway is still never sold: it is a configurable starting point.
     const content = stripComments(read("src/lib/public-site/content/metabolic.ts"));
     expect(content).toMatch(/configurable starting point rather than a product/);
@@ -2981,7 +2985,7 @@ describe("pharmacy responsibilities block and footer legal block (2026-09-13)", 
     const content = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
     expect(content).toContain('title: "Complaints and recalls"');
     const page = stripComments(read(`${PUBLIC_DIR}/pages/pharmacy.tsx`));
-    expect(page).not.toContain("partnerProgram.responsibilities");
+    expect(page).not.toContain(".responsibilities");
     expect(pages()).not.toContain("Complaints and recalls");
   });
 

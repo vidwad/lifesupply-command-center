@@ -34,7 +34,9 @@ One page covering the whole relationship: plan, equip, supply.
 
 ## Pharmacy Solutions — `/pharmacy-solutions`
 
-The authoritative explanation of the pharmacy supply model. Absorbs `/partners/pharmacies` at `#partner-program`.
+The authoritative explanation of the pharmacy supply model. Absorbs `/partners/pharmacies` at `#partner-program`, which since the rebuild of September 13, 2026 is the operating-model section.
+
+**Rebuilt September 13, 2026 (product owner).** The page now runs: the proposition with its development status in the hero; the pharmacy's needs (three points); six representative supply categories with pictures; one operating model (four steps), replacing the programme, partner-programme and proposed-model explanations that repeated one another; proposed ordering tools with the labelled portal concept, told apart from current capabilities; participation (what an initial conversation would cover); one closing action. Every enquiry on the page uses the pharmacy subject; the metabolic-health subject no longer appears here. "Pharmacy-related operations, under evaluation" left this page: potential licensed pharmacy operations, compounding and related regulated activities are addressed on the investor page under Advanced Therapeutics, and one sentence under the model points there. The complaints-and-recalls block and the scope note stay unpublished in the content model.
 
 Covers: introduction and development status; the intended pharmacy customer; proposed pharmacist-selected non-drug configurations; patient-support materials and proposed ordering; initial supplies, consumables and occasional items; replenishment and proposed fulfilment; responsibilities for selection, stockholding, shipment, invoicing, support, complaints and recalls; the development and confirmation process; FAQs; one contextual enquiry.
 

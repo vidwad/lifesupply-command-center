@@ -847,6 +847,40 @@ test.describe("LifeSupply public site", () => {
     await expect(collaboration).toContainText(/no pilot is running today/);
   });
 
+  test("presents Pharmacy Solutions as a proposition in development with one enquiry subject", async ({
+    page,
+  }) => {
+    // Rebuilt 2026-09-13 (product owner): the proposition and its status in
+    // the hero, six representative categories with pictures, one four-step
+    // model, the labelled portal concept, and the pharmacy enquiry subject on
+    // every enquiry. The under-evaluation section moved to the investor page.
+    await page.goto("/pharmacy-solutions");
+    const main = page.locator("main");
+    await expect(
+      main.getByRole("heading", {
+        level: 1,
+        name: "Help patients access the supplies that support their care.",
+      }),
+    ).toBeVisible();
+    await expect(main.getByText("Pharmacy supply programs are not yet available.")).toBeVisible();
+    const mailtos = await main
+      .locator('a[href^="mailto:"]')
+      .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""));
+    expect(mailtos.length).toBeGreaterThan(1);
+    for (const href of mailtos) {
+      expect(href).toMatch(/subject=Pharmacy%20supply%20program$/);
+      expect(href).not.toMatch(/Metabolic/);
+    }
+    await expect(page.locator("#supplies li img")).toHaveCount(6);
+    await expect(page.locator("#partner-program li")).toHaveCount(4);
+    await expect(
+      page.locator("#tools").getByText("Illustrative portal concept — proposed capabilities"),
+    ).toBeVisible();
+    await expect(page.locator("#tools").getByRole("tab")).toHaveCount(3);
+    await expect(main.getByText("Pharmacy-related operations, under evaluation.")).toHaveCount(0);
+    await expect(main.getByText("addressed separately in Investor Information")).toBeVisible();
+  });
+
   test("stays readable on Clinic Solutions with JavaScript disabled", async ({ browser }) => {
     // Scroll-revealed sections used to start at opacity 0, and framer-motion
     // writes the initial variant into the server-rendered HTML, so the whole

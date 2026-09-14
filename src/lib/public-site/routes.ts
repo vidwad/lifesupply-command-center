@@ -149,7 +149,9 @@ export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
     "contact",
     "disclosures",
   ],
-  [PHARMACY_ROUTES.hub]: ["partner-program"],
+  // Pharmacy Solutions, rebuilt 2026-09-13; `partner-program` is the model
+  // section, the address the retired partners page still redirects to.
+  [PHARMACY_ROUTES.hub]: ["needs", "supplies", "partner-program", "tools", "participation"],
   // The eight pathway anchors are the eight slugs, so a retired pathway
   // address and its anchor can never drift apart.
   [METABOLIC_ROUTES.hub]: ["pathways", ...KIT_SLUGS, "replenishment", "collaboration"],

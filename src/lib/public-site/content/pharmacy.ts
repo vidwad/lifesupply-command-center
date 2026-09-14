@@ -1,40 +1,239 @@
 /**
- * Pharmacy Solutions (`/pharmacy-solutions/`), added 2026-09-08 at the
- * product owner's direction as a section that states where pharmacy work
- * stands today and the direction, so the section exists before any
- * pharmacy operation does.
+ * Pharmacy Solutions (`/pharmacy-solutions/`).
  *
- * Reviewed and expanded on 2026-09-09 at the product owner's direction
- * (wording drafted with Codex under the rules below): a "why it matters"
- * block explains the value to the LifeSupply ecosystem as design intent.
+ * Rewritten on 2026-09-13 at the product owner's direction so the page says
+ * why a pharmacy would work with LifeSupply, what supplies the proposed
+ * arrangement covers, and how participation would work: a pharmacy-focused
+ * proposition, the pharmacy's needs, representative supply categories, one
+ * operating model, proposed ordering tools told apart from current
+ * capabilities, participation, and one closing action. The discussion of
+ * LifeSupply potentially holding licensed pharmacy operations left this page
+ * for the investor page, where it already sat under Advanced Therapeutics;
+ * one sentence here points there.
  *
- * Status discipline (guide §2): the only pharmacy offer in development is
- * the non-drug supply program (partner overview, September 2026, and the
- * Partners → Pharmacies page). Pharmacy-related operations are a stated
- * development focus, presented as "under evaluation" exactly as the
- * investor pages state it. No acquisition, transaction, counterparty,
- * licence, dispensing, or timing is named or implied; nothing here
- * dispenses, diagnoses, or prescribes.
+ * Status discipline: the only pharmacy offer in development is the non-drug
+ * supply arrangement, and it is not yet available. Medication and dispensing
+ * are outside the proposed scope. No acquisition, transaction, counterparty,
+ * licence, or timing is named or implied; nothing here dispenses, diagnoses,
+ * or prescribes. Consumables are "replenished", never "refilled", so nothing
+ * reads as a prescription refill. One enquiry destination serves the whole
+ * page.
  */
 export const pharmacy = {
-  /**
-   * Section navigation (website consolidation, stage 2). The page now carries
-   * the partner programme as well as the overview, so a reader needs to see
-   * its shape before scrolling into it.
-   */
-  sections: [{ href: "#partner-program", label: "Partner program" }],
+  /** The in-page navigation, in page order. `#partner-program` keeps the address `/partners/pharmacies` redirects to. */
+  sections: [
+    { href: "#needs", label: "Needs" },
+    { href: "#supplies", label: "Supplies" },
+    { href: "#partner-program", label: "Model" },
+    { href: "#tools", label: "Tools" },
+    { href: "#participation", label: "Participation" },
+  ],
+
+  /** 1. The proposition, with the development status beside it. */
+  hub: {
+    eyebrow: "Pharmacy Solutions",
+    title: "Help patients access the supplies that support their care.",
+    intro: [
+      "LifeSupply is developing supply and fulfilment arrangements for pharmacies supporting patients with pharmacist-selected, non-drug products.",
+      "The proposed offering would bring product selection, initial ordering, and consumable replenishment into a defined process, with responsibilities agreed between LifeSupply and the participating pharmacy.",
+    ],
+    status:
+      "In development. Pharmacy supply programs are not yet available. Medication and dispensing are outside the proposed scope.",
+    /** The owner's supplies illustration, beside the copy. */
+    graphic: "pharmacySupplies",
+    actions: ["pharmacy_program_inquiry", "pharmacy_model"],
+  },
+
+  /** 2. What a pharmacy has to organize. */
+  needs: {
+    eyebrow: "The pharmacy’s needs",
+    title: "A more organized approach to patient supplies.",
+    intro: [
+      "Supporting a patient’s care can involve initial equipment, compatible accessories, consumables to reorder, and questions about delivery or order support.",
+      "The proposed LifeSupply arrangement would help a participating pharmacy define how those supply requirements are handled.",
+    ],
+    items: [
+      {
+        title: "Clarify initial requirements",
+        text: "Identify the equipment, consumables, and occasional-use items to include, based on the pharmacist’s selection and the relevant product specifications.",
+      },
+      {
+        title: "Simplify repeat purchasing",
+        text: "Distinguish equipment purchased initially from consumables that need replacing, with a clear route for reordering.",
+      },
+      {
+        title: "Establish clear responsibilities",
+        text: "Agree who receives orders, supplies products, manages delivery questions, and coordinates product complaints or recalls.",
+      },
+    ],
+  },
 
   /**
-   * Round three, outcome 3. "Pharmacy" meant two things across this site and a
-   * reader could not tell which one a page was about. This block says so on
-   * the page most likely to be misread. Drafted with Codex, edited before use.
+   * 3. Representative categories: six, drawn from the metabolic-health
+   * pathways without reproducing them. Proposed categories, never confirmed
+   * bundles, and never a product offered for sale.
    */
+  supplies: {
+    eyebrow: "Representative supplies",
+    title: "The supplies around the care program.",
+    intro:
+      "The initial development focus connects pharmacy-selected supplies with LifeSupply’s proposed metabolic-health offering. Depending on the agreed program, relevant categories could include:",
+    categories: [
+      {
+        title: "Home monitoring",
+        text: "Monitoring equipment and accessories selected for the intended use.",
+        graphic: "categoryMonitoring",
+        position: "50% 50%",
+      },
+      {
+        title: "Diabetes supplies",
+        text: "Compatible meters, strips, and lancing supplies where relevant to the program.",
+        graphic: "metabolicSupplies",
+        position: "62% 50%",
+      },
+      {
+        title: "Injection accessories",
+        text: "Non-drug accessories matched to the prescribed device and specifications.",
+        graphic: "pharmacyInjection",
+        position: "50% 55%",
+      },
+      {
+        title: "Sharps containers",
+        text: "Container requirements considered for the setting and applicable disposal arrangements.",
+        graphic: "categoryInjection",
+        position: "72% 50%",
+      },
+      {
+        title: "Supply organization",
+        text: "Organizers and practical accessories for keeping supplies together.",
+        graphic: "pharmacyOrganization",
+        position: "45% 50%",
+      },
+      {
+        title: "Consumable replenishment",
+        text: "Replacement supplies identified according to use and the agreed arrangement.",
+        graphic: "clinicSupplies",
+        position: "50% 65%",
+      },
+    ],
+    note: "These are proposed categories, not confirmed bundles. Product selection, compatibility, availability, and quantities would be established for each arrangement.",
+    action: "explore_kits",
+    actionLabel: "Explore Metabolic Health supply pathways",
+  },
+
   /**
-   * Unpublished since 2026-09-12 (product owner). Both distinctions it drew
-   * survive where they belong: the hub's own title says the programme is in
-   * development, its cards say medication is excluded, and About now
-   * separates supplying pharmacies from holding a licensed pharmacy, which
-   * it lists under Longer-term opportunities as being assessed only.
+   * 4. The one operating model, replacing the programme, partner-programme
+   * and proposed-model explanations that used to repeat one another.
+   */
+  model: {
+    eyebrow: "The proposed operating model",
+    title: "The pharmacist selects. The supply arrangement supports delivery.",
+    steps: [
+      {
+        index: "1",
+        title: "Define the requirements",
+        text: "The pharmacy identifies the intended patients or program, relevant supply categories, and the products or specifications to be considered.",
+      },
+      {
+        index: "2",
+        title: "Agree the arrangement",
+        text: "LifeSupply and the pharmacy define product configuration, ordering, payment, stockholding, fulfilment, and customer-support responsibilities.",
+      },
+      {
+        index: "3",
+        title: "Arrange initial supplies",
+        text: "The proposed workflow supports the first order, with clear information about what is included and where order questions should be directed.",
+      },
+      {
+        index: "4",
+        title: "Support replenishment",
+        text: "Consumables are reordered according to use and the agreed process. Durable equipment and occasional purchases are treated separately.",
+      },
+    ],
+    supporting:
+      "Clinical decisions and product suitability remain with the appropriate healthcare professional. LifeSupply’s proposed role is product supply and non-clinical fulfilment support.",
+    /** The one sentence that separates supplying pharmacies from the investor-page question of holding licensed pharmacy operations. */
+    distinction:
+      "This page describes proposed supply services for pharmacies. LifeSupply’s evaluation of potential licensed pharmacy operations is addressed separately in Investor Information.",
+    distinctionAction: "advanced_therapeutics",
+    distinctionLabel: "Investor Information",
+  },
+
+  /** 5. Proposed ordering tools, told apart from anything offered today. */
+  tools: {
+    eyebrow: "Proposed ordering tools",
+    title: "Ordering tools shaped around the pharmacy’s workflow.",
+    paragraphs: [
+      "As the supply model develops, LifeSupply could evaluate dedicated ordering tools for participating pharmacies.",
+      "These could support approved product lists, saved orders, supply-replenishment reminders, and clearer visibility into order status. The required features and any connections to existing systems would be defined with the pharmacy.",
+    ],
+    capabilitiesTitle: "Potential capabilities",
+    capabilities: [
+      "Pharmacist-approved supply lists.",
+      "Saved initial and repeat orders.",
+      "Consumable replenishment reminders.",
+      "Defined ordering permissions.",
+      "Order and delivery-status information.",
+    ],
+    status:
+      "These tools are proposed development capabilities and are not currently offered as a pharmacy portal.",
+    /** Always visible above the concept, so a realistic interface never reads as a live product. */
+    concept: {
+      label: "Illustrative portal concept — proposed capabilities",
+      note: "Demonstration data is fictional. No live product, pharmacy, account, or order is shown.",
+      viewsLabel: "Portal views",
+      views: [
+        { key: "catalogue", label: "Catalogue" },
+        { key: "purchasing", label: "Purchasing" },
+        { key: "reporting", label: "Reporting" },
+      ],
+    },
+  },
+
+  /** 6. Participation: what an initial conversation would cover. */
+  participation: {
+    eyebrow: "Participation",
+    title: "Help define an arrangement that works for your pharmacy.",
+    paragraphs: [
+      "LifeSupply welcomes discussions with pharmacy owners and managers interested in helping define the proposed supply model.",
+      "An initial conversation would focus on your pharmacy’s supply requirements, the patients or programs you support, and how ordering and fulfilment could fit your operations.",
+    ],
+    checklistTitle: "What the discussion would cover",
+    checklist: [
+      "Pharmacy location and intended program.",
+      "Relevant non-drug supply categories.",
+      "Initial purchases and recurring consumable needs.",
+      "Ordering, payment, stockholding, and delivery responsibilities.",
+      "Patient-facing order information and support.",
+      "Product complaints and recall responsibilities.",
+      "Commercial terms and any proposed pilot scope.",
+    ],
+    supporting:
+      "Any pilot or launch would require a separately agreed scope and operating arrangements.",
+  },
+
+  /** 7. The closing action: one enquiry destination, used consistently. */
+  closing: {
+    eyebrow: "Next step",
+    title: "Discuss your pharmacy’s supply requirements.",
+    text: "Tell us where your pharmacy operates, the program you have in mind, and the supply categories you would like to discuss.",
+    action: "pharmacy_program_inquiry",
+    secondary: "metabolic_hub",
+    secondaryLabel: "Explore Metabolic Health Solutions",
+    storesLead: "Looking for products available today?",
+    storesAction: "medical_supply_stores",
+    storesLabel: "Explore our medical supply stores",
+  },
+
+  /*
+   * Unpublished records. None of these renders; the canaries check that and
+   * keep the wording on record.
+   */
+
+  /**
+   * The scope note (round three), unpublished since 2026-09-12 (product
+   * owner). The distinction it drew survives as `model.distinction` and on
+   * the investor page, and About separates the two pharmacy businesses.
    */
   scope: {
     title: "Which pharmacy business this is",
@@ -43,130 +242,43 @@ export const pharmacy = {
       "Whether LifeSupply should hold licensed pharmacy operations of its own is a separate question. That sits under evaluation alongside specialty and compounding, peptide research, and manufacturing, and none of them is offered, licensed or operating. Supplying pharmacies and running one are different businesses.",
     ],
   },
-  hub: {
-    eyebrow: "Pharmacy Solutions",
-    title: "Non-drug supply support for pharmacies, in development.",
-    intro:
-      "LifeSupply is developing a program that brings pharmacist-selected supplies, onboarding, and replenishment into one defined supply pathway, built on the group's existing commerce, fulfilment, and clinic capabilities. Pharmacy-related operations remain a stated development focus, presented here with their status.",
-    /**
-     * Why it matters (2026-09-09, product owner: explain the value to the
-     * LifeSupply ecosystem). Each item is what the program is designed to
-     * do, never a result; drafted with Codex under the site's rules.
-     */
-    value: {
-      eyebrow: "Within the LifeSupply ecosystem",
-      title: "Connecting supply needs across the care pathway.",
-      intro:
-        "The program is designed to connect pharmacy-supported patient supplies with the group's broader supply platform, with responsibilities defined at each step.",
-      /** The diagram's hub: what the four items connect to. */
-      centre: {
-        title: "LifeSupply supply platform",
-        subtitle: "commerce, fulfilment, clinic capabilities",
+
+  /**
+   * "Pharmacy-related operations, under evaluation": the stated-direction
+   * section that came off this page on 2026-09-13 (product owner). Potential
+   * ownership of licensed pharmacies, compounding and related regulated
+   * activities are an investor matter, addressed on the investor page under
+   * Advanced Therapeutics with the same status.
+   */
+  direction: {
+    eyebrow: "Stated direction",
+    title: "Pharmacy-related operations, under evaluation.",
+    text: "Pharmacy-related operations and regulated care infrastructure are a stated development focus within the public growth strategy. Both remain subject to regulatory, operational, and partner confirmation, and are presented on this site as under evaluation until an operation exists. No pharmacy operation is offered here.",
+    items: [
+      {
+        title: "Pharmacy-related operations",
+        status: "Under evaluation",
+        text: "The investor pages describe this development focus, its dependencies, and the qualifications that apply to forward-looking activities.",
       },
-      items: [
-        {
-          title: "For the pharmacy",
-          text: "Pharmacist-led supply selection paired with practical ordering and fulfilment support: a defined way to organise non-drug supplies for the patients the pharmacy supports.",
-        },
-        {
-          title: "For the patient",
-          text: "Initial ordering and consumable replenishment designed to be easier to navigate, with clear supply information and a stated route for order questions.",
-        },
-        {
-          title: "For clinic pathways",
-          text: "Patient supply arrangements aligned with clinic procurement and pathway requirements, with clear responsibilities for configuration, replenishment, and support.",
-        },
-        {
-          title: "For the group",
-          text: "LifeSupply's existing commerce, fulfilment, and clinic capabilities reused for configurable, recurring non-drug supply relationships, with replenishment driven by consumable use.",
-        },
-      ],
-    },
-    today: {
-      eyebrow: "In development today",
-      title: "A non-drug supply program shaped around the pharmacy.",
-      intro:
-        "The pharmacy pathway within LifeSupply's metabolic-health supply work: selected supplies, ordering materials, and fulfilment planning brought together, with fulfilment responsibilities stated per program. No pharmacy supply program is operating.",
-      items: [
-        {
-          title: "Pharmacist-selected configurations",
-          text: "Starter equipment, usage-driven consumables, and occasional items selected by the pharmacist for the intended pathway. Selection stays with the pharmacist; medication is excluded from every configuration.",
-        },
-        {
-          title: "Onboarding and refill support",
-          text: "Patient materials and ordering guidance designed to explain how to obtain initial supplies and replenish consumables as used. Starter equipment is separate from refills; no automatic shipment or subscription is offered.",
-        },
-        {
-          title: "Fulfilment & administration",
-          text: "Planned scope: kitting, direct shipment, replenishment administration, and exception handling. Stockholding, shipping, invoicing, and responsibility for complaints and recalls would be agreed in writing before fulfilment begins.",
-        },
-      ],
-    },
-    direction: {
-      eyebrow: "Stated direction",
-      title: "Pharmacy-related operations, under evaluation.",
-      text: "Pharmacy-related operations and regulated care infrastructure are a stated development focus within the public growth strategy. Both remain subject to regulatory, operational, and partner confirmation, and are presented on this site as under evaluation until an operation exists. No pharmacy operation is offered here.",
-      items: [
-        {
-          title: "Pharmacy-related operations",
-          status: "Under evaluation",
-          text: "The investor pages describe this development focus, its dependencies, and the qualifications that apply to forward-looking activities.",
-        },
-        {
-          title: "Regulated care infrastructure",
-          status: "Under evaluation",
-          text: "Specialty, compounding, and related options remain under evaluation. The advanced therapeutics page describes their individual status and dependencies.",
-        },
-      ],
-    },
-    actions: ["pharmacy_program_inquiry", "discuss_program"],
+      {
+        title: "Regulated care infrastructure",
+        status: "Under evaluation",
+        text: "Specialty, compounding, and related options remain under evaluation. The advanced therapeutics page describes their individual status and dependencies.",
+      },
+    ],
   },
 
   /**
-   * The pharmacy partner programme, moved here from `/partners/pharmacies`
-   * when that page was retired (website consolidation, stage 2, 2026-09-10).
-   *
-   * It belongs on the page that already explains the pharmacy supply model
-   * rather than in a partners hub: a pharmacist reading about the programme
-   * needs the scope distinction above it, and the partners page had to
-   * restate that distinction before it could say anything of its own.
+   * The complaints-and-recalls block, unpublished since 2026-09-13 (product
+   * owner). The responsibility itself is now one line in the pharmacy's
+   * needs and one item in the participation checklist.
    */
-  partnerProgram: {
-    eyebrow: "Partner program",
-    title: "Non-drug supply programs for pharmacies.",
-    intro:
-      "A pharmacy can support its patients with non-drug supplies that the pharmacist selects. LifeSupply proposes to configure and fulfil those supplies, with every responsibility stated before a program starts. The service is in development; no pharmacy program is operating.",
-    model: {
-      eyebrow: "The model",
-      title: "A proposed model: the pharmacist selects, the supply service fulfils.",
-      items: [
-        {
-          title: "Pharmacist-selected configurations",
-          text: "The pharmacist chooses the supplies and their roles. LifeSupply does not substitute and does not select for the patient.",
-        },
-        {
-          title: "Non-drug only",
-          text: "Medication is excluded from every configuration. LifeSupply would supply non-drug items only; it would not dispense, and it would not handle or alter a prescription.",
-        },
-        {
-          title: "Fulfilment responsibilities stated per program",
-          text: "Who holds stock, who ships, who invoices, and who the patient contacts are written down before fulfilment begins.",
-        },
-      ],
-    },
-    /**
-     * Unpublished since 2026-09-13 (product owner): the complaints-and-recalls
-     * block came off the page. Kept here so the wording is on record; no
-     * page renders it, which a canary checks.
-     */
-    responsibilities: {
-      title: "Complaints and recalls",
-      items: [
-        "Product complaints are routed to the party stated in the program agreement and to the manufacturer as required.",
-        "Recall handling follows the manufacturer's and the regulator's instructions; the program agreement names who notifies patients and who retrieves product.",
-        "Each program agreement names who is responsible for what. A responsibility that is not written into the agreement has not been agreed.",
-      ],
-    },
-    actions: ["discuss_program", "metabolic_hub"],
+  responsibilities: {
+    title: "Complaints and recalls",
+    items: [
+      "Product complaints are routed to the party stated in the program agreement and to the manufacturer as required.",
+      "Recall handling follows the manufacturer's and the regulator's instructions; the program agreement names who notifies patients and who retrieves product.",
+      "Each program agreement names who is responsible for what. A responsibility that is not written into the agreement has not been agreed.",
+    ],
   },
 } as const;
