@@ -136,6 +136,8 @@ export const investorRelations = {
     text: "LifeSupply does not publish financial figures on this site. Shareholders can request the annual report for the year ended December 31, 2025 from Investor Relations, and the other investor materials are listed further down this page.",
     action: "request_annual_report",
     actionLabel: "Request the annual report",
+    /** The expansion-strategy cover rendering beneath the text (product owner, 2026-09-14). */
+    graphic: "expansionCover",
   },
 
   /** 3. How the business earns revenue, and how it could extend. */

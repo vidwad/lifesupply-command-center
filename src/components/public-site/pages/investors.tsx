@@ -232,18 +232,30 @@ export function InvestorRelationsPage({
         offset="sectionNav"
         className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
       >
-        <Container className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-16">
+        <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
           <Reveal>
             <SectionHeading
               eyebrow={ir.financials.eyebrow}
               title={ir.financials.title}
               description={ir.financials.text}
             />
+            <div className="mt-8">
+              <ActionLink action={ir.financials.action as ActionKey}>
+                {ir.financials.actionLabel}
+              </ActionLink>
+            </div>
           </Reveal>
-          <Reveal delay={0.05} className="lg:justify-self-end">
-            <ActionLink action={ir.financials.action as ActionKey}>
-              {ir.financials.actionLabel}
-            </ActionLink>
+          {/* The expansion-strategy cover, its white ground multiplied into the section (product owner, 2026-09-14). */}
+          <Reveal delay={0.05}>
+            <figure className="relative mx-auto aspect-[2/3] w-full max-w-[22rem] overflow-hidden lg:mx-0 lg:justify-self-end">
+              <Image
+                src={getGraphic(ir.financials.graphic).src}
+                alt={getGraphic(ir.financials.graphic).alt}
+                fill
+                sizes="(min-width: 1024px) 22rem, 80vw"
+                className="object-contain mix-blend-multiply"
+              />
+            </figure>
           </Reveal>
         </Container>
       </AnchoredSection>
