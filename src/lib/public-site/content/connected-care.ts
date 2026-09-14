@@ -29,9 +29,8 @@ export const connectedCare = {
     { href: "#challenge", label: "Why" },
     { href: "#model", label: "Model" },
     { href: "#example", label: "Example" },
-    { href: "#acquisitions", label: "Pharmacy" },
-    { href: "#compounding", label: "Compounding" },
-    { href: "#technology", label: "Technology" },
+    { href: "#principles", label: "Principles" },
+    { href: "#pharmacy", label: "Pharmacy" },
     { href: "#sequence", label: "Sequence" },
     { href: "#value", label: "Value" },
   ],
@@ -53,17 +52,6 @@ export const connectedCare = {
     ],
   },
 
-  /** The central message, in plain language, and the ownership point beneath it. */
-  vision: {
-    eyebrow: "The vision",
-    statements: [
-      "LifeSupply’s long-term vision is to connect medical supplies, access to qualified healthcare professionals, pharmacy services, and ongoing patient support through a coordinated digital experience.",
-      "Building on its existing supply businesses and clinic-development relationships, the company intends to evaluate partnerships, technology development, and potential pharmacy acquisitions that could bring these capabilities together.",
-    ],
-    ownership:
-      "A connected experience does not require LifeSupply to own every participating business or employ every professional. Some capabilities may be owned, others acquired, and others delivered through appropriately structured relationships.",
-  },
-
   /** B. The problem being addressed, and the intended benefits as objectives. */
   challenge: {
     eyebrow: "The problem being addressed",
@@ -82,6 +70,17 @@ export const connectedCare = {
     ],
     benefitsNote:
       "These are objectives for the proposed model until demonstrated. They are not proven improvements in outcomes, cost, or waiting times.",
+    /** The ownership point, once: the vision does not depend on owning everything in it. */
+    ownership:
+      "A connected experience does not require LifeSupply to own every participating business or employ every professional. Some capabilities may be owned, others acquired, and others delivered through appropriately structured relationships.",
+  },
+
+  /** The one-line summary on the photographic band between the example and the principles. */
+  band: {
+    graphic: "pharmacy",
+    eyebrow: "In one line",
+    statement:
+      "Product access today. Structured services in development. Regulated capabilities under evaluation.",
   },
 
   /**
@@ -263,16 +262,44 @@ export const connectedCare = {
     },
   },
 
-  /** E. Potential pharmacy acquisitions: what ownership could add, and what it would not be for. */
-  acquisitions: {
-    eyebrow: "Potential pharmacy acquisitions",
-    title: "Building pharmacy capabilities through selective acquisitions and partnerships.",
-    status: "Under evaluation",
-    paragraphs: [
-      "LifeSupply’s proposed expansion could include acquiring interests in appropriately licensed pharmacy businesses or establishing relationships with qualified pharmacy operators.",
-      "The purpose would be to add professional pharmacy capability to a broader care and supply model, where there is a sound clinical, operational, and commercial basis.",
-      "Any transaction would require assessment of the business, its licences and permitted activities, professional staffing, facilities, quality systems, and integration requirements.",
+  /**
+   * E. Three principles that hold at every step: gathered here once, in
+   * place of the six-layer technology table, so a reader meets each rule
+   * one time rather than scattered across sections.
+   */
+  principles: {
+    eyebrow: "Principles",
+    title: "What holds at every step.",
+    items: [
+      {
+        title: "Professional decisions stay independent.",
+        text: "Assessment, treatment and dispensing decisions rest with qualified professionals, wherever they work. Access does not guarantee a prescription or a particular treatment.",
+      },
+      {
+        title: "Information stays limited.",
+        text: "No connection would give a supply system a complete medical record. Each exchange is limited to the information it needs, with consent and permissions defined for it.",
+      },
+      {
+        title: "Care stays reachable in person.",
+        text: "Virtual care would include appropriate in-person pathways. It is not suitable for every circumstance, and the participating provider decides.",
+      },
     ],
+  },
+
+  /**
+   * F. Pharmacy expansion, in one section: selective acquisitions and
+   * partnerships on one side, compounding and advanced therapeutics on the
+   * other, with the regulatory distinction behind a disclosure so the page
+   * states it without lecturing.
+   */
+  pharmacy: {
+    eyebrow: "Pharmacy expansion",
+    title: "Building pharmacy capability, carefully.",
+    status: "Under evaluation",
+    intro:
+      "LifeSupply’s proposed expansion could include acquiring interests in appropriately licensed pharmacy businesses or establishing relationships with qualified pharmacy operators, where there is a sound clinical, operational, and commercial basis.",
+    assessment:
+      "Any transaction would require assessment of the business, its licences and permitted activities, professional staffing, facilities, quality systems, and integration requirements.",
     addsTitle: "What pharmacy ownership could add",
     adds: [
       "An established operating capability.",
@@ -283,21 +310,12 @@ export const connectedCare = {
     ],
     safeguard:
       "Ownership would not be a way to control prescribing or to direct every patient to a group-owned pharmacy. The model preserves professional judgment and patient choice.",
-    action: "acquisitions_page",
-    actionLabel: "Acquisitions & Strategic Opportunities",
-  },
-
-  /** F. Compounding and advanced therapeutics, with the regulatory premise stated correctly and briefly. */
-  compounding: {
-    eyebrow: "Compounding and advanced therapeutics",
-    title: "Evaluate new capabilities as evidence and lawful pathways develop.",
-    status: "Under evaluation",
-    paragraphs: [
-      "The proposed model could accommodate selected specialty pharmacy services and, where permissible and appropriate, compounded preparations, including certain peptide-based therapies.",
-      "Each opportunity would be assessed individually for its clinical rationale, permitted ingredients, professional requirements, facilities, quality controls, and applicable jurisdiction.",
+    compoundingTitle: "Compounding and advanced therapeutics",
+    compounding: [
+      "The proposed model could accommodate selected specialty pharmacy services and, where permissible and appropriate, compounded preparations, including certain peptide-based therapies. Each opportunity would be assessed individually for its clinical rationale, permitted ingredients, professional requirements, facilities, quality controls, and applicable jurisdiction.",
       "Peptide synthesis, research, and regulated manufacturing would be evaluated separately from patient-specific pharmacy compounding.",
     ],
-    distinctionTitle: "The distinction in brief",
+    distinctionTitle: "The regulatory distinction in brief",
     distinction: [
       "Compounding already operates within specific regulatory frameworks in Canada and the United States. The question is whether a particular preparation, ingredient, purpose, and operating model is permissible, not whether peptides receive a single authorization.",
       "A pharmacy acquisition does not itself establish permission to compound a particular product.",
@@ -305,52 +323,12 @@ export const connectedCare = {
     ],
     note: "LifeSupply does not currently offer compounded medications, peptide-compounding services, or advanced therapeutics.",
     actions: [
-      { action: "pharmacy_hub", label: "Specialty pharmacy on Pharmacy Solutions" },
+      { action: "acquisitions_page", label: "Acquisitions & Strategic Opportunities" },
       { action: "advanced_therapeutics", label: "Advanced therapeutics on Investor Information" },
     ],
   },
 
-  /** G. The technology, in practical layers, and the two limits that apply to it. */
-  technology: {
-    eyebrow: "The technology, layer by layer",
-    title: "One coordinated experience, with clear responsibilities.",
-    intro:
-      "The platform is described in practical layers. Each connection would be designed around the information actually required and the appropriate permissions.",
-    columns: { layer: "Proposed layer", functions: "Functions to evaluate" },
-    layers: [
-      {
-        title: "Patient access",
-        text: "Service discovery, appointment requests, communications, and clear next steps.",
-      },
-      {
-        title: "Provider coordination",
-        text: "Appropriate referrals, follow-up workflows, and authorized information exchange.",
-      },
-      {
-        title: "Pharmacy workflow",
-        text: "Relevant prescription and service coordination through permitted systems.",
-      },
-      {
-        title: "Supply ordering",
-        text: "Approved product lists, ordering, fulfilment visibility, and replenishment.",
-      },
-      {
-        title: "Organizational tools",
-        text: "Clinic and pharmacy portals, permissions, approvals, and purchasing reports.",
-      },
-      {
-        title: "Administration",
-        text: "Consent, identity, access controls, audit records, and operational support.",
-      },
-    ],
-    notes: [
-      "No connection would give a supply system a complete medical record. Each exchange is limited to the information it needs, with consent and permissions defined for it.",
-      "Virtual care would include appropriate in-person pathways. It is not suitable for every circumstance, and the participating provider decides.",
-    ],
-    status: "Organizational portals are in development; the wider platform is proposed.",
-  },
-
-  /** H. The development sequence, and what it does not claim. */
+  /** G. The development sequence, and what it does not claim. */
   sequence: {
     eyebrow: "Development sequence",
     title: "Build the connections in stages.",
@@ -396,7 +374,7 @@ export const connectedCare = {
       "Pharmacy revenue within any acquired and permitted operation.",
       "Better coordination of customer service and purchasing.",
     ],
-    note: "These opportunities are not additive: some activities may be delivered by independent providers, and some may never form part of LifeSupply’s offering. The detailed revenue model is on the investor page.",
+    note: "These opportunities are not additive: some may be delivered by independent providers, and some may never form part of LifeSupply’s offering. The revenue model is on the investor page.",
     action: "growth_strategy",
     actionLabel: "Growth strategy on Investor Information",
   },
@@ -411,5 +389,61 @@ export const connectedCare = {
       { action: "investor_information", label: "Investor Information" },
       { action: "pharmacy_hub", label: "Pharmacy Solutions" },
     ],
+  },
+
+  /*
+   * Unpublished since the simplification of 2026-09-13 (design review): the
+   * hero already carries the central message, and the diagram's technology
+   * foundation carries the platform. Kept on record.
+   */
+  /** The two central-message statements; the ownership line now sits in the challenge section. */
+  vision: {
+    eyebrow: "The vision",
+    statements: [
+      "LifeSupply’s long-term vision is to connect medical supplies, access to qualified healthcare professionals, pharmacy services, and ongoing patient support through a coordinated digital experience.",
+      "Building on its existing supply businesses and clinic-development relationships, the company intends to evaluate partnerships, technology development, and potential pharmacy acquisitions that could bring these capabilities together.",
+    ],
+    ownership:
+      "A connected experience does not require LifeSupply to own every participating business or employ every professional. Some capabilities may be owned, others acquired, and others delivered through appropriately structured relationships.",
+  },
+
+  /** The six technology layers; the two limits now sit among the principles. */
+  technology: {
+    eyebrow: "The technology, layer by layer",
+    title: "One coordinated experience, with clear responsibilities.",
+    intro:
+      "The platform is described in practical layers. Each connection would be designed around the information actually required and the appropriate permissions.",
+    columns: { layer: "Proposed layer", functions: "Functions to evaluate" },
+    layers: [
+      {
+        title: "Patient access",
+        text: "Service discovery, appointment requests, communications, and clear next steps.",
+      },
+      {
+        title: "Provider coordination",
+        text: "Appropriate referrals, follow-up workflows, and authorized information exchange.",
+      },
+      {
+        title: "Pharmacy workflow",
+        text: "Relevant prescription and service coordination through permitted systems.",
+      },
+      {
+        title: "Supply ordering",
+        text: "Approved product lists, ordering, fulfilment visibility, and replenishment.",
+      },
+      {
+        title: "Organizational tools",
+        text: "Clinic and pharmacy portals, permissions, approvals, and purchasing reports.",
+      },
+      {
+        title: "Administration",
+        text: "Consent, identity, access controls, audit records, and operational support.",
+      },
+    ],
+    notes: [
+      "No connection would give a supply system a complete medical record. Each exchange is limited to the information it needs, with consent and permissions defined for it.",
+      "Virtual care would include appropriate in-person pathways. It is not suitable for every circumstance, and the participating provider decides.",
+    ],
+    status: "Organizational portals are in development; the wider platform is proposed.",
   },
 } as const;

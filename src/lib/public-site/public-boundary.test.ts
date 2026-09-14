@@ -3034,7 +3034,7 @@ describe("Connected Care Vision (2026-09-13)", () => {
       "does not require LifeSupply to own every participating business or employ every professional",
     );
     // Every participant, sequence step and section carries a status.
-    expect((copy.match(/status: "/g) ?? []).length).toBeGreaterThanOrEqual(14);
+    expect((copy.match(/status: "/g) ?? []).length).toBeGreaterThanOrEqual(13);
     expect(page()).toContain("status={hero.status}");
     // Objectives, never demonstrated improvements; revenue never added together.
     expect(copy).toContain("not proven improvements in outcomes, cost, or waiting times");

@@ -38,6 +38,9 @@ export const ICON_BY_TITLE: Record<string, string> = {
   // Pharmacy Solutions
   "For the pharmacy": "pill",
   "For pharmacy operations": "building",
+  "Professional decisions stay independent.": "stethoscope",
+  "Information stays limited.": "shield",
+  "Care stays reachable in person.": "pin",
   "For the retail assortment": "cart",
   "For patient-supply programs": "repeat",
   "Supply support": "package",
