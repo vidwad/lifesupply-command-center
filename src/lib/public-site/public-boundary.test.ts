@@ -1339,6 +1339,7 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
     // The one page since 2026-09-13, in the order an investor asks.
     const order = [
       'id="business"',
+      'id="market-demand"',
       'id="financial-information"',
       'id="business-model"',
       'id="growth-strategy"',
@@ -1355,6 +1356,11 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
     }
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
     expect(investors).toContain("An operating foundation across two markets.");
+    // Market demand is the Medical Supplies market context itself, never a copy
+    // that could drift: the chart and its figures come from businesses.ts.
+    expect(investors).toContain("...businesses.hub.market");
+    expect(investors).not.toMatch(/value: \d/);
+    expect(page).toContain("<DemographicChart data={ir.market.chart} />");
     expect(investors).toContain("How the business operates, and how it could expand.");
     expect(investors).toContain("Grow the core business. Extend the customer relationship.");
     expect(investors).toContain("Additional healthcare capabilities under evaluation.");
@@ -2870,8 +2876,11 @@ describe("Medical Supply Solutions as the commercial proposition (2026-09-13)", 
     }
     expect(market).toContain("Historical: census counts and population estimates");
     expect(market).toContain("Projection: direction only");
-    // The projection is a dashed outline with no number in it.
+    // The projection is a dashed outline with no number in it, and the bars
+    // grow in while the figures beside them stay as static text.
     expect(chart()).toContain("border-dashed");
+    expect(chart()).toContain("<GrowBar");
+    expect(chart()).not.toContain("CountUp");
     const projection = market.match(/projection: \{[^}]*\}/)?.[0] ?? "";
     expect(projection).not.toBe("");
     expect(projection).not.toMatch(/value:|\d+(\.\d+)?\s?%/);

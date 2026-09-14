@@ -133,10 +133,13 @@ export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
    * Investor relations, consolidated on 2026-09-13: Growth Strategy,
    * Advanced Therapeutics and Disclosures became sections, and the
    * document directory moved here from Company News. The three retired
-   * addresses redirect to their sections.
+   * addresses redirect to their sections. Market demand, the Medical
+   * Supplies market context under this page's heading, was added the same
+   * day.
    */
   [LIFE_SUPPLY_ROUTES.investorRelations]: [
     "business",
+    "market-demand",
     "financial-information",
     "business-model",
     "growth-strategy",

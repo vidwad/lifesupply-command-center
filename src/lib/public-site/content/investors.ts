@@ -23,6 +23,8 @@
  * revenue, and no portal fee or service charge is assumed.
  */
 
+import { businesses } from "./businesses";
+
 export type BusinessStatus = "Operating" | "In development" | "Under evaluation" | "Not offered";
 
 export const investorRelations = {
@@ -41,6 +43,7 @@ export const investorRelations = {
   /** The in-page navigation, and the order the sections run in. */
   sections: [
     { href: "#business", label: "Business" },
+    { href: "#market-demand", label: "Market" },
     { href: "#financial-information", label: "Financials" },
     { href: "#growth-strategy", label: "Growth" },
     { href: "#execution", label: "Execution" },
@@ -121,7 +124,18 @@ export const investorRelations = {
     ],
   },
 
-  /** 2. The reported result, once, with its basis directly beneath. */
+  /**
+   * 2. Market demand: the market-context section of Medical Supplies, carried
+   * here unchanged under the owner's heading for this page (2026-09-13). The
+   * copy and every figure on the chart are the ones recorded for that page,
+   * so the two sections can never drift apart.
+   */
+  market: {
+    ...businesses.hub.market,
+    eyebrow: "Market demand",
+  },
+
+  /** 3. The reported result, once, with its basis directly beneath. */
   financials: {
     eyebrow: "2025 Financial Highlights",
     title: "Reported for the year ended December 31, 2025.",
@@ -418,6 +432,8 @@ export const investorRelations = {
     title: "Discuss LifeSupply’s business and growth plans.",
     text: "Contact Investor Relations to request supporting materials or discuss the company’s operating business and proposed expansion.",
     channel: "Investor Relations",
+    /** The photograph that fades into the block's charcoal beside the channel (owner, 2026-09-13). */
+    graphic: "newsDesk",
     primary: "investor_materials",
     secondary: [
       { action: "acquisitions_page", label: "Acquisitions & Strategic Opportunities" },

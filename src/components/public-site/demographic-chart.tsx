@@ -1,5 +1,8 @@
+import { GrowBar } from "@/components/public-site/motion";
+
 /**
- * The one demographic graphic on Medical Supply Solutions (product owner,
+ * The one demographic graphic, on Medical Supply Solutions and, since the
+ * same day, in the investor page's market-demand section (product owner,
  * 2026-09-13): people aged 65 and older, in Canada and the United States.
  *
  * Drawn in HTML and CSS from figures recorded in
@@ -10,6 +13,11 @@
  * the only projected fact published here is the direction. Nothing on the
  * chart is a market size, a growth rate for medical supplies, or a forecast
  * of the business, and the qualification under it says so.
+ *
+ * The bars are brand red on the ink ground and grow in from the left the
+ * first time the chart is seen (owner, 2026-09-13); the figures beside them
+ * are static text and never count, so the approved value is the only value
+ * ever shown.
  */
 interface Point {
   year: string;
@@ -50,14 +58,14 @@ function Panel({ series }: { series: Series }) {
       <p className="lsh-display text-[11px] text-[var(--lsh-red-on-ink)]">{series.geography}</p>
       <p className="mt-2 text-sm leading-6 text-white/75">{series.measure}</p>
       <dl className="mt-5 grid gap-3">
-        {series.points.map((point) => (
+        {series.points.map((point, index) => (
           <div key={point.year} className="grid grid-cols-[4.75rem_1fr_4.5rem] items-center gap-3">
             <dt className="lsh-display text-[11px] text-white/70">{point.year}</dt>
             <dd className="m-0">
-              <span
-                aria-hidden="true"
-                className="block h-5 bg-white/90"
-                style={{ width: width(point.value, max) }}
+              <GrowBar
+                width={width(point.value, max)}
+                delay={index * 0.14}
+                className="lsh-chart-bar block h-5"
               />
             </dd>
             <dd className="lsh-display m-0 text-right text-sm tabular-nums text-white">
@@ -76,13 +84,13 @@ function Panel({ series }: { series: Series }) {
             <dd className="m-0">
               {/* The outline starts where the last measure ends and runs on
                   without a figure: a direction, not a number. */}
-              <span
-                aria-hidden="true"
-                className="block h-5 border border-dashed border-white/70"
-                style={{ width: width(last.value * 1.15, max) }}
+              <GrowBar
+                width={width(last.value * 1.15, max)}
+                delay={series.points.length * 0.14}
+                className="lsh-chart-bar-projection block h-5 border border-dashed"
               />
             </dd>
-            <dd className="lsh-display m-0 text-right text-[10px] leading-tight text-white/70">
+            <dd className="lsh-display m-0 text-right text-[10px] leading-tight text-[var(--lsh-red-on-ink)]">
               rising
             </dd>
           </div>
@@ -106,13 +114,13 @@ export function DemographicChart({ data }: { data: DemographicChartData }) {
       </div>
       <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-2 border-t border-white/15 pt-5 text-xs text-white/70">
         <li className="flex items-center gap-2">
-          <span aria-hidden="true" className="inline-block h-3 w-6 bg-white/90" />
+          <span aria-hidden="true" className="lsh-chart-bar inline-block h-3 w-6" />
           {data.legend.historical}
         </li>
         <li className="flex items-center gap-2">
           <span
             aria-hidden="true"
-            className="inline-block h-3 w-6 border border-dashed border-white/70"
+            className="lsh-chart-bar-projection inline-block h-3 w-6 border border-dashed"
           />
           {data.legend.projection}
         </li>

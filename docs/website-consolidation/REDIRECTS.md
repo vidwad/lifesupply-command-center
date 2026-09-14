@@ -107,4 +107,4 @@ The investor section became one page at the product owner's direction: the overv
 
 **Internal links.** The `growth_strategy` and `advanced_therapeutics` actions open the sections directly; About's growth and longer-term links use them. The program-architecture record's link to the advanced-therapeutics page points at the section. No page links to a retired address, which the consolidation sweep asserts.
 
-**Anchors.** `SECTION_ANCHORS` declares `business`, `financial-information`, `business-model`, `growth-strategy`, `execution`, `advanced-therapeutics`, `materials`, `contact` and `disclosures`, all cleared of the sticky header and the in-page navigation. The sitemap is 13 canonical URLs.
+**Anchors.** `SECTION_ANCHORS` declares `business`, `market-demand` (added 2026-09-13), `financial-information`, `business-model`, `growth-strategy`, `execution`, `advanced-therapeutics`, `materials`, `contact` and `disclosures`, all cleared of the sticky header and the in-page navigation. The sitemap is 13 canonical URLs.

@@ -509,6 +509,45 @@
     box-shadow: 0 0 22px rgb(222 0 0 / 52%);
   }
 
+  /* The demographic chart's bars: brand red on the ink ground, the projection an outline in the same red. */
+  .lsh-chart-bar {
+    background: linear-gradient(90deg, var(--lsh-red-hover), var(--lsh-red-on-ink));
+    box-shadow: 0 0 18px rgb(222 0 0 / 30%);
+  }
+
+  .lsh-chart-bar-projection {
+    border-color: var(--lsh-red-on-ink);
+    opacity: 0.85;
+  }
+
+  /* The investor contact photograph: greyscale, and faded into the charcoal ground on every edge that meets it. */
+  .lsh-contact-graphic img {
+    filter: grayscale(1) contrast(1.05);
+  }
+
+  .lsh-contact-graphic::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background:
+      linear-gradient(
+        90deg,
+        var(--lsh-charcoal) 0%,
+        rgb(29 29 29 / 72%) 34%,
+        rgb(29 29 29 / 18%) 70%,
+        rgb(29 29 29 / 35%) 86%,
+        var(--lsh-charcoal) 100%
+      ),
+      linear-gradient(
+        180deg,
+        var(--lsh-charcoal) 0%,
+        rgb(29 29 29 / 20%) 28%,
+        rgb(29 29 29 / 20%) 68%,
+        var(--lsh-charcoal) 100%
+      );
+    pointer-events: none;
+  }
+
   /* Shared retail composition: verified external links stay as content; visuals remain decorative. */
   .lsh-storefront-category-copy {
     border-left: 4px solid var(--lsh-brand-red);

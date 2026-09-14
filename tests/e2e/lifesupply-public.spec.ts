@@ -1146,6 +1146,27 @@ test.describe("LifeSupply public site", () => {
       "Unaudited, and not the subject of an audit or a review engagement.",
     );
     await expect(main.getByText("C$6.75M")).toHaveCount(1);
+    // Market demand carries the Medical Supplies chart with its sources and
+    // qualification, once, between the operating foundation and the figures.
+    const market = page.locator("#market-demand");
+    await expect(market).toContainText("Sources: Statistics Canada");
+    await expect(market).toContainText("U.S. Census Bureau");
+    await expect(market).toContainText("Projection: direction only");
+    await expect(market).toContainText("not a forecast of LifeSupply’s business");
+    await expect(main.getByText("Projection: direction only")).toHaveCount(1);
+    expect(
+      await market.evaluate(
+        (el) =>
+          el.compareDocumentPosition(document.querySelector("#financial-information")!) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBeTruthy();
+    // The contact block's photograph is decorative: no accessible name, one per breakpoint.
+    const contactImages = page.locator("#contact img");
+    await expect(contactImages).toHaveCount(2);
+    for (const image of await contactImages.all()) {
+      await expect(image).toHaveAttribute("alt", "");
+    }
     await expect(
       page.locator("#disclosures").getByText("Forward-looking statements"),
     ).toBeVisible();

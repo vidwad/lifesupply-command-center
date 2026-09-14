@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ArrowRight, Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
+import { DemographicChart } from "@/components/public-site/demographic-chart";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
@@ -109,14 +110,15 @@ function PublishedDocuments({ published }: { published: Published<PublishedDocum
  * investor asks the questions:
  *
  *   1. #business               what the group operates today
- *   2. #financial-information  what it has reported, once, with its basis
- *   3. #business-model         how it earns revenue and how it could extend
- *   4. #growth-strategy        where growth can come from, five priorities
- *   5. #execution              the phased approach and what it would require
- *   6. #advanced-therapeutics  longer-term regulated opportunities, restrained
- *   7. #materials              the document directory, moved from Company News
- *   8. #contact                the next action, and the two supporting pages
- *   9. #disclosures            the full qualification, on a permanent anchor
+ *   2. #market-demand          the Medical Supplies market context, unchanged
+ *   3. #financial-information  what it has reported, once, with its basis
+ *   4. #business-model         how it earns revenue and how it could extend
+ *   5. #growth-strategy        where growth can come from, five priorities
+ *   6. #execution              the phased approach and what it would require
+ *   7. #advanced-therapeutics  longer-term regulated opportunities, restrained
+ *   8. #materials              the document directory, moved from Company News
+ *   9. #contact                the next action, and the two supporting pages
+ *  10. #disclosures            the full qualification, on a permanent anchor
  *
  * The three retired addresses redirect to their sections. No figure counts
  * up, no chart is drawn from a single period, no phase reads as achieved,
@@ -204,7 +206,28 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
-      {/* 2. The three figures, once, on a quiet ground, with the basis beneath. */}
+      {/* 2. Market demand, on ink: the Medical Supplies market context beside its chart, under this page's heading. */}
+      <AnchoredSection
+        id="market-demand"
+        offset="sectionNav"
+        className="bg-[var(--lsh-ink)] px-5 py-20 text-white lg:px-8"
+      >
+        <Container className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+          <Reveal>
+            <SectionHeading
+              tone="onDark"
+              eyebrow={ir.market.eyebrow}
+              title={ir.market.title}
+              description={ir.market.paragraphs}
+            />
+          </Reveal>
+          <Reveal delay={0.1}>
+            <DemographicChart data={ir.market.chart} />
+          </Reveal>
+        </Container>
+      </AnchoredSection>
+
+      {/* 3. The three figures, once, on a quiet ground, with the basis beneath. */}
       <AnchoredSection
         id="financial-information"
         offset="sectionNav"
@@ -244,7 +267,7 @@ export function InvestorRelationsPage({
         statement={ir.bands.foundation.statement}
       />
 
-      {/* 3. The business model: a real table, status in words, repeat demand told apart from contracted revenue. */}
+      {/* 4. The business model: a real table, status in words, repeat demand told apart from contracted revenue. */}
       <AnchoredSection id="business-model" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
           <Reveal>
@@ -316,7 +339,7 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
-      {/* 4. Growth priorities: a numbered editorial list with varied rows, and one typeset visual for technology. */}
+      {/* 5. Growth priorities: a numbered editorial list with varied rows, and one typeset visual for technology. */}
       <AnchoredSection
         id="growth-strategy"
         offset="sectionNav"
@@ -437,7 +460,7 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
-      {/* 5. Execution: four planned phases, each with the evidence it needs, and what development would require. */}
+      {/* 6. Execution: four planned phases, each with the evidence it needs, and what development would require. */}
       <AnchoredSection id="execution" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
           <Reveal>
@@ -510,7 +533,7 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
-      {/* 6. Longer-term regulated opportunities: a restrained four-row list, no laboratory. */}
+      {/* 7. Longer-term regulated opportunities: a restrained four-row list, no laboratory. */}
       <AnchoredSection
         id="advanced-therapeutics"
         offset="sectionNav"
@@ -570,7 +593,7 @@ export function InvestorRelationsPage({
         statement={ir.bands.materials.statement}
       />
 
-      {/* 7. Investor materials: one record per row, a document-specific request, and the governed published list. */}
+      {/* 8. Investor materials: one record per row, a document-specific request, and the governed published list. */}
       <AnchoredSection id="materials" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
           <Reveal>
@@ -628,7 +651,7 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
-      {/* 8. Investor contact: the channel, the primary action, and the two supporting pages. */}
+      {/* 9. Investor contact: the channel, the primary action, and the two supporting pages. */}
       <AnchoredSection
         id="contact"
         offset="sectionNav"
@@ -653,12 +676,27 @@ export function InvestorRelationsPage({
           </Reveal>
           <Reveal
             delay={0.05}
-            className="border-t border-white/25 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
+            className="relative border-t border-white/25 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
           >
-            <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+            {/* The photograph fades into the charcoal on every edge; it is decorative, and the channel reads over its darkest corner. */}
+            <div
+              aria-hidden="true"
+              className="lsh-contact-graphic pointer-events-none absolute inset-0 hidden overflow-hidden lg:block"
+            >
+              <Image
+                src={getGraphic(ir.contactSection.graphic).src}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 45vw, 100vw"
+                style={{ objectPosition: "80% 50%" }}
+                className="object-cover opacity-75"
+                draggable={false}
+              />
+            </div>
+            <p className="lsh-display relative text-[10px] text-[var(--lsh-red-on-ink)]">
               {ir.contactSection.channel}
             </p>
-            <div className="mt-4 grid gap-2 text-sm text-white/80">
+            <div className="relative mt-4 grid gap-2 text-sm text-white/80">
               <a
                 href={`mailto:${ir.contact.email}`}
                 className="inline-flex w-fit items-center gap-2 transition-colors hover:text-white"
@@ -672,11 +710,26 @@ export function InvestorRelationsPage({
                 <Phone size={15} aria-hidden="true" /> {ir.contact.phone}
               </a>
             </div>
+            {/* On narrow screens the same photograph sits beneath the details, faded the same way. */}
+            <div
+              aria-hidden="true"
+              className="lsh-contact-graphic relative mt-8 aspect-[16/9] overflow-hidden lg:hidden"
+            >
+              <Image
+                src={getGraphic(ir.contactSection.graphic).src}
+                alt=""
+                fill
+                sizes="100vw"
+                style={{ objectPosition: "80% 50%" }}
+                className="object-cover opacity-75"
+                draggable={false}
+              />
+            </div>
           </Reveal>
         </Container>
       </AnchoredSection>
 
-      {/* 9. Disclosures, on a permanent anchor: the figures' basis, the forward-looking statement, no offering. */}
+      {/* 10. Disclosures, on a permanent anchor: the figures' basis, the forward-looking statement, no offering. */}
       <AnchoredSection id="disclosures" offset="sectionNav" className="px-5 py-16 lg:px-8">
         <Container className="grid gap-8 lg:grid-cols-[0.6fr_1.4fr] lg:gap-16">
           <Reveal>
