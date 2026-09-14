@@ -243,6 +243,19 @@ export const GRAPHICS = {
     height: 960,
     provenance: TECHNOLOGY_ILLUSTRATION_PROVENANCE,
   },
+  /**
+   * The homepage's "Who are we and what we do" picture since 2026-09-14
+   * (product owner: the still life before it did nothing for the reader): a
+   * vast fulfilment aisle of plain cartons under clerestory light. A
+   * conceptual scene with scale, not a LifeSupply premises.
+   */
+  homeSupplyHall: {
+    src: "/lsh/graphics/home/supply-hall-greyscale-v1.jpg",
+    alt: "Conceptual photograph of a vast fulfilment aisle, tall shelving of plain white cartons on both sides receding to a vanishing point under clerestory daylight.",
+    width: 1600,
+    height: 900,
+    provenance: HERO_PROVENANCE,
+  },
   /** The Balkowitsch Worldwide store profile on Medical Supply Solutions. */
   balkowitschProducts: {
     src: "/lsh/graphics/medical-supplies/balkowitsch-products-greyscale-v1.jpg",
