@@ -1,9 +1,9 @@
-import Image from "next/image";
 import { Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
 import { BrandGrid } from "@/components/public-site/brand-grid";
 import { HeroBackdrop } from "@/components/public-site/parallax-band";
+import { SectionVideo } from "@/components/public-site/section-video";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
@@ -18,7 +18,6 @@ import {
   GrowthDirection,
   OperatingBaseBand,
 } from "@/components/public-site/pages/about-sections";
-import { getGraphic } from "@/lib/public-site/graphics";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
@@ -53,7 +52,6 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
  */
 export function LifeSupplyHome() {
   const { homepage, contact } = LIFE_SUPPLY_CONTENT;
-  const supplyHall = getGraphic("homeSupplyHall");
   return (
     <LifeSupplyLayout>
       {/*
@@ -99,22 +97,22 @@ export function LifeSupplyHome() {
             </Stagger>
           </div>
           {/*
-           * A picture with scale (product owner, 2026-09-14): a fulfilment
-           * aisle receding under clerestory light, in place of the still life
-           * of cartons and plans that did nothing for the reader. It fills its
-           * column rather than sitting in a fixed box, so neither column ends
-           * early; the picture is on the right here and on the left in the
-           * growth-direction band further down, so the two read as a rhythm
-           * rather than the same composition twice.
+           * The prior site's home-page clip (product owner, 2026-09-14): its
+           * first fourteen seconds, played once when the page loads and left
+           * on the final frame, silent and decorative. The frame keeps its
+           * 16:9 shape and sits centred beside the copy, so the whole scene
+           * shows rather than a crop of it; the picture is on the right here
+           * and on the left in the growth-direction band further down, so the
+           * two read as a rhythm rather than the same composition twice.
            */}
-          <Reveal delay={0.1} className="group min-h-64 lg:min-h-0">
-            <figure className="relative h-full min-h-64 overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)]">
-              <Image
-                src={supplyHall.src}
-                alt={supplyHall.alt}
-                fill
-                sizes="(min-width: 1024px) 560px, 100vw"
-                className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          <Reveal delay={0.1} className="lg:self-center">
+            <figure className="relative aspect-video w-full overflow-hidden border-t-4 border-[var(--lsh-brand-red)] bg-[var(--lsh-charcoal)]">
+              <SectionVideo
+                webm={homepage.whoWeDoVideo.webm}
+                mp4={homepage.whoWeDoVideo.mp4}
+                poster={homepage.whoWeDoVideo.poster}
+                posterWidth={homepage.whoWeDoVideo.posterWidth}
+                posterHeight={homepage.whoWeDoVideo.posterHeight}
               />
             </figure>
           </Reveal>

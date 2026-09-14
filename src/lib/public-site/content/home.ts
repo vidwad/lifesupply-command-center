@@ -72,6 +72,23 @@ export const homepage = {
    * the stores and their two countries, the clinic services and their
    * province, and the two programs in development with their status intact.
    */
+  /**
+   * The clip beside "Who are we and what we do" (product owner, 2026-09-14):
+   * the prior lifesupplyhealth.com home-page video
+   * (wp-content/uploads/2021/10/LSHomeVid.mp4), cut to its first fourteen
+   * seconds so it plays once on load and stops there, scaled to 1280 wide,
+   * silent. Decorative: the copy beside it carries the meaning, and the
+   * captions inside the footage are the prior site's own lines, not copy
+   * published here. The poster is a caption-free frame at twelve seconds.
+   */
+  whoWeDoVideo: {
+    webm: "/lsh/video/home-intro.webm",
+    mp4: "/lsh/video/home-intro.mp4",
+    poster: "/lsh/video/home-intro-poster.jpg",
+    posterWidth: 1280,
+    posterHeight: 720,
+  },
+
   whoWeDo: {
     eyebrow: "Who are we and what we do",
     title: "Medical supplies and clinic services across Canada and the United States.",
