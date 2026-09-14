@@ -3158,6 +3158,39 @@ describe("Connected Care Vision (2026-09-13)", () => {
   });
 });
 
+describe("the homepage section clip (2026-09-14)", () => {
+  // The prior site's home-page video, cut to its first fourteen seconds at
+  // the product owner's direction, plays once beside "Who are we and what we
+  // do" and stops. Silent, decorative, never looped, poster for reduced motion.
+  const ASSETS = {
+    webm: "public/lsh/video/home-intro.webm",
+    mp4: "public/lsh/video/home-intro.mp4",
+    poster: "public/lsh/video/home-intro-poster.jpg",
+  };
+
+  it("ships the clip in both containers and the poster, within the byte budget", () => {
+    for (const rel of Object.values(ASSETS)) expect(existsSync(join(ROOT, rel)), rel).toBe(true);
+    expect(fileSize(ASSETS.webm)).toBeLessThan(3_000_000);
+    expect(fileSize(ASSETS.mp4)).toBeLessThan(3_500_000);
+    expect(fileSize(ASSETS.poster)).toBeLessThan(400_000);
+    const c = stripComments(read("src/lib/public-site/content/home.ts"));
+    for (const rel of Object.values(ASSETS)) expect(c).toContain(`"${rel.replace(/^public/, "")}"`);
+    expect({ width: 1280, height: 720 }).toEqual(jpegSize(ASSETS.poster));
+  });
+
+  it("plays once, silently and decoratively, and never from a path literal on the page", () => {
+    const code = stripComments(read(`${PUBLIC_DIR}/section-video.tsx`));
+    expect(code).toContain('aria-hidden="true"');
+    expect(code).toMatch(/<video[\s\S]*?\bautoPlay\b[\s\S]*?\bmuted\b[\s\S]*?\bplaysInline\b/);
+    expect(code).not.toMatch(/\bloop\b/);
+    expect(code).not.toMatch(/\bcontrols\b/);
+    expect(code).toContain("prefers-reduced-motion: reduce");
+    const page = stripComments(read(`${PUBLIC_DIR}/pages/home.tsx`));
+    expect(page).toContain("<SectionVideo");
+    expect(page).not.toContain("/lsh/video/");
+  });
+});
+
 describe("pharmacy responsibilities block and footer legal block (2026-09-13)", () => {
   it("keeps the complaints-and-recalls wording on record and off the page", () => {
     const content = stripComments(read("src/lib/public-site/content/pharmacy.ts"));
