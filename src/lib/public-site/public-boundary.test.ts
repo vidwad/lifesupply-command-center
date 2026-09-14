@@ -813,13 +813,14 @@ describe("round four: consolidation, precision and available actions", () => {
 
   it("opens the investor section with the business, not the access policy", () => {
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
-    const opening = investors.slice(0, investors.indexOf("currentReport:"));
-    // Since 2026-09-13 the hero states the business and the plan; the figures
-    // follow in their own section rather than crowding the hero.
+    const opening = investors.slice(0, investors.indexOf("financials:"));
+    // Since 2026-09-13 the hero states the business and the plan. Since
+    // 2026-09-14 (product owner) no financial figure is published anywhere on
+    // the site: the annual report is available to shareholders on request.
     expect(opening).toContain("brings together online medical and home-care supply businesses");
     expect(opening).toContain("A focused plan for expansion.");
-    expect(opening).not.toContain("C$");
-    expect(investors).toContain("C$6.75M");
+    expect(investors).not.toMatch(/C\$\s?\d/);
+    expect(investors).toContain("available to shareholders on request");
     // The classification scheme is not the first thing a reader meets.
     expect(opening).not.toMatch(/disclosed information, forward-looking statements/i);
   });
@@ -1216,7 +1217,8 @@ describe("round two: independent review corrections", () => {
   it("promises no access to material that is not published", () => {
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
     expect(investors).not.toMatch(/available on request|on request through/i);
-    expect(investors).toContain("the extent of what is published on this site");
+    // Since 2026-09-14 no figure is published: the section offers the annual report on request and nothing more.
+    expect(investors).toContain("does not publish financial figures on this site");
   });
 
   it("asks for nothing that identifies a person, and assures nothing about it", () => {
@@ -1363,8 +1365,10 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
     expect(investors).toContain("Grow the core business. Extend the customer relationship.");
     expect(investors).toContain("Additional healthcare capabilities under evaluation.");
     expect(investors).toContain("Supporting information for investors.");
-    // The figures appear once, and no chart is drawn from one period.
-    expect((page.match(/currentReport\.highlights/g) ?? []).length).toBe(1);
+    // No figure, no counter, and no chart drawn from one period: the annual
+    // report is requested from the section instead.
+    expect(page).not.toMatch(/currentReport|highlights|EditorialStat/);
+    expect(page).toContain("action={ir.financials.action as ActionKey}");
     expect(page).not.toMatch(/CountUp|<Chart|recharts/);
     // Repeat purchasing is never contracted revenue; no fee is assumed.
     expect(investors).toContain("different from contractual recurring revenue");
@@ -1385,22 +1389,29 @@ describe("round two: cross-page factual consistency", () => {
     }
   });
 
-  it("labels every reported figure with its currency, period, entity and basis", () => {
-    // The consolidated statements express all amounts in Canadian dollars under
-    // IFRS, unaudited (round three, 2026-09-10).
-    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
-    expect(investors).toContain('"Currency: Canadian dollars."');
-    // No bare dollar figure: every published amount carries the currency marker.
-    for (const figure of ["C$6.75M", "C$2.20M", "C$284K"]) {
-      expect(investors).toContain(figure);
+  it("publishes no financial figure anywhere, and points shareholders to the annual report", () => {
+    // Until 2026-09-13 three reported figures were published with their basis.
+    // On 2026-09-14 the product owner withdrew every financial figure and
+    // highlight from the site: the annual report is available to shareholders
+    // on request, and that is all the site says about results.
+    for (const name of [
+      "investors",
+      "about",
+      "home",
+      "news",
+      "businesses",
+      "partners",
+      "pharmacy",
+      "connected-care",
+    ]) {
+      const code = stripComments(read(`src/lib/public-site/content/${name}.ts`));
+      expect(code, name).not.toMatch(/C\$\s?\d/);
+      expect(code, name).not.toMatch(/\b(net sales|gross profit|net income|EBITDA)\b[^.]{0,40}\d/i);
     }
-    expect(investors).not.toMatch(/value: "\$\d/);
-    expect(investors).toContain("Period: year ended December 31, 2025.");
-    expect(investors).toContain("LifeSupply Health Inc., consolidated");
-    expect(investors).toContain("IFRS");
-    expect(investors).toContain("Unaudited");
-    // Consolidated results are never attributed to one brand.
-    expect(investors).toContain("no result is attributable to any single brand");
+    const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
+    expect(investors).toContain("available to shareholders on request");
+    expect(investors).toContain('action: "request_annual_report"');
+    expect(investors).not.toMatch(/Financial Highlights/i);
   });
 
   it("publishes the verified corporate structure once, and keeps brands distinct from it", () => {
@@ -2303,7 +2314,7 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     // second such figure -- a former employer's market capitalisation in
     // Keith Dolo's biography -- left with the 2026-09-12 rewrite.
     const dollars = c.match(/\$[\d.,]+( billion|[MK])?/g) ?? [];
-    expect(new Set(dollars)).toEqual(new Set(["$6.75M", "$2.20M", "$284K", "$5 billion"]));
+    expect(new Set(dollars)).toEqual(new Set(["$5 billion"]));
     const teamContent = stripComments(read("src/lib/public-site/content/team.ts"));
     expect(teamContent.match(/\$[\d.,]+( billion|[MK])?/g)).toEqual(["$5 billion"]);
   });

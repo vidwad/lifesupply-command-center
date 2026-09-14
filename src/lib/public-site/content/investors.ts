@@ -44,7 +44,7 @@ export const investorRelations = {
   sections: [
     { href: "#business", label: "Business" },
     { href: "#market-demand", label: "Market" },
-    { href: "#financial-information", label: "Financials" },
+    { href: "#financial-information", label: "Annual report" },
     { href: "#growth-strategy", label: "Growth" },
     { href: "#execution", label: "Execution" },
     { href: "#materials", label: "Materials" },
@@ -52,17 +52,6 @@ export const investorRelations = {
   ],
 
   /** Approved (published since PR #60/#61): the reported figures, with their basis. */
-  currentReport: {
-    period: "Year ended December 31, 2025",
-    status: "Unaudited consolidated financial information, prepared under IFRS",
-    entity: "LifeSupply Health Inc., consolidated",
-    currency: "Canadian dollars",
-    highlights: [
-      { label: "Net sales", value: "C$6.75M" },
-      { label: "Gross profit", value: "C$2.20M" },
-      { label: "Net income", value: "C$284K" },
-    ],
-  },
   expansionContext: {
     date: "August 25, 2026",
     title: "Expansion strategy",
@@ -88,7 +77,7 @@ export const investorRelations = {
       graphic: "facade",
       eyebrow: "Supporting information",
       statement:
-        "Reported figures with their basis. Plans with their status. Materials shared on request.",
+        "Plans with their status. Materials, including the annual report, shared with shareholders on request.",
     },
   },
 
@@ -136,17 +125,17 @@ export const investorRelations = {
   },
 
   /** 3. The reported result, once, with its basis directly beneath. */
+  /**
+   * 3. Financial information. No figure is published on this site (product
+   * owner, 2026-09-14): the annual report is available to shareholders on
+   * request, and the request goes to Investor Relations with its subject.
+   */
   financials: {
-    eyebrow: "2025 Financial Highlights",
-    title: "Reported for the year ended December 31, 2025.",
-    basisTitle: "Reporting basis",
-    basis: [
-      "Currency: Canadian dollars.",
-      "Period: year ended December 31, 2025.",
-      "Entity scope: LifeSupply Health Inc., consolidated. The figures cover the parent and its wholly-owned subsidiaries together, so no result is attributable to any single brand.",
-      "Basis: prepared by management under IFRS. Unaudited, and not the subject of an audit or a review engagement.",
-    ],
-    note: "These three measures are the extent of what is published on this site about financial results. No brand-level result, cash flow, or forecast is published.",
+    eyebrow: "Financial information",
+    title: "The annual report is available to shareholders on request.",
+    text: "LifeSupply does not publish financial figures on this site. Shareholders can request the annual report for the year ended December 31, 2025 from Investor Relations, and the other investor materials are listed further down this page.",
+    action: "request_annual_report",
+    actionLabel: "Request the annual report",
   },
 
   /** 3. How the business earns revenue, and how it could extend. */
@@ -447,7 +436,7 @@ export const investorRelations = {
     eyebrow: "Disclosures",
     title: "Basis of the information on this page.",
     figures:
-      "The reported figures are consolidated results of LifeSupply Health Inc. for the year ended December 31, 2025, in Canadian dollars, prepared by management under IFRS, unaudited, and not the subject of an audit or a review engagement. They are the extent of what is published on this site about financial results.",
+      "No financial figures are published on this site. The annual report for the year ended December 31, 2025 is available to shareholders on request from Investor Relations, and nothing on this page should be read as a statement of results.",
     forwardLooking: {
       title: "Forward-looking statements",
       text: "Statements on this site about programs in development, opportunities under evaluation, expansion themes, and possible transactions are forward-looking. They are based on current plans and assumptions, depend on approvals, financing, regulatory requirements, market conditions, and transaction terms that are not in place, and may not occur. They are not guarantees, and LifeSupply undertakes no obligation to update them except as required.",

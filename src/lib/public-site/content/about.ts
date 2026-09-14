@@ -202,8 +202,8 @@ export const about = {
       {
         date: "Year ended December 31, 2025",
         sortKey: "2025-12-31",
-        text: "Reported consolidated net sales of C$6.75M, gross profit of C$2.20M, and net income of C$284K, unaudited.",
-        source: "Investor disclosures",
+        text: "2025 Annual Financial Report. Available to shareholders at request.",
+        source: "Investor Relations",
         href: null,
       },
     ],
