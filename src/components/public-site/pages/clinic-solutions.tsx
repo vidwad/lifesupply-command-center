@@ -85,6 +85,16 @@ function Router() {
                 href={route.href}
                 className="group flex h-full flex-col gap-5 p-5 transition-colors hover:bg-[var(--lsh-surface)] lg:p-8"
               >
+                {/* The owner's illustration for the route, in the same frame on every card so the three sit top-aligned (2026-09-13). */}
+                <figure className="relative aspect-[4/3] overflow-hidden">
+                  <Image
+                    src={getGraphic(route.graphic).src}
+                    alt={getGraphic(route.graphic).alt}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, 100vw"
+                    className="object-contain mix-blend-multiply"
+                  />
+                </figure>
                 <span
                   aria-hidden="true"
                   className="lsh-display text-[var(--lsh-charcoal)]/25 text-5xl leading-none transition-colors group-hover:text-[var(--lsh-brand-red)] lg:text-6xl"
