@@ -1,3 +1,5 @@
+import { ChevronDown } from "lucide-react";
+
 import { ActionLink } from "@/components/public-site/action-link";
 import { ConnectedCareSection } from "@/components/public-site/connected-care/connected-care-section";
 import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
@@ -11,40 +13,35 @@ import {
 import { Reveal, Stagger, StaggerItem } from "@/components/public-site/motion";
 import { AnchoredSection } from "@/components/public-site/on-this-page";
 import { SectionNav } from "@/components/public-site/section-nav";
+import { GraphicBand, IconBadge } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
+import { iconForTitle } from "@/lib/public-site/icon-map";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 /**
- * `/connected-care/` (product owner, 2026-09-13): how the businesses and the
- * proposed capabilities could work together.
+ * `/connected-care/` (product owner, 2026-09-13), simplified the same day
+ * after a design review: nine parts, each doing one job, with the diagram
+ * as the centrepiece.
  *
  *   hero            the vision and its status
- *   the vision      the central message and the ownership point
- *   #challenge      the separate steps, and the intended benefits as objectives
- *   #model          the Connected Care diagram: the patient's needs at the
- *                   centre, two existing businesses, two proposed capabilities,
- *                   the technology foundation beneath
- *   #example        one illustrative metabolic-health journey, compounding a branch
- *   #acquisitions   selective pharmacy acquisitions and partnerships
- *   #compounding    compounding and advanced therapeutics, the premise stated
- *   #technology     the platform in practical layers, with its two limits
- *   #sequence       the development sequence, nothing claimed as begun
+ *   #challenge      the separate steps, the intended benefits as objectives,
+ *                   and the ownership point
+ *   #model          the Connected Care diagram
+ *   #example        one illustrative metabolic-health journey
+ *   band            the three statuses in one line, on a photograph
+ *   #principles     three rules that hold at every step
+ *   #pharmacy       acquisitions and partnerships beside compounding, with
+ *                   the regulatory distinction behind a disclosure
+ *   #sequence       six staged steps, nothing claimed as begun
  *   #value          the commercial value, never added together
  *   closing         the actions for the four audiences
  *
- * Every part carries its status. Nothing here is offered, no outcome or
- * cost is claimed, and professional decisions and patient choice stay
- * where they belong.
+ * The two central-message statements and the six-layer technology table
+ * left the page: the hero and the diagram already carry them.
  */
-function StatusLine({ value, tone = "onLight" }: { value: string; tone?: "onLight" | "onDark" }) {
+function StatusLine({ value }: { value: string }) {
   return (
-    <p
-      className={`lsh-display mt-5 inline-block border px-2 py-1 text-[10px] ${
-        tone === "onDark"
-          ? "border-[var(--lsh-red-on-ink)] text-[var(--lsh-red-on-ink)]"
-          : "border-[var(--lsh-brand-red)] text-[var(--lsh-brand-red)]"
-      }`}
-    >
+    <p className="lsh-display mt-5 inline-block border border-[var(--lsh-brand-red)] px-2 py-1 text-[10px] text-[var(--lsh-brand-red)]">
       {value}
     </p>
   );
@@ -53,13 +50,12 @@ function StatusLine({ value, tone = "onLight" }: { value: string; tone?: "onLigh
 export function ConnectedCarePage() {
   const {
     hero,
-    vision,
     challenge,
     diagram,
     example,
-    acquisitions,
-    compounding,
-    technology,
+    band,
+    principles,
+    pharmacy,
     sequence,
     value,
     closing,
@@ -90,29 +86,7 @@ export function ConnectedCarePage() {
 
       <SectionNav items={LIFE_SUPPLY_CONTENT.connectedCare.sections} />
 
-      {/* The central message, set large, and the ownership point beneath it. */}
-      <section className="bg-[var(--lsh-surface)] px-5 py-16 lg:px-8">
-        <Container className="grid gap-8 lg:grid-cols-[0.3fr_1.7fr] lg:gap-16">
-          <Reveal>
-            <Eyebrow as="h2">{vision.eyebrow}</Eyebrow>
-          </Reveal>
-          <Reveal delay={0.05}>
-            <div className="grid gap-5 border-l-4 border-[var(--lsh-brand-red)] pl-6">
-              {vision.statements.map((statement) => (
-                <p
-                  key={statement.slice(0, 40)}
-                  className="lsh-display text-xl leading-snug text-[var(--lsh-charcoal)] lg:text-2xl"
-                >
-                  {statement}
-                </p>
-              ))}
-            </div>
-            <p className="mt-6 max-w-3xl leading-7 text-[var(--lsh-muted)]">{vision.ownership}</p>
-          </Reveal>
-        </Container>
-      </section>
-
-      {/* B. The problem being addressed, beside the intended benefits. */}
+      {/* 1. The problem, the intended benefits as objectives, and the ownership point. */}
       <AnchoredSection id="challenge" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <Reveal>
@@ -121,6 +95,9 @@ export function ConnectedCarePage() {
               title={challenge.title}
               description={challenge.paragraphs}
             />
+            <p className="mt-6 max-w-2xl border-l-2 border-[var(--lsh-brand-red)] pl-4 text-sm leading-6 text-[var(--lsh-charcoal)]">
+              {challenge.ownership}
+            </p>
           </Reveal>
           <Reveal delay={0.05} className="lg:pt-10">
             <Eyebrow as="h3">{challenge.benefitsTitle}</Eyebrow>
@@ -131,14 +108,14 @@ export function ConnectedCarePage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 border-l-2 border-[var(--lsh-brand-red)] pl-4 text-sm leading-6 text-[var(--lsh-muted)]">
+            <p className="mt-5 text-sm leading-6 text-[var(--lsh-muted)]">
               {challenge.benefitsNote}
             </p>
           </Reveal>
         </Container>
       </AnchoredSection>
 
-      {/* C. The Connected Care diagram: the principal explanation of how the businesses and proposed capabilities could work together. */}
+      {/* 2. The diagram: the principal explanation of how the businesses and proposed capabilities could work together. */}
       <AnchoredSection
         id="model"
         offset="sectionNav"
@@ -158,7 +135,7 @@ export function ConnectedCarePage() {
         </Container>
       </AnchoredSection>
 
-      {/* D. One illustrative journey, labelled, with compounding as a branch off the third step. */}
+      {/* 3. One illustrative journey, labelled, with compounding as a branch off the third step. */}
       <AnchoredSection id="example" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <Reveal>
@@ -200,150 +177,119 @@ export function ConnectedCarePage() {
         </Container>
       </AnchoredSection>
 
-      {/* E. Pharmacy acquisitions: purpose, assessment, what ownership could add, and the safeguard. */}
-      <AnchoredSection
-        id="acquisitions"
-        offset="sectionNav"
-        className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
-      >
-        <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-          <Reveal>
-            <SectionHeading
-              eyebrow={acquisitions.eyebrow}
-              title={acquisitions.title}
-              description={acquisitions.paragraphs}
-            />
-            <StatusLine value={acquisitions.status} />
-            <div className="mt-8">
-              <ActionLink action={acquisitions.action as ActionKey} variant="onLight">
-                {acquisitions.actionLabel}
-              </ActionLink>
-            </div>
+      {/* The three statuses in one line, on a photograph, before the rules and the pharmacy detail. */}
+      <GraphicBand graphic={band.graphic} eyebrow={band.eyebrow} statement={band.statement} />
+
+      {/* 4. Three principles that hold at every step. */}
+      <AnchoredSection id="principles" offset="sectionNav" className="px-5 py-20 lg:px-8">
+        <Container>
+          <Reveal className="max-w-3xl">
+            <SectionHeading eyebrow={principles.eyebrow} title={principles.title} />
           </Reveal>
-          <Reveal delay={0.05} className="lg:pt-10">
-            <Eyebrow as="h3">{acquisitions.addsTitle}</Eyebrow>
-            <ol className="mt-5 divide-y divide-[var(--lsh-rule-strong)] border-y border-[var(--lsh-rule-strong)]">
-              {acquisitions.adds.map((item, index) => (
-                <li key={item} className="flex gap-5 py-3">
-                  <span className="lsh-display w-6 shrink-0 pt-1 text-[11px] text-[var(--lsh-brand-red)]">
+          <Stagger as="ul" className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+            {principles.items.map((item, index) => (
+              <StaggerItem
+                key={item.title}
+                as="li"
+                className="border-t-4 border-[var(--lsh-brand-red)] pt-5"
+              >
+                <div className="flex items-center gap-4">
+                  <IconBadge icon={iconForTitle(item.title)} />
+                  <span className="lsh-display text-[11px] text-[var(--lsh-brand-red)]">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <span className="leading-7 text-[var(--lsh-charcoal)]">{item}</span>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-5 border-l-2 border-[var(--lsh-brand-red)] pl-4 text-sm leading-6 text-[var(--lsh-charcoal)]">
-              {acquisitions.safeguard}
-            </p>
-          </Reveal>
+                </div>
+                <h3 className="lsh-display mt-5 text-xl leading-tight text-[var(--lsh-charcoal)]">
+                  {item.title}
+                </h3>
+                <p className="mt-3 leading-7 text-[var(--lsh-muted)]">{item.text}</p>
+              </StaggerItem>
+            ))}
+          </Stagger>
         </Container>
       </AnchoredSection>
 
-      {/* F. Compounding and advanced therapeutics, on ink, with the premise stated in three sentences. */}
+      {/* 5. Pharmacy expansion: acquisitions and partnerships beside compounding, on ink, with the distinction behind a disclosure. */}
       <AnchoredSection
-        id="compounding"
+        id="pharmacy"
         offset="sectionNav"
         className="bg-[var(--lsh-ink)] px-5 py-20 text-white lg:px-8"
       >
-        <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-          <Reveal>
-            <SectionHeading
-              tone="onDark"
-              eyebrow={compounding.eyebrow}
-              title={compounding.title}
-              description={compounding.paragraphs}
-            />
-            <StatusLine value={compounding.status} tone="onDark" />
-            <p className="mt-6 max-w-2xl border-l-2 border-[var(--lsh-red-on-ink)] pl-4 text-sm leading-6 text-white/85">
-              {compounding.note}
-            </p>
-          </Reveal>
-          <Reveal delay={0.05} className="lg:pt-10">
-            <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
-              {compounding.distinctionTitle}
-            </p>
-            <ul className="mt-4 grid gap-4">
-              {compounding.distinction.map((item) => (
-                <li
-                  key={item.slice(0, 40)}
-                  className="border-t border-white/15 pt-4 text-sm leading-6 text-white/80"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-              {compounding.actions.map((item) => (
-                <ActionLink key={item.action} action={item.action as ActionKey} variant="onDark">
-                  {item.label}
-                </ActionLink>
-              ))}
-            </div>
-          </Reveal>
-        </Container>
-      </AnchoredSection>
-
-      {/* G. The technology in six layers, and the two limits. */}
-      <AnchoredSection id="technology" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
           <Reveal className="max-w-3xl">
             <SectionHeading
-              eyebrow={technology.eyebrow}
-              title={technology.title}
-              description={technology.intro}
+              tone="onDark"
+              eyebrow={pharmacy.eyebrow}
+              title={pharmacy.title}
+              description={pharmacy.intro}
             />
+            <StatusLine value={pharmacy.status} />
           </Reveal>
-          <Reveal delay={0.05} className="mt-10 overflow-x-auto">
-            <table className="w-full min-w-[36rem] border-t border-[var(--lsh-rule-strong)]">
-              <thead>
-                <tr className="border-b border-[var(--lsh-rule-strong)]">
-                  <th
-                    scope="col"
-                    className="lsh-display py-3 pr-6 text-left text-[10px] text-[var(--lsh-muted)]"
-                  >
-                    {technology.columns.layer}
-                  </th>
-                  <th
-                    scope="col"
-                    className="lsh-display py-3 text-left text-[10px] text-[var(--lsh-muted)]"
-                  >
-                    {technology.columns.functions}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--lsh-rule)]">
-                {technology.layers.map((layer) => (
-                  <tr key={layer.title}>
-                    <th
-                      scope="row"
-                      className="lsh-display w-[14rem] py-4 pr-6 text-left align-top text-sm text-[var(--lsh-charcoal)]"
-                    >
-                      {layer.title}
-                    </th>
-                    <td className="py-4 align-top leading-7 text-[var(--lsh-muted)]">
-                      {layer.text}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Reveal>
-          <Reveal className="mt-10 grid gap-6 border-t border-[var(--lsh-rule-strong)] pt-6 lg:grid-cols-2 lg:gap-16">
-            {technology.notes.map((note) => (
-              <p key={note.slice(0, 40)} className="text-sm leading-6 text-[var(--lsh-muted)]">
-                {note}
+          <div className="mt-12 grid gap-12 border-t border-white/15 pt-10 lg:grid-cols-2 lg:gap-16">
+            <Reveal>
+              <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+                {pharmacy.addsTitle}
               </p>
+              <ol className="mt-4 divide-y divide-white/15 border-y border-white/15">
+                {pharmacy.adds.map((item, index) => (
+                  <li key={item} className="flex gap-5 py-3">
+                    <span className="lsh-display w-6 shrink-0 pt-1 text-[11px] text-[var(--lsh-red-on-ink)]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-sm leading-7 text-white/85">{item}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-5 border-l-2 border-[var(--lsh-red-on-ink)] pl-4 text-sm leading-6 text-white/85">
+                {pharmacy.safeguard}
+              </p>
+              <p className="mt-4 text-xs leading-5 text-white/60">{pharmacy.assessment}</p>
+            </Reveal>
+            <Reveal delay={0.05}>
+              <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">
+                {pharmacy.compoundingTitle}
+              </p>
+              <div className="mt-4 grid gap-4 text-sm leading-6 text-white/80">
+                {pharmacy.compounding.map((paragraph) => (
+                  <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+                ))}
+              </div>
+              <details className="group mt-5 border border-white/20 px-4 py-2">
+                <summary className="lsh-display flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-[11px] text-white [&::-webkit-details-marker]:hidden">
+                  {pharmacy.distinctionTitle}
+                  <ChevronDown
+                    size={14}
+                    aria-hidden="true"
+                    className="shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                  />
+                </summary>
+                <ul className="mb-2 grid gap-3">
+                  {pharmacy.distinction.map((item) => (
+                    <li
+                      key={item.slice(0, 40)}
+                      className="border-t border-white/15 pt-3 text-sm leading-6 text-white/75"
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+              <p className="mt-5 border-l-2 border-[var(--lsh-red-on-ink)] pl-4 text-sm leading-6 text-white/85">
+                {pharmacy.note}
+              </p>
+            </Reveal>
+          </div>
+          <Reveal className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/15 pt-8">
+            {pharmacy.actions.map((item) => (
+              <ActionLink key={item.action} action={item.action as ActionKey} variant="onDark">
+                {item.label}
+              </ActionLink>
             ))}
-          </Reveal>
-          <Reveal className="mt-6">
-            <p className="inline-block border-l-2 border-[var(--lsh-brand-red)] pl-4 text-sm leading-6 text-[var(--lsh-charcoal)]">
-              {technology.status}
-            </p>
           </Reveal>
         </Container>
       </AnchoredSection>
 
-      {/* H. The development sequence: six numbered stages on a rail, each with its status. */}
+      {/* 6. The development sequence: six numbered stages, each with its status. */}
       <AnchoredSection
         id="sequence"
         offset="sectionNav"
@@ -383,7 +329,7 @@ export function ConnectedCarePage() {
         </Container>
       </AnchoredSection>
 
-      {/* The commercial value: the one strategic claim, five sources, never added together. */}
+      {/* 7. The commercial value: the one strategic claim, five sources, never added together. */}
       <AnchoredSection id="value" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <Reveal>
@@ -405,9 +351,7 @@ export function ConnectedCarePage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-5 border-l-2 border-[var(--lsh-brand-red)] pl-4 text-sm leading-6 text-[var(--lsh-muted)]">
-              {value.note}
-            </p>
+            <p className="mt-5 text-sm leading-6 text-[var(--lsh-muted)]">{value.note}</p>
           </Reveal>
         </Container>
       </AnchoredSection>

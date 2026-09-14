@@ -955,7 +955,7 @@ test.describe("LifeSupply public site", () => {
     ).toBeVisible();
     await expect(
       page
-        .locator("#compounding")
+        .locator("#pharmacy")
         .getByText(
           "LifeSupply does not currently offer compounded medications, peptide-compounding services, or advanced therapeutics.",
         ),
