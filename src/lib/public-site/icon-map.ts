@@ -93,6 +93,13 @@ export const ICON_BY_TITLE: Record<string, string> = {
   "Pursue complementary acquisitions": "handshake",
   "Better information": "clipboardList",
   "Planning and monitoring": "activity",
+  // Medical Supply Solutions, the six supply-planning capabilities (2026-09-14)
+  "Demand forecasting": "chart",
+  "Supply-risk monitoring": "search",
+  "Replenishment automation": "repeat",
+  "Catalogue management": "clipboardList",
+  "Pricing management": "banknote",
+  "Purchasing analytics": "activity",
   "Easier ordering": "cart",
   Define: "compass",
   Pilot: "flask",
