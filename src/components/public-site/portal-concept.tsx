@@ -20,9 +20,10 @@ import { useId, useState } from "react";
  * readable presentation.
  *
  * Two demonstration sets since 2026-09-13: the clinic one on Medical Supply
- * Solutions, and a pharmacy purchasing example on Pharmacy Solutions with
- * the same three views, non-drug supplies only, and nothing about any
- * prescription, record, or dispensing.
+ * Solutions, switched by location, and a pharmacy purchasing example on
+ * Pharmacy Solutions, switched by use (pharmacy operations, the retail
+ * assortment, supply programs), with the same three views, non-drug
+ * supplies only, and nothing about any prescription, record, or dispensing.
  */
 const VIEW_KEYS = ["catalogue", "purchasing", "reporting"] as const;
 type ViewKey = (typeof VIEW_KEYS)[number];
@@ -38,6 +39,8 @@ interface DemoData {
 }
 
 interface DemoSet {
+  /** What the first switch chooses between: a location, or a use. */
+  switchLabel: string;
   locations: readonly { key: string; label: string }[];
   data: Readonly<Record<string, DemoData>>;
 }
@@ -125,9 +128,83 @@ const CLINIC_DEMO: Readonly<Record<string, DemoData>> = {
   },
 };
 
-/** The pharmacy purchasing example: non-drug supplies for a supported program, by location. */
+/** The pharmacy purchasing example: non-drug supplies across the three uses a pharmacy could have for the tools. */
 const PHARMACY_DEMO: Readonly<Record<string, DemoData>> = {
-  downtown: {
+  operations: {
+    catalogue: [
+      { name: "Nitrile examination gloves, medium", unit: "Box of 100", status: "Approved" },
+      { name: "Hand sanitizer, pump bottle", unit: "Each", status: "Approved" },
+      { name: "Digital thermometer probe covers", unit: "Box of 500", status: "Approved" },
+      { name: "Blood-pressure cuff, adult", unit: "Each", status: "Approved" },
+      { name: "Paper towels, folded", unit: "Case of 12", status: "Approved" },
+      { name: "Privacy screen, folding", unit: "Each", status: "Needs approval" },
+    ],
+    lists: [
+      { name: "Consultation room, monthly", items: "5 items" },
+      { name: "Front counter consumables", items: "3 items" },
+    ],
+    approvals: [
+      { ref: "Request 140", by: "Consultation room", items: "1 item", status: "Awaiting approval" },
+      { ref: "Request 139", by: "Front counter", items: "2 items", status: "Approved" },
+    ],
+    history: [
+      { ref: "Order 2210", when: "Week 36", items: "5 items", status: "Delivered" },
+      { ref: "Order 2204", when: "Week 34", items: "3 items", status: "Delivered" },
+    ],
+    reminders: [
+      { item: "Examination gloves, medium", note: "Review in 9 days" },
+      { item: "Probe covers", note: "Reorder point reached" },
+    ],
+    totals: [
+      { label: "Orders this quarter", value: "12" },
+      { label: "Order lines", value: "54" },
+      { label: "Lines backordered", value: "1" },
+    ],
+    byCategory: [
+      { label: "Clinic consumables", share: 58 },
+      { label: "Monitoring accessories", share: 22 },
+      { label: "Furniture and fittings", share: 12 },
+      { label: "Other", share: 8 },
+    ],
+  },
+  retail: {
+    catalogue: [
+      { name: "Blood-pressure monitor, upper arm", unit: "Each", status: "Approved" },
+      { name: "Rollator, standard", unit: "Each", status: "Approved" },
+      { name: "Shower chair", unit: "Each", status: "Approved" },
+      { name: "Adhesive wound dressings, assorted", unit: "Box of 40", status: "Approved" },
+      { name: "Absorbent pads, regular", unit: "Pack of 30", status: "Approved" },
+      { name: "Bed rail, adjustable", unit: "Each", status: "Needs approval" },
+    ],
+    lists: [
+      { name: "Home-care shelf, monthly", items: "6 items" },
+      { name: "Seasonal mobility", items: "2 items" },
+    ],
+    approvals: [
+      { ref: "Request 88", by: "Front store", items: "1 item", status: "Awaiting approval" },
+    ],
+    history: [
+      { ref: "Order 1188", when: "Week 36", items: "6 items", status: "Delivered" },
+      { ref: "Order 1181", when: "Week 35", items: "4 items", status: "1 item backordered" },
+    ],
+    reminders: [
+      { item: "Adhesive wound dressings", note: "Review in 6 days" },
+      { item: "Absorbent pads", note: "Review in 14 days" },
+    ],
+    totals: [
+      { label: "Orders this quarter", value: "9" },
+      { label: "Order lines", value: "41" },
+      { label: "Lines backordered", value: "1" },
+    ],
+    byCategory: [
+      { label: "Mobility and daily living", share: 36 },
+      { label: "Home monitoring", share: 27 },
+      { label: "Wound care", share: 19 },
+      { label: "Incontinence care", share: 13 },
+      { label: "Other", share: 5 },
+    ],
+  },
+  programs: {
     catalogue: [
       { name: "Blood-glucose test strips", unit: "Box of 50", status: "Approved" },
       { name: "Lancets, 30G", unit: "Box of 100", status: "Approved" },
@@ -168,44 +245,11 @@ const PHARMACY_DEMO: Readonly<Record<string, DemoData>> = {
       { label: "Other", share: 7 },
     ],
   },
-  westside: {
-    catalogue: [
-      { name: "Blood-glucose test strips", unit: "Box of 50", status: "Approved" },
-      { name: "Lancets, 30G", unit: "Box of 100", status: "Approved" },
-      { name: "Blood-pressure monitor, upper arm", unit: "Each", status: "Approved" },
-      { name: "Alcohol prep pads", unit: "Box of 200", status: "Approved" },
-      { name: "Sharps container, 1.4 L", unit: "Each", status: "Needs approval" },
-    ],
-    lists: [
-      { name: "Program starter supplies", items: "4 items" },
-      { name: "Monthly consumables", items: "3 items" },
-    ],
-    approvals: [{ ref: "Request 87", by: "Counter", items: "1 item", status: "Awaiting approval" }],
-    history: [
-      { ref: "Order 914", when: "Week 36", items: "4 items", status: "Delivered" },
-      { ref: "Order 909", when: "Week 34", items: "3 items", status: "Delivered" },
-    ],
-    reminders: [
-      { item: "Test strips", note: "Review in 11 days" },
-      { item: "Blood-pressure monitor", note: "No action needed" },
-    ],
-    totals: [
-      { label: "Orders this quarter", value: "11" },
-      { label: "Order lines", value: "48" },
-      { label: "Lines backordered", value: "0" },
-    ],
-    byCategory: [
-      { label: "Diabetes supplies", share: 47 },
-      { label: "Home monitoring", share: 22 },
-      { label: "Injection accessories", share: 18 },
-      { label: "Sharps containers", share: 8 },
-      { label: "Other", share: 5 },
-    ],
-  },
 };
 
 const DEMOS: Readonly<Record<DemoKey, DemoSet>> = {
   clinic: {
+    switchLabel: "Location",
     locations: [
       { key: "north", label: "North clinic" },
       { key: "east", label: "East clinic" },
@@ -213,9 +257,11 @@ const DEMOS: Readonly<Record<DemoKey, DemoSet>> = {
     data: CLINIC_DEMO,
   },
   pharmacy: {
+    switchLabel: "Use",
     locations: [
-      { key: "downtown", label: "Downtown pharmacy" },
-      { key: "westside", label: "Westside pharmacy" },
+      { key: "operations", label: "Pharmacy operations" },
+      { key: "retail", label: "Retail assortment" },
+      { key: "programs", label: "Supply programs" },
     ],
     data: PHARMACY_DEMO,
   },
@@ -301,8 +347,8 @@ export function PortalConcept({
       {/* The portal's own chrome: the location switch and the three views. */}
       <div className="flex flex-col gap-4 border-b border-[var(--lsh-rule)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">Location</span>
-          <div role="group" aria-label="Location" className="flex flex-wrap gap-2">
+          <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">{set.switchLabel}</span>
+          <div role="group" aria-label={set.switchLabel} className="flex flex-wrap gap-2">
             {set.locations.map((option) => {
               const pressed = option.key === location;
               return (

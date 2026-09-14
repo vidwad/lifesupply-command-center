@@ -38,6 +38,9 @@ export type ActionKey =
   | "discuss_program"
   | "pharmacy_program_inquiry"
   | "pharmacy_model"
+  | "pharmacy_products"
+  | "pharmacy_purchasing_inquiry"
+  | "pharmacy_strategic_inquiry"
   | "metabolic_hub"
   | "explore_kits"
   | "refills_information"
@@ -259,6 +262,33 @@ export const ACTIONS: Record<ActionKey, ActionRecord> = {
     label: "Explore the proposed model",
     intent: "navigation",
     destination: internal(sectionRoute(PHARMACY_ROUTES.hub, "partner-program")),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  /** The hero's first action on Pharmacy Solutions (2026-09-13): the Medical Supplies category explorer, not a catalogue of its own. */
+  pharmacy_products: {
+    key: "pharmacy_products",
+    label: "Explore medical products",
+    intent: "navigation",
+    destination: internal(sectionRoute(LIFE_SUPPLY_ROUTES.operations, "categories")),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  /** Purchasing for the pharmacy's own use or its retail assortment; availability and terms are the operating business's. */
+  pharmacy_purchasing_inquiry: {
+    key: "pharmacy_purchasing_inquiry",
+    label: "Discuss pharmacy purchasing",
+    intent: "pharmacy",
+    destination: mail("info@lifesupply.com", "Pharmacy purchasing"),
+    ownerChannel: null,
+    verifiedAt: null,
+  },
+  /** Specialty pharmacy and compounding opportunities: a business enquiry, never a treatment or product enquiry. */
+  pharmacy_strategic_inquiry: {
+    key: "pharmacy_strategic_inquiry",
+    label: "Discuss a strategic pharmacy opportunity",
+    intent: "pharmacy",
+    destination: mail("info@lifesupply.com", "Strategic pharmacy opportunity"),
     ownerChannel: null,
     verifiedAt: null,
   },

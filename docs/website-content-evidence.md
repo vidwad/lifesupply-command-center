@@ -44,7 +44,7 @@ Material public claims touched by the website improvement program, with their so
 | Ongoing supply to an existing clinic | Approved content model | Clinic Solutions | Operating | Approved | Purchasing runs through the operating stores on their own terms |
 | Clinic service geography: British Columbia projects | Approved content model | Clinic Solutions, About | Operating | Approved | Distinct from group commerce geography, which is Canada and the United States |
 | Non-drug supply programs for pharmacies | Partner overview, September 2026 | Pharmacy Solutions, Partners | In development | Approved with qualification | Pharmacist-selected; medication excluded |
-| Pharmacy-related operations and regulated care infrastructure | Public growth strategy | Investors (left Pharmacy Solutions on 2026-09-13; that page carries one sentence pointing to Investor Information) | Under evaluation | Approved with qualification | Never offered, licensed, or operating |
+| Pharmacy-related operations and regulated care infrastructure | Public growth strategy | Investors, with a concise under-evaluation section on Pharmacy Solutions (2026-09-13) that frames compounding on a lawful pathway and satisfied conditions and states nothing is offered | Under evaluation | Approved with qualification | Never offered, licensed, or operating |
 | Metabolic-health supply services | Partner overview, September 2026 | Metabolic Health | In development | Approved with qualification | Non-drug supplies and non-clinical support only |
 | Dispensing, diagnosis, prescribing, medication recommendation | — | — | — | Withheld | The site states it does none of these |
 | Manufacturing of regulated products | — | — | — | Withheld | No authoritative support |
