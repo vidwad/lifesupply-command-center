@@ -198,14 +198,14 @@ test.describe("Medical Supplies storefront visual system", () => {
   test("states the status once, on the page, before the proposed material", async ({ page }) => {
     await page.goto("/medical-supply-solutions");
     const main = page.locator("main");
-    const status = main.getByText("none is offered until its implementation is confirmed");
+    const status = main.getByText("are proposed capabilities in development");
     await expect(status).toHaveCount(1);
     // The status band sits between the stores and business purchasing.
     const order = await page.evaluate(() => {
       const y = (selector: string) =>
         document.querySelector(selector)?.getBoundingClientRect().top ?? -1;
       const band = [...document.querySelectorAll("main section")].find((el) =>
-        el.textContent?.includes("none is offered until its implementation is confirmed"),
+        el.textContent?.includes("are proposed capabilities in development"),
       );
       return [y("#stores"), band?.getBoundingClientRect().top ?? -1, y("#professional-buyers")];
     });
