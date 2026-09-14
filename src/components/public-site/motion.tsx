@@ -10,6 +10,7 @@
  *
  *   Reveal / Stagger / StaggerItem   ibelick "In view" (motion useInView)
  *   CountUp                          danielpetho "Number Ticker"
+ *   GrowBar                          a chart bar that grows in when seen
  *   SpotlightCard                    preetsuthar17 "Spotlight Card"
  *   ScrollBeam                       Aceternity "Timeline" beam
  *
@@ -262,6 +263,58 @@ export function CountUp({
       <motion.span>{text}</motion.span>
       {parsed.suffix ? <span className={suffixClassName}>{parsed.suffix}</span> : null}
     </span>
+  );
+}
+
+/** True once React has hydrated on the client; false on the server and during hydration. */
+function useHydrated() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
+/**
+ * A chart bar that grows from the left the first time it scrolls into view
+ * (product owner, 2026-09-13). The server and the first client render draw
+ * the bar at its full length, so a visitor without JavaScript, and every
+ * search engine, sees the chart complete; once hydrated, a bar that is not
+ * yet on screen collapses and grows when it arrives. Reduced motion keeps
+ * every bar at full length. The bar is decorative: its value is the text
+ * beside it, which never moves.
+ */
+export function GrowBar({
+  width,
+  delay = 0,
+  className,
+}: {
+  /** The bar's length as a CSS width, a share of its track. */
+  width: string;
+  /** Seconds after the bar is seen before it starts to grow. */
+  delay?: number;
+  className?: string;
+}) {
+  const reduce = useHydratedReducedMotion();
+  const hydrated = useHydrated();
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -40px 0px" });
+  const grown = !hydrated || reduce || inView;
+  return (
+    <span
+      ref={ref}
+      aria-hidden="true"
+      className={className}
+      style={{
+        width,
+        transformOrigin: "left center",
+        transform: grown ? "scaleX(1)" : "scaleX(0)",
+        transition:
+          hydrated && !reduce && grown
+            ? `transform 0.9s cubic-bezier(0.23, 1, 0.32, 1) ${delay}s`
+            : "none",
+      }}
+    />
   );
 }
 

@@ -416,6 +416,7 @@ describe("route registry", () => {
     }
     for (const anchor of [
       "business",
+      "market-demand",
       "financial-information",
       "business-model",
       "growth-strategy",
