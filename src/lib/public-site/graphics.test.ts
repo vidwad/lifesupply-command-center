@@ -23,6 +23,18 @@ function jpegSize(rel: string) {
   throw new Error(`no SOF marker in ${rel}`);
 }
 
+/** Width and height from a PNG's IHDR chunk. */
+function pngSize(rel: string) {
+  const bytes = readFileSync(join(ROOT, rel));
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+
+/** PNG or JPEG, by signature: the owner-supplied illustrations are PNG (2026-09-13). */
+function imageSize(rel: string) {
+  const bytes = readFileSync(join(ROOT, rel));
+  return bytes.subarray(1, 4).toString("ascii") === "PNG" ? pngSize(rel) : jpegSize(rel);
+}
+
 describe("conceptual graphics registry", () => {
   const entries = Object.entries(GRAPHICS) as [string, Graphic][];
 
@@ -30,7 +42,7 @@ describe("conceptual graphics registry", () => {
     for (const [key, graphic] of entries) {
       const rel = `public${graphic.src}`;
       expect(existsSync(join(ROOT, rel)), key).toBe(true);
-      expect(jpegSize(rel), key).toEqual({ width: graphic.width, height: graphic.height });
+      expect(imageSize(rel), key).toEqual({ width: graphic.width, height: graphic.height });
       expect(readFileSync(join(ROOT, rel)).length, key).toBeLessThan(400 * 1024);
     }
   });

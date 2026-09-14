@@ -97,16 +97,19 @@ export const investorRelations = {
       "The current business is three online supply stores and a clinic-development service. Each is described on its own page; this is what they add up to.",
     items: [
       {
+        graphic: "businessStores",
         title: "Canadian online supply stores",
         text: "LifeSupply and Wellmart Medical sell medical, health, and home-care products to individuals, caregivers, and professional buyers across Canada.",
         status: "Operating",
       },
       {
+        graphic: "businessUs",
         title: "U.S. online supply business",
         text: "Balkowitsch Worldwide serves the U.S. market with medical, health, and wellness supplies, in U.S. dollars.",
         status: "Operating",
       },
       {
+        graphic: "businessClinic",
         title: "Clinic development and equipment in British Columbia",
         text: "LifeSupply Clinics plans, builds, and equips clinics for projects in British Columbia, which brings equipment and opening-supply requirements into view.",
         status: "Operating",

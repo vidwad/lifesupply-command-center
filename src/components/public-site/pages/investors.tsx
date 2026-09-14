@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ArrowRight, Mail, Phone } from "lucide-react";
 
 import { ActionLink } from "@/components/public-site/action-link";
@@ -16,6 +17,7 @@ import { SectionNav } from "@/components/public-site/section-nav";
 import { GraphicBand, IconBadge } from "@/components/public-site/sections";
 import type { ActionKey } from "@/lib/public-site/actions";
 import { investorRelations } from "@/lib/public-site/content/investors";
+import { getGraphic } from "@/lib/public-site/graphics";
 import { iconForTitle } from "@/lib/public-site/icon-map";
 import { measurementAttributes } from "@/lib/public-site/measurement";
 import { publishedDocumentUrl, type Published } from "@/lib/public-site/published";
@@ -162,6 +164,16 @@ export function InvestorRelationsPage({
                 as="li"
                 className="border-t-4 border-[var(--lsh-brand-red)] pt-5"
               >
+                {/* The owner's illustration for the column, above its number and status. */}
+                <figure className="relative mb-6 aspect-square overflow-hidden bg-[var(--lsh-surface)]">
+                  <Image
+                    src={getGraphic(item.graphic).src}
+                    alt={getGraphic(item.graphic).alt}
+                    fill
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                    className="object-contain p-4"
+                  />
+                </figure>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <IconBadge icon={iconForTitle(item.title)} />
