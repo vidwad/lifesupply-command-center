@@ -76,6 +76,9 @@ const PHARMACY_CATEGORY_PROVENANCE =
 const CONNECTED_CARE_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-13 for the Connected Care Vision hero; monochrome brief, no person, no logo, no text, no vials or laboratory equipment; scaled to 1600×900 and converted to neutral greyscale; conceptual, not operational photography, and not a LifeSupply premises.";
 
+const EXPANSION_COVER_PROVENANCE =
+  "Rendering of the cover of the company's expansion-strategy document, supplied by the product owner on 2026-09-14 and resized to 800 px wide; conceptual, not operational photography, and not a reproduction of the document, which is available on request only.";
+
 const MEDICAL_SUPPLIES_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the Balkowitsch Worldwide profile on the consolidated Medical Supply Solutions page; monochrome brief, no person, no facility, no logo, no text, no legible reading on any screen; scaled to 1800×1012 and converted to neutral greyscale with ffmpeg, then given a midtone lift (lutyuv gamma 1.75) so it sits with the two Canadian store photographs rather than reading as a much darker frame beside them; no highlight is clipped. It is conceptual, not operational photography: not a LifeSupply facility, not a photograph of a listed product, and no item in it is a confirmed SKU. It replaced the warehouse photograph on this page, which showed a person packing and could be read as an employee or an operating site.";
 
@@ -299,6 +302,19 @@ export const GRAPHICS = {
     width: 1600,
     height: 900,
     provenance: CONNECTED_CARE_PROVENANCE,
+  },
+  /**
+   * Below the financial-information text on the investor page (product
+   * owner, 2026-09-14): a rendering of the expansion-strategy document's
+   * cover. It carries the document's title and date and the three approved
+   * operating figures, nothing from inside the document.
+   */
+  expansionCover: {
+    src: "/lsh/graphics/investors/expansion-cover.jpg",
+    alt: "Conceptual rendering of a printed report cover titled Proposed Expansion Strategy for Metabolic Health and Therapeutics, dated August 25, 2026.",
+    width: 800,
+    height: 1193,
+    provenance: EXPANSION_COVER_PROVENANCE,
   },
   /** Beside "Opening, renovating, or expanding?" on Clinic Solutions. */
   clinicPlans: {

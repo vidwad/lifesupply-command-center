@@ -1277,6 +1277,11 @@ test.describe("LifeSupply public site", () => {
       financials.getByRole("link", { name: "Request the annual report" }),
     ).toHaveAttribute("href", /^mailto:invest@lifesupply\.com\?subject=/);
     expect(await main.textContent()).not.toMatch(/C\$\s?\d/);
+    // The expansion-strategy cover sits below the text, described as a rendering.
+    await expect(financials.locator("img")).toHaveAttribute(
+      "alt",
+      /^Conceptual rendering of a printed report cover/,
+    );
     // Market demand carries the Medical Supplies chart with its sources and
     // qualification, once, between the operating foundation and the figures.
     const market = page.locator("#market-demand");
