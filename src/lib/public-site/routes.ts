@@ -22,6 +22,8 @@ export const LIFE_SUPPLY_ROUTES = {
   team: "/our-team/",
   investorRelations: "/investor-relations/",
   news: "/news/",
+  /** Connected Care Vision (2026-09-13): how the businesses and proposed capabilities could work together. */
+  connectedCare: "/connected-care/",
   contact: "/contact/",
   legacyContact: "/contact-2/",
 } as const;
@@ -156,6 +158,17 @@ export const SECTION_ANCHORS: Readonly<Record<string, readonly string[]>> = {
   // address and its anchor can never drift apart.
   [METABOLIC_ROUTES.hub]: ["pathways", ...KIT_SLUGS, "replenishment", "collaboration"],
   [LIFE_SUPPLY_ROUTES.contact]: ["business-inquiries"],
+  // Connected Care Vision (2026-09-13), in page order.
+  [LIFE_SUPPLY_ROUTES.connectedCare]: [
+    "challenge",
+    "model",
+    "example",
+    "acquisitions",
+    "compounding",
+    "technology",
+    "sequence",
+    "value",
+  ],
   [LIFE_SUPPLY_ROUTES.about]: PROFILE_ANCHORS,
 };
 
@@ -239,6 +252,8 @@ export interface RouteRecord {
   stage: 2 | 3 | 4 | 5 | 6 | 7 | 9;
   status: "live" | "proposed" | "redirect";
   navGroup: NavGroupKey | null;
+  /** Set apart from the group's service pages by a rule above it (Connected Care Vision, 2026-09-13). */
+  navSeparated?: boolean;
   /** For dynamic routes: the route file that serves the path (default: the static file for the path). */
   routeFile?: string;
 }
@@ -302,6 +317,20 @@ export const ROUTES: readonly RouteRecord[] = [
     stage: 4,
     status: "live",
     navGroup: "solutions",
+  },
+  {
+    /*
+     * Connected Care Vision (product owner, 2026-09-13): the one page that
+     * explains how the businesses and the proposed capabilities could work
+     * together. Last in the Solutions menu and set apart from the three
+     * service pages, because it describes a vision rather than a service.
+     */
+    path: LIFE_SUPPLY_ROUTES.connectedCare,
+    label: "Connected Care Vision",
+    stage: 5,
+    status: "live",
+    navGroup: "solutions",
+    navSeparated: true,
   },
   {
     /*
@@ -429,6 +458,8 @@ export interface NavLink {
   label: string;
   href: string;
   external?: boolean;
+  /** A rule above the item, setting it apart from the entries before it. */
+  separated?: boolean;
 }
 
 export interface NavGroup {
@@ -482,7 +513,11 @@ const PRIMARY_GROUPS: { key: NavGroupKey; label: string; hub: string | null }[] 
 
 function liveChildren(group: NavGroupKey, hub: string | null): NavLink[] {
   return LIVE_ROUTES.filter((route) => route.navGroup === group && route.path !== hub).map(
-    (route) => ({ label: route.label, href: route.path }),
+    (route) => ({
+      label: route.label,
+      href: route.path,
+      ...(route.navSeparated ? { separated: true } : {}),
+    }),
   );
 }
 

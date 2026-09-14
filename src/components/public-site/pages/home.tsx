@@ -19,6 +19,7 @@ import {
   OperatingBaseBand,
 } from "@/components/public-site/pages/about-sections";
 import { getGraphic } from "@/lib/public-site/graphics";
+import type { ActionKey } from "@/lib/public-site/actions";
 import { LIFE_SUPPLY_CONTENT } from "@/lib/public-site/lifesupply-content";
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
@@ -156,6 +157,11 @@ export function LifeSupplyHome() {
               </StaggerItem>
             ))}
           </Stagger>
+          <Reveal className="mt-12 border-t border-[var(--lsh-rule)] pt-8">
+            <ActionLink action={homepage.whoWeAre.link.action as ActionKey} variant="onLight">
+              {homepage.whoWeAre.link.label}
+            </ActionLink>
+          </Reveal>
         </Container>
       </section>
 

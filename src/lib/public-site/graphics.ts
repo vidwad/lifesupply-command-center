@@ -73,6 +73,9 @@ const PHARMACY_ILLUSTRATION_PROVENANCE =
 const PHARMACY_CATEGORY_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-13 for the representative-supplies tiles on Pharmacy Solutions; monochrome brief, no person, no logo, no packaging text, no product branding; scaled to 1600×900 and converted to neutral greyscale; conceptual, not operational photography, and never a specific product offered for sale.";
 
+const CONNECTED_CARE_PROVENANCE =
+  "Gamma image generation (photo mode), commissioned 2026-09-13 for the Connected Care Vision hero; monochrome brief, no person, no logo, no text, no vials or laboratory equipment; scaled to 1600×900 and converted to neutral greyscale; conceptual, not operational photography, and not a LifeSupply premises.";
+
 const MEDICAL_SUPPLIES_PROVENANCE =
   "Gamma image generation (photo mode), commissioned 2026-09-12 for the Balkowitsch Worldwide profile on the consolidated Medical Supply Solutions page; monochrome brief, no person, no facility, no logo, no text, no legible reading on any screen; scaled to 1800×1012 and converted to neutral greyscale with ffmpeg, then given a midtone lift (lutyuv gamma 1.75) so it sits with the two Canadian store photographs rather than reading as a much darker frame beside them; no highlight is clipped. It is conceptual, not operational photography: not a LifeSupply facility, not a photograph of a listed product, and no item in it is a confirmed SKU. It replaced the warehouse photograph on this page, which showed a person packing and could be read as an employee or an operating site.";
 
@@ -288,6 +291,14 @@ export const GRAPHICS = {
     width: 1600,
     height: 900,
     provenance: PHARMACY_CATEGORY_PROVENANCE,
+  },
+  /** Behind the Connected Care Vision hero (2026-09-13): a consultation desk, not a laboratory. */
+  connectedCareDesk: {
+    src: "/lsh/graphics/connected-care/consultation-desk-greyscale-v1.jpg",
+    alt: "Conceptual photograph of a consultation desk in window light, with a tablet showing a blank screen, a blood-pressure monitor with its cuff, a sealed carton and a pen on a notepad.",
+    width: 1600,
+    height: 900,
+    provenance: CONNECTED_CARE_PROVENANCE,
   },
   /** Beside "Opening, renovating, or expanding?" on Clinic Solutions. */
   clinicPlans: {

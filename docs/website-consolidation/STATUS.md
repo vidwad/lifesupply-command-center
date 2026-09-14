@@ -200,3 +200,7 @@ The marker polled for was "the trades and suppliers each project needs" — the 
 That covers, against production: all 21 retained pages answering 200; all 20 retired addresses answering 308 to their exact fragment; every one of those fragments resolving **with JavaScript disabled**; all 13 legacy redirects resolving in one hop with destinations unchanged; no internal link pointing at a retired address; no horizontal overflow at 360, 390, 768, 1280 or 1440; every image carrying an alternative; outbound destinations confined to approved hosts with nothing sent; and every page canonical and `noindex`.
 
 **The website consolidation is complete and verified in production.**
+
+## Addition — September 13, 2026
+
+Connected Care Vision (`/connected-care`) was added at the product owner's direction: the one page that explains how the businesses and the proposed capabilities could work together, with a status on every part. It is the fourth entry in the Solutions menu, set apart from the three service pages, and the first page added since the consolidation; fourteen live pages since, and the sitemap, the retained-page sweep and the registry canaries carry the new count.
