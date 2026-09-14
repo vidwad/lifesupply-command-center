@@ -7,7 +7,6 @@ import { GraphicBackdrop } from "@/components/public-site/graphic-backdrop";
 import { LifeSupplyLayout } from "@/components/public-site/lifesupply-layout";
 import {
   Container,
-  EditorialStat,
   Eyebrow,
   PublicHero,
   SectionHeading,
@@ -111,7 +110,7 @@ function PublishedDocuments({ published }: { published: Published<PublishedDocum
  *
  *   1. #business               what the group operates today
  *   2. #market-demand          the Medical Supplies market context, unchanged
- *   3. #financial-information  what it has reported, once, with its basis
+ *   3. #financial-information  the annual report, available to shareholders on request
  *   4. #business-model         how it earns revenue and how it could extend
  *   5. #growth-strategy        where growth can come from, five priorities
  *   6. #execution              the phased approach and what it would require
@@ -120,9 +119,9 @@ function PublishedDocuments({ published }: { published: Published<PublishedDocum
  *   9. #contact                the next action, and the two supporting pages
  *  10. #disclosures            the full qualification, on a permanent anchor
  *
- * The three retired addresses redirect to their sections. No figure counts
- * up, no chart is drawn from a single period, no phase reads as achieved,
- * and no proposed activity reads as offered.
+ * The three retired addresses redirect to their sections. No financial
+ * figure is published, no chart is drawn from a single period, no phase
+ * reads as achieved, and no proposed activity reads as offered.
  */
 export function InvestorRelationsPage({
   documents,
@@ -227,35 +226,24 @@ export function InvestorRelationsPage({
         </Container>
       </AnchoredSection>
 
-      {/* 3. The three figures, once, on a quiet ground, with the basis beneath. */}
+      {/* 3. Financial information: no figure on the site; the annual report on request (product owner, 2026-09-14). */}
       <AnchoredSection
         id="financial-information"
         offset="sectionNav"
         className="bg-[var(--lsh-surface)] px-5 py-20 lg:px-8"
       >
-        <Container>
+        <Container className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-16">
           <Reveal>
-            <SectionHeading eyebrow={ir.financials.eyebrow} title={ir.financials.title} />
+            <SectionHeading
+              eyebrow={ir.financials.eyebrow}
+              title={ir.financials.title}
+              description={ir.financials.text}
+            />
           </Reveal>
-          <Stagger className="mt-10 grid gap-4 sm:grid-cols-3">
-            {ir.currentReport.highlights.map((item) => (
-              <StaggerItem key={item.label} className="h-full">
-                <EditorialStat value={item.value} label={item.label} />
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <Reveal className="mt-10 grid gap-6 border-t border-[var(--lsh-rule-strong)] pt-6 lg:grid-cols-[0.6fr_1.4fr] lg:gap-16">
-            <Eyebrow as="h3">{ir.financials.basisTitle}</Eyebrow>
-            <div>
-              <ul className="grid gap-2 text-sm leading-6 text-[var(--lsh-charcoal)]">
-                {ir.financials.basis.map((line) => (
-                  <li key={line} className="lsh-bullet">
-                    {line}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-5 text-sm leading-6 text-[var(--lsh-muted)]">{ir.financials.note}</p>
-            </div>
+          <Reveal delay={0.05} className="lg:justify-self-end">
+            <ActionLink action={ir.financials.action as ActionKey}>
+              {ir.financials.actionLabel}
+            </ActionLink>
           </Reveal>
         </Container>
       </AnchoredSection>

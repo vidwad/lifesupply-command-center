@@ -529,13 +529,9 @@ describe("route registry", () => {
       expect(record.action, record.title).toMatch(/^request_/);
       expect(ACTIONS[record.action].destination.kind, record.title).toBe("mailto");
     }
-    expect(investorRelations.currentReport.entity).toContain("LifeSupply Health Inc.");
-    expect(investorRelations.currentReport.status).toMatch(/unaudited/i);
-    // Currency, and every figure carrying it.
-    expect(investorRelations.currentReport.currency).toBe("Canadian dollars");
-    for (const highlight of investorRelations.currentReport.highlights) {
-      expect(highlight.value, highlight.label).toMatch(/^C\$/);
-    }
+    // No figure since 2026-09-14: the section requests the annual report.
+    expect(investorRelations.financials.action).toBe("request_annual_report");
+    expect(ACTIONS[investorRelations.financials.action].destination.kind).toBe("mailto");
     for (const option of investorRelations.longerTerm.options) {
       expect(option.status, option.title).toBe("Under evaluation");
       expect(option.dependencies, option.title).toBeTruthy();

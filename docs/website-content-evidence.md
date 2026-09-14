@@ -9,9 +9,9 @@ Material public claims touched by the website improvement program, with their so
 
 | Claim | Source and date | Page | Status | Release | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Net sales $6.75M | 2025 annual-report narrative, year ended December 31, 2025 | Investor relations, Disclosures | Historical | Approved with qualification | **Corrected 2026-09-10:** this row previously said CAD. No source states a currency (S-60), so none is published. Period, entity and unaudited basis are shown |
-| Gross profit $2.20M | Same | Same | Historical | Approved with qualification | Not to be described as income |
-| Net income $284K | Same | Same | Historical | Approved with qualification | Distinct from gross profit; never combined |
+| Net sales $6.75M | 2025 annual-report narrative, year ended December 31, 2025 | Investor relations, Disclosures | Historical | **Withdrawn from the site 2026-09-14 (product owner):** no financial figure or highlight is published; the annual report is available to shareholders on request | **Corrected 2026-09-10:** this row previously said CAD. No source states a currency (S-60), so none is published. Period, entity and unaudited basis are shown |
+| Gross profit $2.20M | Same | Same | Historical | **Withdrawn from the site 2026-09-14 (product owner):** no financial figure or highlight is published; the annual report is available to shareholders on request | Not to be described as income |
+| Net income $284K | Same | Same | Historical | **Withdrawn from the site 2026-09-14 (product owner):** no financial figure or highlight is published; the annual report is available to shareholders on request | Distinct from gross profit; never combined |
 | Financing presentation exists, dated August 25, 2026 | Supplied source material | Investor relations | Under evaluation | Approved with qualification | Existence and date only. No amount, valuation, structure, counterparty, or use of proceeds |
 | Any other financial figure | — | — | — | Withheld | No figure is derived, averaged, restated, or carried across periods |
 

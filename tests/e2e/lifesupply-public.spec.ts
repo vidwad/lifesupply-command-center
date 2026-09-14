@@ -1268,13 +1268,15 @@ test.describe("LifeSupply public site", () => {
     for (const request of general) {
       await expect(request).toHaveAttribute("href", /^mailto:invest@lifesupply\.com\?subject=/);
     }
-    // The figures once, with their basis directly beneath, and the disclosures on their anchor.
+    // No financial figure anywhere on the page (product owner, 2026-09-14):
+    // the section says the annual report is available to shareholders on
+    // request, and its one action is that request.
     const financials = page.locator("#financial-information");
-    await expect(financials).toContainText("C$6.75M");
-    await expect(financials).toContainText(
-      "Unaudited, and not the subject of an audit or a review engagement.",
-    );
-    await expect(main.getByText("C$6.75M")).toHaveCount(1);
+    await expect(financials).toContainText("available to shareholders on request");
+    await expect(
+      financials.getByRole("link", { name: "Request the annual report" }),
+    ).toHaveAttribute("href", /^mailto:invest@lifesupply\.com\?subject=/);
+    expect(await main.textContent()).not.toMatch(/C\$\s?\d/);
     // Market demand carries the Medical Supplies chart with its sources and
     // qualification, once, between the operating foundation and the figures.
     const market = page.locator("#market-demand");

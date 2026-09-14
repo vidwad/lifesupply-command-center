@@ -204,3 +204,7 @@ That covers, against production: all 21 retained pages answering 200; all 20 ret
 ## Addition — September 13, 2026
 
 Connected Care Vision (`/connected-care`) was added at the product owner's direction: the one page that explains how the businesses and the proposed capabilities could work together, with a status on every part. It is the fourth entry in the Solutions menu, set apart from the three service pages, and the first page added since the consolidation; fourteen live pages since, and the sitemap, the retained-page sweep and the registry canaries carry the new count.
+
+## Financial figures withdrawn — September 14, 2026
+
+At the product owner's direction no financial figure or highlight is published anywhere on the site. The investor page's financial-information section now says the annual report for the year ended December 31, 2025 is available to shareholders on request, with the request as its one action; the disclosures paragraph, the supporting-information band and the About timeline say the same. The three figures leave the content model, and a canary asserts that no content file carries a dollar figure or a results line.
