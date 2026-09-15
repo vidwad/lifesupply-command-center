@@ -219,12 +219,7 @@ export function LifeSupplyHome() {
               </StaggerItem>
             ))}
           </Stagger>
-          {/* The source and the cumulative qualification, once, under all three. */}
-          <Reveal>
-            <p className="mt-12 border-t border-white/20 pt-6 text-xs leading-5 text-white/50">
-              {homepage.glance.source}
-            </p>
-          </Reveal>
+          {/* The source line under the three figures came off on 2026-09-14 (product owner); it stays in the content model unpublished. */}
         </Container>
       </section>
 

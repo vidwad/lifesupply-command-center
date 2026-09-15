@@ -163,11 +163,11 @@ test.describe("LifeSupply public site", () => {
     await expect(stats.nth(0)).toHaveText("25+", { timeout: 8_000 });
     await expect(stats.nth(1)).toHaveText("50,000+");
     await expect(stats.nth(2)).toHaveText("1M+");
-    // The source and the cumulative qualification moved under the three
-    // figures on 2026-09-12, so the caveat sits with them rather than above.
+    // The source line under the three figures came off on 2026-09-14
+    // (product owner): the band carries the figures and their labels only.
     const band = page.locator("section", { has: glance });
-    await expect(band).toContainText("2025 Annual Report");
-    await expect(band).toContainText(/cumulative and do not represent current active customers/i);
+    await expect(band).not.toContainText("2025 Annual Report");
+    await expect(band).not.toContainText(/cumulative and do not represent/i);
   });
 
   test("opens the homepage after the hero with Experienced, Growing, and Connected", async ({
@@ -272,7 +272,7 @@ test.describe("LifeSupply public site", () => {
     ).toHaveCount(0);
     // What replaced it says plainly that neither programme can be bought.
     await expect(
-      page.locator("main").getByText("These programs are not yet available."),
+      page.locator("main").getByText("These programs are currently in development."),
     ).toBeVisible();
     await expect(page.locator("main").locator('[data-band="warehouse"]')).toContainText(
       "Four operating websites",
