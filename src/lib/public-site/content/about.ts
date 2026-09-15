@@ -261,7 +261,7 @@ export const about = {
      * The section no longer carries "under evaluation" in its title, so this
      * line is what states plainly that neither programme can be bought.
      */
-    note: "These programs are not yet available.",
+    note: "These programs are currently in development.",
   },
 
   // Stage 2 draft heading; the cards come from the brand registry.

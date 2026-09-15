@@ -135,9 +135,10 @@ export const homepage = {
     eyebrow: "LifeSupply at a glance",
     title: "The scale of our operating businesses.",
     /**
-     * The source and the cumulative qualification moved out of a standfirst
-     * and under the figures themselves (product owner, 2026-09-12), so the
-     * caveat sits with the numbers rather than above them.
+     * The source and the cumulative qualification sat under the figures from
+     * 2026-09-12; the line came off the page on 2026-09-14 (product owner)
+     * and is kept here unpublished. The About timeline still carries the
+     * cumulative qualification in its own sentence.
      */
     source:
       "Source: LifeSupply’s 2025 Annual Report. Customer figures are cumulative and do not represent current active customers.",

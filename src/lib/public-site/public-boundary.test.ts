@@ -1949,7 +1949,7 @@ describe("restructure of 2026-09-08: sections, redirects, leadership, and Pharma
     // The section no longer says "under evaluation" in its title, so the
     // note is what states plainly that neither programme can be bought, and
     // it has to be rendered rather than merely present.
-    expect(aboutContent).toContain("These programs are not yet available.");
+    expect(aboutContent).toContain("These programs are currently in development.");
     expect(shared).toContain("{about.developing.note}");
     // Each card carries its own status, detail and destination label.
     expect(shared).toContain("{item.status}");
