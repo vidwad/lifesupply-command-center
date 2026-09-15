@@ -865,7 +865,7 @@ describe("round four: consolidation, precision and available actions", () => {
     const page = stripComments(read(`${PUBLIC_DIR}/pages/investors.tsx`));
     // The three access-class tiles are gone; one of them held nothing at all.
     expect(page).not.toContain("classes.map");
-    expect(investors).toContain("none is downloadable here");
+    expect(investors).toContain("nothing is downloaded directly from this page");
     // Every record still shows where it stands, and asks for the document by name.
     for (const category of ["Restricted, on request", "Historical"]) {
       expect(investors).toContain(category);
