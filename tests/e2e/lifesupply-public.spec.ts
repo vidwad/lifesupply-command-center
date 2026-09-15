@@ -1246,7 +1246,7 @@ test.describe("LifeSupply public site", () => {
     await page.goto("/investor-relations#materials");
     const main = page.locator("main");
     await expect(
-      main.getByRole("heading", { name: "Supporting information for investors.", exact: true }),
+      main.getByRole("heading", { name: "Materials available to investors.", exact: true }),
     ).toBeVisible();
     const materials = page.locator("#materials");
     // Three records, each with a document-specific request and no file.

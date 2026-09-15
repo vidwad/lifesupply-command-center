@@ -84,9 +84,9 @@ export const investorRelations = {
   /** 1. What the group operates today. */
   business: {
     eyebrow: "Operating foundation",
-    title: "An operating foundation across two markets.",
+    title: "Established businesses, real customers, two markets.",
     intro:
-      "The current business is three online supply stores and a clinic-development service. Each is described on its own page; this is what they add up to.",
+      "LifeSupply is built on businesses that serve customers today: online medical and home-care supply stores in Canada and the United States, and a clinic-development service in British Columbia. Together they give the group products, customers, supplier relationships, and the operating experience that its growth plan builds on.",
     items: [
       {
         graphic: "businessStores",
@@ -143,9 +143,9 @@ export const investorRelations = {
   /** 3. How the business earns revenue, and how it could extend. */
   model: {
     eyebrow: "Business model",
-    title: "How the business operates, and how it could expand.",
+    title: "A business that earns today, with room to grow.",
     intro:
-      "Revenue comes from product sales and project work today. The proposed extensions would build on the same customers and supply relationships, and each is shown with its status.",
+      "LifeSupply earns revenue by selling medical, health, and home-care products through its online stores and by delivering clinic planning, construction, and equipment projects. Each proposed extension would serve the same customers and use the same supply relationships. The table shows what operates today and what is proposed, so nothing is presented as more than it is.",
     labels: { activity: "Activity", role: "Commercial role", status: "Status" },
     rows: [
       {
@@ -279,6 +279,7 @@ export const investorRelations = {
           text: "Replenishment reminders, draft orders, and, for organizations, dedicated portals.",
         },
       ],
+      /** Unpublished since 2026-09-14 (product owner); the priority's own "In development" status carries the point. */
       note: "A development direction. None of these capabilities is offered until its implementation is confirmed.",
     },
   },
@@ -286,9 +287,9 @@ export const investorRelations = {
   /** 5. What has to happen to deliver it: four phases, all planned. */
   execution: {
     eyebrow: "Execution roadmap",
-    title: "A phased approach to development.",
+    title: "How an idea becomes a working service.",
     intro:
-      "Each developing program moves through the same four phases, and each phase has to produce its evidence before the next begins. That is why no launch date is published: the gate is what the work shows, not what a calendar says.",
+      "Every new program follows the same four steps: define it, prove it in a pilot, confirm the operating model, then scale it. Each step has to show results before the next one starts, so progress is measured by what has been demonstrated rather than by dates on a calendar.",
     labels: { phase: "Phase", purpose: "Purpose", evidence: "Evidence before progressing" },
     statusLabel: "Planned",
     phases: [
@@ -317,11 +318,13 @@ export const investorRelations = {
         evidence: "Repeatable service delivery and sufficient capacity.",
       },
     ],
+    /** Unpublished since 2026-09-14 (product owner); each phase carries its own "Planned" tag. */
     status:
       "All four phases are planned. No developing program has completed a pilot, and nothing described here is available to buy.",
     /**
      * What development may require, in kind only. No financing target,
      * allocation, valuation, or offering term is published (WEB-05).
+     * Unpublished since 2026-09-14 (product owner); kept on record.
      */
     capital: {
       title: "What development would require",
@@ -380,9 +383,9 @@ export const investorRelations = {
    */
   materials: {
     eyebrow: "Investor materials",
-    title: "Supporting information for investors.",
+    title: "Materials available to investors.",
     intro:
-      "Three materials are held for investors. Each is shared through investor relations, with the recipient and any confidentiality terms settled first; none is downloadable here.",
+      "Three documents are available to investors on request. Contact Investor Relations for any of them: we confirm who is receiving it and any confidentiality terms first, so nothing is downloaded directly from this page.",
     labels: { date: "Period or date", access: "Access" },
     records: [
       {

@@ -453,14 +453,11 @@ export function InvestorRelationsPage({
                 </li>
               ))}
             </ol>
-            <p className="mt-4 text-sm leading-6 text-[var(--lsh-muted)]">
-              {ir.growth.technology.note}
-            </p>
           </Reveal>
         </Container>
       </AnchoredSection>
 
-      {/* 6. Execution: four planned phases, each with the evidence it needs, and what development would require. */}
+      {/* 6. Execution: four planned phases, each with the evidence it needs. */}
       <AnchoredSection id="execution" offset="sectionNav" className="px-5 py-20 lg:px-8">
         <Container>
           <Reveal>
@@ -521,15 +518,7 @@ export function InvestorRelationsPage({
               </li>
             ))}
           </ol>
-          <Reveal className="mt-8 grid gap-6 border-t border-[var(--lsh-rule-strong)] pt-8 lg:grid-cols-2 lg:gap-16">
-            <p className="text-sm leading-6 text-[var(--lsh-muted)]">{ir.execution.status}</p>
-            <div>
-              <Eyebrow as="h3">{ir.execution.capital.title}</Eyebrow>
-              <p className="mt-3 text-sm leading-6 text-[var(--lsh-muted)]">
-                {ir.execution.capital.text}
-              </p>
-            </div>
-          </Reveal>
+          {/* The status line and the "what development would require" block came off on 2026-09-14 (product owner); both stay in the content model unpublished. */}
         </Container>
       </AnchoredSection>
 
