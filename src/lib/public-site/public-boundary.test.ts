@@ -1006,8 +1006,12 @@ describe("round three: architecture, placement and voice", () => {
     expect(investorsPage).toContain("{phase.index}");
     expect(investorsPage).not.toMatch(/complete|achieved|reached|done/i);
     expect(investorsPage).toContain("{phase.evidence}");
-    expect(investors).toContain("A phased approach to development.");
-    expect(investors).toContain("no launch date is published");
+    expect(investors).toContain("How an idea becomes a working service.");
+    expect(investors).toContain("rather than by dates on a calendar");
+    // The status line and the capital block came off the page on 2026-09-14
+    // (product owner) and stay in the model; the phases keep their Planned tags.
+    expect(investorsPage).not.toContain("{ir.execution.status}");
+    expect(investorsPage).not.toContain("ir.execution.capital");
     // What development would require, in kind only: no target, allocation or valuation.
     expect(investors).toContain(
       "The amount and form of any financing are not published on this site.",
@@ -1355,16 +1359,16 @@ describe("round two: commercial model, portfolio and editorial voice", () => {
       );
     }
     const investors = stripComments(read("src/lib/public-site/content/investors.ts"));
-    expect(investors).toContain("An operating foundation across two markets.");
+    expect(investors).toContain("Established businesses, real customers, two markets.");
     // Market demand is the Medical Supplies market context itself, never a copy
     // that could drift: the chart and its figures come from businesses.ts.
     expect(investors).toContain("...businesses.hub.market");
     expect(investors).not.toMatch(/value: \d/);
     expect(page).toContain("<DemographicChart data={ir.market.chart} />");
-    expect(investors).toContain("How the business operates, and how it could expand.");
+    expect(investors).toContain("A business that earns today, with room to grow.");
     expect(investors).toContain("Grow the core business. Extend the customer relationship.");
     expect(investors).toContain("Additional healthcare capabilities under evaluation.");
-    expect(investors).toContain("Supporting information for investors.");
+    expect(investors).toContain("Materials available to investors.");
     // No figure, no counter, and no chart drawn from one period: the annual
     // report is requested from the section instead.
     expect(page).not.toMatch(/currentReport|highlights|EditorialStat/);
@@ -2470,9 +2474,9 @@ describe("Stage 5 partners, investors, team, news, and policies", () => {
     expect(investors).toContain(
       "These activities are under evaluation and are not currently offered by LifeSupply.",
     );
-    expect(investors).toContain(
-      "None of these capabilities is offered until its implementation is confirmed.",
-    );
+    // The technology note came off the page on 2026-09-14 (product owner);
+    // the priority carries its own "In development" status.
+    expect(page).not.toContain("technology.note");
     expect(investors).not.toMatch(
       /predicts? shortages|integrated portals? (is|are) (available|live)|dynamic pricing/i,
     );
