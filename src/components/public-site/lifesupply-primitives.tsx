@@ -129,10 +129,12 @@ export function PublicHero({
       className={`relative overflow-hidden bg-[var(--lsh-ink)] px-5 text-white lg:px-8 ${
         isHome ? "pb-16 pt-12 lg:pb-20 lg:pt-16" : "py-14 lg:py-20"
       } ${media ? "flex min-h-[24rem] items-center lg:min-h-[30rem]" : ""} ${
-        // On a phone or tablet the home hero fills the first screen below the
+        // On a phone or tablet every hero fills the first screen below the
         // sticky header (7rem), in small-viewport units so browser toolbars
-        // never make it jump (product owner, 2026-09-22).
-        isHome ? "max-lg:min-h-[calc(100svh-7rem)]" : ""
+        // never make it jump. A minimum height only: a hero whose copy is
+        // taller than the screen keeps its own height (product owner,
+        // 2026-09-22).
+        "max-lg:min-h-[calc(100svh-7rem)]"
       }`}
     >
       {media}
