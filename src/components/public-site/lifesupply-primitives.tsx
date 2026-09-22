@@ -127,7 +127,7 @@ export function PublicHero({
   return (
     <section
       className={`relative overflow-hidden bg-[var(--lsh-ink)] px-5 text-white lg:px-8 ${
-        isHome ? "pb-16 pt-12 lg:pb-20 lg:pt-16" : "py-14 lg:py-20"
+        isHome ? "pb-16 pt-12 lg:pb-20 lg:pt-16" : "py-10 sm:py-14 lg:py-20"
       } ${media ? "flex min-h-[24rem] items-center lg:min-h-[30rem]" : ""} ${
         // On a phone or tablet every hero fills the first screen below the
         // sticky header (7rem), in small-viewport units so browser toolbars
@@ -196,7 +196,7 @@ export function PublicHero({
             (paragraph, index) => (
               <p
                 key={paragraph.slice(0, 40)}
-                className={`lsh-enter max-w-2xl leading-8 text-white/80 ${index === 0 ? "mt-6" : "mt-4"} ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
+                className={`lsh-enter max-w-2xl leading-6 text-white/80 lg:leading-8 ${index === 0 ? "mt-4 lg:mt-6" : "mt-3 lg:mt-4"} ${isHome ? "text-lg" : "text-base sm:text-lg"}`}
                 style={
                   {
                     "--lsh-enter-delay": `${0.16 + index * 0.04}s`,
@@ -209,16 +209,16 @@ export function PublicHero({
           )}
           {status ? (
             <div
-              className="lsh-enter mt-7 max-w-xl border-l-2 border-[var(--lsh-red-on-ink)] pl-4"
+              className="lsh-enter mt-5 max-w-xl border-l-2 border-[var(--lsh-red-on-ink)] pl-4 lg:mt-7"
               style={{ "--lsh-enter-delay": "0.24s" } as React.CSSProperties}
             >
               <p className="lsh-display text-[10px] text-[var(--lsh-red-on-ink)]">Status</p>
-              <p className="mt-1 text-sm leading-6 text-white/85">{status}</p>
+              <p className="mt-1 text-sm leading-5 text-white/85 lg:leading-6">{status}</p>
             </div>
           ) : null}
           {actions ? (
             <div
-              className="lsh-enter mt-9 flex flex-wrap gap-3"
+              className="lsh-enter mt-6 flex flex-wrap gap-3 lg:mt-9"
               style={{ "--lsh-enter-delay": "0.24s" } as React.CSSProperties}
             >
               {actions}
