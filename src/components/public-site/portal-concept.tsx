@@ -346,9 +346,20 @@ export function PortalConcept({
 
       {/* The portal's own chrome: the location switch and the three views. */}
       <div className="flex flex-col gap-4 border-b border-[var(--lsh-rule)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="lsh-display text-[10px] text-[var(--lsh-muted)]">{set.switchLabel}</span>
-          <div role="group" aria-label={set.switchLabel} className="flex flex-wrap gap-2">
+        {/*
+         * Below the large breakpoint the switch and the tab strip are each one
+         * line that scrolls sideways rather than wrapping; from lg up they wrap
+         * as before.
+         */}
+        <div className="flex items-center gap-x-4 lg:flex-wrap lg:gap-y-2">
+          <span className="lsh-display shrink-0 text-[10px] text-[var(--lsh-muted)]">
+            {set.switchLabel}
+          </span>
+          <div
+            role="group"
+            aria-label={set.switchLabel}
+            className="lsh-scroll-row min-w-0 flex-1 gap-2 lg:flex-none"
+          >
             {set.locations.map((option) => {
               const pressed = option.key === location;
               return (
@@ -369,7 +380,7 @@ export function PortalConcept({
             })}
           </div>
         </div>
-        <div role="tablist" aria-label={viewsLabel} className="flex flex-wrap gap-x-1">
+        <div role="tablist" aria-label={viewsLabel} className="lsh-scroll-row gap-x-1">
           {views.map((option, index) => {
             const key = option.key as ViewKey;
             const selected = key === view;

@@ -63,14 +63,22 @@ export function CategoryExplorer({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-y border-[var(--lsh-rule)] py-4">
-        <span id={groupId} className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">
+        <span id={groupId} className="lsh-display shrink-0 text-[10px] text-[var(--lsh-brand-red)]">
           {filterLabel}
         </span>
         {/*
          * Toggle buttons, not tabs: the tiles are one grid whichever filter
          * is on, so the pressed state is the whole story for a screen reader.
+         *
+         * Below the large breakpoint the buttons are one line that scrolls
+         * sideways beside the label, with the count on its own line beneath;
+         * from lg up they wrap and the count sits at the right as before.
          */}
-        <div role="group" aria-labelledby={groupId} className="flex flex-wrap gap-x-2 gap-y-2">
+        <div
+          role="group"
+          aria-labelledby={groupId}
+          className="lsh-scroll-row min-w-0 flex-1 gap-x-2 lg:flex-none lg:gap-y-2"
+        >
           {filters.map((option) => {
             const pressed = option.key === filter;
             return (
@@ -90,7 +98,10 @@ export function CategoryExplorer({
             );
           })}
         </div>
-        <p aria-live="polite" className="text-xs text-[var(--lsh-muted)] sm:ml-auto">
+        <p
+          aria-live="polite"
+          className="basis-full text-xs text-[var(--lsh-muted)] lg:ml-auto lg:basis-auto"
+        >
           {countLabel.replace("{n}", String(shown))}
         </p>
       </div>

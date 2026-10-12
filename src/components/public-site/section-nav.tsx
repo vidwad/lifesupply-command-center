@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Container } from "@/components/public-site/lifesupply-primitives";
 
@@ -34,6 +34,21 @@ export function SectionNav({
   label?: string;
 }) {
   const [active, setActive] = useState<string | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // On a phone the list is one line that scrolls sideways, so the current
+  // section's link is brought into view as the visitor reads down; otherwise
+  // the mark could sit off the right edge. Only the row scrolls, never the
+  // page, and only when the row actually overflows. The motion comes from
+  // the row's CSS scroll-behavior, which the reduced-motion rule switches off.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || !active || list.scrollWidth <= list.clientWidth) return;
+    const link = list.querySelector<HTMLElement>(`a[href="${active}"]`);
+    const item = link?.parentElement;
+    if (!item) return;
+    list.scrollTo({ left: Math.max(0, item.offsetLeft - 20) });
+  }, [active]);
 
   useEffect(() => {
     const targets = items
@@ -61,9 +76,20 @@ export function SectionNav({
       aria-label={label}
       className="border-y border-[var(--lsh-rule)] bg-[var(--lsh-paper)] px-5 py-4 transition-[top] duration-300 ease-out motion-reduce:transition-none lg:sticky lg:top-[var(--lsh-header-offset,4.5rem)] lg:z-40 lg:px-8"
     >
-      <Container className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
-        <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{label}</span>
-        <ul className="flex flex-wrap gap-x-6 gap-y-1">
+      {/*
+       * Below the large breakpoint the list is one line that scrolls sideways
+       * and runs to the screen's edge, so a cut-off label shows there is
+       * more; the label stays put. From lg up it wraps as before. The list is
+       * positioned so each item's offset is measured from the list itself.
+       */}
+      <Container className="flex items-baseline gap-x-5 lg:flex-wrap lg:gap-x-8 lg:gap-y-2">
+        <span className="lsh-display shrink-0 text-[10px] text-[var(--lsh-brand-red)]">
+          {label}
+        </span>
+        <ul
+          ref={listRef}
+          className="lsh-scroll-row relative -mr-5 min-w-0 flex-1 gap-x-6 pr-5 lg:mr-0 lg:flex-none lg:gap-y-1 lg:pr-0"
+        >
           {items.map((item) => {
             const current = active === item.href;
             return (

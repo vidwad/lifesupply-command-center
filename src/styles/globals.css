@@ -1188,6 +1188,107 @@
     }
   }
 
+  /*
+   * Horizontal sub-menu row (2026-10-11, owner direction). Below the large
+   * breakpoint a row of short labels (the in-page navigation, the category
+   * filter chips, the portal demo's switch and tabs) scrolls sideways in one
+   * line instead of wrapping onto several. The scrollbar is hidden and the
+   * right edge fades to show there is more; the trailing padding keeps the
+   * last item clear of that fade once the row is scrolled to its end. From
+   * the large breakpoint up it is the plain wrapping row it was before.
+   *
+   * Scrolling is smooth through the CSS property only, so the reduced-motion
+   * rule at the end of this layer turns it off with everything else.
+   */
+  .lsh-scroll-row {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-block: 0.25rem;
+    margin-block: -0.25rem;
+  }
+
+  .lsh-scroll-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * The edge fade is driven by the row's own scroll position, so it appears
+   * only when the row overflows, sits on the right until the visitor scrolls,
+   * then on the left once they reach the end, so the last item is never under
+   * it. A browser without scroll-driven
+   * animations gets the plain scrolling row with no fade. This is not motion:
+   * nothing moves unless the visitor scrolls, so it stays on under reduced
+   * motion like the page's own scrolling does. The two lengths are registered
+   * at the end of this file so they can interpolate.
+   */
+  @supports (animation-timeline: scroll()) {
+    .lsh-scroll-row {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--lsh-fade-start),
+        #000 calc(100% - var(--lsh-fade-end)),
+        transparent
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--lsh-fade-start),
+        #000 calc(100% - var(--lsh-fade-end)),
+        transparent
+      );
+      animation-name: lsh-scroll-row-fade;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(self inline);
+    }
+  }
+
+  @keyframes lsh-scroll-row-fade {
+    0% {
+      --lsh-fade-start: 0rem;
+      --lsh-fade-end: 2.5rem;
+    }
+    15%,
+    85% {
+      --lsh-fade-start: 2.5rem;
+      --lsh-fade-end: 2.5rem;
+    }
+    100% {
+      --lsh-fade-start: 2.5rem;
+      --lsh-fade-end: 0rem;
+    }
+  }
+
+  .lsh-scroll-row > * {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 1024px) {
+    .lsh-scroll-row {
+      flex-wrap: wrap;
+      overflow: visible;
+      padding-block: 0;
+      margin-block: 0;
+      -webkit-mask-image: none;
+      mask-image: none;
+      animation: none;
+    }
+
+    .lsh-scroll-row > * {
+      flex: 0 1 auto;
+      white-space: normal;
+    }
+  }
+
   /* Back-to-top control: rises in once it is needed; static under reduced motion. */
   @media (prefers-reduced-motion: no-preference) {
     .lsh-scroll-top {
@@ -1214,4 +1315,21 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+
+/*
+ * Registered so the sub-menu row's edge fade (.lsh-scroll-row, in the
+ * components layer) can interpolate its two lengths along the scroll
+ * timeline. Registration has to sit at the top level of the sheet.
+ */
+@property --lsh-fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0rem;
+}
+
+@property --lsh-fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 2.5rem;
 }
