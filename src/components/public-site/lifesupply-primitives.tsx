@@ -165,11 +165,12 @@ export function PublicHero({
         </div>
       ) : null}
       <div className="relative mx-auto w-full max-w-7xl">
-        <div
-          className={`border-l-4 border-[var(--lsh-brand-red)] pl-5 sm:pl-7 ${
-            isHome ? "max-w-5xl" : aside ? "max-w-3xl lg:max-w-[58%]" : "max-w-4xl"
-          }`}
-        >
+        {/*
+         * The copy block sits flush with the page's left edge: the red rule
+         * that ran down its left side was removed at the product owner's
+         * direction (2026-10-12).
+         */}
+        <div className={isHome ? "max-w-5xl" : aside ? "max-w-3xl lg:max-w-[58%]" : "max-w-4xl"}>
           {/*
            * Round four, change 2. The eyebrow, the heading, the sentence and
            * the actions are plain elements that are legible at the first
