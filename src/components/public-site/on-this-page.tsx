@@ -21,9 +21,16 @@ export function OnThisPage({
 }) {
   return (
     <nav aria-label={label} className="border-y border-[var(--lsh-rule)] px-5 py-5 lg:px-8">
-      <Container className="flex flex-wrap items-baseline gap-x-8 gap-y-3">
-        <span className="lsh-display text-[10px] text-[var(--lsh-brand-red)]">{label}</span>
-        <ul className="flex flex-wrap gap-x-7 gap-y-2">
+      {/*
+       * Below the large breakpoint the list is one line that scrolls sideways
+       * and runs to the screen's edge, so a cut-off label shows there is
+       * more; the label stays put. From lg up it wraps as before.
+       */}
+      <Container className="flex items-baseline gap-x-5 lg:flex-wrap lg:gap-x-8 lg:gap-y-3">
+        <span className="lsh-display shrink-0 text-[10px] text-[var(--lsh-brand-red)]">
+          {label}
+        </span>
+        <ul className="lsh-scroll-row -mr-5 min-w-0 flex-1 gap-x-7 pr-5 lg:mr-0 lg:flex-none lg:gap-y-2 lg:pr-0">
           {items.map((item) => (
             <li key={item.href}>
               <a
