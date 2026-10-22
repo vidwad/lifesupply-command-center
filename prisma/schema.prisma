@@ -77,6 +77,9 @@ model User {
   forecastsApproved           ForecastScenario[]     @relation("ForecastApprover")
   agentRuns                   AgentRun[]             @relation("AgentRunTrigger")
   productStudioProjects       ProductStudioProject[] @relation("ProductStudioCreator")
+  productStudioDescriptionUploadsApproved ProductStudioProject[] @relation("ProductStudioDescriptionUploadApprover")
+  productStudioAssetUploadsApproved ProductStudioAsset[]  @relation("ProductStudioAssetUploadApprover")
+  productStudioPublishesWritten ProductStudioPublishLog[] @relation("ProductStudioPublishWriter")
   pricingRunsCreated          PricingRun[]           @relation("PricingRunCreator")
   priceRecommendationsApproved PriceRecommendation[] @relation("PriceRecommendationApprover")
   priceRecommendationsRejected PriceRecommendation[] @relation("PriceRecommendationRejecter")
@@ -238,6 +241,7 @@ model Store {
   pricingRuns            PricingRun[]
   pricingRunItems        PricingRunItem[]
   priceWritebackLogs     PriceWritebackLog[]
+  productStudioPublishLogs ProductStudioPublishLog[]
 
   @@unique([sourceSystem, externalStoreId])
   @@index([divisionId])
@@ -418,6 +422,7 @@ model Product {
   pricingRules     PricingRule[]
   pricingRunItems  PricingRunItem[]
   priceWritebackLogs PriceWritebackLog[]
+  productStudioPublishLogs ProductStudioPublishLog[]
   competitorUrls   ProductCompetitorUrl[]
 
   @@unique([sourceSystem, sourceId])
@@ -466,15 +471,23 @@ model ProductStudioProject {
   researchSummary   Json?
   warnings          String[]
   errorMessage      String?                    @db.Text
+  /// The full description is marked "approved for upload" to BigCommerce
+  /// (2026-10-22). Internal approval only; the publish step is separate.
+  descriptionUploadApprovedAt   DateTime?
+  descriptionUploadApprovedById String?
+  /// Set once the description has been written to the store; cleared never.
+  descriptionPublishedAt        DateTime?
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
 
   product           Product?                   @relation(fields: [productId], references: [id], onDelete: SetNull)
   createdBy         User?                      @relation("ProductStudioCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  descriptionUploadApprovedBy User?            @relation("ProductStudioDescriptionUploadApprover", fields: [descriptionUploadApprovedById], references: [id], onDelete: SetNull)
   assets            ProductStudioAsset[]
   researchSources   ProductStudioResearchSource[]
   priceObservations ProductStudioPriceObservation[]
   compositions      ProductStudioComposition[]
+  publishLogs       ProductStudioPublishLog[]
 
   @@index([productId])
   @@index([createdById])
@@ -512,10 +525,20 @@ model ProductStudioAsset {
   modelName      String?
   status         ProductStudioAssetStatus @default(uploaded)
   qaResult       Json?
+  /// An approved draft marked "approved for upload" to BigCommerce
+  /// (2026-10-22). Internal approval only; the publish step is separate.
+  uploadApprovedAt   DateTime?
+  uploadApprovedById String?
+  /// Set once the image has been written to the store, with the id the
+  /// store assigned, so the same draft is never uploaded twice.
+  publishedAt        DateTime?
+  bigCommerceImageId Int?
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
 
-  project ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project          ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadApprovedBy User?                @relation("ProductStudioAssetUploadApprover", fields: [uploadApprovedById], references: [id], onDelete: SetNull)
+  publishLogs      ProductStudioPublishLog[]
 
   @@unique([projectId, kind, compositionSlot, revision])
   @@index([projectId])
@@ -535,6 +558,57 @@ enum ProductStudioAssetStatus {
   needs_review
   approved
   rejected
+  failed
+}
+
+/// One attempted write of Product Studio content to a BigCommerce product:
+/// one image upload or one description update (2026-10-22). The row is
+/// created before the request goes out and carries the store's prior state,
+/// so a crash mid-write still leaves evidence of what was there. Separate from
+/// PriceWritebackLog on purpose: that log is price-only and canary-guarded.
+model ProductStudioPublishLog {
+  id              String                     @id @default(cuid())
+  projectId       String?
+  /// Kept as text so the record survives the project being deleted.
+  projectTitle    String
+  assetId         String?
+  storeId         String
+  productId       String?
+  sourceProductId String
+  kind            ProductStudioPublishKind
+  status          ProductStudioPublishStatus @default(queued)
+  /// What was sent: path, fields, file name and hash — never the image bytes.
+  requestPayload  Json?
+  responsePayload Json?
+  /// The product's description and image list as read from the store before
+  /// the write, so the change can be reversed by hand if it has to be.
+  beforeSnapshot  Json?
+  bigCommerceImageId Int?
+  errorMessage    String?                    @db.Text
+  writtenById     String?
+  writtenAt       DateTime?
+  createdAt       DateTime                   @default(now())
+
+  project   ProductStudioProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  asset     ProductStudioAsset?   @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  store     Store                 @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  product   Product?              @relation(fields: [productId], references: [id], onDelete: SetNull)
+  writtenBy User?                 @relation("ProductStudioPublishWriter", fields: [writtenById], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([assetId])
+  @@index([status])
+  @@map("product_studio_publish_logs")
+}
+
+enum ProductStudioPublishKind {
+  image
+  description
+}
+
+enum ProductStudioPublishStatus {
+  queued
+  succeeded
   failed
 }
 

@@ -352,7 +352,11 @@ Recorded here for explicit sign-off. Source: `docs/20_PHASE_11_DEPLOYMENT_READIN
 ### 7.2 Out of scope — keep disabled
 
 - Customer email sending from the Command Center.
-- BigCommerce write-backs.
+- BigCommerce write-backs. Two write paths now exist in code, the sale-price writeback and, since
+  2026-10-22, Product Studio publishing of upload-approved images and the full description
+  (`docs/27_PRODUCT_STUDIO.md` §5.5). Each is behind `external.writebacks` plus its own flag, all
+  seeded off, and a Super Admin-only permission. Neither is enabled in any environment until
+  `GATE-10` is accepted.
 - QuickBooks write-backs.
 - Supplier order submission.
 - Investor material distribution.
@@ -377,7 +381,7 @@ Blockers identified during Phase 11A that are not resolvable by documentation al
 | BLK-06 | No named owners exist for any Phase 11 role. Every "Accountable role" in this register is a role, not a person. | No gate can reach **Accepted** without an accountable person. | 2026-08-04 | Product Owner | Assign named owners. Requires `DEC-09`. | Open |
 | BLK-07 | Object storage is referenced throughout the plan and `docs/16_DEPLOYMENT_AND_ENVIRONMENT.md` §6, but no `S3_*` values are configured in `render.yaml` for any environment. | Supplier evidence, exports, and report artefacts may not persist as designed. | 2026-08-04 | Technical Lead | `S3_*` variables reserved (`sync: false`) in `render.staging.yaml` so the blueprint carries the slots; app treats storage as optional today (supplier evidence persists in Postgres since Phase 7). Provider choice + bucket provisioning await `DEC-03`. | Open — awaiting `DEC-03` |
 | BLK-08 | `main` has advanced beyond the recorded baseline with new feature modules — Product Studio (PR #24) and Pricing Intelligence DP-1 (PR #25), plus two new migrations — merged while `CLAUDE.md` §2/§9 declared feature expansion frozen for Phase 11. | Phase 11C security evidence, 11D reconciliation scope, and 11E performance thresholds were all scoped to baseline `6db79b2`, which no longer describes `main`. Gate evidence gathered before these merges may not cover the pricing engine or the OpenAI image pipeline. | 2026-08-08 | Product Owner | Ratify or reverse the scope change (`DEC-16`). If ratified, re-scope 11C/11D/11E evidence to the new surface area and record a superseding baseline. | **Closed by `DEC-16`** (2026-08-20). Freeze lifted; the evidence-scope consequence below is now tracked as `BLK-09`. |
-| BLK-09 | Phase 11C security evidence, 11D reconciliation scope, and 11E performance thresholds were scoped to baseline `6db79b2`. `main` has since gained Product Studio, Pricing Intelligence, and an OpenAI image pipeline. Lifting the freeze (`DEC-16`) removes the process conflict but not the coverage gap. | Gate evidence may not cover the new surface area. Any gate accepted on pre-2026-08-20 evidence should state the commit it was gathered against. | 2026-08-20 | Technical Lead | Re-scope 11C/11D/11E evidence to current `main`, or record per-gate which commit its evidence covers. | Open |
+| BLK-09 | Phase 11C security evidence, 11D reconciliation scope, and 11E performance thresholds were scoped to baseline `6db79b2`. `main` has since gained Product Studio, Pricing Intelligence, an OpenAI image pipeline and, on 2026-10-22, a second BigCommerce write path (Product Studio publishing, default off). Lifting the freeze (`DEC-16`) removes the process conflict but not the coverage gap. | Gate evidence may not cover the new surface area. Any gate accepted on pre-2026-08-20 evidence should state the commit it was gathered against. | 2026-08-20 | Technical Lead | Re-scope 11C/11D/11E evidence to current `main`, or record per-gate which commit its evidence covers. | Open |
 
 ---
 

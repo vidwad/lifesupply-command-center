@@ -28,6 +28,13 @@ import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
 import { MAX_OPERATOR_INSTRUCTIONS } from "@/server/services/product-studio/prompt-controls";
 import {
+  canUserPublish,
+  latestGeneratedBySlot,
+  resolvePublishTarget,
+  selectPublishItems,
+} from "@/server/services/product-studio/publish-eligibility";
+import { listPublishLogs, publishFlagState } from "@/server/services/product-studio/publish-read";
+import {
   approvedSlotCount,
   buildWorkflowSteps,
   isWorkflowBusy,
@@ -40,6 +47,7 @@ import {
   reviewAssetAction,
 } from "../actions";
 import { StudioActionForm } from "../studio-action-form";
+import { PublishPanel } from "./publish-panel";
 import { WorkflowProgress } from "./workflow-progress";
 
 export const dynamic = "force-dynamic";
@@ -69,12 +77,17 @@ function asStrings(value: unknown): string[] {
 }
 
 export default async function ProductStudioDetailPage({ params }: Props) {
-  await requirePermission(PERMISSIONS.PRODUCTS_UPDATE);
+  const user = await requirePermission(PERMISSIONS.PRODUCTS_UPDATE);
   await requirePermission(PERMISSIONS.AI_USE);
   const { id } = await params;
-  const [project, flags] = await Promise.all([
+  // The publishing card is for Super Admin only, so its history and flag
+  // state are not even queried for anyone else.
+  const mayPublish = canUserPublish(user);
+  const [project, flags, publishFlags, publishLogs] = await Promise.all([
     getProductStudioProject(id),
     getFeatureFlags([FEATURE_FLAGS.PRODUCT_STUDIO, FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION]),
+    mayPublish ? publishFlagState() : Promise.resolve(null),
+    mayPublish ? listPublishLogs(id) : Promise.resolve([]),
   ]);
   if (!project) notFound();
 
@@ -113,6 +126,33 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   const summary = asRecord(project.researchSummary);
   const identity = asRecord(summary?.identifiedProduct);
   const benchmark = asRecord(summary?.benchmarkListing);
+
+  // Everything the publishing card shows is derived by the same pure rules
+  // the publish service applies, so the card can never promise what the
+  // service would refuse.
+  const publishTarget = mayPublish ? resolvePublishTarget(project.product) : null;
+  const publishImages = mayPublish
+    ? latestGeneratedBySlot(project.assets).map((asset) => ({
+        assetId: asset.id,
+        slot: asset.compositionSlot ?? 0,
+        name:
+          project.compositions.find((item) => item.slot === asset.compositionSlot)?.name ??
+          "Composition",
+        revision: asset.revision,
+        status: asset.status,
+        uploadApproved: asset.uploadApprovedAt != null,
+        publishedAt: asset.publishedAt?.toISOString() ?? null,
+        bigCommerceImageId: asset.bigCommerceImageId,
+      }))
+    : [];
+  const publishPending = mayPublish
+    ? selectPublishItems({
+        project,
+        assets: project.assets,
+        compositions: project.compositions,
+      }).length
+    : 0;
+  const formatWhen = (value: Date) => value.toISOString().replace("T", " ").slice(0, 16) + " UTC";
 
   return (
     <div>
@@ -502,11 +542,45 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   </StudioActionForm>
                 ) : null}
                 <p className="text-xs text-muted-foreground">
-                  No result is published externally. Approval here means internally accepted draft
-                  only.
+                  Approval here means internally accepted draft only. Publishing to the store is a
+                  separate step for a Super Admin, under its own controls.
                 </p>
               </CardContent>
             </Card>
+
+            {mayPublish && publishFlags && publishTarget ? (
+              <PublishPanel
+                projectId={project.id}
+                target={publishTarget.target}
+                targetReason={publishTarget.reason}
+                disabledFlags={publishFlags.disabledFlags}
+                busy={busy}
+                images={publishImages}
+                description={{
+                  present: Boolean(project.longDescription?.trim()),
+                  preview: project.longDescription?.trim().slice(0, 280) ?? "",
+                  uploadApproved: project.descriptionUploadApprovedAt != null,
+                  publishedAt: project.descriptionPublishedAt?.toISOString() ?? null,
+                }}
+                pendingCount={publishPending}
+                logs={publishLogs.map((log) => ({
+                  id: log.id,
+                  label:
+                    log.kind === "description"
+                      ? "Full description"
+                      : "Composition " +
+                        String(log.asset?.compositionSlot ?? "?") +
+                        (log.asset && log.asset.revision > 1 ? ` r${log.asset.revision}` : "") +
+                        (log.bigCommerceImageId != null
+                          ? ` → image #${log.bigCommerceImageId}`
+                          : ""),
+                  status: log.status,
+                  who: log.writtenBy?.name ?? log.writtenBy?.email ?? null,
+                  at: formatWhen(log.writtenAt ?? log.createdAt),
+                  error: log.errorMessage,
+                }))}
+              />
+            ) : null}
 
             <Card>
               <CardHeader>

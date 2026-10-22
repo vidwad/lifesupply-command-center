@@ -144,7 +144,17 @@ export async function getProductStudioProject(id: string) {
   return prisma.productStudioProject.findUnique({
     where: { id },
     include: {
-      product: { select: { id: true, name: true, sku: true } },
+      product: {
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          storeId: true,
+          sourceSystem: true,
+          sourceId: true,
+          store: { select: { name: true } },
+        },
+      },
       createdBy: { select: { id: true, name: true, email: true } },
       assets: {
         select: {
@@ -162,6 +172,9 @@ export async function getProductStudioProject(id: string) {
           modelName: true,
           status: true,
           qaResult: true,
+          uploadApprovedAt: true,
+          publishedAt: true,
+          bigCommerceImageId: true,
           createdAt: true,
         },
         orderBy: [{ kind: "asc" }, { compositionSlot: "asc" }, { revision: "desc" }],

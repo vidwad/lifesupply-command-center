@@ -35,6 +35,18 @@ const stripComments = (source: string): string =>
 
 const PUBLIC_DIR = "src/components/public-site";
 
+/**
+ * Command Center migrations added after the website stages closed. The two
+ * "adds no migration file" canaries below guard the public-web stages, which
+ * ship their SQL as prepared artifacts; a migration for the authenticated
+ * application is a different matter and is listed here by name so the
+ * guard still catches an unexpected one.
+ */
+const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
+  // Product Studio publishing to BigCommerce (product owner, 2026-10-22).
+  "20261022120000_product_studio_publish",
+]);
+
 /** Every file in the public content model, for sweeps that must cover all copy. */
 function publicContentFiles() {
   const dir = "src/lib/public-site/content";
@@ -2547,7 +2559,10 @@ describe("Stage 6 governed publishing on the public site", () => {
 
   it("adds no migration file: the Render container applies migrations on every deploy", () => {
     const migrations = readdirSync(join(ROOT, "prisma/migrations")).filter(
-      (name) => /^\d{14}_/.test(name) && Number(name.slice(0, 14)) > 20260907235000,
+      (name) =>
+        /^\d{14}_/.test(name) &&
+        Number(name.slice(0, 14)) > 20260907235000 &&
+        !COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES.has(name),
     );
     expect(migrations).toEqual([]);
     expect(
@@ -2597,7 +2612,10 @@ describe("Stage 7 inquiry capture stays unpublished until its decisions are reco
 
   it("adds no migration file and ships the inquiry table as a prepared artifact", () => {
     const migrations = readdirSync(join(ROOT, "prisma/migrations")).filter(
-      (name) => /^\d{14}_/.test(name) && Number(name.slice(0, 14)) > 20260907235000,
+      (name) =>
+        /^\d{14}_/.test(name) &&
+        Number(name.slice(0, 14)) > 20260907235000 &&
+        !COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES.has(name),
     );
     expect(migrations).toEqual([]);
     expect(

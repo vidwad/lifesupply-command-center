@@ -25,8 +25,10 @@ description into a durable, reviewable project containing:
 - human approval/rejection state and a preserved revision history for every generated image; and
 - complete AI prompt, output, source-reference, model, token, actor, and audit records.
 
-The feature does **not** publish to BigCommerce, change a product price, copy a competitor image,
-send a campaign, or post to a social network.
+The feature does **not** change a product price, copy a competitor image, send a campaign, or post
+to a social network. Since 2026-10-22 it **can** publish upload-approved images and the full
+description to the linked BigCommerce product, but only through the separately gated Super
+Admin step in §5.5; the review workflow itself still publishes nothing.
 
 ## 2. Workflow
 
@@ -51,7 +53,7 @@ send a campaign, or post to a social network.
    their prompts, models, QA results, and timestamps are never overwritten and stay visible in the
    revision history.
 10. After four drafts are approved, the project status becomes `approved`. This means approved inside
-    Command Center only; no external publishing path exists in this slice.
+    Command Center only. Sending anything to the store is the separate Super Admin step in §5.5.
 11. When `product_studio.enabled` is off, intake, research, generation, and review actions all fail
     closed server-side; stored records remain intact and readable.
 
@@ -122,15 +124,60 @@ specification for `new_sealed`. Fabricated identifiers are a defect in both.
 | Prompt injection | Web pages are labelled untrusted data; their instructions must be ignored. |
 | Source verification | Cited seller domains are validated against actual web-search tool evidence (tool calls and URL-citation annotations only — a URL the model merely wrote is not evidence). Research citing unsupported domains is rejected. |
 | Provenance | Seller URLs, price observations, prompts, model names, hashes, actors, and timestamps are stored. |
-| External actions | None. BigCommerce updates and social publishing are out of scope. |
+| External actions | One, added 2026-10-22: publishing upload-approved images and the full description to the linked BigCommerce product (§5.5). Social publishing stays out of scope. |
 | Human review | Generated assets remain `needs_review` or `rejected` until a permitted user acts. |
 | Audit | Project creation, research queue/result/failure, generation queue/result/failure, and review are logged. |
 
+## 5.5 Publishing to BigCommerce (product owner, 2026-10-22)
+
+The second external write-back in the application, after the Pricing Intelligence sale-price
+writeback, and built to the same pattern. It lives in a card of its own, "BigCommerce publishing",
+in the right column of the project page, and only a Super Admin sees it.
+
+**What it can send.** Two things, each once:
+
+- a generated draft that a reviewer approved **and** a Super Admin then marked "approved for
+  upload", added to the product's images as a multipart upload from the stored bytes; and
+- the full description (`longDescription`), once marked "approved for upload", written as escaped
+  `<p>` paragraphs and **replacing** the description on the store.
+
+**What it never touches.** Name, price, SKU, inventory, visibility, the thumbnail and the images
+already on the listing. The client module has no method for any of them.
+
+**The gates, stacked.**
+
+1. `product_studio.enabled`, `product_studio.publish` and `external.writebacks` must all be on. The
+   last two are in the kill set; the health probe observes `product_studio.publish`.
+2. The caller must hold `products.approve_bigcommerce_update`, which only Super Admin has. Both the
+   upload mark and the publish action require it, at the action boundary and again in the service.
+3. The project must be linked to a product that was synced from BigCommerce (`sourceSystem`,
+   `sourceId`) for a store with exactly one BigCommerce connection. Standalone projects cannot
+   publish.
+4. The store's current description and image list are read first and recorded with every log row,
+   so a change can be reversed by hand. If that read fails, nothing is written.
+5. A `ProductStudioPublishLog` row exists before each request goes out. Items are sent one after
+   another, images by slot then the description, and the run stops at the first failure. Each item
+   is sent once; what succeeded is not resent on a retry.
+6. Every outcome is audited: `product_studio.publish_requested`, `_succeeded`, `_failed`,
+   `_refused`, and `product_studio.upload_mark_set` / `_cleared` for the marks.
+
+**Rollback.** Turn `product_studio.publish` off, or trip the kill switch. Content already on the
+store is removed from the BigCommerce control panel using the `beforeSnapshot` on the log row,
+which lists the images and description the listing had before the write. The local `Product` row is
+not updated by a publish; the next catalogue sync brings the store's state back.
+
+**Canaries.** `publish-canaries.test.ts` holds the structure: one log writer, one client importer,
+log before request, read before write, no background path, page renders load only the read-only
+module, and the price client stays price-only. `chokepoints.test.ts` lists the service.
+
 ## 6. Data model
 
-- `ProductStudioProject` — intake, final listing copy, market summary, status, warnings.
+- `ProductStudioProject` — intake, final listing copy, market summary, status, warnings, and the
+  description's upload mark and published time.
 - `ProductStudioAsset` — authoritative and generated image bytes, SHA-256 hash, prompt, model, QA,
-  and review state.
+  review state, and the draft's upload mark, published time and store image id.
+- `ProductStudioPublishLog` — one row per attempted image upload or description write, with the
+  request (never the bytes), the response, the store's prior state, the writer and the outcome.
 - `ProductStudioResearchSource` — seller/product-page evidence and external hero-image URL.
 - `ProductStudioPriceObservation` — normalized source-linked price evidence.
 - `ProductStudioComposition` — four structured composition briefs and compiled prompts.
@@ -152,7 +199,8 @@ Required:
 - `OPENAI_IMAGE_MODEL` — optional. Defaults to `gpt-image-1.5`. See the capability
   trade-off below before overriding;
 - healthy web, worker, database, and Inngest services; and
-- migration `20260819000000_product_studio_mvp` applied in staging first.
+- migrations `20260819000000_product_studio_mvp`, `20260820180000_product_studio_long_description`
+  and `20261022120000_product_studio_publish` applied in staging first.
 
 Activation order:
 
@@ -198,6 +246,10 @@ still come from a separate loss-aware crop/export pipeline rather than regenerat
 - Confirm the global kill switch disables image generation.
 - Confirm prompts preserve authoritative product identity and forbid invented condition/accessories.
 - Confirm every generated image has QA and human review state.
+- Publishing (§5.5): refuse without all three flags, without the Super Admin permission, without a
+  BigCommerce-mapped product, without a successful pre-write read, and with nothing marked; send
+  only the latest approved and upload-marked draft per slot; write the log row before the request;
+  send the description as that one field; never set the thumbnail or send an image URL.
 
 ## 8.5 Error handling, cost control, and rollback
 

@@ -25,8 +25,10 @@ export function KillSwitchPanel({ riskyEnabledCount }: { riskyEnabledCount: numb
             One click to flip OFF: <code>supplier.automation</code>,{" "}
             <code>supplier.order_submit</code>, <code>external.writebacks</code>,{" "}
             <code>quickbooks.writebacks</code>, <code>ai.actions</code>, <code>mailchimp.send</code>
-            , <code>investor.distribution</code>. Read-only flags are untouched. Action is
-            audit-logged with the reason.
+            , <code>investor.distribution</code>, <code>product_studio.image_generation</code>,{" "}
+            <code>product_studio.publish</code>, <code>pricing.writebacks</code>,{" "}
+            <code>public_inquiry.send</code>. Read-only flags are untouched. Action is audit-logged
+            with the reason.
           </p>
           {riskyEnabledCount > 0 && (
             <p className="mt-2 text-xs font-medium text-destructive">

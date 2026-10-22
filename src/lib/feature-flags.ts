@@ -31,6 +31,8 @@ export const FEATURE_FLAGS = {
   PRODUCT_STUDIO: "product_studio.enabled",
   /** Allow Product Studio to spend image-generation credits. */
   PRODUCT_STUDIO_IMAGE_GENERATION: "product_studio.image_generation",
+  /** Allow Product Studio to publish approved images and the description to BigCommerce. Default OFF; kill switch. */
+  PRODUCT_STUDIO_PUBLISH: "product_studio.publish",
   /** Accept public website inquiries into the intake (Stage 7). Default OFF. */
   PUBLIC_INQUIRY_INTAKE: "public_inquiry.intake",
   /** Send inquiry acknowledgment and owner notification emails (Stage 7). Default OFF; kill switch. */
@@ -65,6 +67,8 @@ export const FEATURE_FLAG_DESCRIPTIONS: Record<FeatureFlagKey, string> = {
     "Enable Product Studio intake, retailer research, price observations, and draft review.",
   [FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION]:
     "Generate review-only product images from authoritative user-uploaded references.",
+  [FEATURE_FLAGS.PRODUCT_STUDIO_PUBLISH]:
+    "Publish upload-approved Product Studio images and description to BigCommerce (also requires external.writebacks).",
   [FEATURE_FLAGS.PUBLIC_INQUIRY_INTAKE]:
     "Accept public website inquiries into the Command Center queue (requires the inquiry table).",
   [FEATURE_FLAGS.PUBLIC_INQUIRY_SEND]:

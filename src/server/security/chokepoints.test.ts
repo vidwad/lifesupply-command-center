@@ -95,6 +95,19 @@ const CHOKEPOINTS: Chokepoint[] = [
     file: "server/services/product-studio/index.ts",
     mustContain: ["FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION", "requireFeature", "writeAudit"],
   },
+  {
+    capability: "Product Studio publish to BigCommerce",
+    file: "server/services/product-studio/publish.ts",
+    // The second external write-back (2026-10-22). Three flags through the
+    // shared checker, the Super Admin-only permission re-asserted in the
+    // service, an audit on every outcome, and a log row before each request.
+    mustContain: [
+      "flagsBlockingPublish()",
+      "products.approve_bigcommerce_update",
+      "writeAudit",
+      "productStudioPublishLog.create",
+    ],
+  },
 ];
 
 describe("high-risk chokepoints stay wired", () => {
@@ -129,6 +142,7 @@ describe("high-risk chokepoints stay wired", () => {
       "MAILCHIMP_SEND",
       "INVESTOR_DISTRIBUTION",
       "PRODUCT_STUDIO_IMAGE_GENERATION",
+      "PRODUCT_STUDIO_PUBLISH",
       "PRICING_WRITEBACKS",
     ]) {
       expect(killSwitch, `kill switch must include ${flag}`).toContain(flag);

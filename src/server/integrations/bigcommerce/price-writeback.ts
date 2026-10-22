@@ -12,10 +12,13 @@
  * there is no generic "update product" helper here for a later phase to reach
  * for. Widening this file is a deliberate act, not a convenience.
  */
-import { prisma } from "@/server/db/client";
-import { resolveCredentialsBundleForConnection } from "@/server/services/integrations";
+import {
+  BC_BASE,
+  resolveStoreCredentials,
+  type CredentialOutcome,
+  type StoreCredentials,
+} from "./store-credentials";
 
-const BC_BASE = "https://api.bigcommerce.com";
 const REQUEST_TIMEOUT_MS = 20_000;
 
 /** Which BigCommerce record a price belongs to. */
@@ -23,72 +26,15 @@ export type BigCommerceTarget =
   | { scope: "variant"; productId: string; variantId: string }
   | { scope: "product"; productId: string };
 
-export type StoreCredentials = { storeHash: string; apiToken: string; connectionId: string };
-
-export type CredentialOutcome =
-  | { ok: true; credentials: StoreCredentials }
-  | { ok: false; reason: string };
-
 /**
- * Resolves the BigCommerce connection for ONE store.
- *
- * Routing is by the explicit `IntegrationConnection.storeId` link, never by
- * display-name matching and never by a shared default: two stores may have
- * entirely different credentials, and writing store A's price with store B's
- * token is the exact failure this lookup exists to prevent.
+ * Store routing moved to store-credentials.ts (2026-10-22) so the Product
+ * Studio publish client can route to a store the same way without importing
+ * this module. Re-exported so the pricing write and rollback services are
+ * unchanged. The resolver itself is unchanged: one explicit connection per
+ * store, refused when none or several are linked.
  */
-export async function resolveStoreCredentials(storeId: string): Promise<CredentialOutcome> {
-  const connections = await prisma.integrationConnection.findMany({
-    where: { integrationType: "bigcommerce", storeId },
-    select: { id: true, name: true, status: true },
-  });
-
-  if (connections.length === 0) {
-    return {
-      ok: false,
-      reason:
-        "No BigCommerce integration connection is linked to this store. Link one in " +
-        "/admin/integrations (IntegrationConnection.storeId) before writing prices.",
-    };
-  }
-  if (connections.length > 1) {
-    // Ambiguous routing is refused rather than guessed: picking "the first"
-    // would silently choose which storefront gets repriced.
-    return {
-      ok: false,
-      reason:
-        "This store has " +
-        String(connections.length) +
-        " BigCommerce connections linked (" +
-        connections.map((c) => c.name).join(", ") +
-        "). Exactly one is required so the target storefront is unambiguous.",
-    };
-  }
-
-  const connection = connections[0];
-  if (!connection) {
-    return { ok: false, reason: "No BigCommerce connection resolved for this store." };
-  }
-  const bundle = await resolveCredentialsBundleForConnection(connection.id);
-  if (!bundle?.storeHash || !bundle?.apiToken) {
-    return {
-      ok: false,
-      reason:
-        'BigCommerce connection "' +
-        connection.name +
-        '" is missing a storeHash or apiToken. Set both before writing prices.',
-    };
-  }
-
-  return {
-    ok: true,
-    credentials: {
-      storeHash: bundle.storeHash,
-      apiToken: bundle.apiToken,
-      connectionId: connection.id,
-    },
-  };
-}
+export { resolveStoreCredentials };
+export type { CredentialOutcome, StoreCredentials };
 
 function targetPath(target: BigCommerceTarget): string {
   return target.scope === "variant"
