@@ -163,7 +163,7 @@ Use the current Next.js / React / TypeScript / Tailwind stack and existing compo
 | Assets | `public/lsh/` | Preserve originals; add only approved, optimized assets with provenance. |
 | Tests | Existing public unit/contract tests, `tests/e2e/`, `playwright.config.ts` | Extend meaningful coverage rather than duplicate the implementation. |
 
-Vercel stays database-free and serves public content. Render retains PostgreSQL, migrations, workers, Auth.js, internal APIs, and operational secrets. The public build is `pnpm public-web:build`; do not use the migration-bearing `vercel-build` script for this surface. No database, supplier, accounting, or staff-auth credentials on Vercel or in client bundles.
+Vercel stays database-free and serves public content. Render retains PostgreSQL, migrations, workers, Auth.js, internal APIs, and operational secrets. The public build is `pnpm public-web:build`, which regenerates the Prisma client from the schema (no database is contacted) and then runs `next build`; do not use the migration-bearing `vercel-build` script for this surface. The generate step was added on 2026-10-22 after a Vercel build restored a cached, stale client and failed to type-check a dashboard page. No database, supplier, accounting, or staff-auth credentials on Vercel or in client bundles.
 
 Shared code does not prove host isolation. Test all sensitive route families, not only `/dashboard`: customers, orders, suppliers, products, financials, investors, reports, exports, admin, auth, and non-public APIs. Preserve server-side authorization even where a proxy redirects. Public APIs must be intentionally scoped and validated; do not rely on the `/api/public/` prefix as proof of safety.
 

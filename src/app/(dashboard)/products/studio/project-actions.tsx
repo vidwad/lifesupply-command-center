@@ -10,7 +10,7 @@
  */
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import { CheckCircle2, Loader2, Trash2, X } from "lucide-react";
+import { Loader2, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -42,20 +42,13 @@ export function ProjectActions({
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-t pt-3">
-      {/* Placeholder. Rendered disabled rather than as a button that silently
-          does nothing, so the control communicates "planned" instead of
-          appearing broken. */}
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled
-        title="Not yet available — promoting a project to the catalog is not built"
-      >
-        <CheckCircle2 className="h-3.5 w-3.5" />
-        Approve for catalog
-      </Button>
-      <span className="text-xs text-muted-foreground">Coming soon</span>
+      {/* Publishing to BigCommerce lives on the project page (2026-10-22),
+          where each image and the description are marked and sent under the
+          Super Admin-only controls; the former "Approve for catalog"
+          placeholder is gone. */}
+      <span className="text-xs text-muted-foreground">
+        Publishing to the store is on the project page.
+      </span>
 
       <div className="ml-auto flex items-center gap-2">
         {confirming ? (
