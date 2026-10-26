@@ -20,6 +20,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { MAX_IMAGE_ALT_LENGTH } from "@/server/integrations/bigcommerce/catalog-publish";
 
 import { stripListingLinks } from "./listing-copy";
+import { listingToHtml } from "./listing-format";
 
 /**
  * All three must be on. external.writebacks is the platform gate for any
@@ -317,24 +318,13 @@ export function canPublish(args: {
   return { allowed: true, items: args.items, target: args.target };
 }
 
-const escapeHtml = (text: string): string =>
-  text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-
 /**
  * The description is stored as plain prose. BigCommerce renders the field
  * as HTML, so each paragraph becomes a <p> with its characters escaped: the
  * text can carry no markup of its own, and nothing in it can become a tag.
  */
 export function descriptionToHtml(text: string): string {
-  return text
-    .replace(/\r\n/g, "\n")
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean)
-    .map((paragraph) => "<p>" + escapeHtml(paragraph).replace(/\n/g, "<br>") + "</p>")
-    .join("\n");
+  // Titles, bullet lists and paragraphs, through the one parser the page
+  // uses too (2026-10-26), so the store shows the structure the owner saw.
+  return listingToHtml(text);
 }

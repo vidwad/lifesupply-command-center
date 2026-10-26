@@ -8,7 +8,10 @@ import { sizeForAspect, type FrameAspect } from "./prompt-controls";
 import { getOpenAiClient, resolveOpenAiModel } from "@/server/integrations/openai/client";
 import { AiProviderNotConfiguredError } from "@/server/services/ai/errors";
 
+import { z } from "zod";
+
 import { buildImageQaPrompt, buildProductResearchPrompt } from "./prompts";
+import { buildDescriptionReformatPrompt } from "./reformat-prompt";
 import {
   productStudioQaSchema,
   productStudioResearchSchema,
@@ -474,6 +477,65 @@ export function reconcileResearchWithEvidence(
     evidenceHosts,
   };
 }
+
+export type ReformatCallResult = {
+  longDescription: string;
+  prompt: string;
+  rawOutput: string;
+  modelName: string;
+  usage: Usage;
+};
+
+/**
+ * Restructures an existing description into the plain-text listing format
+ * (2026-10-26): a short opening paragraph, then titled sections of bullets.
+ * A text-only call, no tools, no images, no web search. The service that
+ * calls this refuses the result if any fact token from the original is
+ * missing, so the rewrite can reorder and regroup but never lose data.
+ */
+export async function reformatListingDescription(args: {
+  title: string;
+  longDescription: string;
+}): Promise<ReformatCallResult> {
+  const client = await getOpenAiClient();
+  if (!client) throw new AiProviderNotConfiguredError("openai");
+  const model = await resolveOpenAiModel();
+  const prompt = buildDescriptionReformatPrompt(args);
+  const request = {
+    model,
+    stream: false,
+    input: [{ role: "user", content: [{ type: "input_text", text: prompt }] }],
+    text: {
+      format: {
+        type: "json_schema",
+        name: "product_studio_description_reformat",
+        strict: true,
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["longDescription"],
+          properties: { longDescription: { type: "string" } },
+        },
+      },
+    },
+  } as unknown as ResponseCreateParamsNonStreaming;
+  const response = await client.responses.create(request);
+  const rawOutput = response.output_text.trim();
+  if (!rawOutput) throw new Error("OpenAI returned an empty reformat response.");
+  const parsed = parseJson(rawOutput, reformatSchema);
+  return {
+    longDescription: parsed.longDescription,
+    prompt,
+    rawOutput,
+    modelName: model,
+    usage: {
+      inputTokens: response.usage?.input_tokens ?? null,
+      outputTokens: response.usage?.output_tokens ?? null,
+    },
+  };
+}
+
+const reformatSchema = z.object({ longDescription: z.string().min(1) });
 
 export async function researchProduct(args: {
   title: string;

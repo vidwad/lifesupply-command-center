@@ -15,7 +15,10 @@ import {
   recompileProductStudioPrompts,
 } from "@/server/services/product-studio";
 import { createProductStudioBatch } from "@/server/services/product-studio/bulk";
-import { updateProductStudioLongDescription } from "@/server/services/product-studio/description";
+import {
+  reformatProductStudioDescription,
+  updateProductStudioLongDescription,
+} from "@/server/services/product-studio/description";
 import { updateSourcePhotos } from "@/server/services/product-studio/source-photos";
 
 export type ProductStudioActionState = { error?: string } | undefined;
@@ -176,6 +179,21 @@ export async function updateSourcePhotosAction(
       files,
       mode: formData.get("mode") === "replace" ? "replace" : "add",
     });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  return undefined;
+}
+
+export async function reformatDescriptionAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  try {
+    await reformatProductStudioDescription({ projectId, actorUserId: user.id });
   } catch (error) {
     return actionError(error);
   }
