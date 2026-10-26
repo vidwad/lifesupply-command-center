@@ -33,6 +33,7 @@ import {
   resolvePublishTarget,
   selectPublishItems,
 } from "@/server/services/product-studio/publish-eligibility";
+import { stripListingLinks } from "@/server/services/product-studio/listing-copy";
 import { listPublishLogs, publishFlagState } from "@/server/services/product-studio/publish-read";
 import {
   approvedSlotCount,
@@ -90,6 +91,12 @@ export default async function ProductStudioDetailPage({ params }: Props) {
     mayPublish ? listPublishLogs(id) : Promise.resolve([]),
   ]);
   if (!project) notFound();
+
+  // Shown and published without links or citations (2026-10-26), whatever
+  // the stored text holds, so what the owner reads is what the store gets.
+  const cleanLongDescription = project.longDescription
+    ? stripListingLinks(project.longDescription)
+    : null;
 
   const sourceAssets = project.assets.filter((asset) => asset.kind === "source");
   const allGeneratedAssets = project.assets.filter((asset) => asset.kind === "generated");
@@ -157,8 +164,8 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   return (
     <div>
       <PageHeader
-        title={project.confirmedTitle ?? project.title}
-        description={project.finalDescription ?? project.shortDescription}
+        title={stripListingLinks(project.confirmedTitle ?? project.title)}
+        description={stripListingLinks(project.finalDescription ?? project.shortDescription)}
         breadcrumb={
           <Link href="/products/studio" className="inline-flex items-center gap-1 hover:underline">
             <ArrowLeft className="h-3 w-3" /> Product Studio
@@ -176,14 +183,14 @@ export default async function ProductStudioDetailPage({ params }: Props) {
         }
       />
 
-      {project.longDescription ? (
+      {cleanLongDescription ? (
         <div className="px-6 pt-6">
           <details className="rounded-lg border bg-card">
             <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
               Full product description
             </summary>
             <div className="space-y-3 border-t px-4 py-3 text-sm leading-relaxed text-muted-foreground">
-              {project.longDescription
+              {cleanLongDescription
                 .split(/\n\s*\n/)
                 .map((paragraph) => paragraph.trim())
                 .filter(Boolean)
@@ -557,8 +564,8 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                 busy={busy}
                 images={publishImages}
                 description={{
-                  present: Boolean(project.longDescription?.trim()),
-                  preview: project.longDescription?.trim().slice(0, 280) ?? "",
+                  present: Boolean(cleanLongDescription),
+                  preview: cleanLongDescription?.slice(0, 280) ?? "",
                   uploadApproved: project.descriptionUploadApprovedAt != null,
                   publishedAt: project.descriptionPublishedAt?.toISOString() ?? null,
                 }}

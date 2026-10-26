@@ -121,6 +121,7 @@ specification for `new_sealed`. Fabricated identifiers are a defect in both.
 | Spend switch | `product_studio.image_generation`, default off and included in the global kill switch. |
 | Provider keys | Resolved server-side from environment or encrypted credential vault. |
 | Source authority | Uploaded photographs are explicitly identified as the sole authoritative visual source. |
+| Listing copy | The title, descriptions and key details carry no URLs, links, citations or retailer names (product owner, 2026-10-26): the prompt forbids them, `listing-copy.ts` strips any that appear when research is stored, and the description is stripped again when displayed and when published, so projects researched before the rule are covered. Sources stay in the research sources and price observations. |
 | Prompt injection | Web pages are labelled untrusted data; their instructions must be ignored. |
 | Source verification | Cited seller domains are validated against actual web-search tool evidence (tool calls and URL-citation annotations only — a URL the model merely wrote is not evidence). Research citing unsupported domains is rejected. |
 | Provenance | Seller URLs, price observations, prompts, model names, hashes, actors, and timestamps are stored. |

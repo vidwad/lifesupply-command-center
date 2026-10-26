@@ -19,6 +19,8 @@ import { PERMISSIONS } from "@/lib/permissions";
 
 import { MAX_IMAGE_ALT_LENGTH } from "@/server/integrations/bigcommerce/catalog-publish";
 
+import { stripListingLinks } from "./listing-copy";
+
 /**
  * All three must be on. external.writebacks is the platform gate for any
  * BigCommerce write; product_studio.publish is this capability's own; both
@@ -206,7 +208,9 @@ export function selectPublishItems(args: {
       }),
     });
   }
-  const text = args.project.longDescription?.trim() ?? "";
+  // Stripped again here, not only at research time, so a project researched
+  // before the no-links rule never publishes a link to another seller.
+  const text = stripListingLinks(args.project.longDescription ?? "");
   if (text && args.project.descriptionUploadApprovedAt && !args.project.descriptionPublishedAt) {
     items.push({ kind: "description", text });
   }
