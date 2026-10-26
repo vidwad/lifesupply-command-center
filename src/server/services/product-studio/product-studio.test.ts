@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { prepareProductStudioIntake, ProductStudioInputError } from "./index";
-import { collectWebSearchEvidenceUrls, findUnsupportedCitedDomains } from "./openai";
+import {
+  collectWebSearchEvidenceUrls,
+  findUnsupportedCitedDomains,
+  reconcileResearchWithEvidence,
+} from "./openai";
 import { compileProductImagePrompt } from "./prompts";
 import { planGenerationRevision } from "./revisions";
 import { productStudioQaSchema, productStudioResearchSchema } from "./types";
@@ -183,6 +187,84 @@ describe("Product Studio source verification", () => {
     expect(
       findUnsupportedCitedDomains(research, ["https://different-seller.example.io/x"]),
     ).toEqual(["example.com"]);
+  });
+});
+
+describe("Product Studio evidence reconciliation", () => {
+  const research = productStudioResearchSchema.parse(base);
+  const extra = {
+    sellerName: "Memory Dental",
+    pageTitle: "Recalled listing",
+    url: "https://memory-dental.example/listing",
+    heroImageUrl: null,
+    sourceType: "retailer" as const,
+    notes: "Written from memory.",
+  };
+  const withUnverified = productStudioResearchSchema.parse({
+    ...base,
+    sources: [...base.sources, extra],
+    market: {
+      ...base.market,
+      observations: [
+        ...base.market.observations,
+        {
+          ...base.market.observations[0]!,
+          sellerName: extra.sellerName,
+          url: extra.url,
+          price: 1500,
+        },
+        { ...base.market.observations[0]!, price: 950 },
+      ],
+    },
+    compositions: base.compositions.map((composition, index) =>
+      index === 0
+        ? { ...composition, sourceUrl: extra.url, referenceImageUrl: extra.url }
+        : composition,
+    ),
+  });
+
+  it("keeps research whose citations are all backed, unchanged", () => {
+    const out = reconcileResearchWithEvidence(research, ["https://www.example.com/product"]);
+    expect(out.droppedDomains).toEqual([]);
+    expect(out.research).toEqual(research);
+  });
+
+  it("drops unverified sources and observations, recomputes the range, clears composition links, and warns", () => {
+    const out = reconcileResearchWithEvidence(withUnverified, ["https://example.com/product"]);
+    expect(out.droppedDomains).toEqual(["memory-dental.example"]);
+    expect(out.research.sources.map((s) => s.sellerName)).toEqual(["Example Camera"]);
+    expect(out.research.market.observations.map((o) => o.price)).toEqual([899, 950]);
+    expect(out.research.market).toMatchObject({ low: 899, high: 950, median: 924.5 });
+    expect(out.research.compositions[0]).toMatchObject({
+      sourceSeller: null,
+      sourceUrl: null,
+      referenceImageUrl: null,
+    });
+    expect(out.research.compositions[1]!.sourceUrl).toBe("https://example.com/product");
+    expect(out.research.warnings.join(" ")).toContain("memory-dental.example");
+    expect(out.evidenceHosts).toEqual(["example.com"]);
+  });
+
+  it("reassigns an unverified benchmark to the first verified source", () => {
+    const out = reconcileResearchWithEvidence(
+      productStudioResearchSchema.parse({
+        ...base,
+        benchmarkListing: { ...base.benchmarkListing, sellerName: "Memory Dental", url: extra.url },
+      }),
+      ["https://example.com/product"],
+    );
+    expect(out.research.benchmarkListing).toMatchObject({
+      sellerName: "Example Camera",
+      url: "https://example.com/product",
+      whyStrongHero: base.benchmarkListing.whyStrongHero,
+    });
+    expect(out.droppedDomains).toEqual(["memory-dental.example"]);
+  });
+
+  it("fails, naming what the evidence covered, when no verified seller or observation remains", () => {
+    expect(() =>
+      reconcileResearchWithEvidence(research, ["https://other-seller.example.io/x"]),
+    ).toThrow(/cited: example.com; evidence covered: other-seller.example.io/);
   });
 });
 

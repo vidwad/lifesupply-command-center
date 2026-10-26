@@ -26,6 +26,8 @@ type Usage = { inputTokens: number | null; outputTokens: number | null };
 
 export type ResearchCallResult = {
   result: ProductStudioResearch;
+  /** Seller domains the model cited without search evidence, removed before storage. */
+  droppedSourceDomains: string[];
   prompt: string;
   rawOutput: string;
   modelName: string;
@@ -322,6 +324,157 @@ export function findUnsupportedCitedDomains(
   ];
 }
 
+export type EvidenceReconciliation = {
+  research: ProductStudioResearch;
+  /** Cited domains that were not in the evidence and were removed. */
+  droppedDomains: string[];
+  /** Hosts the evidence did cover, for a failure message a reader can act on. */
+  evidenceHosts: string[];
+};
+
+export class UnverifiableResearchError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnverifiableResearchError";
+  }
+}
+
+const median = (values: number[]): number | null => {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+};
+
+/**
+ * Removes every citation the web-search evidence does not back, instead of
+ * rejecting the whole research (2026-10-26): a model that searched five
+ * sellers and then added two from memory produced evidence worth keeping.
+ *
+ * - Sources and price observations on an unverified domain are dropped; the
+ *   market range is recomputed from the remaining observations when they
+ *   share the stated currency, otherwise the model's figures stay with a
+ *   warning.
+ * - A composition's source and reference URLs on an unverified domain are
+ *   cleared; the brief itself stays, since it describes a photograph rather
+ *   than citing a claim.
+ * - An unverified benchmark listing is reassigned to the first verified
+ *   source, keeping the model's reasoning about what makes a listing strong.
+ * - The dropped domains are written into the research warnings so they are
+ *   visible on the project and in the AI output record.
+ *
+ * Throws only when nothing verifiable remains: no source, or no price
+ * observation, in which case the message names what the evidence did cover.
+ */
+export function reconcileResearchWithEvidence(
+  research: ProductStudioResearch,
+  evidenceUrls: string[],
+): EvidenceReconciliation {
+  const verified = new Set(evidenceUrls.map(hostname));
+  const supported = (url: string) => verified.has(hostname(url));
+  const dropped = new Set<string>();
+  const note = (url: string) => dropped.add(hostname(url));
+
+  const sources = research.sources.filter(
+    (source) => supported(source.url) || (note(source.url), false),
+  );
+  const observations = research.market.observations.filter(
+    (item) => supported(item.url) || (note(item.url), false),
+  );
+  const evidenceHosts = [...verified].sort();
+  if (sources.length === 0) {
+    throw new UnverifiableResearchError(
+      "Research cited no seller present in the web-search evidence (cited: " +
+        [...dropped].join(", ") +
+        "; evidence covered: " +
+        (evidenceHosts.join(", ") || "nothing") +
+        ").",
+    );
+  }
+  if (observations.length === 0) {
+    throw new UnverifiableResearchError(
+      "Every price observation cited a seller absent from the web-search evidence (" +
+        [...dropped].join(", ") +
+        "), so no market range can be kept. Evidence covered: " +
+        (evidenceHosts.join(", ") || "nothing") +
+        ".",
+    );
+  }
+
+  const warnings = [...research.warnings];
+  let market = { ...research.market, observations };
+  if (observations.length !== research.market.observations.length) {
+    const prices = observations
+      .filter((item) => item.currency.toUpperCase() === research.market.currency.toUpperCase())
+      .map((item) => item.price);
+    if (prices.length === observations.length) {
+      market = {
+        ...market,
+        low: Math.min(...prices),
+        high: Math.max(...prices),
+        median: median(prices),
+      };
+    } else {
+      warnings.push(
+        "The market range was stated by the model over observations that included dropped " +
+          "sellers and mixed currencies; it was not recomputed.",
+      );
+    }
+  }
+
+  let benchmarkListing = research.benchmarkListing;
+  if (!supported(benchmarkListing.url)) {
+    note(benchmarkListing.url);
+    const replacement = sources[0]!;
+    benchmarkListing = {
+      ...benchmarkListing,
+      sellerName: replacement.sellerName,
+      url: replacement.url,
+      heroImageUrl: replacement.heroImageUrl,
+    };
+    warnings.push(
+      "The benchmark listing cited a seller absent from the search evidence and was reassigned " +
+        "to " +
+        replacement.sellerName +
+        ".",
+    );
+  }
+
+  const compositions = research.compositions.map((composition) => {
+    const sourceOk = composition.sourceUrl == null || supported(composition.sourceUrl);
+    const imageOk =
+      composition.referenceImageUrl == null || supported(composition.referenceImageUrl);
+    if (sourceOk && imageOk) return composition;
+    if (composition.sourceUrl && !sourceOk) note(composition.sourceUrl);
+    if (composition.referenceImageUrl && !imageOk) note(composition.referenceImageUrl);
+    return {
+      ...composition,
+      sourceSeller: sourceOk ? composition.sourceSeller : null,
+      sourceUrl: sourceOk ? composition.sourceUrl : null,
+      referenceImageUrl: imageOk ? composition.referenceImageUrl : null,
+    };
+  });
+
+  const droppedDomains = [...dropped].sort();
+  if (droppedDomains.length > 0) {
+    warnings.push(
+      "Dropped citations from " +
+        String(droppedDomains.length) +
+        " seller domain" +
+        (droppedDomains.length === 1 ? "" : "s") +
+        " that did not appear in this session's web-search evidence: " +
+        droppedDomains.join(", ") +
+        ".",
+    );
+  }
+
+  return {
+    research: { ...research, sources, market, benchmarkListing, compositions, warnings },
+    droppedDomains,
+    evidenceHosts,
+  };
+}
+
 export async function researchProduct(args: {
   title: string;
   shortDescription: string;
@@ -363,20 +516,22 @@ export async function researchProduct(args: {
   const response = await client.responses.create(request);
   const rawOutput = response.output_text.trim();
   if (!rawOutput) throw new Error("OpenAI returned an empty product research response.");
-  const result = parseJson(rawOutput, productStudioResearchSchema);
+  const parsed = parseJson(rawOutput, productStudioResearchSchema);
   const verifiedSourceUrls = collectWebSearchEvidenceUrls(response.output);
   if (verifiedSourceUrls.length === 0) {
-    throw new Error("Research returned no verifiable web-search source URLs.");
-  }
-  const unsupported = findUnsupportedCitedDomains(result, verifiedSourceUrls);
-  if (unsupported.length > 0) {
-    throw new Error(
-      `Research cited source domains that were not present in the web-search evidence: ${unsupported.join(", ")}`,
+    throw new UnverifiableResearchError(
+      "Research returned no verifiable web-search source URLs, so nothing it cited can be kept.",
     );
   }
+  // Unverified citations are removed, not fatal; see reconcileResearchWithEvidence.
+  const { research: result, droppedDomains } = reconcileResearchWithEvidence(
+    parsed,
+    verifiedSourceUrls,
+  );
 
   return {
     result,
+    droppedSourceDomains: droppedDomains,
     prompt,
     rawOutput,
     modelName: response.model,
