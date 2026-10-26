@@ -5,7 +5,11 @@ import { imageModelCapabilities } from "./image-model";
 import type { ProductMode } from "./depiction";
 import { sizeForAspect, type FrameAspect } from "./prompt-controls";
 
-import { getOpenAiClient, resolveOpenAiModel } from "@/server/integrations/openai/client";
+import {
+  getOpenAiClient,
+  resolveOpenAiImageModel,
+  resolveOpenAiModel,
+} from "@/server/integrations/openai/client";
 import { AiProviderNotConfiguredError } from "@/server/services/ai/errors";
 
 import { z } from "zod";
@@ -621,7 +625,8 @@ export async function generateProductImage(args: {
 }): Promise<GeneratedImage> {
   const client = await getOpenAiClient();
   if (!client) throw new AiProviderNotConfiguredError("openai");
-  const caps = imageModelCapabilities(process.env.OPENAI_IMAGE_MODEL);
+  // Env, then the admin's AI setting, then the built-in default.
+  const caps = imageModelCapabilities(await resolveOpenAiImageModel());
   const requestedSize = sizeForAspect(args.aspect, caps.supportsArbitrarySize);
   const files = await Promise.all(
     args.references.map((asset) =>

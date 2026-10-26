@@ -231,6 +231,11 @@ Required:
 - `OPENAI_API_KEY` in Render secrets or the encrypted integration vault;
 - `OPENAI_MODEL` set to a Responses-compatible multimodal model with web search support, or the
   application default;
+- Since 2026-10-26 both models are admin settings too, on Admin → AI settings under "Product
+  Studio (OpenAI)": `ai.openai_model` (text) and `ai.openai_image_model` (image). The environment
+  variables still win when set; an empty setting falls back to the next in the order (the text
+  model to the shared default model when the provider is OpenAI, else `gpt-5-mini`; the image
+  model to `gpt-image-1.5`).
 - `OPENAI_IMAGE_MODEL` — optional. Defaults to `gpt-image-1.5`. See the capability
   trade-off below before overriding;
 - healthy web, worker, database, and Inngest services; and
