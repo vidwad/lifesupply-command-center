@@ -12,6 +12,7 @@ import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
   countProducts,
+  countProductsByPerformance,
   countProductsByQuality,
   listProducts,
   parseProductSort,
@@ -19,6 +20,13 @@ import {
   PRODUCTS_PAGE_SIZE,
   type ListProductsFilters,
 } from "@/server/services/products";
+import {
+  buildPerformanceIndex,
+  parsePerformanceSegment,
+  PERFORMANCE_DEFINITIONS,
+  PERFORMANCE_SEGMENTS,
+  WINDOW_DAYS,
+} from "@/server/services/products/performance";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { SyncButtons } from "@/components/sync/SyncButtons";
 
@@ -30,6 +38,8 @@ export const dynamic = "force-dynamic";
 type SearchParams = {
   q?: string;
   flag?: "missing_image" | "needs_review";
+  /** A sales performance segment (2026-10-26). */
+  perf?: string;
   /** Set by the shell's Division selector. */
   division?: string;
   page?: string;
@@ -56,7 +66,13 @@ export default async function ProductsPage({
   // a hand-edited URL should not break the page.
   const sort = parseProductSort(params.sort);
   const dir = parseSortDirection(params.dir);
+  const perf = parsePerformanceSegment(params.perf);
+  // Computed once per request from the synced order lines; the rows, the
+  // total and every pill count read these same figures.
+  const performanceIndex = await buildPerformanceIndex();
   const filters: ListProductsFilters = {
+    performance: perf,
+    performanceIndex,
     search: params.q?.trim() || undefined,
     // Honours the Division selector in the app shell. Absent = all divisions.
     divisionId: params.division?.trim() || undefined,
@@ -75,18 +91,30 @@ export default async function ProductsPage({
   // page count can never disagree with what is actually listed. The quality
   // counts ignore the quality filter itself, so each pill reads as "what you
   // would get if you clicked this".
-  const [products, totalProducts, qualityCounts] = await Promise.all([
+  const [listed, totalProducts, qualityCounts, performanceCounts] = await Promise.all([
     listProducts(filters),
     countProducts(filters),
     countProductsByQuality(filters),
+    countProductsByPerformance(filters, performanceIndex),
   ]);
+  const salesFor = (id: string) => performanceIndex.stats.get(id);
+  // Top sellers are a ranked list of at most 50, which fits one page, so
+  // ordering them by revenue here is a true ordering of the whole segment and
+  // not a page-local shuffle.
+  const products =
+    perf === "top"
+      ? [...listed].sort(
+          (a, b) => (salesFor(b.id)?.revenue90 ?? 0) - (salesFor(a.id)?.revenue90 ?? 0),
+        )
+      : listed;
 
   // Changing the flag resets to page 1 — staying on page 7 of a different
   // filter would usually land on an empty page. Sort is preserved: it is a
   // view preference, not a filter.
-  const pillHref = (flag: SearchParams["flag"]): string => {
+  const buildHref = (flag: SearchParams["flag"], segment: string | undefined): string => {
     const qs = new URLSearchParams();
     if (flag) qs.set("flag", flag);
+    if (segment) qs.set("perf", segment);
     if (params.q) qs.set("q", params.q);
     if (params.division) qs.set("division", params.division);
     if (sort) qs.set("sort", sort);
@@ -94,11 +122,14 @@ export default async function ProductsPage({
     const s = qs.toString();
     return `/products${s ? `?${s}` : ""}`;
   };
+  const pillHref = (flag: SearchParams["flag"]): string => buildHref(flag, perf);
+  const perfHref = (segment: string | undefined): string => buildHref(params.flag, segment);
 
   // Params every header link and the pagination footer must carry forward.
   const carried = {
     q: params.q,
     flag: params.flag,
+    perf,
     division: params.division,
   };
 
@@ -147,6 +178,30 @@ export default async function ProductsPage({
               className="h-9 w-64 rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </form>
+        </div>
+
+        {/*
+         * Sales segments (2026-10-26), close equivalents of BigCommerce
+         * Insights computed from the synced order lines. The definition of the
+         * active segment is spelled out so "cold" means one stated thing here.
+         */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Performance</span>
+          <FilterPill href={perfHref(undefined)} label="Any" count={undefined} active={!perf} />
+          {PERFORMANCE_SEGMENTS.map((segment) => (
+            <FilterPill
+              key={segment}
+              href={perfHref(segment)}
+              label={PERFORMANCE_DEFINITIONS[segment].label}
+              count={performanceCounts[segment]}
+              active={perf === segment}
+            />
+          ))}
+          <span className="basis-full text-xs text-muted-foreground sm:basis-auto sm:pl-2">
+            {perf
+              ? PERFORMANCE_DEFINITIONS[perf].definition
+              : `From orders synced from the stores, excluding cancelled and refunded orders; figures cover the last ${WINDOW_DAYS} days.`}
+          </span>
         </div>
 
         {canStudio && products.length > 0 ? <BulkStudioBar /> : null}
@@ -208,6 +263,12 @@ export default async function ProductsPage({
                 <TH align="right">Cost</TH>
                 <TH align="right">Margin</TH>
                 <TH align="right">Stock</TH>
+                {perf ? (
+                  <>
+                    <TH align="right">Units {WINDOW_DAYS}d</TH>
+                    <TH align="right">Revenue {WINDOW_DAYS}d</TH>
+                  </>
+                ) : null}
                 <SortHeader
                   label="Quality"
                   sortKey="quality"
@@ -274,6 +335,16 @@ export default async function ProductsPage({
                   <TD align="right" className="tabular-nums">
                     {p.stock}
                   </TD>
+                  {perf ? (
+                    <>
+                      <TD align="right" className="tabular-nums">
+                        {salesFor(p.id)?.units90 ?? 0}
+                      </TD>
+                      <TD align="right" className="tabular-nums">
+                        {formatCurrency(salesFor(p.id)?.revenue90 ?? 0)}
+                      </TD>
+                    </>
+                  ) : null}
                   <TD>
                     <div className="flex flex-wrap gap-1">
                       {p.imageStatus === "missing" && (
@@ -324,8 +395,8 @@ function FilterPill({
 }: {
   href: string;
   label: string;
-  /** How many products this filter would return under the other active filters. */
-  count: number;
+  /** How many products this filter would return under the other active filters; omitted for "Any". */
+  count?: number;
   active: boolean;
 }) {
   return (
@@ -338,15 +409,17 @@ function FilterPill({
       }
     >
       {label}
-      <span
-        className={
-          active
-            ? "rounded bg-primary-foreground/20 px-1.5 py-0.5 tabular-nums"
-            : "rounded bg-muted px-1.5 py-0.5 tabular-nums text-foreground/70"
-        }
-      >
-        {count.toLocaleString()}
-      </span>
+      {count != null ? (
+        <span
+          className={
+            active
+              ? "rounded bg-primary-foreground/20 px-1.5 py-0.5 tabular-nums"
+              : "rounded bg-muted px-1.5 py-0.5 tabular-nums text-foreground/70"
+          }
+        >
+          {count.toLocaleString()}
+        </span>
+      ) : null}
     </Link>
   );
 }

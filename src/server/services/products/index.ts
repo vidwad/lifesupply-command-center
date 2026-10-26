@@ -2,6 +2,13 @@ import type { Prisma, ProductStatus } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
 
+import {
+  PERFORMANCE_SEGMENTS,
+  segmentIdFilter,
+  type PerformanceIndex,
+  type PerformanceSegment,
+} from "./performance";
+
 export type ListProductsFilters = {
   storeId?: string;
   /** Scopes to one operating division, mirroring the shell's Division selector. */
@@ -9,6 +16,13 @@ export type ListProductsFilters = {
   categoryId?: string;
   status?: ProductStatus;
   imageStatus?: "missing" | "needs_review";
+  /**
+   * A sales segment (2026-10-26). The index is computed once by the caller
+   * and passed in, so the rows, the count and the pill counts all read the
+   * same figures.
+   */
+  performance?: PerformanceSegment;
+  performanceIndex?: PerformanceIndex;
   search?: string;
   /** 1-based. Out-of-range values are clamped by the caller, not here. */
   page?: number;
@@ -92,6 +106,9 @@ function productWhere(filters: ListProductsFilters): Prisma.ProductWhereInput {
   if (filters.status) where.status = filters.status;
   if (filters.imageStatus === "missing") where.imageStatus = "missing";
   if (filters.imageStatus === "needs_review") where.imageStatus = "needs_review";
+  if (filters.performance && filters.performanceIndex) {
+    where.id = segmentIdFilter(filters.performance, filters.performanceIndex);
+  }
   if (filters.search) {
     const q = filters.search.trim();
     where.OR = [
@@ -106,6 +123,29 @@ function productWhere(filters: ListProductsFilters): Prisma.ProductWhereInput {
 /** Total matching the same filters as listProducts — drives the header count and paging. */
 export async function countProducts(filters: ListProductsFilters = {}): Promise<number> {
   return prisma.product.count({ where: productWhere(filters) });
+}
+
+/**
+ * How many products each performance segment would return under the other
+ * active filters, for the segment pills. Four counts against id sets the
+ * caller already computed; the performance filter itself is ignored so each
+ * pill reads as "what you would get if you clicked this".
+ */
+export async function countProductsByPerformance(
+  filters: ListProductsFilters,
+  index: PerformanceIndex,
+): Promise<Record<PerformanceSegment, number>> {
+  const { performance: _ignored, ...rest } = filters;
+  const counts = await Promise.all(
+    PERFORMANCE_SEGMENTS.map((segment) =>
+      prisma.product.count({
+        where: productWhere({ ...rest, performance: segment, performanceIndex: index }),
+      }),
+    ),
+  );
+  return Object.fromEntries(
+    PERFORMANCE_SEGMENTS.map((segment, i) => [segment, counts[i] ?? 0]),
+  ) as Record<PerformanceSegment, number>;
 }
 
 /** How many products each quality filter would return, given the other active filters. */
