@@ -45,6 +45,7 @@ import {
   selectPublishItems,
 } from "@/server/services/product-studio/publish-eligibility";
 import { stripListingLinks } from "@/server/services/product-studio/listing-copy";
+import { parseListingBlocks } from "@/server/services/product-studio/listing-format";
 import {
   lastPublishedDescriptionHtml,
   listPublishLogs,
@@ -60,6 +61,7 @@ import {
   queueGenerationAction,
   queueResearchAction,
   recompilePromptsAction,
+  reformatDescriptionAction,
   reviewAssetAction,
   updateDescriptionAction,
   updateSourcePhotosAction,
@@ -280,14 +282,50 @@ export default async function ProductStudioDetailPage({ params }: Props) {
             </summary>
             <div className="space-y-3 border-t px-4 py-3 text-sm leading-relaxed text-muted-foreground">
               {cleanLongDescription ? (
-                cleanLongDescription
-                  .split(/\n\s*\n/)
-                  .map((paragraph) => paragraph.trim())
-                  .filter(Boolean)
-                  .map((paragraph, index) => <p key={index}>{paragraph}</p>)
+                // The same blocks the store will render (2026-10-26).
+                parseListingBlocks(cleanLongDescription).map((block, index) =>
+                  block.type === "title" ? (
+                    <p key={index} className="font-medium text-foreground">
+                      {block.text}
+                    </p>
+                  ) : block.type === "list" ? (
+                    <ul key={index} className="list-disc space-y-1 pl-5">
+                      {block.items.map((item, i) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p key={index}>
+                      {block.lines.map((line, i) => (
+                        <span key={i}>
+                          {i > 0 ? <br /> : null}
+                          {line}
+                        </span>
+                      ))}
+                    </p>
+                  ),
+                )
               ) : (
                 <p>No full description yet. Write one below.</p>
               )}
+              {cleanLongDescription && !busy ? (
+                /*
+                 * Restructures the existing text into the short-paragraph and
+                 * bullet form without changing its facts (2026-10-26). A guard
+                 * refuses the rewrite if any number, code or measurement from
+                 * the original is missing. Clears the upload mark like an edit.
+                 */
+                <StudioActionForm action={reformatDescriptionAction}>
+                  <input type="hidden" name="projectId" value={project.id} />
+                  <Button type="submit" size="sm" variant="outline">
+                    <Sparkles /> Reformat with AI
+                  </Button>
+                  <p className="mt-1 text-xs">
+                    Rewrites into short paragraphs and bullet points for specifications. Every
+                    figure and code in the current text must survive, or the result is refused.
+                  </p>
+                </StudioActionForm>
+              ) : null}
               {/*
                * Editable at any point, including after approval or publishing
                * (2026-10-26). Saving strips links, clears the upload mark so the
