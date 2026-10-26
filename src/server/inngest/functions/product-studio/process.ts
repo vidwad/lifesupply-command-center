@@ -227,6 +227,7 @@ export const researchProductStudioProject = inngest.createFunction(
               sourceImageCount: project.assets.length,
               retailerUrls: research.sources.map((source) => source.url),
               verifiedWebSearchUrls: call.verifiedSourceUrls,
+              droppedSourceDomains: call.droppedSourceDomains,
               observedAt: new Date().toISOString(),
             },
             tokenUsage: call.usage,
