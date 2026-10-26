@@ -30,6 +30,24 @@ export async function publishFlagState(): Promise<{ enabled: boolean; disabledFl
   return { enabled: disabledFlags.length === 0, disabledFlags };
 }
 
+/**
+ * The description HTML last written to the store for this project, from the
+ * most recent succeeded description log; null when none was ever written.
+ * The eligibility rules compare it with the current text to decide whether
+ * an edited description needs publishing again (2026-10-26).
+ */
+export async function lastPublishedDescriptionHtml(projectId: string): Promise<string | null> {
+  const log = await prisma.productStudioPublishLog.findFirst({
+    where: { projectId, kind: "description", status: "succeeded" },
+    orderBy: { writtenAt: "desc" },
+    select: { requestPayload: true },
+  });
+  const payload = log?.requestPayload;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const body = (payload as { body?: { description?: unknown } }).body;
+  return typeof body?.description === "string" ? body.description : null;
+}
+
 /** Publish history for one project, newest first, for the project page. */
 export async function listPublishLogs(projectId: string) {
   return prisma.productStudioPublishLog.findMany({

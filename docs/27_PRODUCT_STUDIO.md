@@ -135,15 +135,29 @@ The second external write-back in the application, after the Pricing Intelligenc
 writeback, and built to the same pattern. It lives in a card of its own, "BigCommerce publishing",
 in the right column of the project page, and only a Super Admin sees it.
 
-**What it can send.** Two things, each once:
+**What it can send.** Two things:
 
 - a generated draft that a reviewer approved **and** a Super Admin then marked "approved for
   upload", added to the product's images as a multipart upload from the stored bytes; and
 - the full description (`longDescription`), once marked "approved for upload", written as escaped
   `<p>` paragraphs and **replacing** the description on the store.
 
-**What it never touches.** Name, price, SKU, inventory, visibility, the thumbnail and the images
-already on the listing. The client module has no method for any of them.
+**Changing what was published (product owner, 2026-10-26).** Approval is not final:
+
+- An approved image can be revised from its card ("Revise this image"): a new revision is
+  generated with the operator's instructions, reviewed and marked like any other. Publishing it
+  **replaces** the earlier revision's image on the store: the new file is uploaded with the old
+  image's position (and its thumbnail flag, if it had one), then the old image, identified only by
+  the id this system recorded when it uploaded it, is removed. If that removal fails the log says
+  so and the old image stays for a merchant to remove by hand.
+- The full description can be edited on the project page at any time. An edit strips links,
+  clears the upload mark, and leaves the store unchanged until the edited text is marked and
+  published again, which replaces it. The rules compare the current text with the HTML last
+  written (kept in the publish log), so an unchanged description is never resent.
+
+**What it never touches.** Name, price, SKU, inventory, visibility, and any image this system did
+not upload. A fresh image is never made the thumbnail; only a replacement for the thumbnail
+inherits that flag. The client module has no method for anything else.
 
 **The gates, stacked.**
 

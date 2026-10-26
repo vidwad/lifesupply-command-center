@@ -14,6 +14,7 @@ import {
   deleteProductStudioProject,
   recompileProductStudioPrompts,
 } from "@/server/services/product-studio";
+import { updateProductStudioLongDescription } from "@/server/services/product-studio/description";
 
 export type ProductStudioActionState = { error?: string } | undefined;
 
@@ -89,6 +90,7 @@ export async function queueGenerationAction(
       actorUserId: user.id,
       operatorInstructions: typeof operatorInstructions === "string" ? operatorInstructions : null,
       autoContinue: formData.get("autoContinue") === "1",
+      revise: formData.get("revise") === "1",
     });
   } catch (error) {
     return actionError(error);
@@ -131,6 +133,25 @@ export async function deleteProjectAction(
   // Outside the try: redirect() signals by throwing and must never be caught.
   revalidatePath("/products/studio");
   redirect("/products/studio");
+}
+
+export async function updateDescriptionAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  try {
+    await updateProductStudioLongDescription({
+      projectId,
+      actorUserId: user.id,
+      longDescription: String(formData.get("longDescription") ?? ""),
+    });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  return undefined;
 }
 
 export async function recompilePromptsAction(

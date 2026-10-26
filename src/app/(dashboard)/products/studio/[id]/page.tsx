@@ -27,14 +27,21 @@ import { requirePermission } from "@/server/permissions";
 import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
 import { MAX_OPERATOR_INSTRUCTIONS } from "@/server/services/product-studio/prompt-controls";
+import { MAX_LONG_DESCRIPTION } from "@/server/services/product-studio/description";
 import {
   canUserPublish,
+  descriptionNeedsPublish,
   latestGeneratedBySlot,
+  liveImageIdForSlot,
   resolvePublishTarget,
   selectPublishItems,
 } from "@/server/services/product-studio/publish-eligibility";
 import { stripListingLinks } from "@/server/services/product-studio/listing-copy";
-import { listPublishLogs, publishFlagState } from "@/server/services/product-studio/publish-read";
+import {
+  lastPublishedDescriptionHtml,
+  listPublishLogs,
+  publishFlagState,
+} from "@/server/services/product-studio/publish-read";
 import {
   approvedSlotCount,
   buildWorkflowSteps,
@@ -46,6 +53,7 @@ import {
   queueResearchAction,
   recompilePromptsAction,
   reviewAssetAction,
+  updateDescriptionAction,
 } from "../actions";
 import { StudioActionForm } from "../studio-action-form";
 import { PublishPanel } from "./publish-panel";
@@ -84,11 +92,12 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   // The publishing card is for Super Admin only, so its history and flag
   // state are not even queried for anyone else.
   const mayPublish = canUserPublish(user);
-  const [project, flags, publishFlags, publishLogs] = await Promise.all([
+  const [project, flags, publishFlags, publishLogs, publishedDescriptionHtml] = await Promise.all([
     getProductStudioProject(id),
     getFeatureFlags([FEATURE_FLAGS.PRODUCT_STUDIO, FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION]),
     mayPublish ? publishFlagState() : Promise.resolve(null),
     mayPublish ? listPublishLogs(id) : Promise.resolve([]),
+    mayPublish ? lastPublishedDescriptionHtml(id) : Promise.resolve(null),
   ]);
   if (!project) notFound();
 
@@ -150,6 +159,9 @@ export default async function ProductStudioDetailPage({ params }: Props) {
         uploadApproved: asset.uploadApprovedAt != null,
         publishedAt: asset.publishedAt?.toISOString() ?? null,
         bigCommerceImageId: asset.bigCommerceImageId,
+        replacesImageId: asset.publishedAt
+          ? null
+          : liveImageIdForSlot(project.assets, asset.compositionSlot ?? 0),
       }))
     : [];
   const publishPending = mayPublish
@@ -157,8 +169,16 @@ export default async function ProductStudioDetailPage({ params }: Props) {
         project,
         assets: project.assets,
         compositions: project.compositions,
+        publishedDescriptionHtml,
       }).length
     : 0;
+  const descriptionChangedSincePublish =
+    project.descriptionPublishedAt != null &&
+    descriptionNeedsPublish({
+      text: cleanLongDescription ?? "",
+      descriptionPublishedAt: project.descriptionPublishedAt,
+      publishedDescriptionHtml,
+    });
   const formatWhen = (value: Date) => value.toISOString().replace("T", " ").slice(0, 16) + " UTC";
 
   return (
@@ -183,20 +203,52 @@ export default async function ProductStudioDetailPage({ params }: Props) {
         }
       />
 
-      {cleanLongDescription ? (
+      {cleanLongDescription || project.compositions.length > 0 ? (
         <div className="px-6 pt-6">
           <details className="rounded-lg border bg-card">
             <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
               Full product description
             </summary>
             <div className="space-y-3 border-t px-4 py-3 text-sm leading-relaxed text-muted-foreground">
-              {cleanLongDescription
-                .split(/\n\s*\n/)
-                .map((paragraph) => paragraph.trim())
-                .filter(Boolean)
-                .map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
+              {cleanLongDescription ? (
+                cleanLongDescription
+                  .split(/\n\s*\n/)
+                  .map((paragraph) => paragraph.trim())
+                  .filter(Boolean)
+                  .map((paragraph, index) => <p key={index}>{paragraph}</p>)
+              ) : (
+                <p>No full description yet. Write one below.</p>
+              )}
+              {/*
+               * Editable at any point, including after approval or publishing
+               * (2026-10-26). Saving strips links, clears the upload mark so the
+               * edited text is selected afresh, and leaves the store unchanged
+               * until it is published again.
+               */}
+              <details className="rounded-md border bg-background">
+                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-foreground">
+                  Edit the description
+                </summary>
+                <StudioActionForm action={updateDescriptionAction} className="space-y-2 p-3">
+                  <input type="hidden" name="projectId" value={project.id} />
+                  <textarea
+                    name="longDescription"
+                    rows={12}
+                    maxLength={MAX_LONG_DESCRIPTION}
+                    defaultValue={cleanLongDescription ?? ""}
+                    className="w-full rounded-md border bg-background p-2 text-xs leading-relaxed text-foreground"
+                  />
+                  <p className="text-xs">
+                    Plain paragraphs, separated by a blank line. Links and citations are removed on
+                    save. Saving clears the &quot;approved for upload&quot; mark; a published
+                    description stays on the store until the edited one is marked and published
+                    again.
+                  </p>
+                  <Button type="submit" size="sm" variant="outline">
+                    <Check /> Save description
+                  </Button>
+                </StudioActionForm>
+              </details>
             </div>
           </details>
         </div>
@@ -418,6 +470,54 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                     </Button>
                                   </StudioActionForm>
                                 ) : null}
+                                {asset.status === "approved" && canUseGeneration && !busy ? (
+                                  /*
+                                   * An approved image can be revised (2026-10-26). The new
+                                   * revision is reviewed and marked like any other; if this one
+                                   * was published, publishing the revision replaces it on the
+                                   * store. This revision stays on record below.
+                                   */
+                                  <details className="w-full rounded-md border">
+                                    <summary className="cursor-pointer px-3 py-2 text-xs font-medium">
+                                      Revise this image (revision {asset.revision + 1})
+                                    </summary>
+                                    <StudioActionForm
+                                      action={queueGenerationAction}
+                                      className="space-y-2 border-t p-3"
+                                    >
+                                      <input type="hidden" name="projectId" value={project.id} />
+                                      <input type="hidden" name="slot" value={composition.slot} />
+                                      <input type="hidden" name="revise" value="1" />
+                                      <label
+                                        className="block text-xs font-medium"
+                                        htmlFor={`revise-${composition.slot}`}
+                                      >
+                                        What should change
+                                      </label>
+                                      <textarea
+                                        id={`revise-${composition.slot}`}
+                                        name="operatorInstructions"
+                                        rows={2}
+                                        maxLength={MAX_OPERATOR_INSTRUCTIONS}
+                                        placeholder="e.g. Tighter crop on the box front. Plain white background."
+                                        className="w-full rounded-md border bg-background p-2 text-xs"
+                                      />
+                                      <p className="text-xs text-muted-foreground">
+                                        Changes staging and framing only. Product identity and
+                                        visible condition stay locked to your source photographs.
+                                        The new revision needs review and an upload mark before it
+                                        can go to the store
+                                        {asset.publishedAt
+                                          ? ", where it will replace the published image"
+                                          : ""}
+                                        .
+                                      </p>
+                                      <Button type="submit" size="sm" variant="outline">
+                                        <RefreshCw /> Generate revision {asset.revision + 1}
+                                      </Button>
+                                    </StudioActionForm>
+                                  </details>
+                                ) : null}
                               </div>
                             ) : null}
                             {priorRevisions.length > 0 ? (
@@ -568,6 +668,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   preview: cleanLongDescription?.slice(0, 280) ?? "",
                   uploadApproved: project.descriptionUploadApprovedAt != null,
                   publishedAt: project.descriptionPublishedAt?.toISOString() ?? null,
+                  changedSincePublish: descriptionChangedSincePublish,
                 }}
                 pendingCount={publishPending}
                 logs={publishLogs.map((log) => ({

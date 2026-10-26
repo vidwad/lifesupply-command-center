@@ -241,6 +241,16 @@ describe("Product Studio generation revisions", () => {
       expect(planGenerationRevision({ revision: 1, status })).toEqual({ action: "reuse" });
     }
   });
+
+  it("revises an approved image only on an explicit request, never one under review", () => {
+    expect(planGenerationRevision({ revision: 2, status: "approved" }, { revise: true })).toEqual({
+      action: "create",
+      revision: 3,
+    });
+    expect(
+      planGenerationRevision({ revision: 2, status: "needs_review" }, { revise: true }),
+    ).toEqual({ action: "reuse" });
+  });
 });
 
 describe("Product Studio intake validation (server-side)", () => {

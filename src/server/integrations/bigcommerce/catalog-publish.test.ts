@@ -10,7 +10,9 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   buildDescriptionRequestPayload,
+  buildImageDeleteRequestPayload,
   buildImageRequestPayload,
+  deleteBigCommerceProductImage,
   readBigCommerceProductContent,
   uploadBigCommerceProductImage,
   writeBigCommerceProductDescription,
@@ -177,6 +179,51 @@ describe("adding an image", () => {
         is_thumbnail: false,
       },
     });
+  });
+});
+
+describe("replacing an image", () => {
+  it("inherits the thumbnail flag only when asked, for a replacement", async () => {
+    const calls = installFetch(() => jsonResponse({ data: { id: 502 } }));
+    await uploadBigCommerceProductImage({
+      credentials,
+      request: { ...request, isThumbnail: true, sortOrder: 0 },
+      data: new Uint8Array([1]),
+    });
+    const form = calls[0]!.init?.body as FormData;
+    expect(form.get("is_thumbnail")).toBe("true");
+    expect(form.get("sort_order")).toBe("0");
+    expect(buildImageRequestPayload({ ...request, isThumbnail: true }).multipart.is_thumbnail).toBe(
+      true,
+    );
+  });
+  it("deletes one image by id and nothing else", async () => {
+    const calls = installFetch(() => new Response(null, { status: 204 }));
+    const result = await deleteBigCommerceProductImage({
+      credentials,
+      productId: "77",
+      imageId: 501,
+    });
+    expect(result).toMatchObject({ ok: true });
+    expect(calls[0]?.url).toBe(
+      "https://api.bigcommerce.com/stores/abc123/v3/catalog/products/77/images/501",
+    );
+    expect(calls[0]?.init?.method).toBe("DELETE");
+    expect(calls[0]?.init?.body).toBeUndefined();
+    expect(buildImageDeleteRequestPayload({ productId: "77", imageId: 501 })).toEqual({
+      method: "DELETE",
+      path: "/v3/catalog/products/77/images/501",
+    });
+  });
+  it("refuses to delete without a positive image id, and reports the store's refusal", async () => {
+    const calls = installFetch(() => jsonResponse({ title: "Not found" }, 404));
+    expect(
+      await deleteBigCommerceProductImage({ credentials, productId: "77", imageId: 0 }),
+    ).toMatchObject({ ok: false, status: "refused" });
+    expect(calls).toHaveLength(0);
+    expect(
+      await deleteBigCommerceProductImage({ credentials, productId: "77", imageId: 9 }),
+    ).toMatchObject({ ok: false, status: 404 });
   });
 });
 

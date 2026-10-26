@@ -118,6 +118,7 @@ export type PublishableAsset = {
   contentHash: string;
   uploadApprovedAt: Date | null;
   publishedAt: Date | null;
+  bigCommerceImageId?: number | null;
 };
 
 export type PublishCandidate =
@@ -131,8 +132,48 @@ export type PublishCandidate =
       bytes: number;
       contentHash: string;
       altText: string;
+      /**
+       * The store image a previous revision of this slot put on the listing,
+       * which this upload replaces (2026-10-26); null for a first publish.
+       */
+      replacesImageId: number | null;
     }
-  | { kind: "description"; text: string };
+  | { kind: "description"; text: string; replaces: boolean };
+
+/**
+ * The store image currently on the listing for a slot: the most recently
+ * published revision that recorded an image id. Null when none was published.
+ */
+export function liveImageIdForSlot(
+  assets: readonly PublishableAsset[],
+  slot: number,
+): number | null {
+  let latest: PublishableAsset | null = null;
+  for (const asset of assets) {
+    if (asset.kind !== "generated" || asset.compositionSlot !== slot) continue;
+    if (asset.bigCommerceImageId == null || !asset.publishedAt) continue;
+    if (!latest || asset.publishedAt > latest.publishedAt!) latest = asset;
+  }
+  return latest?.bigCommerceImageId ?? null;
+}
+
+/**
+ * Whether the description on the store differs from what would be sent now:
+ * never published, or edited since (the comparison is on the HTML that was
+ * last written, recorded in the publish log).
+ */
+export function descriptionNeedsPublish(args: {
+  text: string;
+  descriptionPublishedAt: Date | null;
+  publishedDescriptionHtml: string | null;
+}): boolean {
+  if (!args.text) return false;
+  if (!args.descriptionPublishedAt) return true;
+  // Published but with no record of what was sent: nothing can be shown to
+  // have changed, so it is not resent.
+  if (args.publishedDescriptionHtml == null) return false;
+  return args.publishedDescriptionHtml !== descriptionToHtml(args.text);
+}
 
 /** The latest revision of each generated slot, which is the only one that counts. */
 export function latestGeneratedBySlot<T extends PublishableAsset>(assets: readonly T[]): T[] {
@@ -163,7 +204,12 @@ export function assetCanBeMarked(
     return { ok: false, reason: "A newer revision of this composition exists; mark that one." };
   }
   if (asset.publishedAt) {
-    return { ok: false, reason: "This draft has already been published." };
+    return {
+      ok: false,
+      reason:
+        "This draft has already been published. To change it, revise the image and mark the " +
+        "new revision; publishing it replaces this one on the store.",
+    };
   }
   return { ok: true };
 }
@@ -187,6 +233,8 @@ export function selectPublishItems(args: {
   };
   assets: readonly PublishableAsset[];
   compositions: readonly { slot: number; name: string }[];
+  /** The HTML last written to the store, from the publish log; null if none. */
+  publishedDescriptionHtml?: string | null;
 }): PublishCandidate[] {
   const items: PublishCandidate[] = [];
   const title = args.project.confirmedTitle ?? args.project.title;
@@ -206,13 +254,25 @@ export function selectPublishItems(args: {
         title,
         compositionName: composition?.name ?? "Composition " + String(asset.compositionSlot),
       }),
+      replacesImageId: liveImageIdForSlot(args.assets, asset.compositionSlot!),
     });
   }
   // Stripped again here, not only at research time, so a project researched
   // before the no-links rule never publishes a link to another seller.
   const text = stripListingLinks(args.project.longDescription ?? "");
-  if (text && args.project.descriptionUploadApprovedAt && !args.project.descriptionPublishedAt) {
-    items.push({ kind: "description", text });
+  if (
+    args.project.descriptionUploadApprovedAt &&
+    descriptionNeedsPublish({
+      text,
+      descriptionPublishedAt: args.project.descriptionPublishedAt,
+      publishedDescriptionHtml: args.publishedDescriptionHtml ?? null,
+    })
+  ) {
+    items.push({
+      kind: "description",
+      text,
+      replaces: args.project.descriptionPublishedAt != null,
+    });
   }
   return items;
 }
