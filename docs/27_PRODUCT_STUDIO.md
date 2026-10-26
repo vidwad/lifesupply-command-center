@@ -57,6 +57,25 @@ Admin step in §5.5; the review workflow itself still publishes nothing.
 11. When `product_studio.enabled` is off, intake, research, generation, and review actions all fail
     closed server-side; stored records remain intact and readable.
 
+## 2.5 Working through a list of products (product owner, 2026-10-26)
+
+- **Open in bulk.** The products list has a checkbox per row and an "Open selected in Product
+  Studio" control. It creates one project per selected product, up to fifty, under one batch id,
+  with the product's name and its store description as the intake text. A product that already has
+  a live project is not duplicated. **Nothing is researched or generated**: creation spends nothing,
+  and each project is researched from its own page. `bulk.test.ts` holds the module to that.
+- **The store image as the photograph.** Each project is seeded with the store's primary image
+  (the thumbnail, else the lowest sort order), fetched only from the store's own image hosts and
+  bounded in type, size and time. It is the catalogue's image, usually the manufacturer's, so it is
+  a reference for a new, sealed product rather than a photograph of a unit. A product with no usable
+  image gets a project without a photograph, and research refuses until one is added.
+- **Adding or replacing photographs.** The project page lets an operator add photographs, or
+  replace the set, up to four, until research has run. After that they are locked, because the
+  identity analysis and every prompt were derived from them; the page says so and points to a new
+  project. One photo is usually enough; three or four from different angles are better.
+- **Stepping through.** A project in a batch shows "n of N" with previous and next links, and the
+  Studio list filtered by `?batch=` shows the batch with its first project to open.
+
 ## 3. What “most effective” means
 
 Retailers generally do not publish image-level conversion data. Product Studio therefore treats

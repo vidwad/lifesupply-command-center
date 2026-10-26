@@ -45,6 +45,8 @@ const PUBLIC_DIR = "src/components/public-site";
 const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   // Product Studio publishing to BigCommerce (product owner, 2026-10-22).
   "20261022120000_product_studio_publish",
+  // Product Studio batches from the products list (product owner, 2026-10-26).
+  "20261026180000_product_studio_batches",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */
