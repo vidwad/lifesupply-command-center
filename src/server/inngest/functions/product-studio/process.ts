@@ -29,6 +29,7 @@ import {
   qaProductImage,
   researchProduct,
 } from "@/server/services/product-studio/openai";
+import { stripListingCopyLinks } from "@/server/services/product-studio/listing-copy";
 import { compileProductImagePrompt } from "@/server/services/product-studio/prompts";
 import { planGenerationRevision } from "@/server/services/product-studio/revisions";
 
@@ -183,12 +184,16 @@ export const researchProductStudioProject = inngest.createFunction(
             }),
           })),
         });
+        // Buyer-facing copy carries no links or citations (2026-10-26): the
+        // model is told not to write them, and they are stripped here in case
+        // it does. Sources stay in the research sources and observations.
+        const listing = stripListingCopyLinks(research.optimizedListing);
         await tx.productStudioProject.update({
           where: { id: project.id },
           data: {
-            confirmedTitle: research.optimizedListing.title,
-            finalDescription: research.optimizedListing.shortDescription,
-            longDescription: research.optimizedListing.longDescription,
+            confirmedTitle: listing.title,
+            finalDescription: listing.shortDescription,
+            longDescription: listing.longDescription,
             currency: research.market.currency.toUpperCase(),
             marketLow: research.market.low,
             marketHigh: research.market.high,
@@ -196,7 +201,7 @@ export const researchProductStudioProject = inngest.createFunction(
             researchSummary: {
               identifiedProduct: research.identifiedProduct,
               benchmarkListing: research.benchmarkListing,
-              keyDetails: research.optimizedListing.keyDetails,
+              keyDetails: listing.keyDetails,
               methodology: research.methodology,
               marketBasis: research.market.basis,
               priceObservationCount: research.market.observations.length,
