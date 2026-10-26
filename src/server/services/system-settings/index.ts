@@ -5,13 +5,19 @@ export type SettingKey =
   | "ai.default_provider"
   | "ai.default_model"
   | "ai.max_output_tokens"
-  | "ai.temperature";
+  | "ai.temperature"
+  /** OpenAI text model for Product Studio research, QA and reformatting (2026-10-26). Empty = fall back. */
+  | "ai.openai_model"
+  /** OpenAI image model for Product Studio generation (2026-10-26). Empty = built-in default. */
+  | "ai.openai_image_model";
 
 export const SETTING_DEFAULTS: Record<SettingKey, string> = {
   "ai.default_provider": "anthropic",
   "ai.default_model": "claude-sonnet-4-6",
   "ai.max_output_tokens": "4096",
   "ai.temperature": "0.3",
+  "ai.openai_model": "",
+  "ai.openai_image_model": "",
 };
 
 export async function getSetting<T extends SettingKey>(key: T): Promise<string> {

@@ -4,6 +4,10 @@ import { ArrowLeft, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { PERMISSIONS } from "@/lib/permissions";
+import {
+  DEFAULT_OPENAI_IMAGE_MODEL,
+  DEFAULT_OPENAI_MODEL,
+} from "@/server/integrations/openai/client";
 import { resolveCredential } from "@/server/services/integrations";
 import { getSettings } from "@/server/services/system-settings";
 import { requirePermission } from "@/server/permissions";
@@ -37,14 +41,17 @@ const PROMPT_TEMPLATES = [
 export default async function AiSettingsPage() {
   await requirePermission(PERMISSIONS.ADMIN_MANAGE_SYSTEM_SETTINGS);
 
-  const [values, anthropicKey] = await Promise.all([
+  const [values, anthropicKey, openAiKey] = await Promise.all([
     getSettings([
       "ai.default_provider",
       "ai.default_model",
       "ai.max_output_tokens",
       "ai.temperature",
+      "ai.openai_model",
+      "ai.openai_image_model",
     ]),
     resolveCredential("anthropic", "apiKey"),
+    resolveCredential("openai", "apiKey"),
   ]);
 
   return (
@@ -67,8 +74,15 @@ export default async function AiSettingsPage() {
               "ai.default_model": values["ai.default_model"] ?? "claude-sonnet-4-6",
               "ai.max_output_tokens": values["ai.max_output_tokens"] ?? "4096",
               "ai.temperature": values["ai.temperature"] ?? "0.3",
+              "ai.openai_model": values["ai.openai_model"] ?? "",
+              "ai.openai_image_model": values["ai.openai_image_model"] ?? "",
             }}
             envOverride={process.env.ANTHROPIC_MODEL ?? null}
+            openAiEnv={{
+              model: process.env.OPENAI_MODEL?.trim() || null,
+              imageModel: process.env.OPENAI_IMAGE_MODEL?.trim() || null,
+            }}
+            openAiDefaults={{ model: DEFAULT_OPENAI_MODEL, imageModel: DEFAULT_OPENAI_IMAGE_MODEL }}
           />
 
           <Card>
@@ -123,6 +137,34 @@ export default async function AiSettingsPage() {
               )}
               <p className="text-xs text-muted-foreground">
                 Resolution order: process.env.ANTHROPIC_API_KEY then encrypted vault.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">OpenAI credential</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {openAiKey ? (
+                <p className="rounded-md border border-success/40 bg-success/10 px-3 py-2 text-success">
+                  Configured.{" "}
+                  <Link href="/admin/integrations" className="underline">
+                    Manage credentials
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2">
+                  No API key configured. Product Studio will fail until you{" "}
+                  <Link href="/admin/integrations" className="underline">
+                    add a credential
+                  </Link>
+                  .
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Resolution order: process.env.OPENAI_API_KEY then encrypted vault.
               </p>
             </CardContent>
           </Card>
