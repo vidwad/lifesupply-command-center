@@ -175,9 +175,16 @@ in the right column of the project page, and only a Super Admin sees it.
   published again, which replaces it. The rules compare the current text with the HTML last
   written (kept in the publish log), so an unchanged description is never resent.
 
+**The main image (product owner, 2026-10-26).** The publishing card offers a choice of which
+approved draft becomes the listing's main image. The default keeps the store's current main image
+when it has one; when the store has no image at all, the first draft published takes it. A chosen
+draft that is being uploaded goes first with the thumbnail flag; one already on the store is
+promoted in place with one update of its flag and position. The store clears the flag on its
+previous main image itself. The choice is internal until the next publish and is audited.
+
 **What it never touches.** Name, price, SKU, inventory, visibility, and any image this system did
-not upload. A fresh image is never made the thumbnail; only a replacement for the thumbnail
-inherits that flag. The client module has no method for anything else.
+not upload. A fresh image is never made the thumbnail unless it is the chosen or defaulted main
+image, or a replacement for the thumbnail. The client module has no method for anything else.
 
 **The gates, stacked.**
 

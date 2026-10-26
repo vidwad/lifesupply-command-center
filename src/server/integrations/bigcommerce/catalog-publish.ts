@@ -318,6 +318,71 @@ export async function deleteBigCommerceProductImage(args: {
   return { ok: true, response: body };
 }
 
+/** What the log records about promoting an image to the listing's main image. */
+export function buildImageUpdateRequestPayload(args: {
+  productId: string;
+  imageId: number;
+  isThumbnail: boolean;
+  sortOrder: number;
+}) {
+  return {
+    method: "PUT" as const,
+    path: productPath(args.productId) + "/images/" + String(args.imageId),
+    body: { is_thumbnail: args.isThumbnail, sort_order: args.sortOrder },
+  };
+}
+
+export type ImageUpdateOutcome =
+  | { ok: true; response: unknown }
+  | { ok: false; status: number | "network" | "refused"; message: string; response?: unknown };
+
+/**
+ * Sets ONE image's thumbnail flag and position (2026-10-26), for an image
+ * the Command Center itself uploaded earlier. The body carries those two
+ * fields and nothing else; the store clears the flag on its previous
+ * thumbnail itself.
+ */
+export async function updateBigCommerceProductImage(args: {
+  credentials: StoreCredentials;
+  productId: string;
+  imageId: number;
+  isThumbnail: boolean;
+  sortOrder: number;
+}): Promise<ImageUpdateOutcome> {
+  if (!Number.isInteger(args.imageId) || args.imageId <= 0) {
+    return { ok: false, status: "refused", message: "Refusing to update without an image id." };
+  }
+  const payload = buildImageUpdateRequestPayload(args);
+  let response: Response;
+  try {
+    response = await fetch(
+      BC_BASE + "/stores/" + encodeURIComponent(args.credentials.storeHash) + payload.path,
+      {
+        method: "PUT",
+        headers: { ...authHeaders(args.credentials), "Content-Type": "application/json" },
+        body: JSON.stringify(payload.body),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      },
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: "network",
+      message: error instanceof Error ? error.message : "Network failure updating the image.",
+    };
+  }
+  const body = await parseBody(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: errorMessage(body, response.status),
+      response: body,
+    };
+  }
+  return { ok: true, response: body };
+}
+
 /** What the log records about a description request. */
 export function buildDescriptionRequestPayload(args: { productId: string; html: string }) {
   return {

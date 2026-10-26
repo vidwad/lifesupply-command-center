@@ -251,6 +251,102 @@ describe("replacing what was published", () => {
   });
 });
 
+describe("the main image", () => {
+  const first = asset({ id: "s1", compositionSlot: 1 });
+  const second = asset({ id: "s2", compositionSlot: 2 });
+  const published = asset({
+    id: "s3",
+    compositionSlot: 3,
+    publishedAt: new Date("2026-10-20T10:00:00Z"),
+    bigCommerceImageId: 700,
+  });
+  const noDescription = { ...project, descriptionUploadApprovedAt: null };
+  const uploads = (items: ReturnType<typeof selectPublishItems>) =>
+    items.filter((item) => item.kind === "image").map((item) => [item.assetId, item.isMainImage]);
+
+  it("keeps the store's main image by default when the store has one", () => {
+    const items = selectPublishItems({
+      project: noDescription,
+      assets: [first, second],
+      compositions: [],
+      store: { imageCount: 3, thumbnailImageId: 10 },
+    });
+    expect(uploads(items)).toEqual([
+      ["s1", false],
+      ["s2", false],
+    ]);
+  });
+
+  it("makes the first upload the main image when the store has none", () => {
+    const items = selectPublishItems({
+      project: noDescription,
+      assets: [first, second],
+      compositions: [],
+      store: { imageCount: 0, thumbnailImageId: null },
+    });
+    expect(uploads(items)).toEqual([
+      ["s1", true],
+      ["s2", false],
+    ]);
+  });
+
+  it("honours a chosen upload over both defaults", () => {
+    const items = selectPublishItems({
+      project: noDescription,
+      assets: [first, second],
+      compositions: [],
+      store: { imageCount: 3, thumbnailImageId: 10 },
+      mainImageAssetId: "s2",
+    });
+    expect(uploads(items)).toEqual([
+      ["s1", false],
+      ["s2", true],
+    ]);
+  });
+
+  it("promotes a chosen draft already on the store, unless it is the main image already", () => {
+    const promote = selectPublishItems({
+      project: noDescription,
+      assets: [published],
+      compositions: [],
+      store: { imageCount: 3, thumbnailImageId: 10 },
+      mainImageAssetId: "s3",
+    });
+    expect(promote).toEqual([
+      { kind: "main_image", assetId: "s3", slot: 3, revision: 1, imageId: 700 },
+    ]);
+    const already = selectPublishItems({
+      project: noDescription,
+      assets: [published],
+      compositions: [],
+      store: { imageCount: 3, thumbnailImageId: 700 },
+      mainImageAssetId: "s3",
+    });
+    expect(already).toEqual([]);
+  });
+
+  it("ignores a choice that is not a latest approved draft", () => {
+    const items = selectPublishItems({
+      project: noDescription,
+      assets: [
+        first,
+        asset({ id: "s2r1", compositionSlot: 2, revision: 1 }),
+        asset({
+          id: "s2r2",
+          compositionSlot: 2,
+          revision: 2,
+          status: "needs_review",
+          uploadApprovedAt: null,
+        }),
+      ],
+      compositions: [],
+      store: { imageCount: 0, thumbnailImageId: null },
+      mainImageAssetId: "s2r1",
+    });
+    expect(uploads(items)).toEqual([["s1", true]]);
+  });
+});
+
 describe("the description as HTML", () => {
   it("wraps paragraphs, escapes markup and keeps single line breaks", () => {
     expect(descriptionToHtml(project.longDescription)).toBe(

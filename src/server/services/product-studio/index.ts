@@ -154,6 +154,7 @@ export async function getProductStudioProject(id: string) {
           storeId: true,
           sourceSystem: true,
           sourceId: true,
+          metadata: true,
           store: { select: { name: true } },
         },
       },

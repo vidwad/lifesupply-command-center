@@ -91,11 +91,14 @@ describe("only one module can send Product Studio content to a store", () => {
 
   it("the client adds an image and sets a description, and nothing else", () => {
     const code = stripComments(read(CLIENT));
-    // The description body is that one field as a literal, never a spread,
-    // and it is the only JSON body the module ever serialises.
+    // Two JSON bodies, each a literal of named fields, never a spread: the
+    // description (that one field) and the main-image promotion (thumbnail
+    // flag and position only).
     expect(code).toContain("body: { description: args.html }");
+    expect(code).toContain("body: { is_thumbnail: args.isThumbnail, sort_order: args.sortOrder }");
     expect(code).not.toMatch(/\.\.\.args|\.\.\.request/);
-    expect(code.match(/JSON\.stringify\(/g)?.length).toBe(1);
+    expect(code.match(/JSON\.stringify\(/g)?.length).toBe(2);
+    expect(code.match(/method:\s*"PUT",/g)?.length).toBe(2);
     // The multipart form carries exactly these four fields: the bytes, the
     // alt text, the order, and the thumbnail flag, which is false unless the
     // request is a replacement for the thumbnail.
@@ -136,7 +139,8 @@ describe("only one module can send Product Studio content to a store", () => {
       code.indexOf("deleteBigCommerceProductImage({"),
     );
     // The thumbnail flag is inherited from the replaced image only.
-    expect(code).toContain("isThumbnail: replaced?.isThumbnail === true");
+    // ...or from the main-image choice, the only other way a draft takes the flag.
+    expect(code).toContain("isThumbnail: item.isMainImage || replaced?.isThumbnail === true");
     // The replaced image's id comes from the rules module, which takes it
     // from a published draft's own record.
     expect(stripComments(read(RULES))).toContain("replacesImageId: liveImageIdForSlot(");
@@ -189,8 +193,9 @@ describe("the publish service is gated, logged and single-shot", () => {
     expect(code).not.toMatch(
       /inngest|createFunction|cron|setInterval|findMany\(\s*\{\s*where:\s*\{\s*status/,
     );
-    // Two `break` statements: one per item kind, each after a failure.
-    expect(code.match(/\bbreak;/g)?.length).toBe(2);
+    // Three `break` statements: one per item kind (image upload, main-image
+    // promotion, description), each after a failure.
+    expect(code.match(/\bbreak;/g)?.length).toBe(3);
   });
 
   it("is unreachable from any background function or the worker entrypoint", () => {
@@ -229,9 +234,10 @@ describe("the publish service is gated, logged and single-shot", () => {
   it("every publish action requires the Super Admin-only permission at the boundary", () => {
     const code = stripComments(read(ACTIONS));
     expect(code).toContain("requirePermission(PERMISSIONS.PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE)");
+    // Mark an image, mark the description, choose the main image, publish.
     const actions = code.match(/export async function \w+Action/g) ?? [];
-    expect(actions.length).toBe(3);
-    expect(code.match(/await requirePublisher\(\)/g)?.length).toBe(3);
+    expect(actions.length).toBe(4);
+    expect(code.match(/await requirePublisher\(\)/g)?.length).toBe(4);
     const panel = stripComments(read(PANEL));
     expect(panel).toContain('variant="destructive"');
     expect(panel).toContain("Super Admin only");
