@@ -46,9 +46,11 @@ import { resolveStoreCredentials } from "@/server/integrations/bigcommerce/store
 import { logger } from "@/server/logger";
 
 import { ProductStudioInputError } from "./index";
+import { stripListingLinks } from "./listing-copy";
 import {
   assetCanBeMarked,
   canPublish,
+  descriptionNeedsPublish,
   descriptionToHtml,
   PUBLISH_PERMISSION,
   resolvePublishTarget,
@@ -213,14 +215,27 @@ export async function setDescriptionUploadMark(args: {
     select: { id: true, longDescription: true, descriptionPublishedAt: true },
   });
   if (!project) throw new ProductStudioInputError("Project not found.");
-  if (project.descriptionPublishedAt) {
+  const text = stripListingLinks(project.longDescription ?? "");
+  if (args.marked && !text) {
     throw new ProductStudioInputError(
-      "The description has already been published; its mark is part of the record.",
+      "This project has no full description yet. Run research or write one on the project page.",
     );
   }
-  if (args.marked && !project.longDescription?.trim()) {
+  // A published description may be marked again once it has been edited
+  // (2026-10-26): publishing then replaces the store's copy. While the text
+  // still matches what the store has, there is nothing to send.
+  if (
+    args.marked &&
+    project.descriptionPublishedAt &&
+    !descriptionNeedsPublish({
+      text,
+      descriptionPublishedAt: project.descriptionPublishedAt,
+      publishedDescriptionHtml: await lastPublishedDescriptionHtml(project.id),
+    })
+  ) {
     throw new ProductStudioInputError(
-      "This project has no full description yet. Run research to produce one.",
+      "The store already has this description. Edit it first; the edited text can then be marked " +
+        "and published to replace it.",
     );
   }
   await prisma.productStudioProject.update({

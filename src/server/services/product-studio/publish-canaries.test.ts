@@ -114,6 +114,17 @@ describe("only one module can send Product Studio content to a store", () => {
     expect(code).not.toContain("sale_price");
   });
 
+  it("an edited description can be marked again after publishing; an unchanged one cannot", () => {
+    const code = stripComments(read(SERVICE));
+    const mark = code.slice(
+      code.indexOf("export async function setDescriptionUploadMark"),
+      code.indexOf("export type PublishItemResult"),
+    );
+    expect(mark).toContain("descriptionNeedsPublish({");
+    expect(mark).toContain("lastPublishedDescriptionHtml(project.id)");
+    expect(mark).not.toContain("its mark is part of the record");
+  });
+
   it("the service removes only the image a published draft recorded, and only after its replacement is up", () => {
     const code = stripComments(read(SERVICE));
     // One call, keyed on the id found in the pre-write snapshot that matches

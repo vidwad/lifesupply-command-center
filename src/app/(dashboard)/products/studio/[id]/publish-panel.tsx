@@ -286,8 +286,10 @@ export function PublishPanel({
               are read and recorded first, and every attempt is logged and audited.
             </p>
             <p>
-              Not touched: name, price, SKU, inventory, visibility, the thumbnail and existing
-              images. Each item is sent once; the run stops at the first failure.
+              Not touched: name, price, SKU, inventory, visibility, and any image this system did
+              not upload. A revised image replaces the earlier revision&apos;s image on the store;
+              an edited description replaces the store&apos;s copy. Each item is sent once; the run
+              stops at the first failure.
             </p>
           </div>
           {blockedByFlags ? (
