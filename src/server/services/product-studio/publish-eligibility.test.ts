@@ -11,8 +11,10 @@ import {
   assetCanBeMarked,
   buildImageAltText,
   canPublish,
+  descriptionNeedsPublish,
   descriptionToHtml,
   latestGeneratedBySlot,
+  liveImageIdForSlot,
   REQUIRED_PUBLISH_FLAGS,
   resolvePublishTarget,
   selectPublishItems,
@@ -163,6 +165,89 @@ describe("the verdict", () => {
       reason: "nothing_marked",
     });
     expect(canPublish({ target, targetReason: null, items: item, busy: false }).allowed).toBe(true);
+  });
+});
+
+describe("replacing what was published", () => {
+  const published = asset({
+    id: "r1",
+    compositionSlot: 1,
+    revision: 1,
+    publishedAt: new Date("2026-10-20T10:00:00Z"),
+    bigCommerceImageId: 501,
+  });
+  const revision = asset({ id: "r2", compositionSlot: 1, revision: 2 });
+
+  it("finds the store image a slot currently has, by the latest published revision", () => {
+    const older = asset({
+      id: "r0",
+      compositionSlot: 1,
+      revision: 0,
+      publishedAt: new Date("2026-10-01T10:00:00Z"),
+      bigCommerceImageId: 400,
+    });
+    expect(liveImageIdForSlot([older, published, revision], 1)).toBe(501);
+    expect(liveImageIdForSlot([revision], 1)).toBeNull();
+    expect(liveImageIdForSlot([published], 2)).toBeNull();
+  });
+
+  it("marks a revision of a published image as a replacement, and a first publish as not", () => {
+    const items = selectPublishItems({
+      project: { ...project, descriptionUploadApprovedAt: null },
+      assets: [published, revision, asset({ id: "fresh", compositionSlot: 2 })],
+      compositions: [],
+    });
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ kind: "image", assetId: "r2", replacesImageId: 501 });
+    expect(items[1]).toMatchObject({ kind: "image", assetId: "fresh", replacesImageId: null });
+  });
+
+  it("will not mark the published revision again; the revision carries the change", () => {
+    expect(assetCanBeMarked(published, [published, revision]).ok).toBe(false);
+    expect(assetCanBeMarked(revision, [published, revision])).toEqual({ ok: true });
+  });
+
+  it("resends an edited description, never an unchanged one", () => {
+    const sent = descriptionToHtml(project.longDescription);
+    const publishedAt = new Date("2026-10-20T10:00:00Z");
+    expect(
+      descriptionNeedsPublish({
+        text: project.longDescription,
+        descriptionPublishedAt: publishedAt,
+        publishedDescriptionHtml: sent,
+      }),
+    ).toBe(false);
+    expect(
+      descriptionNeedsPublish({
+        text: project.longDescription + "\n\nAn added paragraph.",
+        descriptionPublishedAt: publishedAt,
+        publishedDescriptionHtml: sent,
+      }),
+    ).toBe(true);
+    expect(
+      descriptionNeedsPublish({
+        text: project.longDescription,
+        descriptionPublishedAt: null,
+        publishedDescriptionHtml: null,
+      }),
+    ).toBe(true);
+    // Published with no record of what was sent: not resent.
+    expect(
+      descriptionNeedsPublish({
+        text: project.longDescription,
+        descriptionPublishedAt: publishedAt,
+        publishedDescriptionHtml: null,
+      }),
+    ).toBe(false);
+    const items = selectPublishItems({
+      project: { ...project, descriptionPublishedAt: publishedAt },
+      assets: [],
+      compositions: [],
+      publishedDescriptionHtml: "<p>something older</p>",
+    });
+    expect(items).toEqual([
+      { kind: "description", text: expect.any(String) as string, replaces: true },
+    ]);
   });
 });
 

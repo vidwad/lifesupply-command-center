@@ -38,6 +38,8 @@ type GenerateEvent = ResearchEvent & {
   slot: number;
   operatorInstructions?: string | null;
   autoContinue?: boolean;
+  /** The operator asked to revise an approved image (2026-10-26). */
+  revise?: boolean;
 };
 
 function errorMessage(error: unknown): string {
@@ -299,7 +301,7 @@ export const generateProductStudioImage = inngest.createFunction(
       where: { projectId: project.id, kind: "generated", compositionSlot: data.slot },
       orderBy: { revision: "desc" },
     });
-    const plan = planGenerationRevision(existing);
+    const plan = planGenerationRevision(existing, { revise: data.revise === true });
     if (plan.action === "reuse") {
       return { assetId: existing?.id, status: existing?.status, reused: true };
     }

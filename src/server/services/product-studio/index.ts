@@ -244,6 +244,12 @@ export async function queueProductStudioGeneration(args: {
   operatorInstructions?: string | null;
   /** Chain the remaining planned slots after this one succeeds. */
   autoContinue?: boolean;
+  /**
+   * Revise an image that is already approved (2026-10-26): a new revision is
+   * generated and reviewed again; the approved one stays on record, and if it
+   * was published, the revision replaces it on the store when published.
+   */
+  revise?: boolean;
 }): Promise<void> {
   await Promise.all([
     requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO),
@@ -300,7 +306,7 @@ export async function queueProductStudioGeneration(args: {
     action: "product_studio.image_queued",
     entityType: "ProductStudioProject",
     entityId: args.projectId,
-    afterData: { slot: args.slot, operatorInstructions },
+    afterData: { slot: args.slot, operatorInstructions, revise: args.revise === true },
   });
 }
 

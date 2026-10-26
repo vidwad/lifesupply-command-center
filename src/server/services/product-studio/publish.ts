@@ -35,7 +35,9 @@ import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 import {
   buildDescriptionRequestPayload,
+  buildImageDeleteRequestPayload,
   buildImageRequestPayload,
+  deleteBigCommerceProductImage,
   readBigCommerceProductContent,
   uploadBigCommerceProductImage,
   writeBigCommerceProductDescription,
@@ -54,7 +56,7 @@ import {
   type PublishCandidate,
   type PublishTarget,
 } from "./publish-eligibility";
-import { flagsBlockingPublish } from "./publish-read";
+import { flagsBlockingPublish, lastPublishedDescriptionHtml } from "./publish-read";
 import { isWorkflowBusy } from "./workflow-progress";
 
 const json = (value: unknown) => JSON.parse(JSON.stringify(value ?? null)) as never;
@@ -71,6 +73,7 @@ const ASSET_SELECT = {
   contentHash: true,
   uploadApprovedAt: true,
   publishedAt: true,
+  bigCommerceImageId: true,
 } as const;
 
 async function loadProject(projectId: string) {
@@ -302,6 +305,7 @@ export async function publishProductStudioProject(args: {
     project: row,
     assets: row.assets,
     compositions: row.compositions,
+    publishedDescriptionHtml: await lastPublishedDescriptionHtml(row.id),
   });
   const verdict = canPublish({
     target,
@@ -394,6 +398,15 @@ export async function publishProductStudioProject(args: {
   for (const [index, item] of verdict.items.entries()) {
     if (item.kind === "image") {
       const label = "Composition " + String(item.slot) + " (r" + String(item.revision) + ")";
+      // A revision of a published image replaces it (2026-10-26): the new
+      // file takes the old image's position and thumbnail flag, and the old
+      // image is removed afterwards. The old image is identified only by the
+      // id this system recorded when it uploaded it, and only if the store
+      // still lists it.
+      const replaced =
+        item.replacesImageId != null
+          ? (before.snapshot.images.find((image) => image.id === item.replacesImageId) ?? null)
+          : null;
       const request = {
         productId: resolvedTarget.sourceProductId,
         fileName: item.fileName,
@@ -401,7 +414,8 @@ export async function publishProductStudioProject(args: {
         contentHash: item.contentHash,
         bytes: item.bytes,
         altText: item.altText,
-        sortOrder: existingImageCount + index,
+        sortOrder: replaced?.sortOrder ?? existingImageCount + index,
+        isThumbnail: replaced?.isThumbnail === true,
       };
       // The log row exists before the request goes out.
       const log = await prisma.productStudioPublishLog.create({
@@ -410,7 +424,20 @@ export async function publishProductStudioProject(args: {
           assetId: item.assetId,
           kind: "image",
           status: "queued",
-          requestPayload: json(buildImageRequestPayload(request)),
+          requestPayload: json({
+            ...buildImageRequestPayload(request),
+            replaces: replaced
+              ? {
+                  imageId: replaced.id,
+                  isThumbnail: replaced.isThumbnail,
+                  sortOrder: replaced.sortOrder,
+                  then: buildImageDeleteRequestPayload({
+                    productId: resolvedTarget.sourceProductId,
+                    imageId: replaced.id!,
+                  }),
+                }
+              : null,
+          }),
           beforeSnapshot,
         },
         select: { id: true },
@@ -461,13 +488,34 @@ export async function publishProductStudioProject(args: {
         break;
       }
       const writtenAt = new Date();
+      // Only after the replacement is on the store is the old image removed,
+      // so a failed upload never leaves the listing one image short.
+      let removal: { ok: boolean; message: string | null; response: unknown } | null = null;
+      if (replaced?.id != null) {
+        const removed = await deleteBigCommerceProductImage({
+          credentials,
+          productId: resolvedTarget.sourceProductId,
+          imageId: replaced.id,
+        });
+        removal = removed.ok
+          ? { ok: true, message: null, response: removed.response }
+          : { ok: false, message: removed.message, response: removed.response ?? null };
+      }
       await prisma.productStudioPublishLog.update({
         where: { id: log.id },
         data: {
           status: "succeeded",
           writtenAt,
           bigCommerceImageId: outcome.imageId,
-          responsePayload: json(outcome.response),
+          responsePayload: json({ upload: outcome.response, removal }),
+          errorMessage:
+            removal && !removal.ok
+              ? "Replacement uploaded, but the previous image #" +
+                String(replaced?.id) +
+                " could not be removed: " +
+                (removal.message ?? "unknown error") +
+                ". Remove it from the BigCommerce control panel."
+              : null,
         },
       });
       await prisma.productStudioAsset.update({
@@ -483,13 +531,24 @@ export async function publishProductStudioProject(args: {
           ...auditContext(row, resolvedTarget),
           logId: log.id,
           bigCommerceImageId: outcome.imageId,
+          replacedImageId: replaced?.id ?? null,
+          replacedImageRemoved: removal ? removal.ok : null,
         },
       });
       results.push({
         kind: "image",
         label,
         status: "succeeded",
-        message: "Added to the listing as image id " + String(outcome.imageId ?? "unknown") + ".",
+        message: replaced
+          ? "Replaced image #" +
+            String(replaced.id) +
+            " with image id " +
+            String(outcome.imageId ?? "unknown") +
+            (removal && !removal.ok
+              ? ", but the old image could not be removed: " + (removal.message ?? "unknown error")
+              : "") +
+            "."
+          : "Added to the listing as image id " + String(outcome.imageId ?? "unknown") + ".",
         logId: log.id,
       });
       continue;

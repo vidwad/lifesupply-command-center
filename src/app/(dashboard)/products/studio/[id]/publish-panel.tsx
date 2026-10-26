@@ -39,6 +39,8 @@ export type PublishPanelImage = {
   uploadApproved: boolean;
   publishedAt: string | null;
   bigCommerceImageId: number | null;
+  /** The store image an earlier revision put on the listing, which this one replaces. */
+  replacesImageId: number | null;
 };
 
 export type PublishPanelLog = {
@@ -130,6 +132,8 @@ export function PublishPanel({
     preview: string;
     uploadApproved: boolean;
     publishedAt: string | null;
+    /** Edited since the last publish, so publishing again replaces the store's copy. */
+    changedSincePublish: boolean;
   };
   /** Marked and not yet published: what the publish button will send. */
   pendingCount: number;
@@ -203,6 +207,9 @@ export function PublishPanel({
                           : image.uploadApproved
                             ? "Approved for upload"
                             : "Approved in review"}
+                        {!image.publishedAt && image.replacesImageId != null
+                          ? ` · will replace image #${image.replacesImageId} on the store`
+                          : ""}
                       </p>
                     </div>
                     {image.publishedAt ? (
@@ -237,17 +244,19 @@ export function PublishPanel({
                     {description.preview}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {description.uploadApproved ? "Approved for upload" : "Not marked"} · replaces
-                    the listing&apos;s current description
+                    {description.uploadApproved ? "Approved for upload" : "Not marked"}
+                    {description.changedSincePublish
+                      ? " · edited since it was published; publishing replaces the store's copy"
+                      : " · replaces the listing's current description"}
                   </p>
                 </>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  No full description yet. Run research to produce one.
+                  No full description yet. Run research or write one at the top of the page.
                 </p>
               )}
             </div>
-            {description.publishedAt ? (
+            {description.publishedAt && !description.changedSincePublish ? (
               <PublishedBadge at={description.publishedAt} />
             ) : (
               <MarkForm

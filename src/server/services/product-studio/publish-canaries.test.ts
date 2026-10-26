@@ -97,14 +97,38 @@ describe("only one module can send Product Studio content to a store", () => {
     expect(code).not.toMatch(/\.\.\.args|\.\.\.request/);
     expect(code.match(/JSON\.stringify\(/g)?.length).toBe(1);
     // The multipart form carries exactly these four fields: the bytes, the
-    // alt text, the order, and the thumbnail flag pinned to false.
+    // alt text, the order, and the thumbnail flag, which is false unless the
+    // request is a replacement for the thumbnail.
     const appended = [...code.matchAll(/form\.append\(\s*"([a-z_]+)"/g)].map((m) => m[1]);
     expect(appended.sort()).toEqual(["description", "image_file", "is_thumbnail", "sort_order"]);
-    expect(code).toContain('form.append("is_thumbnail", "false")');
-    // No deletes, and never a URL the store would have to fetch.
-    expect(code).not.toMatch(/method:\s*"DELETE"/);
+    expect(code).toContain("is_thumbnail: request.isThumbnail === true");
+    // Exactly one delete, in the function that removes a replaced image by
+    // id, and never a URL the store would have to fetch.
+    // Once in the request sent (the fetch init) and once in the log payload
+    // builder, which records it; no other delete anywhere in the module.
+    expect(code.match(/method:\s*"DELETE",/g)?.length).toBe(1);
+    expect(code.match(/method:\s*"DELETE" as const/g)?.length).toBe(1);
+    expect(code.match(/method:\s*"DELETE"/g)?.length).toBe(2);
+    expect(code).toContain("export async function deleteBigCommerceProductImage(");
     expect(code).not.toContain("image_url");
     expect(code).not.toContain("sale_price");
+  });
+
+  it("the service removes only the image a published draft recorded, and only after its replacement is up", () => {
+    const code = stripComments(read(SERVICE));
+    // One call, keyed on the id found in the pre-write snapshot that matches
+    // the replaced draft's recorded id; never a listing-wide sweep.
+    expect(code.match(/deleteBigCommerceProductImage\(\{/g)?.length).toBe(1);
+    expect(code).toContain("image.id === item.replacesImageId");
+    expect(code).toContain("imageId: replaced.id");
+    expect(code.indexOf("uploadBigCommerceProductImage({")).toBeLessThan(
+      code.indexOf("deleteBigCommerceProductImage({"),
+    );
+    // The thumbnail flag is inherited from the replaced image only.
+    expect(code).toContain("isThumbnail: replaced?.isThumbnail === true");
+    // The replaced image's id comes from the rules module, which takes it
+    // from a published draft's own record.
+    expect(stripComments(read(RULES))).toContain("replacesImageId: liveImageIdForSlot(");
   });
 });
 

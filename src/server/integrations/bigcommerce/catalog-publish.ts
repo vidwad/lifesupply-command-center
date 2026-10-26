@@ -165,6 +165,12 @@ export type ImageUploadRequest = {
   bytes: number;
   altText: string;
   sortOrder: number;
+  /**
+   * True only when the upload replaces an image that was the listing's
+   * thumbnail, so the listing keeps one (2026-10-26). A fresh image is never
+   * made the thumbnail.
+   */
+  isThumbnail?: boolean;
 };
 
 /** What the log records about an image request: everything but the pixels. */
@@ -181,7 +187,7 @@ export function buildImageRequestPayload(request: ImageUploadRequest) {
       },
       description: request.altText.slice(0, MAX_IMAGE_ALT_LENGTH),
       sort_order: request.sortOrder,
-      is_thumbnail: false,
+      is_thumbnail: request.isThumbnail === true,
     },
   };
 }
@@ -195,8 +201,10 @@ export type UploadOutcome =
  * the Command Center database, where Product Studio keeps them behind an
  * authenticated route, so the store cannot fetch them by URL.
  *
- * The new image is never made the thumbnail: the store keeps whatever it
- * had, and a merchant can promote the image from the control panel.
+ * A new image is never made the thumbnail: the store keeps whatever it had,
+ * and a merchant can promote the image from the control panel. The one
+ * exception is a replacement for the image that was the thumbnail, which
+ * inherits the flag so the listing is never left without one.
  */
 export async function uploadBigCommerceProductImage(args: {
   credentials: StoreCredentials;
@@ -223,7 +231,7 @@ export async function uploadBigCommerceProductImage(args: {
   );
   form.append("description", payload.multipart.description);
   form.append("sort_order", String(payload.multipart.sort_order));
-  form.append("is_thumbnail", "false");
+  form.append("is_thumbnail", payload.multipart.is_thumbnail ? "true" : "false");
 
   let response: Response;
   try {
@@ -252,6 +260,62 @@ export async function uploadBigCommerceProductImage(args: {
   }
   const data = dataOf(body);
   return { ok: true, imageId: typeof data?.id === "number" ? data.id : null, response: body };
+}
+
+export type DeleteOutcome =
+  | { ok: true; response: unknown }
+  | { ok: false; status: number | "network" | "refused"; message: string; response?: unknown };
+
+/** What the log records about removing a replaced image. */
+export function buildImageDeleteRequestPayload(args: { productId: string; imageId: number }) {
+  return {
+    method: "DELETE" as const,
+    path: productPath(args.productId) + "/images/" + String(args.imageId),
+  };
+}
+
+/**
+ * Removes ONE image the Command Center itself uploaded earlier, after its
+ * replacement has been uploaded (2026-10-26). The service passes only an
+ * image id it recorded on a published draft; this module cannot list or
+ * choose images, and never touches one it did not put there.
+ */
+export async function deleteBigCommerceProductImage(args: {
+  credentials: StoreCredentials;
+  productId: string;
+  imageId: number;
+}): Promise<DeleteOutcome> {
+  if (!Number.isInteger(args.imageId) || args.imageId <= 0) {
+    return { ok: false, status: "refused", message: "Refusing to delete without an image id." };
+  }
+  const payload = buildImageDeleteRequestPayload(args);
+  let response: Response;
+  try {
+    response = await fetch(
+      BC_BASE + "/stores/" + encodeURIComponent(args.credentials.storeHash) + payload.path,
+      {
+        method: "DELETE",
+        headers: authHeaders(args.credentials),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      },
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: "network",
+      message: error instanceof Error ? error.message : "Network failure removing the image.",
+    };
+  }
+  const body = await parseBody(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: errorMessage(body, response.status),
+      response: body,
+    };
+  }
+  return { ok: true, response: body };
 }
 
 /** What the log records about a description request. */
