@@ -129,9 +129,11 @@ export async function createProductStudioProject(args: {
   return project.id;
 }
 
-export async function listProductStudioProjects() {
+export async function listProductStudioProjects(filter: { batchId?: string | null } = {}) {
   return prisma.productStudioProject.findMany({
-    orderBy: { createdAt: "desc" },
+    where: filter.batchId ? { batchId: filter.batchId } : undefined,
+    // A batch lists in the order it was created so it reads top to bottom.
+    orderBy: { createdAt: filter.batchId ? "asc" : "desc" },
     take: 100,
     include: {
       product: { select: { id: true, name: true, sku: true } },
@@ -214,6 +216,16 @@ export async function queueProductStudioResearch(args: {
   if (project._count.assets > 0) {
     throw new ProductStudioInputError(
       "Research cannot be replaced after image generation. Start a new project to preserve provenance.",
+    );
+  }
+  // A project created in bulk may have no photograph yet (the store had none);
+  // research is grounded in the photographs, so there must be at least one.
+  const sourceCount = await prisma.productStudioAsset.count({
+    where: { projectId: args.projectId, kind: "source" },
+  });
+  if (sourceCount === 0) {
+    throw new ProductStudioInputError(
+      "Add at least one authoritative photograph before researching this product.",
     );
   }
   if (["research_queued", "researching", "generating"].includes(project.status)) {

@@ -15,10 +15,17 @@ import { ProjectActions } from "./project-actions";
 export const metadata = { title: "Product Studio" };
 export const dynamic = "force-dynamic";
 
-export default async function ProductStudioPage() {
+export default async function ProductStudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ batch?: string }>;
+}) {
   await requirePermission(PERMISSIONS.PRODUCTS_UPDATE);
   await requirePermission(PERMISSIONS.AI_USE);
-  const projects = await listProductStudioProjects();
+  const { batch } = await searchParams;
+  const batchId = batch?.trim() || null;
+  const projects = await listProductStudioProjects({ batchId });
+  const first = batchId ? projects[0] : null;
 
   return (
     <div>
@@ -39,6 +46,25 @@ export default async function ProductStudioPage() {
         }
       />
       <div className="space-y-4 p-6">
+        {batchId ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-md border bg-card p-4 text-sm">
+            <p>
+              <span className="font-medium">Batch of {projects.length}</span>
+              <span className="text-muted-foreground">
+                {" "}
+                · created together from the products list. Each project page steps to the next.
+              </span>
+            </p>
+            {first ? (
+              <Button asChild size="sm" className="ml-auto">
+                <Link href={`/products/studio/${first.id}`}>Open the first project</Link>
+              </Button>
+            ) : null}
+            <Button asChild size="sm" variant="ghost">
+              <Link href="/products/studio">All projects</Link>
+            </Button>
+          </div>
+        ) : null}
         {projects.length === 0 ? (
           <EmptyState
             icon={Sparkles}

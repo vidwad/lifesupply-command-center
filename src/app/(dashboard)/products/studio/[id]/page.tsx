@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Download,
   ExternalLink,
   ImageIcon,
@@ -12,6 +14,7 @@ import {
   Search,
   ShieldAlert,
   Sparkles,
+  Upload,
   Wrench,
   X,
 } from "lucide-react";
@@ -27,7 +30,12 @@ import { requirePermission } from "@/server/permissions";
 import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
 import { MAX_OPERATOR_INSTRUCTIONS } from "@/server/services/product-studio/prompt-controls";
+import { listBatchProjects } from "@/server/services/product-studio/bulk";
 import { MAX_LONG_DESCRIPTION } from "@/server/services/product-studio/description";
+import {
+  MAX_SOURCE_PHOTOS,
+  sourcePhotosLocked,
+} from "@/server/services/product-studio/source-photos";
 import {
   canUserPublish,
   descriptionNeedsPublish,
@@ -54,6 +62,7 @@ import {
   recompilePromptsAction,
   reviewAssetAction,
   updateDescriptionAction,
+  updateSourcePhotosAction,
 } from "../actions";
 import { StudioActionForm } from "../studio-action-form";
 import { PublishPanel } from "./publish-panel";
@@ -132,10 +141,23 @@ export default async function ProductStudioDetailPage({ params }: Props) {
   const remainingSlots = project.compositions.filter((item) =>
     ["planned", "failed"].includes(item.status),
   ).length;
+  // Research is grounded in the photographs, so a project created in bulk
+  // from a product with no store image cannot research until one is added.
+  const hasSourcePhotos = sourceAssets.length > 0;
   const canResearch =
     flags[FEATURE_FLAGS.PRODUCT_STUDIO] &&
     generatedAssets.length === 0 &&
+    hasSourcePhotos &&
     ["draft", "failed"].includes(project.status);
+  const photosLocked = sourcePhotosLocked({
+    status: project.status,
+    compositionCount: project.compositions.length,
+  });
+  // Stepping through a batch created from the products list (2026-10-26).
+  const batch = project.batchId ? await listBatchProjects(project.batchId) : [];
+  const batchIndex = batch.findIndex((item) => item.id === project.id);
+  const batchPrevious = batchIndex > 0 ? batch[batchIndex - 1] : null;
+  const batchNext = batchIndex >= 0 && batchIndex < batch.length - 1 ? batch[batchIndex + 1] : null;
   const canUseGeneration =
     flags[FEATURE_FLAGS.PRODUCT_STUDIO] && flags[FEATURE_FLAGS.PRODUCT_STUDIO_IMAGE_GENERATION];
   const canGenerate = canUseGeneration && Boolean(nextComposition) && !busy;
@@ -202,6 +224,53 @@ export default async function ProductStudioDetailPage({ params }: Props) {
           </div>
         }
       />
+
+      {project.batchId && batchIndex >= 0 ? (
+        <div className="px-6 pt-6">
+          <nav
+            aria-label="Batch"
+            className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-3 text-sm"
+          >
+            <Link
+              href={`/products/studio?batch=${project.batchId}`}
+              className="font-medium hover:underline"
+            >
+              Batch
+            </Link>
+            <span className="text-muted-foreground">
+              {batchIndex + 1} of {batch.length}
+            </span>
+            <span className="hidden text-xs text-muted-foreground sm:inline">
+              · {batch.filter((item) => item._count.assets === 0).length} without a photograph ·{" "}
+              {batch.filter((item) => item.status === "approved").length} approved
+            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <Button asChild variant="outline" size="sm" disabled={!batchPrevious}>
+                <Link
+                  href={batchPrevious ? `/products/studio/${batchPrevious.id}` : "#"}
+                  aria-disabled={!batchPrevious}
+                  title={
+                    batchPrevious
+                      ? (batchPrevious.confirmedTitle ?? batchPrevious.title)
+                      : undefined
+                  }
+                >
+                  <ChevronLeft /> Previous
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" disabled={!batchNext}>
+                <Link
+                  href={batchNext ? `/products/studio/${batchNext.id}` : "#"}
+                  aria-disabled={!batchNext}
+                  title={batchNext ? (batchNext.confirmedTitle ?? batchNext.title) : undefined}
+                >
+                  Next <ChevronRight />
+                </Link>
+              </Button>
+            </div>
+          </nav>
+        </div>
+      ) : null}
 
       {cleanLongDescription || project.compositions.length > 0 ? (
         <div className="px-6 pt-6">
@@ -273,24 +342,78 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   Every generated draft must preserve the product and visible condition shown here.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {sourceAssets.map((asset) => (
-                    <div key={asset.id} className="space-y-2">
-                      <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
-                        <Image
-                          src={`/api/product-studio/assets/${asset.id}`}
-                          alt={`Authoritative source: ${asset.fileName}`}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 220px"
-                          className="object-contain"
-                          unoptimized
-                        />
+              <CardContent className="space-y-4">
+                {sourceAssets.length === 0 ? (
+                  <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    No photograph yet. The store listing had none, so add one to four below before
+                    researching.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {sourceAssets.map((asset) => (
+                      <div key={asset.id} className="space-y-2">
+                        <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
+                          <Image
+                            src={`/api/product-studio/assets/${asset.id}`}
+                            alt={`Authoritative source: ${asset.fileName}`}
+                            fill
+                            sizes="(max-width: 768px) 50vw, 220px"
+                            className="object-contain"
+                            unoptimized
+                          />
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">{asset.fileName}</p>
                       </div>
-                      <p className="truncate text-xs text-muted-foreground">{asset.fileName}</p>
+                    ))}
+                  </div>
+                )}
+                {/*
+                 * Photographs can be added or replaced until research has run
+                 * (2026-10-26). A project opened in bulk starts with the store's
+                 * image; one photo is usually enough, three or four are better.
+                 */}
+                {photosLocked ? (
+                  <p className="text-xs text-muted-foreground">
+                    Photographs are locked once research has run, because the identity analysis and
+                    every prompt were derived from them. Start a new project to use different ones.
+                  </p>
+                ) : (
+                  <StudioActionForm
+                    action={updateSourcePhotosAction}
+                    className="space-y-2 rounded-md border p-3"
+                  >
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <label className="block text-xs font-medium" htmlFor="source-photos">
+                      {sourceAssets.length === 0
+                        ? "Add photographs"
+                        : `Add or replace photographs (${sourceAssets.length} of ${MAX_SOURCE_PHOTOS})`}
+                    </label>
+                    <input
+                      id="source-photos"
+                      type="file"
+                      name="referenceImages"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      required
+                      className="block w-full text-xs"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      JPEG, PNG or WebP, up to 8 MiB each, {MAX_SOURCE_PHOTOS} in total. Photos of
+                      the actual item, from more than one angle, give research and the generated
+                      images the most to work with.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="submit" size="sm" variant="outline" name="mode" value="add">
+                        <Upload /> Add
+                      </Button>
+                      {sourceAssets.length > 0 ? (
+                        <Button type="submit" size="sm" variant="ghost" name="mode" value="replace">
+                          <RefreshCw /> Replace all
+                        </Button>
+                      ) : null}
                     </div>
-                  ))}
-                </div>
+                  </StudioActionForm>
+                )}
               </CardContent>
             </Card>
 
@@ -589,6 +712,11 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                 <p className="text-xs text-muted-foreground">
                   {approvedCount} of 4 image{approvedCount === 1 ? "" : "s"} approved.
                 </p>
+                {!hasSourcePhotos && ["draft", "failed"].includes(project.status) ? (
+                  <p className="text-sm text-muted-foreground">
+                    Add at least one photograph in the card to the left before researching.
+                  </p>
+                ) : null}
                 {canResearch ? (
                   <StudioActionForm action={queueResearchAction}>
                     <input type="hidden" name="projectId" value={project.id} />

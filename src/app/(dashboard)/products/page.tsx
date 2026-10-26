@@ -22,6 +22,8 @@ import {
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { SyncButtons } from "@/components/sync/SyncButtons";
 
+import { BULK_STUDIO_FORM_ID, BulkStudioBar } from "./bulk-studio-bar";
+
 export const metadata = { title: "Products & Catalog" };
 export const dynamic = "force-dynamic";
 
@@ -44,6 +46,10 @@ export default async function ProductsPage({
   const params = await searchParams;
   const canExport = userHasPermission(user, PERMISSIONS.PRODUCTS_EXPORT);
   const canSync = userHasPermission(user, PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS);
+  // The same two permissions Product Studio itself requires.
+  const canStudio =
+    userHasPermission(user, PERMISSIONS.PRODUCTS_UPDATE) &&
+    userHasPermission(user, PERMISSIONS.AI_USE);
 
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
   // Unknown sort keys fall back to the default ordering rather than erroring —
@@ -143,6 +149,8 @@ export default async function ProductsPage({
           </form>
         </div>
 
+        {canStudio && products.length > 0 ? <BulkStudioBar /> : null}
+
         {products.length === 0 ? (
           <EmptyState
             icon={Boxes}
@@ -153,6 +161,11 @@ export default async function ProductsPage({
           <DataTable>
             <THead>
               <tr>
+                {canStudio ? (
+                  <TH>
+                    <span className="sr-only">Select for Product Studio</span>
+                  </TH>
+                ) : null}
                 <SortHeader
                   label="Product"
                   sortKey="name"
@@ -208,6 +221,18 @@ export default async function ProductsPage({
             <TBody>
               {products.map((p) => (
                 <TR key={p.id}>
+                  {canStudio ? (
+                    <TD>
+                      <input
+                        type="checkbox"
+                        name="productId"
+                        value={p.id}
+                        form={BULK_STUDIO_FORM_ID}
+                        aria-label={`Select ${p.name} for Product Studio`}
+                        className="h-4 w-4 accent-primary"
+                      />
+                    </TD>
+                  ) : null}
                   <TD>
                     <div className="flex items-center gap-2">
                       {p.isFeatured && <Star className="h-3 w-3 fill-warning text-warning" />}

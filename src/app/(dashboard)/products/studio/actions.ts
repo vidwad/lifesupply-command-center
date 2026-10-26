@@ -14,7 +14,9 @@ import {
   deleteProductStudioProject,
   recompileProductStudioPrompts,
 } from "@/server/services/product-studio";
+import { createProductStudioBatch } from "@/server/services/product-studio/bulk";
 import { updateProductStudioLongDescription } from "@/server/services/product-studio/description";
+import { updateSourcePhotos } from "@/server/services/product-studio/source-photos";
 
 export type ProductStudioActionState = { error?: string } | undefined;
 
@@ -133,6 +135,52 @@ export async function deleteProjectAction(
   // Outside the try: redirect() signals by throwing and must never be caught.
   revalidatePath("/products/studio");
   redirect("/products/studio");
+}
+
+/**
+ * Opens the selected products in Product Studio as one batch (2026-10-26).
+ * Creation only: no research or generation is queued by this action.
+ */
+export async function bulkCreateProjectsAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const productIds = formData
+    .getAll("productId")
+    .filter((value): value is string => typeof value === "string");
+  let batchId: string;
+  try {
+    ({ batchId } = await createProductStudioBatch({ actorUserId: user.id, productIds }));
+  } catch (error) {
+    return actionError(error);
+  }
+  // Outside the try: redirect() signals by throwing and must never be caught.
+  revalidatePath("/products/studio");
+  redirect(`/products/studio?batch=${batchId}`);
+}
+
+export async function updateSourcePhotosAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  const files = formData
+    .getAll("referenceImages")
+    .filter((value): value is File => value instanceof File && value.size > 0);
+  try {
+    await updateSourcePhotos({
+      projectId,
+      actorUserId: user.id,
+      files,
+      mode: formData.get("mode") === "replace" ? "replace" : "add",
+    });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  return undefined;
 }
 
 export async function updateDescriptionAction(
