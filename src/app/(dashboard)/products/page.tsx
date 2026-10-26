@@ -269,6 +269,10 @@ export default async function ProductsPage({
                     <TH align="right">Revenue {WINDOW_DAYS}d</TH>
                   </>
                 ) : null}
+                {/* Images the store lists for the product, from the last sync.
+                    Derived from the synced payload, so it cannot be sorted in
+                    the database either (product owner, 2026-10-26). */}
+                <TH align="right">Images</TH>
                 <SortHeader
                   label="Quality"
                   sortKey="quality"
@@ -345,6 +349,14 @@ export default async function ProductsPage({
                       </TD>
                     </>
                   ) : null}
+                  <TD
+                    align="right"
+                    className={
+                      p.imageCount === 0 ? "tabular-nums text-destructive" : "tabular-nums"
+                    }
+                  >
+                    {p.imageCount}
+                  </TD>
                   <TD>
                     <div className="flex flex-wrap gap-1">
                       {p.imageStatus === "missing" && (

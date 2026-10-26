@@ -184,6 +184,19 @@ export async function countProductsByQuality(
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
 
 /**
+ * How many images the store lists for the product, from the synced
+ * BigCommerce payload (2026-10-26). Zero when the payload has none or the
+ * product was never synced from BigCommerce.
+ */
+export function storeImageCount(metadata: unknown): number {
+  const raw =
+    metadata && typeof metadata === "object" ? (metadata as Record<string, unknown>).bcRaw : null;
+  const images =
+    raw && typeof raw === "object" ? (raw as Record<string, unknown>).images : undefined;
+  return Array.isArray(images) ? images.length : 0;
+}
+
+/**
  * A cost only counts if it is strictly positive.
  *
  * Guards two distinct traps: a Prisma `Decimal` is an object and therefore
@@ -240,6 +253,7 @@ export async function listProducts(filters: ListProductsFilters = {}) {
     const stock = p.variants.reduce((sum, v) => sum + (v.stockLevel ?? 0), 0);
 
     return {
+      imageCount: storeImageCount(p.metadata),
       id: p.id,
       name: p.name,
       sku: p.sku,
