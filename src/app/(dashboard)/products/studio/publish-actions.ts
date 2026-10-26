@@ -19,6 +19,7 @@ import {
   publishProductStudioProject,
   setAssetUploadMark,
   setDescriptionUploadMark,
+  setMainImage,
   type PublishItemResult,
 } from "@/server/services/product-studio/publish";
 
@@ -53,6 +54,26 @@ export async function setAssetUploadMarkAction(
   }
   revalidatePath(`/products/studio/${projectId}`);
   return undefined;
+}
+
+export async function setMainImageAction(
+  _previous: PublishActionState,
+  formData: FormData,
+): Promise<PublishActionState> {
+  const user = await requirePublisher();
+  const projectId = String(formData.get("projectId") ?? "");
+  try {
+    await setMainImage({
+      projectId,
+      assetId: String(formData.get("mainImageAssetId") ?? "").trim() || null,
+      actorUserId: user.id,
+      actorPermissions: user.permissions,
+    });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  return { ok: "Main image choice saved. It is applied on the next publish." };
 }
 
 export async function setDescriptionUploadMarkAction(

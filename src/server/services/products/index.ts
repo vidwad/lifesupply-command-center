@@ -189,11 +189,26 @@ const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : N
  * product was never synced from BigCommerce.
  */
 export function storeImageCount(metadata: unknown): number {
+  return storeImages(metadata).length;
+}
+
+/** The id of the image the store flags as the listing's main image, per the last sync. */
+export function storeThumbnailImageId(metadata: unknown): number | null {
+  const thumbnail = storeImages(metadata).find(
+    (image) =>
+      image &&
+      typeof image === "object" &&
+      (image as { is_thumbnail?: unknown }).is_thumbnail === true,
+  ) as { id?: unknown } | undefined;
+  return typeof thumbnail?.id === "number" ? thumbnail.id : null;
+}
+
+function storeImages(metadata: unknown): unknown[] {
   const raw =
     metadata && typeof metadata === "object" ? (metadata as Record<string, unknown>).bcRaw : null;
   const images =
     raw && typeof raw === "object" ? (raw as Record<string, unknown>).images : undefined;
-  return Array.isArray(images) ? images.length : 0;
+  return Array.isArray(images) ? images : [];
 }
 
 /**

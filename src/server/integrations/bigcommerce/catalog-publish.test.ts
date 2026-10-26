@@ -12,8 +12,10 @@ import {
   buildDescriptionRequestPayload,
   buildImageDeleteRequestPayload,
   buildImageRequestPayload,
+  buildImageUpdateRequestPayload,
   deleteBigCommerceProductImage,
   readBigCommerceProductContent,
+  updateBigCommerceProductImage,
   uploadBigCommerceProductImage,
   writeBigCommerceProductDescription,
 } from "./catalog-publish";
@@ -224,6 +226,50 @@ describe("replacing an image", () => {
     expect(
       await deleteBigCommerceProductImage({ credentials, productId: "77", imageId: 9 }),
     ).toMatchObject({ ok: false, status: 404 });
+  });
+});
+
+describe("promoting an image to the main image", () => {
+  it("sends the thumbnail flag and position for one image id, and nothing else", async () => {
+    const calls = installFetch(() => jsonResponse({ data: { id: 501, is_thumbnail: true } }));
+    const result = await updateBigCommerceProductImage({
+      credentials,
+      productId: "77",
+      imageId: 501,
+      isThumbnail: true,
+      sortOrder: 0,
+    });
+    expect(result).toMatchObject({ ok: true });
+    expect(calls[0]?.url).toBe(
+      "https://api.bigcommerce.com/stores/abc123/v3/catalog/products/77/images/501",
+    );
+    expect(calls[0]?.init?.method).toBe("PUT");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ is_thumbnail: true, sort_order: 0 });
+    expect(
+      buildImageUpdateRequestPayload({
+        productId: "77",
+        imageId: 501,
+        isThumbnail: true,
+        sortOrder: 0,
+      }),
+    ).toEqual({
+      method: "PUT",
+      path: "/v3/catalog/products/77/images/501",
+      body: { is_thumbnail: true, sort_order: 0 },
+    });
+  });
+  it("refuses without an image id, without calling the store", async () => {
+    const calls = installFetch(() => jsonResponse({ data: {} }));
+    expect(
+      await updateBigCommerceProductImage({
+        credentials,
+        productId: "77",
+        imageId: 0,
+        isThumbnail: true,
+        sortOrder: 0,
+      }),
+    ).toMatchObject({ ok: false, status: "refused" });
+    expect(calls).toHaveLength(0);
   });
 });
 

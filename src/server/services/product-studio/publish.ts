@@ -37,11 +37,14 @@ import {
   buildDescriptionRequestPayload,
   buildImageDeleteRequestPayload,
   buildImageRequestPayload,
+  buildImageUpdateRequestPayload,
   deleteBigCommerceProductImage,
   readBigCommerceProductContent,
+  updateBigCommerceProductImage,
   uploadBigCommerceProductImage,
   writeBigCommerceProductDescription,
 } from "@/server/integrations/bigcommerce/catalog-publish";
+import { storeImageCount, storeThumbnailImageId } from "@/server/services/products";
 import { resolveStoreCredentials } from "@/server/integrations/bigcommerce/store-credentials";
 import { logger } from "@/server/logger";
 
@@ -52,6 +55,7 @@ import {
   canPublish,
   descriptionNeedsPublish,
   descriptionToHtml,
+  latestGeneratedBySlot,
   PUBLISH_PERMISSION,
   resolvePublishTarget,
   selectPublishItems,
@@ -90,6 +94,7 @@ async function loadProject(projectId: string) {
           storeId: true,
           sourceSystem: true,
           sourceId: true,
+          metadata: true,
           store: { select: { name: true } },
         },
       },
@@ -194,6 +199,59 @@ export async function setAssetUploadMark(args: {
       compositionSlot: asset.compositionSlot,
       revision: asset.revision,
       note: "Internal selection only. Nothing was sent to any store.",
+    },
+  });
+}
+
+/**
+ * Chooses which draft becomes the listing's main image on the store
+ * (2026-10-26), or clears the choice so the store keeps its current one
+ * (or, when it has none, the first published draft takes it). Internal
+ * state only; the publish action applies it.
+ */
+export async function setMainImage(args: {
+  projectId: string;
+  assetId: string | null;
+  actorUserId: string;
+  actorPermissions: readonly string[];
+}): Promise<void> {
+  if (!requirePublishPermission(args.actorPermissions)) {
+    throw new ProductStudioInputError(
+      "Only a Super Admin can choose the main image for BigCommerce.",
+    );
+  }
+  const project = await prisma.productStudioProject.findUnique({
+    where: { id: args.projectId },
+    select: { id: true, mainImageAssetId: true, assets: { select: ASSET_SELECT } },
+  });
+  if (!project) throw new ProductStudioInputError("Project not found.");
+  if (args.assetId) {
+    const latest = latestGeneratedBySlot(project.assets);
+    const chosen = latest.find((asset) => asset.id === args.assetId);
+    if (!chosen) {
+      throw new ProductStudioInputError(
+        "Choose the latest revision of a composition on this project.",
+      );
+    }
+    if (chosen.status !== "approved") {
+      throw new ProductStudioInputError(
+        "Approve the draft in review before making it the main image.",
+      );
+    }
+  }
+  await prisma.productStudioProject.update({
+    where: { id: project.id },
+    data: { mainImageAssetId: args.assetId },
+  });
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: args.assetId ? "product_studio.main_image_set" : "product_studio.main_image_cleared",
+    entityType: "ProductStudioProject",
+    entityId: project.id,
+    beforeData: { mainImageAssetId: project.mainImageAssetId },
+    afterData: {
+      mainImageAssetId: args.assetId,
+      note: "Internal choice only. Applied on the next publish; nothing was sent.",
     },
   });
 }
@@ -321,6 +379,11 @@ export async function publishProductStudioProject(args: {
     assets: row.assets,
     compositions: row.compositions,
     publishedDescriptionHtml: await lastPublishedDescriptionHtml(row.id),
+    mainImageAssetId: row.mainImageAssetId,
+    store: {
+      imageCount: storeImageCount(row.product?.metadata),
+      thumbnailImageId: storeThumbnailImageId(row.product?.metadata),
+    },
   });
   const verdict = canPublish({
     target,
@@ -354,8 +417,10 @@ export async function publishProductStudioProject(args: {
       ...auditContext(row, resolvedTarget),
       items: verdict.items.map((item) =>
         item.kind === "image"
-          ? { kind: "image", slot: item.slot, assetId: item.assetId }
-          : { kind: "description" },
+          ? { kind: "image", slot: item.slot, assetId: item.assetId, main: item.isMainImage }
+          : item.kind === "main_image"
+            ? { kind: "main_image", slot: item.slot, assetId: item.assetId, imageId: item.imageId }
+            : { kind: "description" },
       ),
     },
   });
@@ -429,8 +494,10 @@ export async function publishProductStudioProject(args: {
         contentHash: item.contentHash,
         bytes: item.bytes,
         altText: item.altText,
-        sortOrder: replaced?.sortOrder ?? existingImageCount + index,
-        isThumbnail: replaced?.isThumbnail === true,
+        // The chosen main image goes first and takes the thumbnail flag; the
+        // store clears the flag on its previous main image itself.
+        sortOrder: item.isMainImage ? 0 : (replaced?.sortOrder ?? existingImageCount + index),
+        isThumbnail: item.isMainImage || replaced?.isThumbnail === true,
       };
       // The log row exists before the request goes out.
       const log = await prisma.productStudioPublishLog.create({
@@ -564,6 +631,88 @@ export async function publishProductStudioProject(args: {
               : "") +
             "."
           : "Added to the listing as image id " + String(outcome.imageId ?? "unknown") + ".",
+        logId: log.id,
+      });
+      continue;
+    }
+
+    if (item.kind === "main_image") {
+      // A draft already on the store becomes its main image in place
+      // (2026-10-26): one PUT setting the thumbnail flag and first position.
+      const label = "Composition " + String(item.slot) + " (r" + String(item.revision) + ")";
+      const update = {
+        productId: resolvedTarget.sourceProductId,
+        imageId: item.imageId,
+        isThumbnail: true,
+        sortOrder: 0,
+      };
+      const log = await prisma.productStudioPublishLog.create({
+        data: {
+          ...common,
+          assetId: item.assetId,
+          kind: "image",
+          status: "queued",
+          requestPayload: json({ ...buildImageUpdateRequestPayload(update), promotesToMain: true }),
+          beforeSnapshot,
+        },
+        select: { id: true },
+      });
+      const outcome = await updateBigCommerceProductImage({ credentials, ...update });
+      if (!outcome.ok) {
+        await prisma.productStudioPublishLog.update({
+          where: { id: log.id },
+          data: {
+            status: "failed",
+            errorMessage: outcome.message,
+            responsePayload: json(outcome.response ?? null),
+          },
+        });
+        await writeAudit({
+          actorUserId: args.actorUserId,
+          action: "product_studio.publish_failed",
+          entityType: "ProductStudioAsset",
+          entityId: item.assetId,
+          afterData: {
+            ...auditContext(row, resolvedTarget),
+            logId: log.id,
+            error: outcome.message,
+          },
+        });
+        results.push({
+          kind: "main_image",
+          label,
+          status: "failed",
+          message: "Could not make it the main image: " + outcome.message,
+          logId: log.id,
+        });
+        break;
+      }
+      await prisma.productStudioPublishLog.update({
+        where: { id: log.id },
+        data: {
+          status: "succeeded",
+          writtenAt: new Date(),
+          bigCommerceImageId: item.imageId,
+          responsePayload: json(outcome.response),
+        },
+      });
+      await writeAudit({
+        actorUserId: args.actorUserId,
+        action: "product_studio.publish_succeeded",
+        entityType: "ProductStudioAsset",
+        entityId: item.assetId,
+        afterData: {
+          ...auditContext(row, resolvedTarget),
+          logId: log.id,
+          bigCommerceImageId: item.imageId,
+          promotedToMain: true,
+        },
+      });
+      results.push({
+        kind: "main_image",
+        label,
+        status: "succeeded",
+        message: "Now the listing's main image (image id " + String(item.imageId) + ").",
         logId: log.id,
       });
       continue;

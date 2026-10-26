@@ -47,6 +47,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261022120000_product_studio_publish",
   // Product Studio batches from the products list (product owner, 2026-10-26).
   "20261026180000_product_studio_batches",
+  // Product Studio main image choice (product owner, 2026-10-26).
+  "20261026210000_product_studio_main_image",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */

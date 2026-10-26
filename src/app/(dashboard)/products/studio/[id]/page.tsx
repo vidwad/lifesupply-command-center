@@ -31,6 +31,7 @@ import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
 import { MAX_OPERATOR_INSTRUCTIONS } from "@/server/services/product-studio/prompt-controls";
 import { listBatchProjects } from "@/server/services/product-studio/bulk";
+import { storeImageCount, storeThumbnailImageId } from "@/server/services/products";
 import { MAX_LONG_DESCRIPTION } from "@/server/services/product-studio/description";
 import {
   MAX_SOURCE_PHOTOS,
@@ -188,12 +189,18 @@ export default async function ProductStudioDetailPage({ params }: Props) {
           : liveImageIdForSlot(project.assets, asset.compositionSlot ?? 0),
       }))
     : [];
+  const storeImages = {
+    imageCount: storeImageCount(project.product?.metadata),
+    thumbnailImageId: storeThumbnailImageId(project.product?.metadata),
+  };
   const publishPending = mayPublish
     ? selectPublishItems({
         project,
         assets: project.assets,
         compositions: project.compositions,
         publishedDescriptionHtml,
+        mainImageAssetId: project.mainImageAssetId,
+        store: storeImages,
       }).length
     : 0;
   const descriptionChangedSincePublish =
@@ -837,6 +844,8 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                   changedSincePublish: descriptionChangedSincePublish,
                 }}
                 pendingCount={publishPending}
+                mainImageAssetId={project.mainImageAssetId}
+                store={storeImages}
                 logs={publishLogs.map((log) => ({
                   id: log.id,
                   label:

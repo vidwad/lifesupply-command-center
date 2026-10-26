@@ -138,8 +138,43 @@ export type PublishCandidate =
        * which this upload replaces (2026-10-26); null for a first publish.
        */
       replacesImageId: number | null;
+      /** Uploaded as the listing's main image, first in order (2026-10-26). */
+      isMainImage: boolean;
+    }
+  | {
+      /** An already-published draft promoted to the listing's main image. */
+      kind: "main_image";
+      assetId: string;
+      slot: number;
+      revision: number;
+      imageId: number;
     }
   | { kind: "description"; text: string; replaces: boolean };
+
+/** What the synced store payload says about the listing's images. */
+export type StoreImageState = { imageCount: number; thumbnailImageId: number | null };
+
+/**
+ * Which draft becomes the main image (product owner, 2026-10-26): the chosen
+ * one if it is a latest approved draft; otherwise, when the store has no
+ * image at all, the first draft being published; otherwise none, so the
+ * store keeps its current main image.
+ */
+export function resolveMainImageAssetId(args: {
+  mainImageAssetId: string | null;
+  assets: readonly PublishableAsset[];
+  store: StoreImageState;
+  /** Assets about to be uploaded, in order. */
+  uploading: readonly { assetId: string }[];
+}): string | null {
+  const latest = latestGeneratedBySlot(args.assets);
+  if (args.mainImageAssetId) {
+    const chosen = latest.find((asset) => asset.id === args.mainImageAssetId);
+    if (chosen && chosen.status === "approved") return chosen.id;
+  }
+  if (args.store.imageCount === 0) return args.uploading[0]?.assetId ?? null;
+  return null;
+}
 
 /**
  * The store image currently on the listing for a slot: the most recently
@@ -236,11 +271,25 @@ export function selectPublishItems(args: {
   compositions: readonly { slot: number; name: string }[];
   /** The HTML last written to the store, from the publish log; null if none. */
   publishedDescriptionHtml?: string | null;
+  /** The draft chosen as the main image; null keeps the store's, or defaults. */
+  mainImageAssetId?: string | null;
+  /** The listing's images per the last sync; defaults to "none". */
+  store?: StoreImageState;
 }): PublishCandidate[] {
   const items: PublishCandidate[] = [];
   const title = args.project.confirmedTitle ?? args.project.title;
-  for (const asset of latestGeneratedBySlot(args.assets)) {
-    if (asset.status !== "approved" || !asset.uploadApprovedAt || asset.publishedAt) continue;
+  const store = args.store ?? { imageCount: 0, thumbnailImageId: null };
+  const latest = latestGeneratedBySlot(args.assets);
+  const uploading = latest.filter(
+    (asset) => asset.status === "approved" && asset.uploadApprovedAt && !asset.publishedAt,
+  );
+  const mainId = resolveMainImageAssetId({
+    mainImageAssetId: args.mainImageAssetId ?? null,
+    assets: args.assets,
+    store,
+    uploading: uploading.map((asset) => ({ assetId: asset.id })),
+  });
+  for (const asset of uploading) {
     const composition = args.compositions.find((item) => item.slot === asset.compositionSlot);
     items.push({
       kind: "image",
@@ -256,6 +305,21 @@ export function selectPublishItems(args: {
         compositionName: composition?.name ?? "Composition " + String(asset.compositionSlot),
       }),
       replacesImageId: liveImageIdForSlot(args.assets, asset.compositionSlot!),
+      isMainImage: asset.id === mainId,
+    });
+  }
+  // A chosen draft that is already on the store is promoted in place, unless
+  // the store already shows it as the main image.
+  const chosenPublished = mainId
+    ? latest.find((asset) => asset.id === mainId && asset.publishedAt && asset.bigCommerceImageId)
+    : null;
+  if (chosenPublished && chosenPublished.bigCommerceImageId !== store.thumbnailImageId) {
+    items.push({
+      kind: "main_image",
+      assetId: chosenPublished.id,
+      slot: chosenPublished.compositionSlot!,
+      revision: chosenPublished.revision,
+      imageId: chosenPublished.bigCommerceImageId!,
     });
   }
   // Stripped again here, not only at research time, so a project researched

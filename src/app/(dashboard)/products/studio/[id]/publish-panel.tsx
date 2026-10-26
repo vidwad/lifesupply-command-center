@@ -26,6 +26,7 @@ import {
   publishProjectAction,
   setAssetUploadMarkAction,
   setDescriptionUploadMarkAction,
+  setMainImageAction,
   type PublishActionState,
 } from "../publish-actions";
 
@@ -97,6 +98,79 @@ function MarkForm({
   );
 }
 
+/**
+ * Which draft becomes the listing's main image (2026-10-26). Internal
+ * choice, applied on the next publish: an uploaded draft goes first with the
+ * thumbnail flag, an already-published one is promoted in place.
+ */
+function MainImageForm({
+  projectId,
+  images,
+  current,
+  storeHasImages,
+}: {
+  projectId: string;
+  images: PublishPanelImage[];
+  current: string | null;
+  storeHasImages: boolean;
+}): React.JSX.Element {
+  const [state, formAction, pending] = useActionState(setMainImageAction, undefined);
+  const approved = images.filter((image) => image.status === "approved");
+  // The default when nothing is chosen: the store keeps its own main image
+  // if it has one; otherwise the first draft takes it.
+  const defaultId = current ?? (storeHasImages ? "" : (approved[0]?.assetId ?? ""));
+  return (
+    <form action={formAction} className="space-y-2 rounded-md border p-3">
+      <input type="hidden" name="projectId" value={projectId} />
+      <p className="text-xs font-medium">Main image on the store</p>
+      <div className="space-y-1 text-xs">
+        <label className="flex items-center gap-2">
+          <input type="radio" name="mainImageAssetId" value="" defaultChecked={defaultId === ""} />
+          {storeHasImages
+            ? "Keep the store's current main image"
+            : "No choice: the first published draft becomes the main image"}
+        </label>
+        {approved.map((image) => (
+          <label key={image.assetId} className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="mainImageAssetId"
+              value={image.assetId}
+              defaultChecked={defaultId === image.assetId}
+            />
+            Composition {image.slot}
+            <span className="text-muted-foreground">· {image.name}</span>
+            {image.revision > 1 ? (
+              <span className="text-muted-foreground">· r{image.revision}</span>
+            ) : null}
+            {image.publishedAt ? (
+              <span className="text-muted-foreground">· on the store</span>
+            ) : null}
+          </label>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Applied on the next publish. A draft not yet on the store must also be approved for upload;
+        one already there is promoted in place.
+      </p>
+      {state?.error ? (
+        <p role="alert" className="text-xs text-destructive">
+          {state.error}
+        </p>
+      ) : null}
+      {state?.ok ? <p className="text-xs text-muted-foreground">{state.ok}</p> : null}
+      <Button type="submit" size="sm" variant="outline" disabled={pending || approved.length === 0}>
+        {pending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <CheckCircle2 className="h-3.5 w-3.5" />
+        )}
+        Save main image choice
+      </Button>
+    </form>
+  );
+}
+
 function PublishedBadge({ at, imageId }: { at: string; imageId?: number | null }) {
   return (
     <Badge variant="secondary" title={at}>
@@ -114,6 +188,8 @@ export function PublishPanel({
   images,
   description,
   pendingCount,
+  mainImageAssetId,
+  store,
   logs,
 }: {
   projectId: string;
@@ -137,6 +213,10 @@ export function PublishPanel({
   };
   /** Marked and not yet published: what the publish button will send. */
   pendingCount: number;
+  /** The draft chosen as the listing's main image; null keeps the store's. */
+  mainImageAssetId: string | null;
+  /** The listing's images per the last sync. */
+  store: { imageCount: number; thumbnailImageId: number | null };
   logs: PublishPanelLog[];
 }): React.JSX.Element {
   const [state, publishAction, pending] = useActionState(publishProjectAction, undefined);
@@ -210,6 +290,7 @@ export function PublishPanel({
                         {!image.publishedAt && image.replacesImageId != null
                           ? ` · will replace image #${image.replacesImageId} on the store`
                           : ""}
+                        {image.assetId === mainImageAssetId ? " · chosen as main image" : ""}
                       </p>
                     </div>
                     {image.publishedAt ? (
@@ -231,6 +312,15 @@ export function PublishPanel({
             </ul>
           )}
         </div>
+
+        {images.some((image) => image.status === "approved") && !noTarget ? (
+          <MainImageForm
+            projectId={projectId}
+            images={images}
+            current={mainImageAssetId}
+            storeHasImages={store.imageCount > 0}
+          />
+        ) : null}
 
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

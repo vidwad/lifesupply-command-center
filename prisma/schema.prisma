@@ -477,6 +477,10 @@ model ProductStudioProject {
   descriptionUploadApprovedById String?
   /// Set once the description has been written to the store; cleared never.
   descriptionPublishedAt        DateTime?
+  /// The draft chosen as the listing's main image on the store (2026-10-26).
+  /// Null keeps the store's current main image, or, when the store has
+  /// none, lets the first published draft take it.
+  mainImageAssetId              String?
   /// Projects created together from the products list (2026-10-26) share a
   /// batch id, so the project page can step through them in order.
   batchId           String?
