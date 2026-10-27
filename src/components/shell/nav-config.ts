@@ -168,6 +168,12 @@ export const PRIMARY_NAV: NavItem[] = [
     permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
   },
   {
+    label: "Product Studio runs",
+    href: "/automation/product-studio",
+    icon: Camera,
+    permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
+  },
+  {
     label: "Public Website",
     href: "/public-web",
     icon: Globe,
