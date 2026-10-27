@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { OpenAiModelListing } from "@/server/integrations/openai/models";
 
 import { saveAiSettingsAction, type AiSettingsActionState } from "./actions";
 
@@ -19,6 +20,58 @@ const COMMON_MODELS: Record<string, string[]> = {
 };
 
 const OPENAI_IMAGE_MODELS = ["gpt-image-1.5", "gpt-image-1", "gpt-image-2"];
+
+/**
+ * The models the configured key can use, under a field (2026-10-26). A
+ * click fills the field; the current value is highlighted. When the list
+ * could not be fetched, the static suggestions stand in and the reason is
+ * shown, so the page never pretends to know what the account has.
+ */
+function ModelChoices({
+  listing,
+  kind,
+  fallback,
+  value,
+  onPick,
+}: {
+  listing: OpenAiModelListing;
+  kind: "text" | "image";
+  fallback: readonly string[];
+  value: string;
+  onPick: (model: string) => void;
+}) {
+  const ids = listing.ok ? listing.choices[kind] : fallback;
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] text-muted-foreground">
+        {listing.ok
+          ? ids.length > 0
+            ? "Available on your OpenAI account:"
+            : `No ${kind} models of a supported family are on this account.`
+          : `Could not list the account's models (${listing.reason}). Common choices:`}
+      </p>
+      {ids.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {ids.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onPick(id)}
+              aria-pressed={value === id}
+              className={
+                value === id
+                  ? "rounded-md border border-primary bg-primary px-2 py-0.5 font-mono text-[11px] text-primary-foreground"
+                  : "rounded-md border bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground hover:bg-accent hover:text-foreground"
+              }
+            >
+              {id}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function EnvOverrideNote({ name, value }: { name: string; value: string | null }) {
   if (!value) return null;
@@ -37,6 +90,7 @@ export function AiSettingsForm({
   envOverride,
   openAiEnv,
   openAiDefaults,
+  openAiModels,
 }: {
   values: {
     "ai.default_provider": string;
@@ -51,11 +105,15 @@ export function AiSettingsForm({
   openAiEnv: { model: string | null; imageModel: string | null };
   /** What each OpenAI field falls back to when left empty. */
   openAiDefaults: { model: string; imageModel: string };
+  /** The models the configured OpenAI key can use, or why they could not be listed. */
+  openAiModels: OpenAiModelListing;
 }) {
   const [state, formAction, pending] = useActionState<AiSettingsActionState, FormData>(
     saveAiSettingsAction,
     undefined,
   );
+  const [textModel, setTextModel] = useState(values["ai.openai_model"]);
+  const [imageModel, setImageModel] = useState(values["ai.openai_image_model"]);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -155,7 +213,8 @@ export function AiSettingsForm({
             <Input
               id="ai.openai_model"
               name="ai.openai_model"
-              defaultValue={values["ai.openai_model"]}
+              value={textModel}
+              onChange={(event) => setTextModel(event.target.value)}
               placeholder={openAiDefaults.model}
               list="openai-model-suggestions"
               autoComplete="off"
@@ -165,6 +224,13 @@ export function AiSettingsForm({
                 <option key={m} value={m} />
               ))}
             </datalist>
+            <ModelChoices
+              listing={openAiModels}
+              kind="text"
+              fallback={COMMON_MODELS.openai ?? []}
+              value={textModel}
+              onPick={setTextModel}
+            />
             <p className="text-xs text-muted-foreground">
               Must support the Responses API with web search and structured output.
             </p>
@@ -174,7 +240,8 @@ export function AiSettingsForm({
             <Input
               id="ai.openai_image_model"
               name="ai.openai_image_model"
-              defaultValue={values["ai.openai_image_model"]}
+              value={imageModel}
+              onChange={(event) => setImageModel(event.target.value)}
               placeholder={openAiDefaults.imageModel}
               list="openai-image-model-suggestions"
               autoComplete="off"
@@ -184,6 +251,13 @@ export function AiSettingsForm({
                 <option key={m} value={m} />
               ))}
             </datalist>
+            <ModelChoices
+              listing={openAiModels}
+              kind="image"
+              fallback={OPENAI_IMAGE_MODELS}
+              value={imageModel}
+              onPick={setImageModel}
+            />
             <p className="text-xs text-muted-foreground">
               gpt-image-1 and gpt-image-1.5 hold the draft to your photographs (high input fidelity)
               at 1024 px. gpt-image-2 renders at 2048 px but cannot use that setting, so expect more

@@ -8,6 +8,7 @@ import {
   DEFAULT_OPENAI_IMAGE_MODEL,
   DEFAULT_OPENAI_MODEL,
 } from "@/server/integrations/openai/client";
+import { listOpenAiModels } from "@/server/integrations/openai/models";
 import { resolveCredential } from "@/server/services/integrations";
 import { getSettings } from "@/server/services/system-settings";
 import { requirePermission } from "@/server/permissions";
@@ -41,7 +42,7 @@ const PROMPT_TEMPLATES = [
 export default async function AiSettingsPage() {
   await requirePermission(PERMISSIONS.ADMIN_MANAGE_SYSTEM_SETTINGS);
 
-  const [values, anthropicKey, openAiKey] = await Promise.all([
+  const [values, anthropicKey, openAiKey, openAiModels] = await Promise.all([
     getSettings([
       "ai.default_provider",
       "ai.default_model",
@@ -52,6 +53,8 @@ export default async function AiSettingsPage() {
     ]),
     resolveCredential("anthropic", "apiKey"),
     resolveCredential("openai", "apiKey"),
+    // The models the configured key can use, listed under the fields.
+    listOpenAiModels(),
   ]);
 
   return (
@@ -83,6 +86,7 @@ export default async function AiSettingsPage() {
               imageModel: process.env.OPENAI_IMAGE_MODEL?.trim() || null,
             }}
             openAiDefaults={{ model: DEFAULT_OPENAI_MODEL, imageModel: DEFAULT_OPENAI_IMAGE_MODEL }}
+            openAiModels={openAiModels}
           />
 
           <Card>
