@@ -235,7 +235,9 @@ Until this date every step of the Studio was a button a person pressed. An unatt
 whole sequence for a selected list of products with no further input: research, up to four images,
 automatic approval or regeneration of each draft from its QA scores, and the product left approved
 or marked for a person's attention. It lives in the Automation Center under "Product Studio runs"
-(`/automation/product-studio`), because that is where the owner looks at background work; it starts
+(`/automation/product-studio`), because that is where the owner looks at background work. Since
+October 27, 2026 the sidebar also carries a "Product Studio runs" entry directly below Automation
+Center, so a finished run can be reopened later without knowing its link. A run starts
 from a selection, with a "Run unattended" button on the Product Studio list's selection bar and on
 the products list's bar (which creates the batch first). Both lead to the run form, where the
 criteria are set; nothing starts until that form is submitted.
