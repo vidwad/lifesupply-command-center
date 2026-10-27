@@ -80,6 +80,8 @@ model User {
   productStudioDescriptionUploadsApproved ProductStudioProject[] @relation("ProductStudioDescriptionUploadApprover")
   productStudioAssetUploadsApproved ProductStudioAsset[]  @relation("ProductStudioAssetUploadApprover")
   productStudioPublishesWritten ProductStudioPublishLog[] @relation("ProductStudioPublishWriter")
+  productStudioRunsCreated    ProductStudioRun[]     @relation("ProductStudioRunCreator")
+  productStudioRunsCancelled  ProductStudioRun[]     @relation("ProductStudioRunCanceller")
   pricingRunsCreated          PricingRun[]           @relation("PricingRunCreator")
   priceRecommendationsApproved PriceRecommendation[] @relation("PriceRecommendationApprover")
   priceRecommendationsRejected PriceRecommendation[] @relation("PriceRecommendationRejecter")
@@ -484,24 +486,127 @@ model ProductStudioProject {
   /// Projects created together from the products list (2026-10-26) share a
   /// batch id, so the project page can step through them in order.
   batchId           String?
+  /// The unattended run that owns this project (2026-10-27). While that run
+  /// is live, manual research, generation, review and deletion are refused;
+  /// afterwards the link stays so the page can point to the run's record.
+  autopilotRunId    String?
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
 
   product           Product?                   @relation(fields: [productId], references: [id], onDelete: SetNull)
   createdBy         User?                      @relation("ProductStudioCreator", fields: [createdById], references: [id], onDelete: SetNull)
   descriptionUploadApprovedBy User?            @relation("ProductStudioDescriptionUploadApprover", fields: [descriptionUploadApprovedById], references: [id], onDelete: SetNull)
+  autopilotRun      ProductStudioRun?          @relation(fields: [autopilotRunId], references: [id], onDelete: SetNull)
   assets            ProductStudioAsset[]
   researchSources   ProductStudioResearchSource[]
   priceObservations ProductStudioPriceObservation[]
   compositions      ProductStudioComposition[]
   publishLogs       ProductStudioPublishLog[]
+  runItems          ProductStudioRunItem[]
 
   @@index([productId])
   @@index([createdById])
   @@index([status])
   @@index([createdAt])
   @@index([batchId])
+  @@index([autopilotRunId])
   @@map("product_studio_projects")
+}
+
+/// One unattended Product Studio run (product owner, 2026-10-27): research,
+/// up to four images with automatic QA review and regeneration, and, when the
+/// settings say so, publishing to BigCommerce, for a selected list of products
+/// without further input. Created only by a holder of the Super Admin-only
+/// publish permission; the creation is the approval for everything the run
+/// does, and `settings` is the frozen copy of the criteria it was given.
+model ProductStudioRun {
+  id                String                 @id @default(cuid())
+  createdById       String?
+  status            ProductStudioRunStatus @default(queued)
+  /// The criteria the run was created with, validated by autopilot-settings.
+  settings          Json
+  /// Approval row recording the Super Admin's authorisation of this run.
+  approvalId        String?
+  /// Running totals across items, so the spend ceiling can be enforced.
+  imagesGenerated   Int                    @default(0)
+  consecutiveFailures Int                  @default(0)
+  /// Set when a cancel was requested or a stop rule tripped; lanes stop at
+  /// their next checkpoint. stopReason says which.
+  cancelRequestedAt DateTime?
+  cancelledById     String?
+  stopReason        String?                @db.Text
+  summary           String?                @db.Text
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  createdBy   User?                  @relation("ProductStudioRunCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  cancelledBy User?                  @relation("ProductStudioRunCanceller", fields: [cancelledById], references: [id], onDelete: SetNull)
+  items       ProductStudioRunItem[]
+  projects    ProductStudioProject[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("product_studio_runs")
+}
+
+enum ProductStudioRunStatus {
+  queued
+  running
+  succeeded
+  needs_attention
+  failed
+  cancelled
+}
+
+/// One product in an unattended run. The project link is nullable so the
+/// record survives the project being deleted; the product name is kept as
+/// text for the same reason.
+model ProductStudioRunItem {
+  id              String                   @id @default(cuid())
+  runId           String
+  projectId       String?
+  productId       String?
+  productName     String
+  sortOrder       Int                      @default(0)
+  stage           ProductStudioRunItemStage @default(pending)
+  /// Worker steps taken on this item; also keys the continuation events.
+  steps           Int                      @default(0)
+  /// Images generated for this item, regenerations included.
+  imagesGenerated Int                      @default(0)
+  regenerations   Int                      @default(0)
+  approvedSlots   Int                      @default(0)
+  publishedItems  Int                      @default(0)
+  /// What happened, in one or two sentences: why it needs attention, what
+  /// failed, or what was published.
+  note            String?                  @db.Text
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  run     ProductStudioRun      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  project ProductStudioProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([runId, sortOrder])
+  @@index([projectId])
+  @@index([stage])
+  @@map("product_studio_run_items")
+}
+
+enum ProductStudioRunItemStage {
+  pending
+  claimed
+  researching
+  generating
+  reviewing
+  publishing
+  done
+  attention
+  failed
+  skipped
+  cancelled
 }
 
 enum ProductStudioProjectStatus {
@@ -541,6 +646,9 @@ model ProductStudioAsset {
   /// store assigned, so the same draft is never uploaded twice.
   publishedAt        DateTime?
   bigCommerceImageId Int?
+  /// Set when an unattended run, not a person, approved or rejected this
+  /// draft from its QA scores (2026-10-27), so the two are distinguishable.
+  autoReviewedAt     DateTime?
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
 

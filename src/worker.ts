@@ -51,6 +51,10 @@ import {
   generateProductStudioImage,
   researchProductStudioProject,
 } from "@/server/inngest/functions/product-studio/process";
+import {
+  processProductStudioAutopilotItem,
+  startProductStudioAutopilotRun,
+} from "@/server/inngest/functions/product-studio/autopilot";
 
 // Process-level safety nets (Phase 11E — row 11E-06). Inngest handles
 // per-run failures; these catch everything outside a run so a crashing
@@ -87,6 +91,8 @@ async function main(): Promise<void> {
           competitorPriceCheck,
           researchProductStudioProject,
           generateProductStudioImage,
+          startProductStudioAutopilotRun,
+          processProductStudioAutopilotItem,
         ],
       },
     ],

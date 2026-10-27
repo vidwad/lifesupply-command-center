@@ -260,10 +260,12 @@ export async function getProductStudioProject(id: string) {
           uploadApprovedAt: true,
           publishedAt: true,
           bigCommerceImageId: true,
+          autoReviewedAt: true,
           createdAt: true,
         },
         orderBy: [{ kind: "asc" }, { compositionSlot: "asc" }, { revision: "desc" }],
       },
+      autopilotRun: { select: { id: true, status: true, createdAt: true } },
       researchSources: { orderBy: { capturedAt: "asc" } },
       priceObservations: { orderBy: { price: "asc" } },
       compositions: { orderBy: { slot: "asc" } },
@@ -287,6 +289,29 @@ export async function getProductStudioAsset(id: string) {
   });
 }
 
+/**
+ * Refuses a manual step while an unattended run owns the project
+ * (2026-10-27). The run re-derives its next step from the project's rows, so
+ * a person's research, generation, review or deletion landing in between
+ * would be acted on, or deleted under, by the worker.
+ */
+async function assertNotUnderAutopilot(
+  project: { autopilotRunId: string | null },
+  what: string,
+): Promise<void> {
+  if (!project.autopilotRunId) return;
+  const run = await prisma.productStudioRun.findUnique({
+    where: { id: project.autopilotRunId },
+    select: { status: true },
+  });
+  if (run && ["queued", "running"].includes(run.status)) {
+    throw new ProductStudioInputError(
+      `${what} is unavailable while an unattended run is processing this project. ` +
+        "Wait for the run to finish, or stop it from the Automation Center.",
+    );
+  }
+}
+
 export async function queueProductStudioResearch(args: {
   projectId: string;
   actorUserId: string;
@@ -296,6 +321,7 @@ export async function queueProductStudioResearch(args: {
     where: { id: args.projectId },
     include: { _count: { select: { assets: { where: { kind: "generated" } } } } },
   });
+  await assertNotUnderAutopilot(project, "Research");
   if (project._count.assets > 0) {
     throw new ProductStudioInputError(
       "Research cannot be replaced after image generation. Start a new project to preserve provenance.",
@@ -355,8 +381,10 @@ export async function queueProductStudioGeneration(args: {
   }
   const composition = await prisma.productStudioComposition.findUnique({
     where: { projectId_slot: { projectId: args.projectId, slot: args.slot } },
+    include: { project: { select: { autopilotRunId: true } } },
   });
   if (!composition) throw new ProductStudioInputError("Research this project before generating.");
+  await assertNotUnderAutopilot(composition.project, "Image generation");
   if (["queued", "generating"].includes(composition.status)) {
     throw new ProductStudioInputError(`Composition ${args.slot} is already ${composition.status}.`);
   }
@@ -409,11 +437,21 @@ export async function reviewProductStudioAsset(args: {
   assetId: string;
   actorUserId: string;
   decision: "approved" | "rejected";
+  /**
+   * Set when an unattended run decides from the QA scores (2026-10-27). The
+   * draft is stamped as automatically reviewed and the audit entry says so;
+   * the run holds the project's lock, so the manual-step guard is skipped.
+   */
+  automatic?: { runId: string; score: number; reason: string | null };
 }): Promise<void> {
   // Fail closed with the rest of the workflow when the module is disabled;
   // stored records stay intact and readable either way.
   await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
-  const asset = await prisma.productStudioAsset.findUniqueOrThrow({ where: { id: args.assetId } });
+  const asset = await prisma.productStudioAsset.findUniqueOrThrow({
+    where: { id: args.assetId },
+    include: { project: { select: { autopilotRunId: true } } },
+  });
+  if (!args.automatic) await assertNotUnderAutopilot(asset.project, "Review");
   if (asset.kind !== "generated") {
     throw new ProductStudioInputError("Only generated draft images can be approved or rejected.");
   }
@@ -422,7 +460,7 @@ export async function reviewProductStudioAsset(args: {
   }
   await prisma.productStudioAsset.update({
     where: { id: asset.id },
-    data: { status: args.decision },
+    data: { status: args.decision, autoReviewedAt: args.automatic ? new Date() : null },
   });
   await prisma.productStudioComposition.update({
     where: {
@@ -447,7 +485,18 @@ export async function reviewProductStudioAsset(args: {
     action: `product_studio.asset_${args.decision}`,
     entityType: "ProductStudioAsset",
     entityId: asset.id,
-    afterData: { projectId: asset.projectId, compositionSlot: asset.compositionSlot },
+    afterData: {
+      projectId: asset.projectId,
+      compositionSlot: asset.compositionSlot,
+      ...(args.automatic
+        ? {
+            automatic: true,
+            runId: args.automatic.runId,
+            lowestQaScore: args.automatic.score,
+            reason: args.automatic.reason,
+          }
+        : { automatic: false }),
+    },
   });
 }
 
@@ -472,6 +521,7 @@ export async function deleteProductStudioProject(args: {
     },
   });
 
+  await assertNotUnderAutopilot(project, "Deletion");
   // Refuse while a worker job is in flight. Deleting mid-run would leave the
   // job writing to rows that no longer exist.
   if (isWorkflowBusy({ status: project.status, compositions: project.compositions, assets: [] })) {
@@ -525,6 +575,7 @@ export async function recompileProductStudioPrompts(args: {
     include: { compositions: { orderBy: { slot: "asc" } } },
   });
 
+  await assertNotUnderAutopilot(project, "Recompiling prompts");
   if (isWorkflowBusy({ status: project.status, compositions: project.compositions, assets: [] })) {
     throw new ProductStudioInputError(
       "This project has work in progress. Wait for the worker to finish before recompiling prompts.",

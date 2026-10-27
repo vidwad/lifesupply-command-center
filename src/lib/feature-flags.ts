@@ -33,6 +33,8 @@ export const FEATURE_FLAGS = {
   PRODUCT_STUDIO_IMAGE_GENERATION: "product_studio.image_generation",
   /** Allow Product Studio to publish approved images and the description to BigCommerce. Default OFF; kill switch. */
   PRODUCT_STUDIO_PUBLISH: "product_studio.publish",
+  /** Allow unattended Product Studio runs: research, generation, automatic QA review and, with the publish flags, publishing, for selected products. Default OFF; kill switch. */
+  PRODUCT_STUDIO_AUTOPILOT: "product_studio.autopilot",
   /** Accept public website inquiries into the intake (Stage 7). Default OFF. */
   PUBLIC_INQUIRY_INTAKE: "public_inquiry.intake",
   /** Send inquiry acknowledgment and owner notification emails (Stage 7). Default OFF; kill switch. */
@@ -69,6 +71,8 @@ export const FEATURE_FLAG_DESCRIPTIONS: Record<FeatureFlagKey, string> = {
     "Generate review-only product images from authoritative user-uploaded references.",
   [FEATURE_FLAGS.PRODUCT_STUDIO_PUBLISH]:
     "Publish upload-approved Product Studio images and description to BigCommerce (also requires external.writebacks).",
+  [FEATURE_FLAGS.PRODUCT_STUDIO_AUTOPILOT]:
+    "Run Product Studio unattended for selected products: research, images, automatic QA review and regeneration (also requires product_studio.enabled and image_generation).",
   [FEATURE_FLAGS.PUBLIC_INQUIRY_INTAKE]:
     "Accept public website inquiries into the Command Center queue (requires the inquiry table).",
   [FEATURE_FLAGS.PUBLIC_INQUIRY_SEND]:

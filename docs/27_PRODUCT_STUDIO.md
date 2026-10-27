@@ -162,7 +162,8 @@ specification for `new_sealed`. Fabricated identifiers are a defect in both.
 | Source verification | Cited seller domains are validated against actual web-search tool evidence (tool calls and URL-citation annotations only — a URL the model merely wrote is not evidence). Since 2026-10-26 a citation whose domain is not in the evidence is **removed** rather than failing the whole research: the source and its price observations are dropped, the market range is recomputed from what remains, the dropped domains are recorded in the project's warnings and in the AI output record, and the benchmark listing is reassigned to a verified source. Research still fails if no verified source or no verified price observation remains, and the failure names the domains the evidence did cover. |
 | Provenance | Seller URLs, price observations, prompts, model names, hashes, actors, and timestamps are stored. |
 | External actions | One, added 2026-10-22: publishing upload-approved images and the full description to the linked BigCommerce product (§5.5). Social publishing stays out of scope. |
-| Human review | Generated assets remain `needs_review` or `rejected` until a permitted user acts. |
+| Human review | Generated assets remain `needs_review` or `rejected` until a permitted user acts, except inside an unattended run (§5.6), where the run approves or rejects each draft from its QA scores and stamps the draft `autoReviewedAt` so the two kinds of review are never confused. |
+| Unattended runs | `product_studio.autopilot`, default off, in the kill set, on top of the Studio and image-generation flags; creation and cancellation need the Super Admin-only publish permission; every step re-checks the flags; an Approval row records the creation; `autopilot-canaries.test.ts` holds the structure (§5.6). |
 | Audit | Project creation, research queue/result/failure, generation queue/result/failure, and review are logged. |
 
 ## 5.5 Publishing to BigCommerce (product owner, 2026-10-22)
@@ -228,6 +229,73 @@ not updated by a publish; the next catalogue sync brings the store's state back.
 log before request, read before write, no background path, page renders load only the read-only
 module, and the price client stays price-only. `chokepoints.test.ts` lists the service.
 
+## 5.6 Unattended runs (product owner, 2026-10-27)
+
+Until this date every step of the Studio was a button a person pressed. An unattended run does the
+whole sequence for a selected list of products with no further input: research, up to four images,
+automatic approval or regeneration of each draft from its QA scores, and the product left approved
+or marked for a person's attention. It lives in the Automation Center under "Product Studio runs"
+(`/automation/product-studio`), because that is where the owner looks at background work; it starts
+from a selection, with a "Run unattended" button on the Product Studio list's selection bar and on
+the products list's bar (which creates the batch first). Both lead to the run form, where the
+criteria are set; nothing starts until that form is submitted.
+
+**Who and when.** Creating or stopping a run needs `products.approve_bigcommerce_update`, which only
+Super Admin holds. Three flags must be on: `product_studio.enabled`, `product_studio.image_generation`
+and the run's own `product_studio.autopilot`, which is in the kill set and observed by the health
+probe. They are checked when the run is created, when it starts, and before every step, so turning
+one off or tripping the kill switch stops a run at its next checkpoint. The run also stops if its
+creator is no longer an active user.
+
+**The criteria.** Frozen as JSON on the run when it is created (`autopilot-settings.ts`):
+
+| Setting | Default | Effect |
+|---|---|---|
+| Minimum image score | 80% | The lowest of a draft's identity, condition fidelity and composition QA scores must reach it to be approved; below it the draft is rejected and regenerated. A `reject` verdict or failed text integrity always regenerates. The QA model's confidence in its own verdict is not the threshold: it rates the model's certainty, not the image. |
+| Regenerations per image | 2 | Extra attempts after the first; when they run out the slot stays rejected for a person and the product is marked for attention. |
+| Minimum identity confidence | 80% | Research must be at least this sure of the exact product before any image is generated; below it the product stops, unspent. |
+| Images per product | 4 | Slots 1 to n; research still plans all four. |
+| Maximum products | 10 (cap 50) | Enforced at creation. |
+| Image ceiling | 80 (cap 400) | Counted before each generation across the run; once reached, remaining products are marked for attention rather than generated. |
+| Products at a time | 2 (cap 4) | Lanes worked in parallel. |
+| Stop after consecutive failures | 3 | A provider outage stops the run rather than failing every product. |
+| Publish to BigCommerce | none | The only value accepted in this release. Nothing is sent to a store; approved drafts wait on the publishing card. |
+| Open a Task | yes | On completion, a Task for the creator lists the products needing attention. |
+
+**How it runs.** Two worker functions. The run function marks the run running and sends one event
+per lane. The item function performs ONE step (research; one image with its QA review; one review
+of a draft left awaiting review; or the closing decision) and re-sends itself, so each worker
+invocation is short and every step is a checkpoint. When an item finishes, its lane claims the next
+pending product; the lane that finds none closes the run. Every decision is re-derived from the
+project's stored rows (`autopilot-policy.ts`), so a retried or duplicated step finds the state
+already advanced and does the next right thing rather than spending twice. Work already on a
+project is kept: research is not repeated, approved drafts are not regenerated, and only slots
+without an approved draft are worked. Concurrency is one invocation per item.
+
+**While a run owns a project**, the project page shows a banner and research, generation, manual
+review, deletion and prompt recompiling are refused with a message pointing at the run; the run
+re-derives its next step from the project's rows, so a person's action landing in between would be
+acted on, or deleted under, by the worker. Afterwards the banner stays, pointing at the run's
+record, and drafts the run reviewed carry "automatic" on their status badge.
+
+**The record.** The run page lists each product with its stage, images generated, regenerations,
+approved slots and a note saying what happened; a live run's page refreshes itself. The criteria
+and the Approval id are shown. Audited: `product_studio.autopilot_run_created`,
+`_run_cancel_requested`, `_item_completed`, `_item_needs_attention`, `_item_failed`,
+`_run_completed`, and every automatic review as `product_studio.asset_approved` / `_rejected` with
+`automatic: true`, the run id, the lowest QA score and the reason.
+
+**Stopping.** "Stop run" on the run page cancels products not yet started at once; products in
+progress stop at their next step. The same mechanism stops the run when a flag goes off, when the
+failure rule trips, or when the creator is deactivated; `stopReason` says which.
+
+**Canaries.** `autopilot-canaries.test.ts`: the permission on creation and cancellation in action
+and service; three flags at creation, start and every step; Approval and audit; spend counted before
+each generation; no import of the publish service or the BigCommerce client anywhere in the run
+code; publish mode fixed to `none`; automatic reviews stamped; the manual workflow's five guards;
+worker functions thin and serialised per item; pages reading only the read-only module.
+`chokepoints.test.ts` lists the service and the kill-set flag.
+
 ## 6. Data model
 
 - `ProductStudioProject` — intake, final listing copy, market summary, status, warnings, and the
@@ -236,6 +304,10 @@ module, and the price client stays price-only. `chokepoints.test.ts` lists the s
   review state, and the draft's upload mark, published time and store image id.
 - `ProductStudioPublishLog` — one row per attempted image upload or description write, with the
   request (never the bytes), the response, the store's prior state, the writer and the outcome.
+- `ProductStudioRun` and `ProductStudioRunItem` (2026-10-27) — an unattended run's frozen criteria,
+  running totals, stop state and outcome, and one row per product with its stage, counts and note.
+  A project's `autopilotRunId` links it to the run that owns it; a draft's `autoReviewedAt` marks a
+  review the run made.
 - `ProductStudioResearchSource` — seller/product-page evidence and external hero-image URL.
 - `ProductStudioPriceObservation` — normalized source-linked price evidence.
 - `ProductStudioComposition` — four structured composition briefs and compiled prompts.
@@ -346,7 +418,13 @@ Build social output only after this review workflow passes staging UAT. The next
 ## 10. Known production-readiness follow-ups
 
 - Move image bytes to private object storage and define lifecycle/retention policy.
-- Add per-user and per-project generation budgets, provider cost estimates, and spend alerts.
+- Add per-user and per-project generation budgets, provider cost estimates, and spend alerts. An
+  unattended run has its own image ceiling and failure rule (§5.6), but no money figure.
+- Publishing from an unattended run: the `publishMode` setting accepts only `none` until the
+  publish step is wired behind the publish flags with its own canaries.
+- A stuck-lane sweep for unattended runs: if the worker dies mid-step and the retry also fails, the
+  item stays in progress and the run never closes; today that is read off the run page and the run
+  is stopped by hand.
 - Add stale-price detection and scheduled research refresh that creates a new version.
 - Add malware/content scanning and image-dimension/EXIF validation at upload.
 - Add download/export renditions only after approved storage and retention controls exist.

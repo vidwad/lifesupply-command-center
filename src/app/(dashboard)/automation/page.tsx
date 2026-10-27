@@ -63,12 +63,20 @@ export default async function AutomationPage() {
         description="Integration status, sync logs, and AI run logs across all connected systems."
         breadcrumb={`${data.totals.configuredCount} of ${data.totals.integrationCount} integrations configured`}
         actions={
-          <Link
-            href="/automation/runs"
-            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
-          >
-            Supplier automation runs
-          </Link>
+          <>
+            <Link
+              href="/automation/product-studio"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Product Studio runs
+            </Link>
+            <Link
+              href="/automation/runs"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Supplier automation runs
+            </Link>
+          </>
         }
       />
 

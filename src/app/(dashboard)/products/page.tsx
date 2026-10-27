@@ -60,6 +60,9 @@ export default async function ProductsPage({
   const canStudio =
     userHasPermission(user, PERMISSIONS.PRODUCTS_UPDATE) &&
     userHasPermission(user, PERMISSIONS.AI_USE);
+  // Unattended runs (2026-10-27) take the Super Admin-only publish permission.
+  const canAutopilot =
+    canStudio && userHasPermission(user, PERMISSIONS.PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE);
 
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
   // Unknown sort keys fall back to the default ordering rather than erroring —
@@ -204,7 +207,7 @@ export default async function ProductsPage({
           </span>
         </div>
 
-        {canStudio && products.length > 0 ? <BulkStudioBar /> : null}
+        {canStudio && products.length > 0 ? <BulkStudioBar canAutopilot={canAutopilot} /> : null}
 
         {products.length === 0 ? (
           <EmptyState
