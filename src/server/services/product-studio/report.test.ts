@@ -74,6 +74,8 @@ const project = {
     sourceId: "4411",
     metadata: null,
     store: { name: "LifeSupply" },
+    variants: [{ sku: "OM-246", price: 18, costPrice: 0 }],
+    supplierProducts: [{ cost: 9 }],
   },
   createdBy: { id: "u1", name: "Vid", email: "v@example.com" },
   assets: [
@@ -220,6 +222,18 @@ describe("summarising a project for the report", () => {
   it("orders price observations lowest first and summarises publishing history", () => {
     expect(snapshot.market.observations.map((o) => o.price)).toEqual([12, 20]);
     expect(snapshot.market).toMatchObject({ low: 12, high: 20, median: 15, observationCount: 2 });
+    // The store's own listing: price from the variant, cost from the
+    // preferred supplier since the variant's cost is zero (unknown).
+    expect(snapshot.market.store).toMatchObject({
+      storeName: "LifeSupply",
+      price: 18,
+      cost: 9,
+      margin: 0.5,
+      position: "within",
+      vsMedian: 0.2,
+      cheaperSellers: 1,
+      observedSellers: 2,
+    });
     expect(snapshot.publishing.history[0]).toMatchObject({
       label: "Composition 1 → image #501",
       status: "succeeded",

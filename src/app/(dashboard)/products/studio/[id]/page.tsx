@@ -31,6 +31,8 @@ import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
 import { MAX_OPERATOR_INSTRUCTIONS } from "@/server/services/product-studio/prompt-controls";
 import { listBatchProjects } from "@/server/services/product-studio/bulk";
+import { storePriceFor } from "@/server/services/product-studio/report";
+import { describeStorePrice } from "@/server/services/product-studio/store-price";
 import { storeImageCount, storeThumbnailImageId } from "@/server/services/products";
 import { MAX_LONG_DESCRIPTION } from "@/server/services/product-studio/description";
 import {
@@ -193,6 +195,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
     imageCount: storeImageCount(project.product?.metadata),
     thumbnailImageId: storeThumbnailImageId(project.product?.metadata),
   };
+  const storePrice = storePriceFor(project);
   const publishPending = mayPublish
     ? selectPublishItems({
         project,
@@ -934,6 +937,38 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                 ) : (
                   <p className="text-sm text-muted-foreground">Pending research.</p>
                 )}
+                {/* The store's own listing against the range (2026-10-26). */}
+                {storePrice ? (
+                  <div className="rounded-md border bg-muted/40 p-3 text-sm">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {storePrice.storeName ?? "Our store"} today
+                    </p>
+                    <p className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                      <span className="text-lg font-semibold tabular-nums">
+                        {formatCurrency(storePrice.price, storePrice.currency)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        cost{" "}
+                        {storePrice.cost != null
+                          ? formatCurrency(storePrice.cost, storePrice.currency)
+                          : "not known"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        margin{" "}
+                        {storePrice.margin != null
+                          ? `${Math.round(storePrice.margin * 1000) / 10}%`
+                          : "—"}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {describeStorePrice(storePrice)}
+                    </p>
+                  </div>
+                ) : project.product ? (
+                  <p className="text-xs text-muted-foreground">
+                    No listed price on the catalogue product.
+                  </p>
+                ) : null}
                 <div className="space-y-2">
                   {project.priceObservations.map((observation) => (
                     <a
