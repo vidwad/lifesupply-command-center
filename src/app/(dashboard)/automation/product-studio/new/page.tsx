@@ -13,6 +13,7 @@ import {
   listRunCandidates,
 } from "@/server/services/product-studio/autopilot-read";
 import { listBatchProjects } from "@/server/services/product-studio/bulk";
+import { publishFlagState } from "@/server/services/product-studio/publish-read";
 
 import { RunForm } from "./run-form";
 
@@ -36,7 +37,7 @@ export default async function NewProductStudioRunPage({
   const batchId = params.batch?.trim() || null;
   const fromBatch = batchId ? (await listBatchProjects(batchId)).map((item) => item.id) : [];
   const candidates = await listRunCandidates([...fromQuery, ...fromBatch]);
-  const flags = await autopilotFlagState();
+  const [flags, publishFlags] = await Promise.all([autopilotFlagState(), publishFlagState()]);
 
   const blocked = candidates.filter(
     (project) =>
@@ -86,6 +87,7 @@ export default async function NewProductStudioRunPage({
               <RunForm
                 projectIds={eligible.map((project) => project.id)}
                 disabledReason={disabledReason}
+                publishAvailable={publishFlags.enabled}
               />
             </CardContent>
           </Card>

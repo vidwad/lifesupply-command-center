@@ -23,6 +23,7 @@ const READ_ONLY = "src/server/services/product-studio/autopilot-read.ts";
 const POLICY = "src/server/services/product-studio/autopilot-policy.ts";
 const SETTINGS = "src/server/services/product-studio/autopilot-settings.ts";
 const FUNCTIONS = "src/server/inngest/functions/product-studio/autopilot.ts";
+const PUBLISH = "src/server/services/product-studio/autopilot-publish.ts";
 const ACTIONS = "src/app/(dashboard)/automation/product-studio/actions.ts";
 const STUDIO = "src/server/services/product-studio/index.ts";
 
@@ -77,14 +78,53 @@ describe("unattended runs keep their controls", () => {
     expect(stripComments(read(POLICY))).toContain("run.imagesGenerated >= settings.maxImagesTotal");
   });
 
-  it("sends nothing to a store: no publish service, no BigCommerce client, publish mode fixed to none", () => {
+  it("reaches the store only through autopilot-publish.ts, which uses the publish service and never the client", () => {
+    // The run service, the read-only queries, the policy, the settings and
+    // the worker functions never touch the publish service or the client.
     for (const file of [SERVICE, READ_ONLY, POLICY, SETTINGS, FUNCTIONS]) {
       const code = stripComments(read(file));
-      expect(code, file).not.toMatch(/services\/product-studio\/publish["']/);
+      expect(code, file).not.toMatch(/\.\/publish["']|services\/product-studio\/publish["']/);
       expect(code, file).not.toContain("integrations/bigcommerce");
       expect(code, file).not.toContain("productStudioPublishLog");
     }
-    expect(stripComments(read(SETTINGS))).toContain('PUBLISH_MODES = ["none"] as const');
+    const publish = stripComments(read(PUBLISH));
+    expect(publish).toContain('from "./publish"');
+    expect(publish).not.toContain("integrations/bigcommerce");
+    expect(publish).not.toContain("productStudioPublishLog");
+    expect(publish).not.toMatch(/fetch\(/);
+    // Exactly one publish call, after the marks, and only when the mode asks.
+    expect(publish.match(/publishProductStudioProject\(\{/g)?.length).toBe(1);
+    expect(publish).toContain('if (args.settings.publishMode === "none")');
+    expect(publish.indexOf("setAssetUploadMark({")).toBeLessThan(
+      publish.indexOf("publishProductStudioProject({"),
+    );
+    // The run service calls it only from the completion step, gated on the mode.
+    const service = stripComments(read(SERVICE));
+    expect(service.match(/await publishForRun\(\{/g)?.length).toBe(1);
+    expect(service).toContain("if (publishesToStore(settings)) {");
+  });
+
+  it("publishing from a run checks the approval, the creator's current permissions and the flags first", () => {
+    const publish = stripComments(read(PUBLISH));
+    expect(publish).toContain('approval.status !== "approved"');
+    expect(publish).toContain("approval.relatedEntityId !== args.runId");
+    expect(publish).toContain("loadCurrentPermissions(args.actorUserId)");
+    expect(publish).toContain("actorPermissions.includes(PUBLISH_PERMISSION)");
+    expect(publish).toContain("await flagsBlockingPublish()");
+    // Permissions come from the roles table now, never from a snapshot.
+    expect(publish).toContain("rolePermissions");
+    expect(publish).not.toMatch(/settings\.(permissions|actorPermissions)/);
+    // The order: approval, then permission, then flags, then any mark.
+    const approval = publish.indexOf("approval.status");
+    const permission = publish.indexOf("loadCurrentPermissions(args.actorUserId)");
+    const flags = publish.indexOf("await flagsBlockingPublish()");
+    const mark = publish.indexOf("setAssetUploadMark({");
+    expect(approval).toBeLessThan(permission);
+    expect(permission).toBeLessThan(flags);
+    expect(flags).toBeLessThan(mark);
+    // Creation refuses a publishing run while the publish flags are off.
+    const service = stripComments(read(SERVICE));
+    expect(service).toContain("const publishOff = await flagsBlockingPublish();");
   });
 
   it("marks automatic reviews as such and refuses manual steps on a project a live run owns", () => {

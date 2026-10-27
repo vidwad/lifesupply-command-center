@@ -18,11 +18,18 @@ import {
   MAX_PARALLEL_PRODUCTS,
   MAX_RUN_IMAGES,
   MAX_RUN_PRODUCTS,
+  PUBLISH_MODE_LABEL,
+  PUBLISH_MODES,
 } from "@/server/services/product-studio/autopilot-settings";
 
 import { createRunAction } from "../actions";
 
-type Props = { projectIds: string[]; disabledReason: string | null };
+type Props = {
+  projectIds: string[];
+  disabledReason: string | null;
+  /** Whether the publish flags are on, so a publish mode may be chosen. */
+  publishAvailable: boolean;
+};
 
 function Field({
   id,
@@ -44,9 +51,14 @@ function Field({
   );
 }
 
-export function RunForm({ projectIds, disabledReason }: Props): React.JSX.Element {
+export function RunForm({
+  projectIds,
+  disabledReason,
+  publishAvailable,
+}: Props): React.JSX.Element {
   const [state, action, pending] = useActionState(createRunAction, undefined);
   const d = DEFAULT_AUTOPILOT_SETTINGS;
+  const [publishMode, setPublishMode] = useState<string>(d.publishMode);
   const [imagesPerProduct, setImagesPerProduct] = useState(d.imagesPerProduct);
   const [maxRegenerations, setMaxRegenerations] = useState(d.maxRegenerationsPerSlot);
   const [maxImagesTotal, setMaxImagesTotal] = useState(
@@ -208,15 +220,36 @@ export function RunForm({ projectIds, disabledReason }: Props): React.JSX.Elemen
             id="publishMode"
             name="publishMode"
             defaultValue="none"
-            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+            disabled={!publishAvailable}
+            onChange={(event) => setPublishMode(event.target.value)}
+            className="h-10 w-full rounded-md border bg-background px-3 text-sm disabled:opacity-60"
           >
-            <option value="none">No. Leave approved drafts for a Super Admin to publish.</option>
+            {PUBLISH_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {PUBLISH_MODE_LABEL[mode]}
+              </option>
+            ))}
           </select>
           <p className="text-xs text-muted-foreground">
-            Publishing from a run arrives in a later release behind the publish flags. Nothing in
-            this run is sent to a store.
+            {publishAvailable
+              ? "Once a product's images are approved, the run publishes through the same service and gates as the publishing card: its log row before every request, stopping at the first failure. A refused or failed publish leaves the product for your attention; nothing is retried on its own."
+              : "Publishing from a run needs product_studio.publish and external.writebacks on. They are off, so this run leaves approved drafts for a Super Admin to publish."}
           </p>
         </div>
+        {publishMode === "images_and_description" || publishMode === "all" ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="descriptionMode">Store description</Label>
+            <select
+              id="descriptionMode"
+              name="descriptionMode"
+              defaultValue="replace"
+              className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+            >
+              <option value="replace">Replace the store description with the new one.</option>
+              <option value="fill_empty">Write it only where the store has no description.</option>
+            </select>
+          </div>
+        ) : null}
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"

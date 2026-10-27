@@ -24,9 +24,13 @@
  * retried or duplicated step finds the state already advanced and does the
  * next right thing rather than spending twice.
  *
- * Nothing in this file sends anything to a store. Publishing from a run
- * arrives in a later release behind the publish flags; until then a run ends
- * with approved drafts and the publish panel does the rest.
+ * Nothing in this file sends anything to a store. When a run's settings ask
+ * for publishing, the completion step hands the product to
+ * autopilot-publish.ts, the one module outside the publish server actions
+ * that may call the publish service, and that only under the run's Approval
+ * row, the creator's permissions as they stand at that moment, and the
+ * publish flags. With publish mode "none" a run ends with approved drafts
+ * and the publishing card does the rest.
  */
 import type { Prisma } from "@prisma/client";
 
@@ -48,13 +52,16 @@ import {
   type ItemOutcome,
   type NextAction,
 } from "./autopilot-policy";
+import { publishForRun } from "./autopilot-publish";
 import {
   describeAutopilotSettings,
   parseAutopilotSettings,
+  publishesToStore,
   type AutopilotSettings,
 } from "./autopilot-settings";
 import { ProductStudioInputError, reviewProductStudioAsset } from "./index";
 import { runProductStudioGeneration, runProductStudioResearch } from "./jobs";
+import { flagsBlockingPublish } from "./publish-read";
 import { isWorkflowBusy } from "./workflow-progress";
 
 export const AUTOPILOT_RUN_EVENT = "product-studio/autopilot.run.requested";
@@ -105,6 +112,19 @@ export async function createProductStudioRun(args: {
     throw new ProductStudioInputError(
       "Unattended runs are disabled. These flags must all be on: " + off.join(", ") + ".",
     );
+  }
+  // A run that publishes needs the publish flags on when it is created too,
+  // so the owner learns now rather than from a refused note hours later. The
+  // publish module checks them again for every product.
+  if (publishesToStore(settings)) {
+    const publishOff = await flagsBlockingPublish();
+    if (publishOff.length > 0) {
+      throw new ProductStudioInputError(
+        "A run that publishes needs these flags on as well: " +
+          publishOff.join(", ") +
+          '. Choose "No" under Publish to BigCommerce to run without publishing.',
+      );
+    }
   }
   const ids = [...new Set(args.projectIds.map((id) => id.trim()).filter(Boolean))];
   if (ids.length === 0) throw new ProductStudioInputError("Select at least one project.");
@@ -443,6 +463,7 @@ export async function processRunItemStep(args: {
         stopReason: true,
         imagesGenerated: true,
         consecutiveFailures: true,
+        approvalId: true,
       },
     }),
     prisma.productStudioRunItem.findUnique({ where: { id: args.itemId } }),
@@ -572,11 +593,46 @@ export async function processRunItemStep(args: {
         return { kind: "continue", step: steps };
       }
       case "complete": {
-        await finishItem({
-          itemId: item.id,
-          stage: "done",
-          approvedSlots: next.approvedSlots,
-          note: `${next.approvedSlots} image${next.approvedSlots === 1 ? "" : "s"} approved automatically. Nothing was sent to the store.`,
+        const approved = `${next.approvedSlots} image${next.approvedSlots === 1 ? "" : "s"} approved automatically.`;
+        // Publishing, when the run's settings ask for it (2026-10-27): the
+        // one place a run reaches the store, through the publish module and
+        // its gates. A refusal or failure leaves the product for a person.
+        let publishedItems = 0;
+        let stage: "done" | "attention" = "done";
+        let note = approved + " Nothing was sent to the store.";
+        if (publishesToStore(settings)) {
+          await prisma.productStudioRunItem.update({
+            where: { id: item.id },
+            data: { stage: "publishing" },
+          });
+          const outcome = await publishForRun({
+            runId: run.id,
+            approvalId: run.approvalId,
+            projectId: project.id,
+            actorUserId,
+            settings,
+          });
+          if (outcome.status === "published") {
+            publishedItems = outcome.publishedItems;
+            note = approved + " " + outcome.message;
+          } else if (outcome.status === "nothing") {
+            note = approved + " " + outcome.message;
+          } else {
+            publishedItems = outcome.publishedItems;
+            stage = "attention";
+            note =
+              approved + " " + outcome.message + " Publish from the project page once resolved.";
+          }
+        }
+        await prisma.productStudioRunItem.update({
+          where: { id: item.id },
+          data: {
+            stage,
+            note,
+            approvedSlots: next.approvedSlots,
+            publishedItems,
+            completedAt: new Date(),
+          },
         });
         await prisma.productStudioRun.update({
           where: { id: run.id },
@@ -584,12 +640,21 @@ export async function processRunItemStep(args: {
         });
         await writeAudit({
           actorUserId,
-          action: "product_studio.autopilot_item_completed",
+          action:
+            stage === "done"
+              ? "product_studio.autopilot_item_completed"
+              : "product_studio.autopilot_item_needs_attention",
           entityType: "ProductStudioProject",
           entityId: project.id,
-          afterData: { runId: run.id, approvedSlots: next.approvedSlots },
+          afterData: {
+            runId: run.id,
+            approvedSlots: next.approvedSlots,
+            publishMode: settings.publishMode,
+            publishedItems,
+            note,
+          },
         });
-        return { kind: "item_finished", stage: "done" };
+        return { kind: "item_finished", stage };
       }
       case "attention": {
         await finishItem({
