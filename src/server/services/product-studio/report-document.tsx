@@ -1,6 +1,7 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type { ProductStudioReport, ProjectReport, ReportImage } from "./report";
+import { describeStorePrice } from "./store-price";
 
 /**
  * The Product Studio summary report (2026-10-26): a cover, then one section
@@ -178,6 +179,35 @@ function ProjectPage({ project, generatedAt }: { project: ProjectReport; generat
             </Text>
           </View>
           {market.basis ? <Text style={styles.small}>{market.basis}</Text> : null}
+          {/* The store's own listing against the range (2026-10-26). */}
+          {market.store ? (
+            <View style={{ marginTop: 6 }}>
+              <Text style={styles.blockTitle}>{market.store.storeName ?? "Our store"} today</Text>
+              <View style={styles.kv}>
+                <Text style={styles.k}>Listed price</Text>
+                <Text style={styles.v}>{money(market.store.price, market.store.currency)}</Text>
+              </View>
+              <View style={styles.kv}>
+                <Text style={styles.k}>Cost</Text>
+                <Text style={styles.v}>
+                  {market.store.cost != null
+                    ? money(market.store.cost, market.store.currency)
+                    : "not known"}
+                </Text>
+              </View>
+              <View style={styles.kv}>
+                <Text style={styles.k}>Margin</Text>
+                <Text style={styles.v}>
+                  {market.store.margin != null
+                    ? `${Math.round(market.store.margin * 1000) / 10}%`
+                    : "—"}
+                </Text>
+              </View>
+              <Text style={styles.small}>{describeStorePrice(market.store)}</Text>
+            </View>
+          ) : project.product ? (
+            <Text style={styles.small}>No listed price on the catalogue product.</Text>
+          ) : null}
         </View>
       </View>
 

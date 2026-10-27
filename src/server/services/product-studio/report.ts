@@ -13,6 +13,7 @@ import { stripListingLinks } from "./listing-copy";
 import { parseListingBlocks, type ListingBlock } from "./listing-format";
 import { latestGeneratedBySlot } from "./publish-eligibility";
 import { listPublishLogs } from "./publish-read";
+import { storePriceContext, type StorePriceContext } from "./store-price";
 
 export const MAX_REPORT_PROJECTS = 50;
 
@@ -74,6 +75,8 @@ export type ProjectReport = {
     basis: string | null;
     observationCount: number;
     observations: { seller: string; price: number; currency: string; condition: string | null }[];
+    /** The store's own listed price against the range; null when unlinked or unpriced. */
+    store: StorePriceContext | null;
   };
   sources: { seller: string; title: string | null; url: string }[];
   sourcePhotos: ReportImage[];
@@ -107,6 +110,36 @@ const num = (value: unknown): number | null => {
 };
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+/**
+ * The store's listed price and cost from the linked product, as the products
+ * list reads them, against this project's researched range.
+ */
+export function storePriceFor(project: Loaded): StorePriceContext | null {
+  const product = project.product;
+  if (!product) return null;
+  const variant = product.variants[0];
+  // A zero variant cost means "not known", so the preferred supplier's cost
+  // is the fallback, as on the products list.
+  const variantCost = num(variant?.costPrice);
+  return storePriceContext({
+    storeName: product.store?.name ?? null,
+    currency: project.currency,
+    price: variant ? num(variant.price) : null,
+    cost:
+      variantCost != null && variantCost > 0 ? variantCost : num(product.supplierProducts[0]?.cost),
+    market: {
+      currency: project.currency,
+      low: num(project.marketLow),
+      high: num(project.marketHigh),
+      median: num(project.marketMedian),
+      observations: project.priceObservations.map((item) => ({
+        price: Number(item.price),
+        currency: item.currency,
+      })),
+    },
+  });
+}
 
 /** The plain snapshot of one project, without image bytes. */
 export function summarizeProject(project: Loaded, logs: Logs): Omit<ProjectReport, "sourcePhotos"> {
@@ -177,6 +210,7 @@ export function summarizeProject(project: Loaded, logs: Logs): Omit<ProjectRepor
         currency: item.currency,
         condition: item.condition,
       })),
+      store: storePriceFor(project),
     },
     sources: project.researchSources.map((source) => ({
       seller: source.sellerName,

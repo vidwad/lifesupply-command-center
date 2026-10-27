@@ -230,6 +230,14 @@ export async function getProductStudioProject(id: string) {
           sourceId: true,
           metadata: true,
           store: { select: { name: true } },
+          // The store's own price and cost, read as the products list reads
+          // them: the primary variant, then the preferred supplier's cost.
+          variants: {
+            select: { sku: true, price: true, costPrice: true },
+            orderBy: { sku: "asc" },
+            take: 1,
+          },
+          supplierProducts: { where: { isPreferred: true }, select: { cost: true }, take: 1 },
         },
       },
       createdBy: { select: { id: true, name: true, email: true } },

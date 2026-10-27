@@ -110,6 +110,12 @@ warnings are stored with each project.
 - Present the result as an asking-price range, not an appraisal, realized-sale guarantee, or pricing
   instruction.
 - Re-run research for stale projects by creating a new project; historical evidence remains intact.
+- The store's own listing is shown against the range (product owner, 2026-10-26), on the project
+  page and in the summary report: the linked product's listed price, cost and gross margin as the
+  products list reads them (primary variant, then the preferred supplier's cost, a zero cost
+  meaning unknown), with where the price sits in the range, its distance from the median and how
+  many observed sellers ask less. Compared only in the market currency; otherwise stated as not
+  comparable (`store-price.ts`).
 
 ## 4.5 What a generated image may depict
 
