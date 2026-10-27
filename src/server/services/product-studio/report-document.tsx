@@ -39,10 +39,30 @@ const styles = StyleSheet.create({
   k: { width: 92, color: "#6b7280" },
   v: { flex: 1 },
   photoRow: { flexDirection: "row", gap: 6, marginBottom: 4 },
-  photo: { width: 90, height: 90, objectFit: "contain", borderWidth: 0.5, borderColor: "#e5e7eb" },
+  // Square frames with the whole image fitted inside, as the project page
+  // shows them (2026-10-26): a light field, a hairline border, no cropping
+  // and no stretching whatever the image's own proportions.
+  photoFrame: {
+    width: 104,
+    height: 104,
+    backgroundColor: "#f3f4f6",
+    borderWidth: 0.5,
+    borderColor: "#e5e7eb",
+    padding: 3,
+  },
+  photo: { width: 96, height: 96, objectFit: "contain" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  card: { width: "48%", borderWidth: 0.5, borderColor: "#e5e7eb", padding: 6, marginBottom: 6 },
-  cardImage: { width: "100%", height: 150, objectFit: "contain", marginBottom: 4 },
+  card: { width: 256, borderWidth: 0.5, borderColor: "#e5e7eb", padding: 6, marginBottom: 6 },
+  cardFrame: {
+    width: 242,
+    height: 242,
+    backgroundColor: "#f3f4f6",
+    borderWidth: 0.5,
+    borderColor: "#e5e7eb",
+    padding: 4,
+    marginBottom: 4,
+  },
+  cardImage: { width: 232, height: 232, objectFit: "contain" },
   cardTitle: { fontSize: 9, fontWeight: 700 },
   small: { fontSize: 8, color: "#6b7280", lineHeight: 1.35 },
   tableHead: {
@@ -217,7 +237,9 @@ function ProjectPage({ project, generatedAt }: { project: ProjectReport; generat
       {project.sourcePhotos.length > 0 ? (
         <View style={styles.photoRow}>
           {project.sourcePhotos.map((image, i) => (
-            <Pic key={i} image={image} style={styles.photo} />
+            <View key={i} style={styles.photoFrame}>
+              <Pic image={image} style={styles.photo} />
+            </View>
           ))}
         </View>
       ) : (
@@ -268,7 +290,9 @@ function ProjectPage({ project, generatedAt }: { project: ProjectReport; generat
           {project.compositions.map((composition) => (
             <View key={composition.slot} style={styles.card} wrap={false}>
               {composition.image ? (
-                <Pic image={composition.image} style={styles.cardImage} />
+                <View style={styles.cardFrame}>
+                  <Pic image={composition.image} style={styles.cardImage} />
+                </View>
               ) : (
                 <Text style={styles.small}>No image generated.</Text>
               )}
