@@ -129,17 +129,91 @@ export async function createProductStudioProject(args: {
   return project.id;
 }
 
-export async function listProductStudioProjects(filter: { batchId?: string | null } = {}) {
+export const PROJECT_SORT_KEYS = ["updated", "created", "title", "status", "product"] as const;
+export type ProjectSortKey = (typeof PROJECT_SORT_KEYS)[number];
+
+export function parseProjectSort(value: string | undefined): ProjectSortKey | undefined {
+  return PROJECT_SORT_KEYS.includes(value as ProjectSortKey)
+    ? (value as ProjectSortKey)
+    : undefined;
+}
+
+/** Every branch ends with id so paging and re-renders are deterministic. */
+function projectOrderBy(
+  sort: ProjectSortKey | undefined,
+  dir: "asc" | "desc",
+  batch: boolean,
+): Prisma.ProductStudioProjectOrderByWithRelationInput[] {
+  switch (sort) {
+    case "created":
+      return [{ createdAt: dir }, { id: "asc" }];
+    case "title":
+      return [{ title: dir }, { id: "asc" }];
+    case "status":
+      return [{ status: dir }, { id: "asc" }];
+    case "product":
+      // A relation field cannot take a nulls placement; unlinked projects
+      // sort as the database decides.
+      return [{ product: { name: dir } }, { id: "asc" }];
+    case "updated":
+      return [{ updatedAt: dir }, { id: "asc" }];
+    default:
+      // A batch lists in the order it was created so it reads top to bottom;
+      // otherwise the most recently worked-on project first.
+      return batch ? [{ createdAt: "asc" }, { id: "asc" }] : [{ updatedAt: "desc" }, { id: "asc" }];
+  }
+}
+
+export async function listProductStudioProjects(
+  filter: { batchId?: string | null; sort?: ProjectSortKey; dir?: "asc" | "desc" } = {},
+) {
   return prisma.productStudioProject.findMany({
     where: filter.batchId ? { batchId: filter.batchId } : undefined,
-    // A batch lists in the order it was created so it reads top to bottom.
-    orderBy: { createdAt: filter.batchId ? "asc" : "desc" },
+    orderBy: projectOrderBy(filter.sort, filter.dir ?? "asc", Boolean(filter.batchId)),
     take: 100,
     include: {
       product: { select: { id: true, name: true, sku: true } },
+      // Small per-asset rows for the list's photo, approval and publish
+      // counts (2026-10-26); never the bytes.
+      assets: {
+        select: {
+          kind: true,
+          status: true,
+          compositionSlot: true,
+          revision: true,
+          publishedAt: true,
+        },
+      },
       _count: { select: { assets: true, researchSources: true, compositions: true } },
     },
   });
+}
+
+/** Counts the list and the report both show for a project. */
+export function summarizeProjectAssets(
+  assets: readonly {
+    kind: string;
+    status: string;
+    compositionSlot: number | null;
+    revision: number;
+    publishedAt: Date | null;
+  }[],
+): { sourceCount: number; approvedSlots: number; publishedSlots: number } {
+  const latest = new Map<number, (typeof assets)[number]>();
+  for (const asset of assets) {
+    if (asset.kind !== "generated" || asset.compositionSlot == null) continue;
+    const current = latest.get(asset.compositionSlot);
+    if (!current || asset.revision > current.revision) latest.set(asset.compositionSlot, asset);
+  }
+  return {
+    sourceCount: assets.filter((asset) => asset.kind === "source").length,
+    approvedSlots: [...latest.values()].filter((asset) => asset.status === "approved").length,
+    publishedSlots: new Set(
+      assets
+        .filter((asset) => asset.kind === "generated" && asset.publishedAt)
+        .map((asset) => asset.compositionSlot),
+    ).size,
+  };
 }
 
 export async function getProductStudioProject(id: string) {

@@ -75,6 +75,16 @@ Admin step in §5.5; the review workflow itself still publishes nothing.
   project. One photo is usually enough; three or four from different angles are better.
 - **Stepping through.** A project in a batch shows "n of N" with previous and next links, and the
   Studio list filtered by `?batch=` shows the batch with its first project to open.
+- **Two layouts and a summary report (product owner, 2026-10-26).** The Studio list offers the
+  cards or a condensed list that sorts in the database by project, catalogue product, status,
+  updated and created; photos, approved, on-store and source counts are derived after the query
+  and are not sortable. Every card and row has a checkbox; "Summary report" opens a PDF at
+  `/api/product-studio/report?id=…` with a cover and one section per project, starting on its own
+  page: identity, market range, authoritative photographs, listing copy, the four compositions
+  with review, QA and publishing state and the latest draft of each, price observations, publishing
+  history, warnings and sources. Read-only, the same two permissions as the Studio pages, audited
+  as `export.product_studio.report`, up to fifty projects. WebP photographs cannot be embedded and
+  are noted rather than shown.
 
 ## 3. What “most effective” means
 
