@@ -19,17 +19,23 @@
  *   5. A pre-write read of the live product must succeed. Without it there is
  *      no record to restore from.
  *
- * One project per explicit user action, items sent one after another, and the
- * run stops at the first failure. There is no scheduler, no bulk path and no
- * Inngest function in this file, so no code path can rewrite a catalogue
- * without a human pressing a button each time.
+ * One project per call, items sent one after another, and the run stops at
+ * the first failure. There is no scheduler, no bulk path and no Inngest
+ * function in this file. Two callers exist: the publish server actions (a
+ * person pressing "Publish" on one project), and since 2026-10-27 the
+ * unattended-run publish module, autopilot-publish.ts, which calls this once
+ * per product at the end of that product's run, only when the run's frozen
+ * settings ask for publishing, under an Approval row the Super Admin wrote
+ * when creating the run, and with that person's permissions re-read from the
+ * database at the moment of publishing. Every gate below applies to both.
  *
  * Only an image is added, and only the description is replaced. Name, price,
  * SKU, inventory, visibility, the thumbnail and existing images are untouched,
  * and the client module offers no method that could change them.
  *
  * READ-ONLY helpers live in publish-read.ts so a page render never loads this
- * module. Only the publish server actions may import this file.
+ * module. Only the publish server actions and autopilot-publish.ts may import
+ * this file.
  */
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";

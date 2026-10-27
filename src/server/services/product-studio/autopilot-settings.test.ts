@@ -8,6 +8,7 @@ import {
   estimateMaxImages,
   MAX_RUN_PRODUCTS,
   parseAutopilotSettings,
+  publishesToStore,
 } from "./autopilot-settings";
 import { MAX_BATCH_SIZE } from "./bulk";
 
@@ -57,10 +58,26 @@ describe("unattended run settings", () => {
     expect(() => autopilotSettingsFromForm(text)).toThrow(/enter a number/);
   });
 
-  it("refuses a publish mode other than none until publishing from runs ships", () => {
+  it("accepts the four publish modes and the two description modes, and nothing else", () => {
+    for (const publishMode of ["none", "images", "images_and_description", "all"] as const) {
+      expect(
+        parseAutopilotSettings({ ...DEFAULT_AUTOPILOT_SETTINGS, publishMode }).publishMode,
+      ).toBe(publishMode);
+      expect(publishesToStore({ publishMode })).toBe(publishMode !== "none");
+    }
     expect(() =>
-      parseAutopilotSettings({ ...DEFAULT_AUTOPILOT_SETTINGS, publishMode: "images" }),
+      parseAutopilotSettings({ ...DEFAULT_AUTOPILOT_SETTINGS, publishMode: "everything" }),
     ).toThrow(/publishMode/);
+    expect(() =>
+      parseAutopilotSettings({ ...DEFAULT_AUTOPILOT_SETTINGS, descriptionMode: "always" }),
+    ).toThrow(/descriptionMode/);
+    const form = new FormData();
+    form.set("publishMode", "all");
+    form.set("descriptionMode", "fill_empty");
+    expect(autopilotSettingsFromForm(form)).toMatchObject({
+      publishMode: "all",
+      descriptionMode: "fill_empty",
+    });
   });
 
   it("estimates the worst-case spend and caps it at the run ceiling", () => {
@@ -72,8 +89,15 @@ describe("unattended run settings", () => {
 
   it("describes every setting in one line each", () => {
     const lines = describeAutopilotSettings(DEFAULT_AUTOPILOT_SETTINGS);
-    expect(lines).toHaveLength(9);
+    expect(lines).toHaveLength(10);
     expect(lines.join(" ")).toContain("80%");
     expect(lines.join(" ")).toContain("Nothing is sent to BigCommerce");
+    const publishing = describeAutopilotSettings({
+      ...DEFAULT_AUTOPILOT_SETTINGS,
+      publishMode: "all",
+      descriptionMode: "fill_empty",
+    }).join(" ");
+    expect(publishing).toContain("make the first composition the main image");
+    expect(publishing).toContain("only where the store has none");
   });
 });

@@ -17,12 +17,26 @@ export const MAX_RUN_IMAGES = 400;
 export const MAX_PARALLEL_PRODUCTS = 4;
 
 /**
- * What the run may send to the store. Publishing from a run is wired in a
- * later release; until then the only accepted value is "none", so a run
- * finishes with approved drafts for a Super Admin to publish by hand.
+ * What the run may send to the store once a product's images are approved
+ * (2026-10-27). "none" leaves approved drafts for a Super Admin to publish by
+ * hand; "images" uploads the approved drafts; "images_and_description" also
+ * replaces the store description; "all" also makes the first composition the
+ * listing's main image. Anything but "none" needs the publish flags on when
+ * the run is created and again when each product publishes.
  */
-export const PUBLISH_MODES = ["none"] as const;
+export const PUBLISH_MODES = ["none", "images", "images_and_description", "all"] as const;
 export type PublishMode = (typeof PUBLISH_MODES)[number];
+
+/** Whether a run replaces a description the store already has, or only fills an empty one. */
+export const DESCRIPTION_MODES = ["replace", "fill_empty"] as const;
+export type DescriptionMode = (typeof DESCRIPTION_MODES)[number];
+
+export const PUBLISH_MODE_LABEL: Record<PublishMode, string> = {
+  none: "No. Leave approved drafts for a Super Admin to publish.",
+  images: "Images only: add the approved drafts to the listing.",
+  images_and_description: "Images and the full description.",
+  all: "Images, the description, and make the first composition the main image.",
+};
 
 export const autopilotSettingsSchema = z.object({
   /**
@@ -49,6 +63,7 @@ export const autopilotSettingsSchema = z.object({
   /** Stop the whole run after this many products fail one after another. */
   stopAfterConsecutiveFailures: z.number().int().min(1).max(10),
   publishMode: z.enum(PUBLISH_MODES),
+  descriptionMode: z.enum(DESCRIPTION_MODES),
   /** Open a Task for the creator listing products that need attention. */
   createTask: z.boolean(),
 });
@@ -65,8 +80,14 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   parallelProducts: 2,
   stopAfterConsecutiveFailures: 3,
   publishMode: "none",
+  descriptionMode: "replace",
   createTask: true,
 };
+
+/** Whether the settings send anything to the store. */
+export function publishesToStore(settings: Pick<AutopilotSettings, "publishMode">): boolean {
+  return settings.publishMode !== "none";
+}
 
 export class AutopilotSettingsError extends Error {
   constructor(message: string) {
@@ -100,7 +121,9 @@ function numberField(form: FormData, name: string, fallback: number, percent = f
  */
 export function autopilotSettingsFromForm(form: FormData): AutopilotSettings {
   const d = DEFAULT_AUTOPILOT_SETTINGS;
-  const publishMode = String(form.get("publishMode") ?? d.publishMode);
+  const publishMode = String(form.get("publishMode") ?? d.publishMode) || d.publishMode;
+  const descriptionMode =
+    String(form.get("descriptionMode") ?? d.descriptionMode) || d.descriptionMode;
   return parseAutopilotSettings({
     minImageScore: numberField(form, "minImageScore", d.minImageScore, true),
     maxRegenerationsPerSlot: numberField(
@@ -124,6 +147,7 @@ export function autopilotSettingsFromForm(form: FormData): AutopilotSettings {
       d.stopAfterConsecutiveFailures,
     ),
     publishMode,
+    descriptionMode,
     createTask: form.get("createTask") === "1",
   });
 }
@@ -151,7 +175,16 @@ export function describeAutopilotSettings(settings: AutopilotSettings): string[]
     `Stop the run after ${settings.stopAfterConsecutiveFailures} consecutive product failures.`,
     settings.publishMode === "none"
       ? "Nothing is sent to BigCommerce; approved drafts wait for a Super Admin to publish."
-      : `Publish mode: ${settings.publishMode}.`,
+      : settings.publishMode === "images"
+        ? "Once a product's images are approved, publish them to its BigCommerce listing."
+        : settings.publishMode === "images_and_description"
+          ? "Once a product's images are approved, publish them and the full description to its BigCommerce listing."
+          : "Once a product's images are approved, publish them and the full description to its BigCommerce listing, and make the first composition the main image.",
+    settings.publishMode === "none"
+      ? "The store description is not touched."
+      : settings.descriptionMode === "replace"
+        ? "The store description is replaced."
+        : "The store description is written only where the store has none.",
     settings.createTask
       ? "Open a Task for products that need attention."
       : "No Task is opened; the run page is the record.",

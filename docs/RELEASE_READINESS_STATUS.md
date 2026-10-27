@@ -358,8 +358,10 @@ Recorded here for explicit sign-off. Source: `docs/20_PHASE_11_DEPLOYMENT_READIN
   seeded off, and a Super Admin-only permission. Neither is enabled in any environment until
   `GATE-10` is accepted. Since 2026-10-27 Product Studio also has unattended runs
   (`docs/27_PRODUCT_STUDIO.md` §5.6) behind `product_studio.autopilot`, seeded off and in the kill
-  set: they spend on research and images and approve drafts without a person, but send nothing to
-  a store, and their publish setting accepts only `none`.
+  set: they spend on research and images and approve drafts without a person, and, when a run is
+  created with a publish mode, publish a product's approved content through the same publish
+  service and gates once its images are approved. A publishing run cannot be created while the
+  publish flags are off, so no environment publishes anything until `GATE-10` is accepted.
 - QuickBooks write-backs.
 - Supplier order submission.
 - Investor material distribution.

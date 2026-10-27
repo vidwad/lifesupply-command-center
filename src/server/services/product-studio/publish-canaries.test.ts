@@ -209,8 +209,12 @@ describe("the publish service is gated, logged and single-shot", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("is imported by the publish actions and nothing else", () => {
-    const allowed = new Set([ACTIONS]);
+  it("is imported by the publish actions and the unattended-run publish module, and nothing else", () => {
+    // autopilot-publish.ts (2026-10-27) is the one background caller: once
+    // per product at the end of its run, under the run's Approval row, with
+    // the creator's permissions re-read from the database. Its own canaries
+    // in autopilot-canaries.test.ts hold that shape.
+    const allowed = new Set([ACTIONS, "src/server/services/product-studio/autopilot-publish.ts"]);
     const offenders: string[] = [];
     for (const file of allSource()) {
       if (file.endsWith(SELF)) continue;

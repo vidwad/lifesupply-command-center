@@ -161,7 +161,7 @@ specification for `new_sealed`. Fabricated identifiers are a defect in both.
 | Prompt injection | Web pages are labelled untrusted data; their instructions must be ignored. |
 | Source verification | Cited seller domains are validated against actual web-search tool evidence (tool calls and URL-citation annotations only — a URL the model merely wrote is not evidence). Since 2026-10-26 a citation whose domain is not in the evidence is **removed** rather than failing the whole research: the source and its price observations are dropped, the market range is recomputed from what remains, the dropped domains are recorded in the project's warnings and in the AI output record, and the benchmark listing is reassigned to a verified source. Research still fails if no verified source or no verified price observation remains, and the failure names the domains the evidence did cover. |
 | Provenance | Seller URLs, price observations, prompts, model names, hashes, actors, and timestamps are stored. |
-| External actions | One, added 2026-10-22: publishing upload-approved images and the full description to the linked BigCommerce product (§5.5). Social publishing stays out of scope. |
+| External actions | One, added 2026-10-22: publishing upload-approved images and the full description to the linked BigCommerce product (§5.5), by a Super Admin on the publishing card or, since 2026-10-27, by an unattended run that Super Admin created with a publish mode (§5.6). Social publishing stays out of scope. |
 | Human review | Generated assets remain `needs_review` or `rejected` until a permitted user acts, except inside an unattended run (§5.6), where the run approves or rejects each draft from its QA scores and stamps the draft `autoReviewedAt` so the two kinds of review are never confused. |
 | Unattended runs | `product_studio.autopilot`, default off, in the kill set, on top of the Studio and image-generation flags; creation and cancellation need the Super Admin-only publish permission; every step re-checks the flags; an Approval row records the creation; `autopilot-canaries.test.ts` holds the structure (§5.6). |
 | Audit | Project creation, research queue/result/failure, generation queue/result/failure, and review are logged. |
@@ -259,8 +259,22 @@ creator is no longer an active user.
 | Image ceiling | 80 (cap 400) | Counted before each generation across the run; once reached, remaining products are marked for attention rather than generated. |
 | Products at a time | 2 (cap 4) | Lanes worked in parallel. |
 | Stop after consecutive failures | 3 | A provider outage stops the run rather than failing every product. |
-| Publish to BigCommerce | none | The only value accepted in this release. Nothing is sent to a store; approved drafts wait on the publishing card. |
+| Publish to BigCommerce | none | `none` leaves approved drafts for the publishing card. `images` adds the approved drafts to the listing; `images_and_description` also replaces the store description; `all` also makes the first composition the main image. Any mode but `none` needs `product_studio.publish` and `external.writebacks` on when the run is created and again when each product publishes. |
+| Store description | replace | With a publishing mode that includes the description: replace what the store has, or write it only where the store's description is empty. |
 | Open a Task | yes | On completion, a Task for the creator lists the products needing attention. |
+
+**Publishing from a run.** When the mode is not `none`, a product whose requested images are all
+approved goes through `autopilot-publish.ts`, the one module outside the publish server actions that
+may call the publish service, and the only way content reaches a store without a person pressing
+"Publish" on that project. In order: the run's Approval row must exist and be approved; the creator
+must hold the publish permission *now*, read from the roles tables rather than from any snapshot;
+the publish flags must be on; then the module sets the marks a Super Admin would set on the
+publishing card (each approved, unpublished latest draft up to the requested slot count; the
+description when the mode and the store's current text allow; the first composition as main image
+under `all`) and calls `publishProductStudioProject` once, which writes its log row before every
+request and stops at the first failure as always. A refusal or failure marks the product for
+attention with the reason and is not retried by the run; what did publish stays published and the
+publishing card shows the rest. Each product's publish history is the record.
 
 **How it runs.** Two worker functions. The run function marks the run running and sends one event
 per lane. The item function performs ONE step (research; one image with its QA review; one review
@@ -291,10 +305,12 @@ failure rule trips, or when the creator is deactivated; `stopReason` says which.
 
 **Canaries.** `autopilot-canaries.test.ts`: the permission on creation and cancellation in action
 and service; three flags at creation, start and every step; Approval and audit; spend counted before
-each generation; no import of the publish service or the BigCommerce client anywhere in the run
-code; publish mode fixed to `none`; automatic reviews stamped; the manual workflow's five guards;
-worker functions thin and serialised per item; pages reading only the read-only module.
-`chokepoints.test.ts` lists the service and the kill-set flag.
+each generation; the publish service imported only by `autopilot-publish.ts`, which never touches
+the BigCommerce client, checks approval, then current permissions, then flags before any mark, and
+calls the publish service exactly once from the completion step; automatic reviews stamped; the
+manual workflow's five guards; worker functions thin and serialised per item; pages reading only the
+read-only module. `publish-canaries.test.ts` names `autopilot-publish.ts` as the second permitted
+importer of the publish service. `chokepoints.test.ts` lists the service and the kill-set flag.
 
 ## 6. Data model
 
@@ -420,8 +436,6 @@ Build social output only after this review workflow passes staging UAT. The next
 - Move image bytes to private object storage and define lifecycle/retention policy.
 - Add per-user and per-project generation budgets, provider cost estimates, and spend alerts. An
   unattended run has its own image ceiling and failure rule (§5.6), but no money figure.
-- Publishing from an unattended run: the `publishMode` setting accepts only `none` until the
-  publish step is wired behind the publish flags with its own canaries.
 - A stuck-lane sweep for unattended runs: if the worker dies mid-step and the retry also fails, the
   item stays in progress and the run never closes; today that is read off the run page and the run
   is stopped by hand.

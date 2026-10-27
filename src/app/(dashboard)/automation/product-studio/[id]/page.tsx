@@ -95,6 +95,7 @@ export default async function ProductStudioRunPage({ params }: Props) {
                     <TH align="right">Images</TH>
                     <TH align="right">Regen.</TH>
                     <TH align="right">Approved</TH>
+                    <TH align="right">Published</TH>
                     <TH>Note</TH>
                   </tr>
                 </THead>
@@ -134,6 +135,9 @@ export default async function ProductStudioRunPage({ params }: Props) {
                       </TD>
                       <TD align="right" className="tabular-nums">
                         {item.approvedSlots}
+                      </TD>
+                      <TD align="right" className="tabular-nums">
+                        {item.publishedItems}
                       </TD>
                       <TD className="max-w-md text-xs text-muted-foreground">{item.note ?? "—"}</TD>
                     </TR>
@@ -185,8 +189,9 @@ export default async function ProductStudioRunPage({ params }: Props) {
                 </p>
               ) : null}
               <p className="text-xs text-muted-foreground">
-                Nothing in this run was sent to a store. Approved drafts wait on each project&apos;s
-                publishing card for a Super Admin.
+                {settings.publishMode === "none"
+                  ? "Nothing in this run was sent to a store. Approved drafts wait on each project's publishing card for a Super Admin."
+                  : "Products whose images were approved were published through the same service and gates as the publishing card; each project's publish history lists every request. A refused or failed publish is marked for attention and is not retried."}
               </p>
             </CardContent>
           </Card>
