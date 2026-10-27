@@ -49,6 +49,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261026180000_product_studio_batches",
   // Product Studio main image choice (product owner, 2026-10-26).
   "20261026210000_product_studio_main_image",
+  // Product Studio unattended runs (product owner, 2026-10-27).
+  "20261027120000_product_studio_autopilot",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */

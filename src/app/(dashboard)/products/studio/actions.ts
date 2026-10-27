@@ -163,6 +163,30 @@ export async function bulkCreateProjectsAction(
   redirect(`/products/studio?batch=${batchId}`);
 }
 
+/**
+ * Opens the selected products as a batch and continues to the unattended-run
+ * form for it (2026-10-27). Creation only, like the action above: the run
+ * itself starts when that form is submitted. Super Admin only.
+ */
+export async function bulkAutopilotAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  await requirePermission(PERMISSIONS.PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE);
+  const productIds = formData
+    .getAll("productId")
+    .filter((value): value is string => typeof value === "string");
+  let batchId: string;
+  try {
+    ({ batchId } = await createProductStudioBatch({ actorUserId: user.id, productIds }));
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath("/products/studio");
+  redirect(`/automation/product-studio/new?batch=${batchId}`);
+}
+
 export async function updateSourcePhotosAction(
   _previous: ProductStudioActionState,
   formData: FormData,

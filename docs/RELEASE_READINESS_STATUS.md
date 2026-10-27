@@ -356,7 +356,10 @@ Recorded here for explicit sign-off. Source: `docs/20_PHASE_11_DEPLOYMENT_READIN
   2026-10-22, Product Studio publishing of upload-approved images and the full description
   (`docs/27_PRODUCT_STUDIO.md` §5.5). Each is behind `external.writebacks` plus its own flag, all
   seeded off, and a Super Admin-only permission. Neither is enabled in any environment until
-  `GATE-10` is accepted.
+  `GATE-10` is accepted. Since 2026-10-27 Product Studio also has unattended runs
+  (`docs/27_PRODUCT_STUDIO.md` §5.6) behind `product_studio.autopilot`, seeded off and in the kill
+  set: they spend on research and images and approve drafts without a person, but send nothing to
+  a store, and their publish setting accepts only `none`.
 - QuickBooks write-backs.
 - Supplier order submission.
 - Investor material distribution.

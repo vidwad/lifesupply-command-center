@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission } from "@/server/permissions";
 import { getFeatureFlags } from "@/server/services/feature-flags";
@@ -236,6 +236,43 @@ export default async function ProductStudioDetailPage({ params }: Props) {
           </div>
         }
       />
+
+      {project.autopilotRun ? (
+        <div className="px-6 pt-6">
+          <div
+            className={
+              ["queued", "running"].includes(project.autopilotRun.status)
+                ? "flex flex-wrap items-center gap-3 rounded-lg border border-warning/50 bg-warning/10 px-4 py-3 text-sm"
+                : "flex flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-3 text-sm"
+            }
+          >
+            <Wrench className="h-4 w-4 shrink-0" />
+            <p>
+              {["queued", "running"].includes(project.autopilotRun.status) ? (
+                <>
+                  <span className="font-medium">An unattended run is processing this project.</span>{" "}
+                  <span className="text-muted-foreground">
+                    Research, generation, review and deletion are unavailable until it finishes or
+                    is stopped.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-medium">Processed by an unattended run</span>{" "}
+                  <span className="text-muted-foreground">
+                    on {formatDateTime(project.autopilotRun.createdAt)}. Drafts marked
+                    &ldquo;automatic&rdquo; were approved or rejected from their QA scores, not by a
+                    person.
+                  </span>
+                </>
+              )}
+            </p>
+            <Button asChild size="sm" variant="outline" className="ml-auto">
+              <Link href={`/automation/product-studio/${project.autopilotRun.id}`}>Open run</Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {project.batchId && batchIndex >= 0 ? (
         <div className="px-6 pt-6">
@@ -525,9 +562,17 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                                 </p>
                                 <h3 className="font-semibold">{composition.name}</h3>
                               </div>
-                              <Badge variant="outline">
+                              <Badge
+                                variant="outline"
+                                title={
+                                  asset?.autoReviewedAt
+                                    ? "Reviewed automatically by an unattended run from its QA scores"
+                                    : undefined
+                                }
+                              >
                                 {(asset?.status ?? composition.status).replaceAll("_", " ")}
                                 {asset && asset.revision > 1 ? ` · r${asset.revision}` : ""}
+                                {asset?.autoReviewedAt ? " · automatic" : ""}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">{composition.rationale}</p>

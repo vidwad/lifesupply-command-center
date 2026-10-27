@@ -78,6 +78,9 @@ async function checkFeatureFlags(): Promise<Check> {
     // Writes Product Studio images and descriptions to a BigCommerce product
     // (2026-10-22); kill-switch covered, so the probe observes it.
     FEATURE_FLAGS.PRODUCT_STUDIO_PUBLISH,
+    // Lets a run spend on research and images and approve drafts without a
+    // person (2026-10-27); kill-switch covered, so the probe observes it.
+    FEATURE_FLAGS.PRODUCT_STUDIO_AUTOPILOT,
     // Future BigCommerce sale-price writebacks (DP-1 ships no write path);
     // kill-switch covered, so the probe observes it from day one.
     FEATURE_FLAGS.PRICING_WRITEBACKS,

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PERMISSIONS } from "@/lib/permissions";
-import { requirePermission } from "@/server/permissions";
+import { requirePermission, userHasPermission } from "@/server/permissions";
 import {
   listProductStudioProjects,
   parseProjectSort,
@@ -42,8 +42,10 @@ export default async function ProductStudioPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requirePermission(PERMISSIONS.PRODUCTS_UPDATE);
+  const user = await requirePermission(PERMISSIONS.PRODUCTS_UPDATE);
   await requirePermission(PERMISSIONS.AI_USE);
+  // Unattended runs (2026-10-27) take the Super Admin-only publish permission.
+  const canAutopilot = userHasPermission(user, PERMISSIONS.PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE);
   const params = await searchParams;
   const batchId = params.batch?.trim() || null;
   // Two layouts (2026-10-26): the cards, and a condensed list that sorts in
@@ -133,7 +135,9 @@ export default async function ProductStudioPage({
           </div>
         ) : null}
 
-        {projects.length > 0 ? <ReportBar total={projects.length} /> : null}
+        {projects.length > 0 ? (
+          <ReportBar total={projects.length} canAutopilot={canAutopilot} />
+        ) : null}
 
         {projects.length === 0 ? (
           <EmptyState

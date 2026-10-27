@@ -65,7 +65,8 @@ describe("the strip is wired where copy is written, shown and published", () => 
     expect(prompt).toContain("must contain NO URLs, hyperlinks, markdown links, citations");
   });
   it("the research worker strips the listing before storing it", () => {
-    const worker = stripComments(read("src/server/inngest/functions/product-studio/process.ts"));
+    // The body moved to the shared job service on 2026-10-27; the worker wraps it.
+    const worker = stripComments(read("src/server/services/product-studio/jobs.ts"));
     expect(worker).toContain("stripListingCopyLinks(research.optimizedListing)");
     expect(worker).toContain("longDescription: listing.longDescription");
     expect(worker).not.toContain("longDescription: research.optimizedListing.longDescription");

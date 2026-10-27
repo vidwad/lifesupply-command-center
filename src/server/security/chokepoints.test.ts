@@ -108,6 +108,21 @@ const CHOKEPOINTS: Chokepoint[] = [
       "productStudioPublishLog.create",
     ],
   },
+  {
+    capability: "Product Studio unattended runs",
+    file: "server/services/product-studio/autopilot.ts",
+    // The first path that spends and approves without a person pressing a
+    // button each time (2026-10-27): three flags through the shared checker
+    // at creation, start and every step, the Super Admin-only permission
+    // re-asserted in the service, an Approval row, and an audit on every
+    // outcome. autopilot-canaries.test.ts holds the rest.
+    mustContain: [
+      "flagsBlockingAutopilot()",
+      "PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE",
+      'approvalType: "product_studio_autopilot"',
+      "writeAudit",
+    ],
+  },
 ];
 
 describe("high-risk chokepoints stay wired", () => {
@@ -143,6 +158,7 @@ describe("high-risk chokepoints stay wired", () => {
       "INVESTOR_DISTRIBUTION",
       "PRODUCT_STUDIO_IMAGE_GENERATION",
       "PRODUCT_STUDIO_PUBLISH",
+      "PRODUCT_STUDIO_AUTOPILOT",
       "PRICING_WRITEBACKS",
     ]) {
       expect(killSwitch, `kill switch must include ${flag}`).toContain(flag);
