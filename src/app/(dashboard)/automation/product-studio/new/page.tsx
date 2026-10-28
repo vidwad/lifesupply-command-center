@@ -90,6 +90,7 @@ export default async function NewProductStudioRunPage({
                 projectIds={eligible.map((project) => project.id)}
                 disabledReason={disabledReason}
                 publishAvailable={publishFlags.enabled}
+                unlinkedCount={eligible.filter((project) => !project.product).length}
               />
             </CardContent>
           </Card>

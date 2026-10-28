@@ -368,7 +368,7 @@ export async function getProductStudioAsset(id: string) {
  * a person's research, generation, review or deletion landing in between
  * would be acted on, or deleted under, by the worker.
  */
-async function assertNotUnderAutopilot(
+export async function assertNotUnderAutopilot(
   project: { autopilotRunId: string | null },
   what: string,
 ): Promise<void> {

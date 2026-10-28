@@ -46,6 +46,28 @@ export default async function NewProductStudioPage({ searchParams }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {productId && !product ? (
+              <p
+                role="alert"
+                className="mb-4 rounded-md border border-warning/50 bg-warning/10 px-3 py-2 text-sm"
+              >
+                The catalogue product this page was opened from no longer exists, so the project
+                will be created without a link and cannot publish to a store listing. Open the
+                product again from the Products list to link it.
+              </p>
+            ) : product ? (
+              <p className="mb-4 text-sm text-muted-foreground">
+                Linked to <span className="font-medium text-foreground">{product.name}</span>
+                {product.sku ? ` (${product.sku})` : ""}. Approved drafts can be published to its
+                store listing.
+              </p>
+            ) : (
+              <p className="mb-4 text-sm text-muted-foreground">
+                No catalogue product is linked. The project can be researched and reviewed, but
+                nothing can be published from it until it is linked on its project page. To start
+                linked, open the product from the Products list instead.
+              </p>
+            )}
             {enabled ? (
               <ProductStudioIntakeForm
                 productId={product?.id}
