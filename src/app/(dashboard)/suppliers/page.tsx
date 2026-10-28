@@ -31,7 +31,7 @@ export default async function SuppliersPage({
         breadcrumb={`${suppliers.length} ${suppliers.length === 1 ? "supplier" : "suppliers"}`}
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <form action="/suppliers" className="flex justify-end">
           <input
             type="search"

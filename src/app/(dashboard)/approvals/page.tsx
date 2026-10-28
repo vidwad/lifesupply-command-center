@@ -75,7 +75,7 @@ export default async function ApprovalsPage({
         breadcrumb={`${approvals.length} ${approvals.length === 1 ? "item" : "items"} • ${tabs.find((t) => t.key === view)?.label.toLowerCase()}`}
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {/* Tabs */}
         <div className="flex flex-wrap items-center gap-2">
           {tabs.map((t) => {

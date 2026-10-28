@@ -26,7 +26,7 @@ export default async function NewOpportunityPage() {
           </Link>
         }
       />
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <Card className="max-w-3xl">
           <CardHeader>
             <CardTitle>Opportunity details</CardTitle>

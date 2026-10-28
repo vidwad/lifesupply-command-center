@@ -32,7 +32,7 @@ export default async function PricingCompetitorsPage() {
         }
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Registered competitors</CardTitle>

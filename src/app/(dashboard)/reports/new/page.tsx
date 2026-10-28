@@ -27,7 +27,7 @@ export default async function NewReportPage() {
           </Link>
         }
       />
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <Card className="max-w-xl">
           <CardHeader>
             <CardTitle>Source data</CardTitle>

@@ -86,7 +86,7 @@ export default async function CustomersPage({
         }
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <div className="flex flex-wrap items-center gap-2">
           {TYPE_FILTERS.map((f) => {
             const isActive = activeType === f.value;

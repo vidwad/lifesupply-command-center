@@ -128,7 +128,7 @@ export default async function CapitalRaiseDetailPage({ params }: Props) {
         }
       />
 
-      <div className="grid gap-6 p-6 lg:grid-cols-3">
+      <div className="grid gap-6 p-4 md:p-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>

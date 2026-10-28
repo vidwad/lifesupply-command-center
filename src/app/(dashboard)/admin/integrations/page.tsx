@@ -88,7 +88,7 @@ export default async function IntegrationsSettingsPage() {
         }
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {!isVaultEnabled && (
           <Card className="border-warning/50 bg-warning/5">
             <CardHeader className="pb-3">

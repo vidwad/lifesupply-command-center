@@ -32,7 +32,7 @@ export default async function NewPublicContentPage({
           </Link>
         }
       />
-      <div className="max-w-4xl p-6">
+      <div className="max-w-4xl p-4 md:p-6">
         <ContentForm
           editable
           values={{

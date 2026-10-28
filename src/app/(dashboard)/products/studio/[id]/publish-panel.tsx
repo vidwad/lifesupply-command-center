@@ -326,7 +326,7 @@ export function PublishPanel({
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Full description
           </p>
-          <div className="flex items-start gap-3 rounded-md border p-2">
+          <div className="flex flex-col gap-3 rounded-md border p-2 sm:flex-row sm:items-start">
             <div className="min-w-0 flex-1">
               {description.present ? (
                 <>

@@ -34,7 +34,7 @@ export default async function PricingUploadPage() {
           </Link>
         }
       />
-      <div className="mx-auto max-w-3xl p-6">
+      <div className="mx-auto max-w-3xl p-4 md:p-6">
         <Card>
           <CardHeader>
             <CardTitle>Upload a list</CardTitle>

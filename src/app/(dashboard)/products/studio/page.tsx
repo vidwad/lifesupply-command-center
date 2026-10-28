@@ -114,7 +114,7 @@ export default async function ProductStudioPage({
           </div>
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {batchId ? (
           <div className="flex flex-wrap items-center gap-3 rounded-md border bg-card p-4 text-sm">
             <p>

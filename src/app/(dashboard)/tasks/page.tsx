@@ -83,7 +83,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         }
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {/* Tabs */}
         <div className="flex flex-wrap items-center gap-2">
           {tabs.map((t) => {

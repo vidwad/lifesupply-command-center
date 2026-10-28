@@ -36,7 +36,7 @@ export default async function NewProductStudioPage({ searchParams }: Props) {
           </Link>
         }
       />
-      <div className="mx-auto grid max-w-5xl gap-6 p-6 lg:grid-cols-[1fr_320px]">
+      <div className="mx-auto grid max-w-5xl gap-6 p-4 md:p-6 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardHeader>
             <CardTitle>Product intake</CardTitle>

@@ -39,4 +39,11 @@ describe("the app shell keeps a navigation route on narrow screens", () => {
     const sidebar = read("SidebarNav.tsx");
     expect(sidebar.match(/onClick=\{onNavigate\}/g)?.length).toBe(2);
   });
+
+  it("the page header stacks its title above its actions below `sm`", () => {
+    const header = read("PageHeader.tsx");
+    expect(header).toContain("flex flex-col gap-3 sm:flex-row");
+    expect(header).toContain('className="min-w-0 sm:flex-1"');
+    expect(header).toContain("px-4 py-4 md:px-6 md:py-5");
+  });
 });

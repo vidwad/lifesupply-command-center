@@ -63,7 +63,7 @@ export default async function InquiryQueuePage({
           </>
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {!ready && (
           <p className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
             The inquiry table has not been provisioned (the Stage 7 migration is prepared and not

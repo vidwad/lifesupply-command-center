@@ -50,7 +50,7 @@ export default async function ForecastingPage() {
         }
       />
 
-      <div className="grid gap-6 p-6 lg:grid-cols-3">
+      <div className="grid gap-6 p-4 md:p-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card>
             <CardHeader>
@@ -62,7 +62,7 @@ export default async function ForecastingPage() {
             </CardHeader>
             <CardContent className="p-0">
               {scenarios.length === 0 ? (
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                   <EmptyState
                     icon={TrendingUp}
                     title="No scenarios yet"

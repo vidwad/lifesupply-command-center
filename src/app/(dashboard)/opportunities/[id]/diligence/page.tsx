@@ -88,7 +88,7 @@ export default async function OpportunityDiligencePage({ params }: Props) {
         }
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {summary.total > 0 && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <SummaryStat label="Items" value={summary.total} />

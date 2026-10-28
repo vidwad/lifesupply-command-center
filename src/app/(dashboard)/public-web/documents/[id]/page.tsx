@@ -71,7 +71,7 @@ export default async function PublicDocumentEditorPage({
           </Badge>
         }
       />
-      <div className="grid gap-8 p-6 xl:grid-cols-[1fr_20rem]">
+      <div className="grid gap-8 p-4 md:p-6 xl:grid-cols-[1fr_20rem]">
         <div className="max-w-3xl">
           <DocumentForm
             editable={EDITABLE_STATUSES.includes(row.status)}

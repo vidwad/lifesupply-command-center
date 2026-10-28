@@ -238,7 +238,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
       />
 
       {project.autopilotRun ? (
-        <div className="px-6 pt-6">
+        <div className="px-4 pt-4 md:px-6 md:pt-6">
           <div
             className={
               ["queued", "running"].includes(project.autopilotRun.status)
@@ -275,7 +275,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
       ) : null}
 
       {project.batchId && batchIndex >= 0 ? (
-        <div className="px-6 pt-6">
+        <div className="px-4 pt-4 md:px-6 md:pt-6">
           <nav
             aria-label="Batch"
             className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-4 py-3 text-sm"
@@ -322,7 +322,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
       ) : null}
 
       {cleanLongDescription || project.compositions.length > 0 ? (
-        <div className="px-6 pt-6">
+        <div className="px-4 pt-4 md:px-6 md:pt-6">
           <details className="rounded-lg border bg-card">
             <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
               Full product description
@@ -407,7 +407,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
           </details>
         </div>
       ) : null}
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {project.errorMessage ? (
           <div className="flex gap-3 rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
             <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
@@ -807,7 +807,7 @@ export default async function ProductStudioDetailPage({ params }: Props) {
                 </p>
                 {!hasSourcePhotos && ["draft", "failed"].includes(project.status) ? (
                   <p className="text-sm text-muted-foreground">
-                    Add at least one photograph in the card to the left before researching.
+                    Add at least one photograph in the source photographs card before researching.
                   </p>
                 ) : null}
                 {canResearch ? (

@@ -73,7 +73,7 @@ export default async function AgentRunDetailPage({ params }: Props) {
         }
       />
 
-      <div className="grid gap-6 p-6 lg:grid-cols-3">
+      <div className="grid gap-6 p-4 md:p-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {run.errorSummary && (
             <Card className="border-destructive/40 bg-destructive/5">
