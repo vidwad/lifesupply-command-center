@@ -191,7 +191,7 @@ export default async function ProductStudioRunPage({ params }: Props) {
               <p className="text-xs text-muted-foreground">
                 {settings.publishMode === "none"
                   ? "Nothing in this run was sent to a store. Approved drafts wait on each project's publishing card for a Super Admin."
-                  : "Products whose images were approved were published through the same service and gates as the publishing card; each project's publish history lists every request. A refused or failed publish is marked for attention and is not retried."}
+                  : "Products whose images were approved were published through the same service and gates as the publishing card; each project's publish history lists every request. A product short of images that published under the run's minimum is approved, its note naming the images left out. A refused or failed publish is marked for attention and is not retried."}
               </p>
             </CardContent>
           </Card>
