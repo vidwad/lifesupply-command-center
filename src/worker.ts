@@ -27,6 +27,7 @@ import { connect } from "inngest/connect";
 import { inngest } from "@/server/inngest/client";
 import { logger } from "@/server/logger";
 import { captureException } from "@/server/logger/error-tracking";
+import { backfillReportThumbnails } from "@/server/services/product-studio/report-thumbnails";
 import {
   syncBcCustomersFull,
   syncBcCustomersIncremental,
@@ -102,6 +103,13 @@ async function main(): Promise<void> {
     { deployEnv: process.env.DEPLOY_ENV ?? "unknown" },
     "[worker] connected to Inngest, awaiting work…",
   );
+
+  // Product Studio report thumbnails for assets stored before the column
+  // existed (2026-10-28): one asset at a time in the background, idempotent,
+  // a single query once the column is full. Never blocks Inngest work.
+  void backfillReportThumbnails().catch((err) => {
+    captureException(err, { source: "worker.reportThumbnails" });
+  });
 
   // Block forever until the connection is closed (SIGINT/SIGTERM are
   // handled by the SDK automatically and trigger graceful shutdown).

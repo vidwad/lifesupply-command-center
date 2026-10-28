@@ -29,6 +29,7 @@ import { stripListingCopyLinks } from "./listing-copy";
 import { generateProductImage, qaProductImage, researchProduct } from "./openai";
 import { buildEffectivePrompt, detectAspect } from "./prompt-controls";
 import { compileProductImagePrompt } from "./prompts";
+import { reportThumbnailFor } from "./report-thumbnails";
 import { planGenerationRevision } from "./revisions";
 import type { ProductStudioQa } from "./types";
 
@@ -364,6 +365,7 @@ export async function runProductStudioGeneration(args: {
       generated,
     });
     const contentHash = createHash("sha256").update(generated.data).digest("hex");
+    const reportThumbnail = await reportThumbnailFor(generated.data, generated.contentType);
     const generatedSlots = await prisma.productStudioAsset.findMany({
       where: { projectId: project.id, kind: "generated" },
       distinct: ["compositionSlot"],
@@ -384,6 +386,7 @@ export async function runProductStudioGeneration(args: {
           contentType: generated.contentType,
           bytes: generated.data.byteLength,
           data: new Uint8Array(generated.data),
+          reportThumbnail,
           contentHash,
           width: generated.width,
           height: generated.height,

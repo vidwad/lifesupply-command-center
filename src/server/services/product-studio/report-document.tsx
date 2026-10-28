@@ -241,7 +241,17 @@ function ProjectPage({ project, generatedAt }: { project: ProjectReport; generat
               <Pic image={image} style={styles.photo} />
             </View>
           ))}
+          {project.sourcePhotosPending > 0 ? (
+            <Text style={styles.small}>
+              {project.sourcePhotosPending} not yet prepared for the report; run it again in a few
+              minutes.
+            </Text>
+          ) : null}
         </View>
+      ) : project.sourcePhotosPending > 0 ? (
+        <Text style={styles.small}>
+          Photographs not yet prepared for the report; run it again in a few minutes.
+        </Text>
       ) : (
         <Text style={styles.small}>
           {project.sourcePhotoCount === 0
@@ -293,6 +303,10 @@ function ProjectPage({ project, generatedAt }: { project: ProjectReport; generat
                 <View style={styles.cardFrame}>
                   <Pic image={composition.image} style={styles.cardImage} />
                 </View>
+              ) : composition.imagePending ? (
+                <Text style={styles.small}>
+                  Image not yet prepared for the report; run the report again in a few minutes.
+                </Text>
               ) : (
                 <Text style={styles.small}>No image generated.</Text>
               )}

@@ -4,17 +4,21 @@
  * PDF for review away from the screen.
  *
  * `summarizeProject` is pure and builds a plain snapshot from the loaded
- * rows; `buildProductStudioReport` loads the projects and attaches image
- * bytes for the latest draft of each composition and the first source
- * photographs, each shrunk to report size as it is loaded (see
- * report-images.ts for why). Nothing here writes anything.
+ * rows; `buildProductStudioReport` loads the projects and attaches the
+ * stored report thumbnail of the latest draft of each composition and of
+ * the first source photographs (report-thumbnails.ts). An asset from before
+ * thumbnails were stored is shrunk on the spot, up to a few per report so
+ * one request stays small; past that the image is reported as pending and
+ * the worker's backfill has it ready for the next run. Nothing here writes
+ * business data; the only write is that thumbnail cache.
  */
-import { getProductStudioAsset, getProductStudioProject, summarizeProjectAssets } from "./index";
+import { getProductStudioProject, summarizeProjectAssets } from "./index";
 import { stripListingLinks } from "./listing-copy";
 import { parseListingBlocks, type ListingBlock } from "./listing-format";
 import { latestGeneratedBySlot } from "./publish-eligibility";
 import { listPublishLogs } from "./publish-read";
-import { shrinkForReport } from "./report-images";
+import type { ReportImage } from "./report-images";
+import { reportImageForAsset } from "./report-thumbnails";
 import { storePriceContext, type StorePriceContext } from "./store-price";
 
 export const MAX_REPORT_PROJECTS = 50;
@@ -22,11 +26,14 @@ export const MAX_REPORT_PROJECTS = 50;
 type Loaded = NonNullable<Awaited<ReturnType<typeof getProductStudioProject>>>;
 type Logs = Awaited<ReturnType<typeof listPublishLogs>>;
 
-export type ReportImage = {
-  /** Report-sized JPEG bytes; see report-images.ts. */
-  data: Uint8Array;
-  format: "jpg" | "png";
-};
+export type { ReportImage } from "./report-images";
+
+/**
+ * How many images one report will shrink from full size when their
+ * thumbnails are not stored yet. Each costs a full read and a decode on the
+ * web service; the rest are left pending for the worker's backfill.
+ */
+export const MAX_LAZY_THUMBNAILS_PER_REPORT = 12;
 
 export type ReportComposition = {
   slot: number;
@@ -42,6 +49,8 @@ export type ReportComposition = {
   bigCommerceImageId: number | null;
   isMainImage: boolean;
   image: ReportImage | null;
+  /** True when a draft exists but its report thumbnail is not stored yet. */
+  imagePending: boolean;
 };
 
 export type ProjectReport = {
@@ -83,6 +92,8 @@ export type ProjectReport = {
   sources: { seller: string; title: string | null; url: string }[];
   sourcePhotos: ReportImage[];
   sourcePhotoCount: number;
+  /** Photographs left out because their thumbnails are not stored yet. */
+  sourcePhotosPending: number;
   compositions: ReportComposition[];
   publishing: {
     descriptionUploadApproved: boolean;
@@ -144,7 +155,10 @@ export function storePriceFor(project: Loaded): StorePriceContext | null {
 }
 
 /** The plain snapshot of one project, without image bytes. */
-export function summarizeProject(project: Loaded, logs: Logs): Omit<ProjectReport, "sourcePhotos"> {
+export function summarizeProject(
+  project: Loaded,
+  logs: Logs,
+): Omit<ProjectReport, "sourcePhotos" | "sourcePhotosPending"> {
   const summary = record(project.researchSummary);
   const identity = record(summary?.identifiedProduct);
   const latest = latestGeneratedBySlot(project.assets);
@@ -166,6 +180,7 @@ export function summarizeProject(project: Loaded, logs: Logs): Omit<ProjectRepor
       bigCommerceImageId: asset?.bigCommerceImageId ?? null,
       isMainImage: asset != null && asset.id === project.mainImageAssetId,
       image: null,
+      imagePending: false,
     };
   });
   const sorted = [...project.priceObservations].sort((a, b) => Number(a.price) - Number(b.price));
@@ -241,14 +256,6 @@ export function summarizeProject(project: Loaded, logs: Logs): Omit<ProjectRepor
   };
 }
 
-/**
- * One asset's bytes, loaded and shrunk in one step so the full-size image is
- * released before the next one is read; the stored row is never kept.
- */
-async function imageOf(assetId: string): Promise<ReportImage | null> {
-  return shrinkForReport(await getProductStudioAsset(assetId));
-}
-
 export async function buildProductStudioReport(args: {
   ids: string[];
   preparedBy: string;
@@ -260,6 +267,7 @@ export async function buildProductStudioReport(args: {
   );
   const projects: ProjectReport[] = [];
   const missing: string[] = [];
+  const budget = { remaining: MAX_LAZY_THUMBNAILS_PER_REPORT };
   for (const id of ids) {
     const project = await getProductStudioProject(id);
     if (!project) {
@@ -271,14 +279,19 @@ export async function buildProductStudioReport(args: {
     const latest = latestGeneratedBySlot(project.assets);
     for (const composition of snapshot.compositions) {
       const asset = latest.find((item) => item.compositionSlot === composition.slot);
-      if (asset) composition.image = await imageOf(asset.id);
+      if (!asset) continue;
+      const found = await reportImageForAsset(asset.id, budget);
+      composition.image = found.image;
+      composition.imagePending = found.pending;
     }
     const sourcePhotos: ReportImage[] = [];
+    let sourcePhotosPending = 0;
     for (const asset of project.assets.filter((item) => item.kind === "source").slice(0, 4)) {
-      const image = await imageOf(asset.id);
-      if (image) sourcePhotos.push(image);
+      const found = await reportImageForAsset(asset.id, budget);
+      if (found.image) sourcePhotos.push(found.image);
+      else if (found.pending) sourcePhotosPending += 1;
     }
-    projects.push({ ...snapshot, sourcePhotos });
+    projects.push({ ...snapshot, sourcePhotos, sourcePhotosPending });
   }
   return { generatedAt: args.now ?? new Date(), preparedBy: args.preparedBy, projects, missing };
 }

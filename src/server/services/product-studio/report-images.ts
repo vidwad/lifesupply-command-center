@@ -15,7 +15,11 @@
  */
 import sharp from "sharp";
 
-import type { ReportImage } from "./report";
+export type ReportImage = {
+  /** Report-sized JPEG bytes. */
+  data: Uint8Array;
+  format: "jpg" | "png";
+};
 
 /** Long-edge pixel bound; the report shows images at 232pt. */
 export const REPORT_IMAGE_EDGE = 640;
