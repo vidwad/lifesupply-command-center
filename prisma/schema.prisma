@@ -405,6 +405,11 @@ model Product {
   url                 String?
   imageStatus         DataQualityStatus @default(missing)
   descriptionStatus   DataQualityStatus @default(missing)
+  /// Images the store lists for the product, from the last sync (2026-10-27).
+  /// Denormalised so the list can filter and sort on it in the database.
+  imageCount          Int               @default(0)
+  /// Characters of description text with markup stripped, from the last sync.
+  descriptionLength   Int               @default(0)
   status              ProductStatus     @default(active)
   productType         String?
   isFeatured          Boolean           @default(false)
@@ -432,6 +437,8 @@ model Product {
   @@index([categoryId])
   @@index([sku])
   @@index([status])
+  @@index([imageCount])
+  @@index([descriptionLength])
   @@map("products")
 }
 

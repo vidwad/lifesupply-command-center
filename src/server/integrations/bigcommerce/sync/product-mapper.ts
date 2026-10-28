@@ -69,10 +69,23 @@ export function deriveImageStatus(bc: BcProduct): DataQualityStatus {
  * before measuring so markup doesn't inflate the length.
  */
 export function deriveDescriptionStatus(bc: BcProduct): DataQualityStatus {
-  const text = (bc.description ?? "").replace(/<[^>]*>/g, "").trim();
-  if (text.length === 0) return "missing";
-  if (text.length < 40) return "needs_review";
+  const length = descriptionTextLength(bc.description);
+  if (length === 0) return "missing";
+  if (length < 40) return "needs_review";
   return "present";
+}
+
+/**
+ * Characters of description text once markup is stripped; what the list's
+ * "description shorter than" filter compares against (2026-10-27).
+ */
+export function descriptionTextLength(description: string | null | undefined): number {
+  return (description ?? "").replace(/<[^>]*>/g, "").trim().length;
+}
+
+/** Images the store lists for the product; what the list's image filter and sort use. */
+export function storeImageCountOf(bc: Pick<BcProduct, "images">): number {
+  return Array.isArray(bc.images) ? bc.images.length : 0;
 }
 
 export function mapBcProductToUpsert(
@@ -92,6 +105,8 @@ export function mapBcProductToUpsert(
     url: trimOrNull(bc.custom_url?.url),
     imageStatus: deriveImageStatus(bc),
     descriptionStatus: deriveDescriptionStatus(bc),
+    imageCount: storeImageCountOf(bc),
+    descriptionLength: descriptionTextLength(bc.description),
     status: deriveProductStatus(bc),
     productType: trimOrNull(bc.type),
     categoryId: args.categoryId,

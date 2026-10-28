@@ -23,6 +23,8 @@ export type SortHeaderProps = {
   /** Other params to preserve. `sort`, `dir` and `page` are managed here. */
   params: Record<string, string | undefined>;
   align?: "left" | "right" | "center";
+  /** The direction a first click on this column uses. Ascending unless the column says otherwise. */
+  defaultDir?: "asc" | "desc";
 };
 
 export function SortHeader({
@@ -33,10 +35,13 @@ export function SortHeader({
   basePath,
   params,
   align = "left",
+  defaultDir = "asc",
 }: SortHeaderProps) {
   const isActive = activeKey === sortKey;
-  // Clicking the active column flips direction; a new column starts ascending.
-  const nextDir = isActive && activeDir === "asc" ? "desc" : "asc";
+  // Clicking the active column flips direction; a new column starts in its
+  // default direction (descending for a revenue column, where ascending
+  // would lead with every product that sold nothing).
+  const nextDir = isActive ? (activeDir === "asc" ? "desc" : "asc") : defaultDir;
 
   const qs = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {

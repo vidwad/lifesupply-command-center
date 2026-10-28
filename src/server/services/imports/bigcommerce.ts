@@ -1,4 +1,5 @@
 import { type Prisma, SyncStatus, type IntegrationType } from "@prisma/client";
+import { descriptionTextLength } from "@/server/integrations/bigcommerce/sync/product-mapper";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
@@ -282,6 +283,7 @@ export async function importBigCommerceProducts(args: {
         sku,
         brand: pick(row, ["brand", "Brand"]),
         description: pick(row, ["description", "Description"]),
+        descriptionLength: descriptionTextLength(pick(row, ["description", "Description"])),
         url: pick(row, ["url", "URL"]),
       };
 

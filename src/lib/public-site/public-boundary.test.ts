@@ -53,6 +53,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261027120000_product_studio_autopilot",
   // OpenAI is the only AI provider (product owner, 2026-10-27).
   "20261028090000_openai_only",
+  // Product list filters on image count and description length (product owner, 2026-10-27).
+  "20261028110000_product_image_count_description_length",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */

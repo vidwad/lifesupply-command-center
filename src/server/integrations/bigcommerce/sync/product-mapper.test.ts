@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   deriveDescriptionStatus,
+  descriptionTextLength,
+  storeImageCountOf,
   deriveImageStatus,
   deriveProductStatus,
   mapBcProductToUpsert,
@@ -96,5 +98,32 @@ describe("mapBcProductToUpsert", () => {
     );
     expect(b.create.categoryId).toBeNull();
     expect(b.create.brand).toBeNull();
+  });
+});
+
+describe("the denormalised list columns (2026-10-27)", () => {
+  it("measures description text with markup stripped", () => {
+    expect(descriptionTextLength("<p>Sterile <b>gauze</b></p>")).toBe(13);
+    expect(descriptionTextLength("  <p></p> ")).toBe(0);
+    expect(descriptionTextLength(null)).toBe(0);
+    expect(descriptionTextLength(undefined)).toBe(0);
+  });
+  it("counts the store images and reads zero for none", () => {
+    expect(storeImageCountOf({ images: [{ id: 1 }, { id: 2 }] } as never)).toBe(2);
+    expect(storeImageCountOf({ images: undefined } as never)).toBe(0);
+  });
+  it("writes both columns on create and on update so a sync keeps them current", () => {
+    const { create, update } = mapBcProductToUpsert(
+      {
+        ...base,
+        description: "<p>Twelve chars</p>",
+        images: [{ id: 1 }, { id: 2 }, { id: 3 }],
+      } as never,
+      { storeId: "s", divisionId: null, categoryId: null, brandName: null },
+    );
+    expect(create.imageCount).toBe(3);
+    expect(create.descriptionLength).toBe(12);
+    expect(update.imageCount).toBe(3);
+    expect(update.descriptionLength).toBe(12);
   });
 });
