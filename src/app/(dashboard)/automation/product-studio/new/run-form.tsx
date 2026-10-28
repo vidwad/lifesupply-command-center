@@ -29,6 +29,8 @@ type Props = {
   disabledReason: string | null;
   /** Whether the publish flags are on, so a publish mode may be chosen. */
   publishAvailable: boolean;
+  /** Selected projects with no catalogue product: a publish mode would be refused for them. */
+  unlinkedCount: number;
 };
 
 function Field({
@@ -55,6 +57,7 @@ export function RunForm({
   projectIds,
   disabledReason,
   publishAvailable,
+  unlinkedCount,
 }: Props): React.JSX.Element {
   const [state, action, pending] = useActionState(createRunAction, undefined);
   const d = DEFAULT_AUTOPILOT_SETTINGS;
@@ -236,6 +239,16 @@ export function RunForm({
               : "Publishing from a run needs product_studio.publish and external.writebacks on. They are off, so this run leaves approved drafts for a Super Admin to publish."}
           </p>
         </div>
+        {publishMode !== "none" && unlinkedCount > 0 ? (
+          <p
+            role="alert"
+            className="rounded-md border border-warning/50 bg-warning/10 px-3 py-2 text-xs"
+          >
+            {unlinkedCount === 1
+              ? "One selected project is not linked to a catalogue product. Its images will be approved, but publishing will be refused because there is no store listing to write to. Link it on its project page first, or run it without publishing."
+              : `${String(unlinkedCount)} selected projects are not linked to a catalogue product. Their images will be approved, but publishing will be refused because there is no store listing to write to. Link them on their project pages first, or run without publishing.`}
+          </p>
+        ) : null}
         {publishMode === "images_and_description" || publishMode === "all" ? (
           <div className="space-y-1.5">
             <Label htmlFor="descriptionMode">Store description</Label>

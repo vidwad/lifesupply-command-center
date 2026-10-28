@@ -22,6 +22,7 @@ import {
   reformatProductStudioDescription,
   updateProductStudioLongDescription,
 } from "@/server/services/product-studio/description";
+import { linkProjectToProduct } from "@/server/services/product-studio/link";
 import { updateSourcePhotos } from "@/server/services/product-studio/source-photos";
 
 export type ProductStudioActionState = { error?: string } | undefined;
@@ -125,6 +126,23 @@ export async function reviewAssetAction(
   }
   revalidatePath(`/products/studio/${projectId}`);
   return undefined;
+}
+
+/** Links a standalone project to a catalogue product; spends nothing. */
+export async function linkProductAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  const productId = String(formData.get("productId") ?? "");
+  try {
+    await linkProjectToProduct({ projectId, productId, actorUserId: user.id });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  redirect(`/products/studio/${projectId}`);
 }
 
 export async function deleteProjectAction(

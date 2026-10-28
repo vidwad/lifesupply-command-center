@@ -211,7 +211,10 @@ image, or a replacement for the thumbnail. The client module has no method for a
    upload mark and the publish action require it, at the action boundary and again in the service.
 3. The project must be linked to a product that was synced from BigCommerce (`sourceSystem`,
    `sourceId`) for a store with exactly one BigCommerce connection. Standalone projects cannot
-   publish.
+   publish. Since 2026-10-28 a standalone project can be linked once, from the panel its project
+   page shows while it has no product (`link.ts`, audited as `product_studio.project_linked`).
+   The link is never changed afterwards; a project started from a product page is linked from the
+   start, and the intake page now says which of the two it is creating. Linking spends nothing.
 4. The store's current description and image list are read first and recorded with every log row,
    so a change can be reversed by hand. If that read fails, nothing is written.
 5. A `ProductStudioPublishLog` row exists before each request goes out. Items are sent one after

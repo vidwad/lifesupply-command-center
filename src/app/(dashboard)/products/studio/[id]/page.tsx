@@ -70,12 +70,16 @@ import {
   updateSourcePhotosAction,
 } from "../actions";
 import { StudioActionForm } from "../studio-action-form";
+import { LinkProductPanel } from "./link-product-panel";
 import { PublishPanel } from "./publish-panel";
 import { WorkflowProgress } from "./workflow-progress";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ link?: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
@@ -99,10 +103,11 @@ function asStrings(value: unknown): string[] {
     : [];
 }
 
-export default async function ProductStudioDetailPage({ params }: Props) {
+export default async function ProductStudioDetailPage({ params, searchParams }: Props) {
   const user = await requirePermission(PERMISSIONS.PRODUCTS_UPDATE);
   await requirePermission(PERMISSIONS.AI_USE);
   const { id } = await params;
+  const linkQuery = (await searchParams).link ?? "";
   // The publishing card is for Super Admin only, so its history and flag
   // state are not even queried for anyone else.
   const mayPublish = canUserPublish(user);
@@ -273,6 +278,8 @@ export default async function ProductStudioDetailPage({ params }: Props) {
           </div>
         </div>
       ) : null}
+
+      {project.product ? null : <LinkProductPanel projectId={project.id} query={linkQuery} />}
 
       {project.batchId && batchIndex >= 0 ? (
         <div className="px-4 pt-4 md:px-6 md:pt-6">
