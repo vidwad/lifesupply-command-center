@@ -44,7 +44,10 @@ The interface should be desktop-first and optimized for daily management use.
 
 The main application should use:
 
-- Left navigation sidebar.
+- Left navigation sidebar. Below the `md` breakpoint (768px) the sidebar is not rendered; a menu
+  button at the left of the top bar opens the same navigation as a left drawer, with the division
+  and period selectors at its foot. The drawer closes after a link is chosen. (Added
+  October 27, 2026.)
 - Top bar with search/command, current period selector, notifications, and user profile.
 - Main content canvas.
 - Optional right-side detail drawer.

@@ -53,7 +53,7 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {/* Row 1 — KPI cards */}
         <section
           aria-label="Key performance indicators"
