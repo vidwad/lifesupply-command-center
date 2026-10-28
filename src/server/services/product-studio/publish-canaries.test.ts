@@ -198,6 +198,17 @@ describe("the publish service is gated, logged and single-shot", () => {
     expect(code.match(/\bbreak;/g)?.length).toBe(3);
   });
 
+  it("marks the project approved only after a complete, successful publish from needs_review", () => {
+    // Product owner, 2026-10-28: once content is on the store the project is
+    // approved, whatever drafts were rejected. A failed publish never does it.
+    const service = stripComments(read(SERVICE));
+    expect(service).toContain(
+      'if (failed.length === 0 && sent > 0 && row.status === "needs_review") {',
+    );
+    expect(service).toContain('action: "product_studio.project_approved_on_publish"');
+    expect(service.match(/data: \{ status: "approved" \}/g)?.length).toBe(1);
+  });
+
   it("is unreachable from any background function or the worker entrypoint", () => {
     const offenders: string[] = [];
     for (const file of allSource()) {
