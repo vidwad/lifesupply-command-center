@@ -60,8 +60,13 @@ export const OWN_STORE_HOSTS = [
   "balkowitsch.com",
 ];
 
+/** The registrable host of a URL, www-insensitive; "" when it does not parse. */
 export function hostOf(url: string): string {
-  return new URL(url).hostname.replace(/^www\./i, "").toLowerCase();
+  try {
+    return new URL(url).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 export function isOwnStoreHost(host: string): boolean {
@@ -98,11 +103,17 @@ export function reconcileCandidatesWithEvidence(
   candidates: readonly SellerImageCandidate[],
   evidenceUrls: readonly string[],
 ): CandidateReconciliation {
-  const verified = new Set(evidenceUrls.map(hostOf));
+  // A malformed evidence string (the tool has emitted a bare "https://")
+  // vouches for nothing; it must not become the empty host.
+  const verified = new Set(evidenceUrls.map(hostOf).filter((host) => host !== ""));
   const dropped: CandidateReconciliation["dropped"] = [];
   const byHost = new Map<string, SellerImageCandidate>();
   for (const candidate of candidates) {
     const host = hostOf(candidate.pageUrl);
+    if (host === "") {
+      dropped.push({ host: candidate.pageUrl, reason: "not a valid URL" });
+      continue;
+    }
     if (isOwnStoreHost(host)) {
       dropped.push({ host, reason: "the operator's own store" });
       continue;
