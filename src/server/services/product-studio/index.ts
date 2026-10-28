@@ -202,6 +202,8 @@ function projectOrderBy(
 
 export type ListProjectsFilter = {
   batchId?: string | null;
+  /** Projects shown beside the batch (2026-10-28): ones the products already had. */
+  includeIds?: readonly string[];
   status?: ProjectStatusFilter;
   sort?: ProjectSortKey;
   dir?: "asc" | "desc";
@@ -210,7 +212,11 @@ export type ListProjectsFilter = {
 /** The where clause the list and its counts share, so they cannot disagree. */
 function projectWhere(filter: ListProjectsFilter): Prisma.ProductStudioProjectWhereInput {
   const where: Prisma.ProductStudioProjectWhereInput = {};
-  if (filter.batchId) where.batchId = filter.batchId;
+  if (filter.batchId) {
+    const ids = filter.includeIds ?? [];
+    where.OR = ids.length > 0 ? [{ batchId: filter.batchId }, { id: { in: [...ids] } }] : undefined;
+    if (ids.length === 0) where.batchId = filter.batchId;
+  }
   if (filter.status) where.status = { in: [...PROJECT_STATUS_FILTERS[filter.status]] };
   return where;
 }
@@ -220,7 +226,7 @@ function projectWhere(filter: ListProjectsFilter): Prisma.ProductStudioProjectWh
  * plus the total, for the filter pills.
  */
 export async function countProductStudioProjectsByStatus(
-  filter: Pick<ListProjectsFilter, "batchId">,
+  filter: Pick<ListProjectsFilter, "batchId" | "includeIds">,
 ): Promise<Record<ProjectStatusFilter | "all", number>> {
   const grouped = await prisma.productStudioProject.groupBy({
     by: ["status"],
