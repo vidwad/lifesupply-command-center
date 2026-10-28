@@ -174,6 +174,23 @@ export function runFormHrefForBatch(result: BatchResult): string {
 }
 
 /**
+ * Where "Open selected in Product Studio" lands (2026-10-28). One project,
+ * new or pre-existing, opens directly. Several open the Studio list for the
+ * batch, with the pre-existing projects carried as `id=` the same way the run
+ * form takes them, since they keep their original batch id. Before this, a
+ * product that had been opened once landed on an empty "Batch of 0".
+ */
+export function studioHrefForBatch(result: BatchResult): string {
+  const opened = result.entries.filter((entry) => entry.projectId);
+  if (opened.length === 1) return "/products/studio/" + opened[0]!.projectId;
+  const qs = new URLSearchParams({ batch: result.batchId });
+  for (const entry of opened) {
+    if (entry.note?.startsWith("Already")) qs.append("id", entry.projectId!);
+  }
+  return "/products/studio?" + qs.toString();
+}
+
+/**
  * Creates one project per selected product, in the order selected, under one
  * batch id. A product that already has a live project is not duplicated; its
  * existing project is reported instead.

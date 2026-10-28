@@ -46,7 +46,7 @@ describe("the project status filter", () => {
 
   it("the list and the pill counts share one where clause, and the page carries the filter", () => {
     expect(service.match(/where: projectWhere\(filter\)/g)?.length).toBe(2);
-    expect(page).toContain("countProductStudioProjectsByStatus({ batchId })");
+    expect(page).toContain("countProductStudioProjectsByStatus({ batchId, includeIds })");
     expect(page).toContain("const carried = { batch: batchId ?? undefined, view, status };");
     // Date added is offered in both layouts, newest and oldest.
     expect(page).toContain('{ key: "created", dir: "desc", label: "Newest first" }');

@@ -17,6 +17,7 @@ import {
 import {
   createProductStudioBatch,
   runFormHrefForBatch,
+  studioHrefForBatch,
 } from "@/server/services/product-studio/bulk";
 import {
   reformatProductStudioDescription,
@@ -177,15 +178,16 @@ export async function bulkCreateProjectsAction(
   const productIds = formData
     .getAll("productId")
     .filter((value): value is string => typeof value === "string");
-  let batchId: string;
+  let batch: Awaited<ReturnType<typeof createProductStudioBatch>>;
   try {
-    ({ batchId } = await createProductStudioBatch({ actorUserId: user.id, productIds }));
+    batch = await createProductStudioBatch({ actorUserId: user.id, productIds });
   } catch (error) {
     return actionError(error);
   }
   // Outside the try: redirect() signals by throwing and must never be caught.
+  // One project opens directly; a product opened before rides along as `id=`.
   revalidatePath("/products/studio");
-  redirect(`/products/studio?batch=${batchId}`);
+  redirect(studioHrefForBatch(batch));
 }
 
 /**

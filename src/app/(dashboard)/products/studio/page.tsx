@@ -28,6 +28,8 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = {
   batch?: string;
+  /** Pre-existing projects shown beside the batch (2026-10-28); see studioHrefForBatch. */
+  id?: string | string[];
   view?: string;
   sort?: string;
   dir?: string;
@@ -67,6 +69,7 @@ export default async function ProductStudioPage({
   const canAutopilot = userHasPermission(user, PERMISSIONS.PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE);
   const params = await searchParams;
   const batchId = params.batch?.trim() || null;
+  const includeIds = Array.isArray(params.id) ? params.id : params.id ? [params.id] : [];
   // Two layouts (2026-10-26): the cards, and a condensed list that sorts in
   // the database. The view and the sort are view preferences carried on
   // every link; the batch is a filter.
@@ -75,8 +78,8 @@ export default async function ProductStudioPage({
   const dir = params.dir === "desc" ? "desc" : "asc";
   const status = parseProjectStatusFilter(params.status);
   const [projects, statusCounts] = await Promise.all([
-    listProductStudioProjects({ batchId, status, sort, dir }),
-    countProductStudioProjectsByStatus({ batchId }),
+    listProductStudioProjects({ batchId, includeIds, status, sort, dir }),
+    countProductStudioProjectsByStatus({ batchId, includeIds }),
   ]);
   const first = batchId ? projects[0] : null;
   const carried = { batch: batchId ?? undefined, view, status };
@@ -90,6 +93,7 @@ export default async function ProductStudioPage({
   }) => {
     const qs = new URLSearchParams();
     if (batchId) qs.set("batch", batchId);
+    for (const id of includeIds) qs.append("id", id);
     const nextView = "view" in next ? next.view : view;
     if (nextView === "list") qs.set("view", "list");
     const nextStatus = "status" in next ? next.status : status;

@@ -7,6 +7,7 @@ import {
   firstStoreImageUrl,
   isStoreImageHost,
   runFormHrefForBatch,
+  studioHrefForBatch,
   storeDescriptionToText,
 } from "./bulk";
 import { sourcePhotosLocked } from "./source-photos";
@@ -111,6 +112,32 @@ describe("the run form address for a batch", () => {
       "/automation/product-studio/new?batch=b",
     );
   });
+  it("opens one project directly, new or pre-existing, and lists several with the old ones beside the batch", () => {
+    // Production, 2026-10-28: a product opened once before landed on "Batch of 0".
+    const old = {
+      productId: "p1",
+      productName: "Pad",
+      projectId: "proj-old",
+      seeded: false,
+      note: "Already has a project; opened that one instead.",
+    };
+    const fresh = {
+      productId: "p2",
+      productName: "Plate",
+      projectId: "proj-new",
+      seeded: false,
+      note: null,
+    };
+    expect(studioHrefForBatch({ batchId: "b", entries: [old] })).toBe("/products/studio/proj-old");
+    expect(studioHrefForBatch({ batchId: "b", entries: [fresh] })).toBe(
+      "/products/studio/proj-new",
+    );
+    const url = new URL(studioHrefForBatch({ batchId: "b", entries: [old, fresh] }), "http://x");
+    expect(url.pathname).toBe("/products/studio");
+    expect(url.searchParams.get("batch")).toBe("b");
+    expect(url.searchParams.getAll("id")).toEqual(["proj-old"]);
+    expect(studioHrefForBatch({ batchId: "b", entries: [] })).toBe("/products/studio?batch=b");
+  });
 });
 
 describe("bulk creation spends nothing", () => {
@@ -134,7 +161,7 @@ describe("bulk creation spends nothing", () => {
       actions.indexOf("export async function updateSourcePhotosAction"),
     );
     expect(bulk).toContain("createProductStudioBatch({");
-    expect(bulk).toContain("redirect(`/products/studio?batch=${batchId}`)");
+    expect(bulk).toContain("redirect(studioHrefForBatch(batch))");
     expect(bulk).not.toMatch(/queue|Generation|Research/);
   });
   it("the unattended-run action sends the whole selection to the run form", () => {
