@@ -85,7 +85,7 @@ export default async function ReactivationPage({
         }
       />
 
-      <div className="grid gap-6 p-6 lg:grid-cols-3">
+      <div className="grid gap-6 p-4 md:p-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {/* Bucket pills */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -37,7 +37,7 @@ export default async function UsersPage() {
           </Link>
         }
       />
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {users.length === 0 ? (
           <EmptyState
             icon={Users}

@@ -48,7 +48,7 @@ export default async function FinancialsPage({
           title="Financials"
           description="Management-level financial reporting across consolidated and divisional operations."
         />
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <EmptyState
             icon={CircleDollarSign}
             title="No financial periods are available"
@@ -68,7 +68,7 @@ export default async function FinancialsPage({
     return (
       <div>
         <PageHeader title="Financials" />
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <EmptyState
             icon={CircleDollarSign}
             title="No data for this selection"
@@ -137,7 +137,7 @@ export default async function FinancialsPage({
         }
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {/* Selectors */}
         <form
           action="/financials"

@@ -113,7 +113,7 @@ export default async function PublicContentEditorPage({
           </>
         }
       />
-      <div className="grid gap-8 p-6 xl:grid-cols-[1fr_20rem]">
+      <div className="grid gap-8 p-4 md:p-6 xl:grid-cols-[1fr_20rem]">
         <div className="max-w-4xl space-y-6">
           {!payload && (
             <p className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">

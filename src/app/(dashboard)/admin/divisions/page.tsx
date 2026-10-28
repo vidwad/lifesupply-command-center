@@ -32,7 +32,7 @@ export default async function DivisionsPage() {
         }
         actions={<CreateDivisionForm parents={parentChoices} />}
       />
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {divisions.length === 0 ? (
           <EmptyState
             icon={Building2}

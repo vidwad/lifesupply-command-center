@@ -77,7 +77,7 @@ export default async function OrdersPage({
         }
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           {STATUS_FILTERS.map((f) => {

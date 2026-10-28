@@ -42,7 +42,7 @@ export default async function PublicWebDocumentsPage() {
           </Button>
         }
       />
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <Card>
           <CardContent className="p-0">
             <DataTable className="border-0">

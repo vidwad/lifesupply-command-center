@@ -41,7 +41,7 @@ export default async function FeatureFlagsPage() {
           </Badge>
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <KillSwitchPanel riskyEnabledCount={riskyEnabledCount} />
         <Card>
           <CardContent className="p-0">

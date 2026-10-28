@@ -61,7 +61,7 @@ export default async function MarketingPage() {
         }
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {/* KPI row */}
         <section
           aria-label="Campaign performance"

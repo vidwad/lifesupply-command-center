@@ -59,7 +59,7 @@ export default async function AnalyticsPage({
         breadcrumb={`${data.range.toUpperCase()} • ${data.store?.name ?? "All stores"}`}
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           {RANGES.map((r) => {

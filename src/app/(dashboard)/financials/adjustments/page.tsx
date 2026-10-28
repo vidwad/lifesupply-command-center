@@ -71,7 +71,7 @@ export default async function AdjustmentsPage({
         }
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {rows.length === 0 ? (
           <EmptyState
             icon={Scale}

@@ -76,7 +76,7 @@ export default async function ReportDetailPage({ params }: Props) {
         }
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {report.summary && (
           <Card>
             <CardHeader className="pb-3">

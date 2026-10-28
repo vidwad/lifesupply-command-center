@@ -41,7 +41,7 @@ export default async function ProductStudioRunsPage() {
           </Badge>
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <Card>
           <CardContent className="space-y-2 py-4 text-sm">
             <p>

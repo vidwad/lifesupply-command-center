@@ -55,7 +55,7 @@ export default async function CampaignDraftsPage() {
           </Link>
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {drafts.length === 0 ? (
           <EmptyState
             icon={Megaphone}

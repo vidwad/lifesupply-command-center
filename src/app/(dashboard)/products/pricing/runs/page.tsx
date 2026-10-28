@@ -52,7 +52,7 @@ export default async function PricingRunsPage() {
           ) : null
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         {!enabled ? (
           <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
             Pricing Intelligence is off, so no new runs can be built. Existing runs below remain

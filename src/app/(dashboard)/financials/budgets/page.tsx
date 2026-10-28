@@ -41,7 +41,7 @@ export default async function BudgetsPage() {
           </Link>
         }
       />
-      <div className="grid gap-6 p-6 lg:grid-cols-3">
+      <div className="grid gap-6 p-4 md:p-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           {budgets.length === 0 ? (
             <EmptyState

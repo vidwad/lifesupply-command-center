@@ -163,7 +163,7 @@ export default async function AuditLogsPage({
         actions={<RunRetentionButton retentionDays={getRetentionDays()} />}
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <form action="/admin/audit-logs" className="rounded-md border bg-card p-4">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             <Field label="Search">

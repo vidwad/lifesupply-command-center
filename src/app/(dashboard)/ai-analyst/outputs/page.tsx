@@ -53,7 +53,7 @@ export default async function AiOutputReviewPage({ searchParams }: { searchParam
         }
       />
 
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 md:p-6">
         <form method="get" className="flex flex-wrap items-end gap-2 text-xs">
           <label className="flex flex-col gap-1">
             <span className="font-medium uppercase tracking-wide text-muted-foreground">

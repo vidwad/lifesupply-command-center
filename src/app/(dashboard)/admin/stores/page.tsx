@@ -35,7 +35,7 @@ export default async function StoresPage() {
         }
         actions={<CreateStoreForm divisions={divisionChoices} />}
       />
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {stores.length === 0 ? (
           <EmptyState
             icon={StoreIcon}

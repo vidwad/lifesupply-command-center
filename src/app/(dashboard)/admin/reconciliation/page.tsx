@@ -40,7 +40,7 @@ export default async function ReconciliationPage() {
         actions={<RunReconciliationButton />}
       />
 
-      <div className="space-y-6 p-6">
+      <div className="space-y-6 p-4 md:p-6">
         {reports.length === 0 ? (
           <EmptyState
             icon={Scale}
