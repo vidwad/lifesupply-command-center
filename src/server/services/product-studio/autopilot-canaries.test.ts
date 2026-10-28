@@ -104,6 +104,15 @@ describe("unattended runs keep their controls", () => {
     expect(service.match(/await publishForRun\(\{/g)?.length).toBe(1);
     expect(service).toContain("if (publishesToStore(settings)) {");
     expect(service).toContain("if (!partial || mayPublishPartially(next, settings)) {");
+    // A product published under the minimum is finished and approved, not
+    // left for attention (product owner, 2026-10-28); only a successful
+    // publish does that, never a refusal, a failure or "nothing to send".
+    expect(service).toContain('if (outcome.status === "published") {');
+    expect(service).toContain(
+      'if (partial) {\n                stage = "done";\n                approveProject = true;',
+    );
+    expect(service).toContain('data: { status: "approved" },');
+    expect(service.match(/approveProject = true/g)?.length).toBe(1);
     const policy = stripComments(read(POLICY));
     expect(policy).toContain("next.imagesFinal &&");
     expect(policy).toContain("next.approvedSlots >= publishThreshold(settings)");

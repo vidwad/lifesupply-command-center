@@ -301,7 +301,7 @@ creator is no longer an active user.
 | Stop after consecutive failures | 3 | A provider outage stops the run rather than failing every product. |
 | Publish to BigCommerce | none | `none` leaves approved drafts for the publishing card. `images` adds the approved drafts to the listing; `images_and_description` also replaces the store description; `all` also makes the first composition the main image. Any mode but `none` needs `product_studio.publish` and `external.writebacks` on when the run is created and again when each product publishes. |
 | Store description | replace | With a publishing mode that includes the description: replace what the store has, or write it only where the store's description is empty. |
-| Minimum approved images to publish | every image | With a publishing mode: a product whose images did not all pass is still published when at least this many are approved (product owner, 2026-10-28). The approved images go up, and the description if the mode includes it, and the product stays marked for attention for the images that failed. At the default nothing changes: only fully approved products publish. 0 publishes the description even when no image passed. Never applies to a product that stopped before its images (no photograph, research below the confidence threshold, no research). Capped at the images per product. |
+| Minimum approved images to publish | every image | With a publishing mode: a product whose images did not all pass is still published when at least this many are approved (product owner, 2026-10-28). The approved images go up, and the description if the mode includes it. Once that publish succeeds the product is finished and its project marked approved, with the item's note naming the images that were not published (product owner, 2026-10-28): the minimum was the criterion, and it was met. A refused or failed publish, or one with nothing to send, still leaves the product for attention. At the default nothing changes: only fully approved products publish. 0 publishes the description even when no image passed. Never applies to a product that stopped before its images (no photograph, research below the confidence threshold, no research). Capped at the images per product. |
 | Open a Task | yes | On completion, a Task for the creator lists the products needing attention. |
 
 **Publishing from a run.** When the mode is not `none`, a product whose requested images are all
@@ -316,7 +316,9 @@ description when the mode and the store's current text allow; the first composit
 under `all`) and calls `publishProductStudioProject` once, which writes its log row before every
 request and stops at the first failure as always. A refusal or failure marks the product for
 attention with the reason and is not retried by the run; what did publish stays published and the
-publishing card shows the rest. Each product's publish history is the record.
+publishing card shows the rest. A product short of images whose publish under the run's minimum
+succeeds is marked done and its project approved, the rejected images named in its note. Each
+product's publish history is the record.
 
 **How it runs.** Two worker functions. The run function marks the run running and sends one event
 per lane. The item function performs ONE step (research; one image with its QA review; one review

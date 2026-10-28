@@ -610,6 +610,11 @@ export async function processRunItemStep(args: {
         let publishedItems = 0;
         let stage: "done" | "attention" = partial ? "attention" : "done";
         let note = partial ? next.reason : approved + " Nothing was sent to the store.";
+        // A product short of images that publishes under the run's minimum
+        // is finished, not left for a person (product owner, 2026-10-28):
+        // the minimum was the criterion it was asked to meet, and it met it.
+        // The project is marked approved once the store has what passed.
+        let approveProject = false;
         if (publishesToStore(settings)) {
           if (!partial || mayPublishPartially(next, settings)) {
             await prisma.productStudioRunItem.update({
@@ -626,6 +631,17 @@ export async function processRunItemStep(args: {
             if (outcome.status === "published") {
               publishedItems = outcome.publishedItems;
               note = lead + " " + outcome.message;
+              if (partial) {
+                stage = "done";
+                approveProject = true;
+                note =
+                  approved +
+                  " " +
+                  outcome.message +
+                  " Not published: " +
+                  next.reason +
+                  ` The run's minimum of ${publishThreshold(settings)} approved image${publishThreshold(settings) === 1 ? "" : "s"} was met, so the product is approved.`;
+              }
             } else if (outcome.status === "nothing") {
               note = lead + " " + outcome.message;
             } else {
@@ -649,6 +665,12 @@ export async function processRunItemStep(args: {
             completedAt: new Date(),
           },
         });
+        if (approveProject) {
+          await prisma.productStudioProject.update({
+            where: { id: project.id },
+            data: { status: "approved" },
+          });
+        }
         await prisma.productStudioRun.update({
           where: { id: run.id },
           data: { consecutiveFailures: 0 },
@@ -667,6 +689,7 @@ export async function processRunItemStep(args: {
             approvedSlots: next.approvedSlots,
             publishMode: settings.publishMode,
             publishedItems,
+            approvedUnderMinimum: approveProject,
             note,
           },
         });
