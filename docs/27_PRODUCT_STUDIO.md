@@ -39,7 +39,9 @@ Admin step in §5.5; the review workflow itself still publishes nothing.
 4. The user explicitly queues research. The worker uses OpenAI Responses web search and strict
    structured output to identify the exact product, collect seller/price evidence, and derive four
    composition patterns.
-5. The application stores seller pages and reference-image URLs, but not competitor image bytes.
+5. The application stores seller pages and reference-image URLs, but not competitor image bytes,
+   with one exception: a seller's image the operator chose as the project's photograph because
+   the product had none (§2.6).
 6. The prompt compiler combines the confirmed product identity, truthful condition notes, and one
    composition brief. It explicitly forbids model substitution, invented defects/accessories, and
    retailer-specific creative copying.
@@ -85,6 +87,38 @@ Admin step in §5.5; the review workflow itself still publishes nothing.
   history, warnings and sources. Read-only, the same two permissions as the Studio pages, audited
   as `export.product_studio.report`, up to fifty projects. WebP photographs cannot be embedded and
   are noted rather than shown.
+
+## 2.6 A seller's image as the reference when there is no photograph (product owner, 2026-10-28)
+
+A product the store has no image of, and nobody has photographed, could not start: research is
+grounded in the photographs. The project page now offers, in the source photographs card while a
+project has none and its photographs may still change, a **seller-image search**:
+
+- **Search.** The worker runs the same OpenAI web-search call research uses, text only, asking for
+  current listings of the exact product at other sellers, the manufacturer's own page first, then
+  distributors, retailers and marketplaces, and for each the direct URL of the listing's main
+  product image, preferring a plain packshot or packaging shot over styled photography. A listing
+  is kept only when its domain is in the web-search evidence; the operator's own stores are
+  excluded; one listing per seller, up to eight, manufacturer first (`competitor-images.ts`).
+- **One thumbnail per seller.** Each kept image is fetched once, bounded to public HTTP(S) host
+  names (no IP literals, local names, credentials or odd ports; the host must resolve to public
+  addresses), to 8 MiB and twenty seconds, and must decode as JPEG, PNG or WebP. It is hashed and
+  kept only as a small JPEG thumbnail for choosing; the full image is not stored. A seller whose
+  image could not be fetched is still listed, with the reason, and cannot be chosen.
+- **Choosing.** "Use as the photograph" fetches the image again and accepts it only if its hash
+  still matches the one that was shown, then stores it as an ordinary source asset with the
+  candidate linked to it. The card labels it a seller's listing image, not a photograph of the
+  stock, with the seller and page. Research is told which photographs are seller images and must
+  not read condition, packaging state or included accessories from them (`prompts.ts`).
+- **Governance.** Search and selection need the Studio flag and the two Studio permissions, are
+  refused while an unattended run owns the project or once research has locked the photographs,
+  and are audited (`product_studio.image_search_queued`, `_completed`, `_failed`,
+  `product_studio.seller_image_selected`). The search is recorded as an AI output
+  (`product_studio_image_search`) with the evidence URLs and the dropped listings. Unattended
+  runs do not search: a product with no photograph still stops for attention, as before.
+- **Choice of image.** A manufacturer's packshot is identity evidence of a mass-produced product
+  and the right choice; a retailer's styled photograph carries that retailer's creative work, and
+  the panel says so. The operator makes the call and the record shows which image was chosen.
 
 ## 3. What “most effective” means
 
@@ -155,7 +189,8 @@ specification for `new_sealed`. Fabricated identifiers are a defect in both.
 | Intake switch | `product_studio.enabled`, default off. |
 | Spend switch | `product_studio.image_generation`, default off and included in the global kill switch. |
 | Provider keys | Resolved server-side from environment or encrypted credential vault. |
-| Source authority | Uploaded photographs are explicitly identified as the sole authoritative visual source. |
+| Source authority | Uploaded photographs are explicitly identified as the sole authoritative visual source. A seller's image chosen under §2.6 becomes one of them, labelled as a listing image, with research told not to read condition from it. |
+| Seller-image search | Text-only web search, evidence-verified sellers, one bounded fetch per seller, thumbnails only until the operator chooses, hash check on selection, refused under a live run or locked photographs (§2.6). |
 | Listing copy | The title, descriptions and key details carry no URLs, links, citations or retailer names (product owner, 2026-10-26): the prompt forbids them, `listing-copy.ts` strips any that appear when research is stored, and the description is stripped again when displayed and when published, so projects researched before the rule are covered. Sources stay in the research sources and price observations. |
 | Listing structure | The full description is plain text in a small vocabulary (`listing-format.ts`): a short opening paragraph, then titled sections ("Specifications:") of "- " bullets, one fact per bullet, with prose where a sentence reads better. The page and the BigCommerce HTML render it through one parser, so lists are real lists on the store. The prompt asks research for this shape; "Reformat with AI" restructures an existing description the same way, and a guard rejects the rewrite if any number, code or measurement from the original is missing, so nothing is lost in the rewrite. The rewrite is a small text call, recorded as an AI output, that clears the upload mark like a manual edit. |
 | Prompt injection | Web pages are labelled untrusted data; their instructions must be ignored. |
@@ -332,6 +367,10 @@ importer of the publish service. `chokepoints.test.ts` lists the service and the
   A project's `autopilotRunId` links it to the run that owns it; a draft's `autoReviewedAt` marks a
   review the run made.
 - `ProductStudioResearchSource` — seller/product-page evidence and external hero-image URL.
+- `ProductStudioImageSearch` and `ProductStudioImageCandidate` (2026-10-28) — one row per
+  seller-image search with its outcome, and one row per seller image found: listing and image
+  URLs, why it matches, the fetched image's facts and hash, a thumbnail for choosing, and the
+  source asset it became if chosen.
 - `ProductStudioPriceObservation` — normalized source-linked price evidence.
 - `ProductStudioComposition` — four structured composition briefs and compiled prompts.
 - `AiOutput` — complete research and image-QA invocation records.

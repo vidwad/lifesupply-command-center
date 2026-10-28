@@ -22,6 +22,10 @@ import {
   reformatProductStudioDescription,
   updateProductStudioLongDescription,
 } from "@/server/services/product-studio/description";
+import {
+  queueCompetitorImageSearch,
+  selectCompetitorImage,
+} from "@/server/services/product-studio/competitor-images";
 import { linkProjectToProduct } from "@/server/services/product-studio/link";
 import { updateSourcePhotos } from "@/server/services/product-studio/source-photos";
 
@@ -225,6 +229,39 @@ export async function updateSourcePhotosAction(
       files,
       mode: formData.get("mode") === "replace" ? "replace" : "add",
     });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  return undefined;
+}
+
+/** Queues the seller-image search for a project with no photograph (2026-10-28). */
+export async function queueImageSearchAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  try {
+    await queueCompetitorImageSearch({ projectId, actorUserId: user.id });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath(`/products/studio/${projectId}`);
+  return undefined;
+}
+
+/** Makes a found seller image the project's authoritative photograph. */
+export async function selectSellerImageAction(
+  _previous: ProductStudioActionState,
+  formData: FormData,
+): Promise<ProductStudioActionState> {
+  const user = await requireStudioUser();
+  const projectId = String(formData.get("projectId") ?? "");
+  const candidateId = String(formData.get("candidateId") ?? "");
+  try {
+    await selectCompetitorImage({ projectId, candidateId, actorUserId: user.id });
   } catch (error) {
     return actionError(error);
   }

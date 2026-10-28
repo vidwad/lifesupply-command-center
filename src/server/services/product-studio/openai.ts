@@ -14,13 +14,19 @@ import { AiProviderNotConfiguredError } from "@/server/services/ai/errors";
 
 import { z } from "zod";
 
-import { buildImageQaPrompt, buildProductResearchPrompt } from "./prompts";
+import {
+  buildImageQaPrompt,
+  buildProductResearchPrompt,
+  buildSellerImageSearchPrompt,
+} from "./prompts";
 import { buildDescriptionReformatPrompt } from "./reformat-prompt";
 import {
   productStudioQaSchema,
   productStudioResearchSchema,
+  sellerImageSearchSchema,
   type ProductStudioQa,
   type ProductStudioResearch,
+  type SellerImageSearch,
 } from "./types";
 
 type ReferenceAsset = {
@@ -545,6 +551,8 @@ export async function researchProduct(args: {
   title: string;
   shortDescription: string;
   references: ReferenceAsset[];
+  /** Provenance lines for photographs that are seller listing images. */
+  referenceNotes?: readonly string[];
 }): Promise<ResearchCallResult> {
   const client = await getOpenAiClient();
   if (!client) throw new AiProviderNotConfiguredError("openai");
@@ -553,6 +561,7 @@ export async function researchProduct(args: {
     title: args.title,
     shortDescription: args.shortDescription,
     sourcePhotoCount: args.references.length,
+    referenceNotes: args.referenceNotes,
   });
 
   const content = [
@@ -606,6 +615,124 @@ export async function researchProduct(args: {
       outputTokens: response.usage?.output_tokens ?? null,
     },
     verifiedSourceUrls,
+  };
+}
+
+const sellerImageSearchJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["productIdentified", "candidates", "warnings"],
+  properties: {
+    productIdentified: { type: "string" },
+    candidates: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "sellerName",
+          "pageTitle",
+          "pageUrl",
+          "imageUrl",
+          "sourceType",
+          "imageKind",
+          "whyMatch",
+          "matchConfidence",
+        ],
+        properties: {
+          sellerName: { type: "string" },
+          pageTitle: { anyOf: [{ type: "string" }, { type: "null" }] },
+          pageUrl: { type: "string" },
+          imageUrl: { type: "string" },
+          sourceType: {
+            type: "string",
+            enum: ["manufacturer", "distributor", "retailer", "marketplace"],
+          },
+          imageKind: { type: "string", enum: ["packshot", "packaging", "lifestyle", "other"] },
+          whyMatch: { type: "string" },
+          matchConfidence: { type: "number", minimum: 0, maximum: 1 },
+        },
+      },
+    },
+    warnings: { type: "array", items: { type: "string" } },
+  },
+} as const;
+
+export type SellerImageSearchCallResult = {
+  /** As the model returned it; the caller verifies it against the evidence. */
+  result: SellerImageSearch;
+  prompt: string;
+  rawOutput: string;
+  modelName: string;
+  usage: Usage;
+  /** Web-search evidence URLs, the only basis on which a seller is kept. */
+  evidenceUrls: string[];
+};
+
+/**
+ * The seller-image search (competitor-images.ts): text in, web search on,
+ * strict JSON out. No photograph is attached, because the project has none;
+ * that is the point. Throws when the search produced no evidence at all,
+ * since then nothing the model named can be kept.
+ */
+export async function searchSellerProductImages(args: {
+  title: string;
+  shortDescription: string;
+  identifiers: readonly string[];
+  ownStoreHosts?: readonly string[];
+  maxCandidates?: number;
+}): Promise<SellerImageSearchCallResult> {
+  const client = await getOpenAiClient();
+  if (!client) throw new AiProviderNotConfiguredError("openai");
+  const model = await resolveOpenAiModel();
+  const prompt = buildSellerImageSearchPrompt({
+    title: args.title,
+    shortDescription: args.shortDescription,
+    identifiers: args.identifiers,
+    ownStoreHosts: args.ownStoreHosts ?? [
+      "lifesupply.ca",
+      "wellmartmedical.com",
+      "lifesupplyclinics.com",
+      "balkowitsch.com",
+    ],
+    maxCandidates: args.maxCandidates ?? 8,
+  });
+  const request = {
+    model,
+    stream: false,
+    tools: [{ type: "web_search" }],
+    include: ["web_search_call.action.sources"],
+    input: [{ role: "user", content: [{ type: "input_text", text: prompt }] }],
+    text: {
+      format: {
+        type: "json_schema",
+        name: "product_studio_seller_images",
+        strict: true,
+        schema: sellerImageSearchJsonSchema,
+      },
+    },
+  } as unknown as ResponseCreateParamsNonStreaming;
+
+  const response = await client.responses.create(request);
+  const rawOutput = response.output_text.trim();
+  if (!rawOutput) throw new Error("OpenAI returned an empty seller-image search response.");
+  const result = parseJson(rawOutput, sellerImageSearchSchema);
+  const evidenceUrls = collectWebSearchEvidenceUrls(response.output);
+  if (evidenceUrls.length === 0) {
+    throw new UnverifiableResearchError(
+      "The seller-image search returned no verifiable web-search source URLs, so no listing it named can be kept.",
+    );
+  }
+  return {
+    result,
+    prompt,
+    rawOutput,
+    modelName: response.model,
+    usage: {
+      inputTokens: response.usage?.input_tokens ?? null,
+      outputTokens: response.usage?.output_tokens ?? null,
+    },
+    evidenceUrls,
   };
 }
 

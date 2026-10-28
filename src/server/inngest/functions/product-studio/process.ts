@@ -12,6 +12,7 @@ import { prisma } from "@/server/db/client";
 import { inngest } from "@/server/inngest/client";
 import { requireFeature } from "@/server/services/feature-flags";
 import { queueProductStudioGeneration } from "@/server/services/product-studio";
+import { runCompetitorImageSearch } from "@/server/services/product-studio/competitor-images";
 import {
   decideNextChainedSlot,
   PENDING_COMPOSITION_STATUSES,
@@ -22,6 +23,7 @@ import {
 } from "@/server/services/product-studio/jobs";
 
 type ResearchEvent = { projectId: string; actorUserId: string };
+type ImageSearchEvent = ResearchEvent & { searchId: string };
 type GenerateEvent = ResearchEvent & {
   slot: number;
   operatorInstructions?: string | null;
@@ -43,6 +45,30 @@ export const researchProductStudioProject = inngest.createFunction(
     await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
     const result = await runProductStudioResearch(data);
     return { projectId: result.projectId, status: result.status };
+  },
+);
+
+/**
+ * The seller-image search for a project with no photograph (2026-10-28).
+ * Text in, web search, one bounded fetch per seller; the operator chooses
+ * on the project page. Same per-project concurrency and single retry.
+ */
+export const searchProductStudioSellerImages = inngest.createFunction(
+  {
+    id: "product-studio-image-search",
+    name: "Product Studio — Search sellers for a product image",
+    triggers: [{ event: "product-studio/image-search.requested" }],
+    concurrency: { limit: 1, key: "event.data.projectId" },
+    retries: 1,
+  },
+  async ({ event }) => {
+    const data = event.data as ImageSearchEvent;
+    await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
+    const result = await runCompetitorImageSearch({
+      searchId: data.searchId,
+      actorUserId: data.actorUserId,
+    });
+    return result;
   },
 );
 

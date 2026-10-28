@@ -51,6 +51,7 @@ import { helloWorld } from "@/server/inngest/functions/hello";
 import {
   generateProductStudioImage,
   researchProductStudioProject,
+  searchProductStudioSellerImages,
 } from "@/server/inngest/functions/product-studio/process";
 import {
   processProductStudioAutopilotItem,
@@ -91,6 +92,7 @@ async function main(): Promise<void> {
           delaySweep,
           competitorPriceCheck,
           researchProductStudioProject,
+          searchProductStudioSellerImages,
           generateProductStudioImage,
           startProductStudioAutopilotRun,
           processProductStudioAutopilotItem,

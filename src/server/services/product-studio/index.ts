@@ -407,7 +407,8 @@ export async function queueProductStudioResearch(args: {
   });
   if (sourceCount === 0) {
     throw new ProductStudioInputError(
-      "Add at least one authoritative photograph before researching this product.",
+      "Add at least one authoritative photograph, or choose a seller's image of the product, " +
+        "before researching this product.",
     );
   }
   if (["research_queued", "researching", "generating"].includes(project.status)) {

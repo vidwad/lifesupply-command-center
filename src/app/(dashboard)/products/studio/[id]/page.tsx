@@ -31,6 +31,7 @@ import { getFeatureFlags } from "@/server/services/feature-flags";
 import { getProductStudioProject } from "@/server/services/product-studio";
 import { MAX_OPERATOR_INSTRUCTIONS } from "@/server/services/product-studio/prompt-controls";
 import { listBatchProjects } from "@/server/services/product-studio/bulk";
+import { sellerProvenanceByAsset } from "@/server/services/product-studio/competitor-images";
 import { storePriceFor } from "@/server/services/product-studio/report";
 import { describeStorePrice } from "@/server/services/product-studio/store-price";
 import { storeImageCount, storeThumbnailImageId } from "@/server/services/products";
@@ -72,6 +73,7 @@ import {
 import { StudioActionForm } from "../studio-action-form";
 import { LinkProductPanel } from "./link-product-panel";
 import { PublishPanel } from "./publish-panel";
+import { SellerImagePanel } from "./seller-image-panel";
 import { WorkflowProgress } from "./workflow-progress";
 
 export const dynamic = "force-dynamic";
@@ -127,6 +129,9 @@ export default async function ProductStudioDetailPage({ params, searchParams }: 
     : null;
 
   const sourceAssets = project.assets.filter((asset) => asset.kind === "source");
+  // Which photographs came from a seller's listing (2026-10-28), so the card
+  // can say so rather than present them as photographs of the stock.
+  const sellerProvenance = await sellerProvenanceByAsset(project.id);
   const allGeneratedAssets = project.assets.filter((asset) => asset.kind === "generated");
   const generatedAssets = allGeneratedAssets.filter(
     (asset, index) =>
@@ -437,28 +442,57 @@ export default async function ProductStudioDetailPage({ params, searchParams }: 
               <CardContent className="space-y-4">
                 {sourceAssets.length === 0 ? (
                   <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-                    No photograph yet. The store listing had none, so add one to four below before
-                    researching.
+                    No photograph yet. The store listing had none. Add one to four below, or choose
+                    a seller&rsquo;s image of the product, before researching.
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                    {sourceAssets.map((asset) => (
-                      <div key={asset.id} className="space-y-2">
-                        <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
-                          <Image
-                            src={`/api/product-studio/assets/${asset.id}`}
-                            alt={`Authoritative source: ${asset.fileName}`}
-                            fill
-                            sizes="(max-width: 768px) 50vw, 220px"
-                            className="object-contain"
-                            unoptimized
-                          />
+                    {sourceAssets.map((asset) => {
+                      const seller = sellerProvenance.get(asset.id);
+                      return (
+                        <div key={asset.id} className="space-y-2">
+                          <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
+                            <Image
+                              src={`/api/product-studio/assets/${asset.id}`}
+                              alt={
+                                seller
+                                  ? `Reference image from ${seller.sellerName}`
+                                  : `Authoritative source: ${asset.fileName}`
+                              }
+                              fill
+                              sizes="(max-width: 768px) 50vw, 220px"
+                              className="object-contain"
+                              unoptimized
+                            />
+                          </div>
+                          {seller ? (
+                            <p className="text-xs text-muted-foreground">
+                              Seller&rsquo;s listing image, not a photograph of this stock:{" "}
+                              <a
+                                href={seller.pageUrl}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                className="text-primary underline-offset-2 hover:underline"
+                              >
+                                {seller.sellerName}
+                              </a>
+                            </p>
+                          ) : (
+                            <p className="truncate text-xs text-muted-foreground">
+                              {asset.fileName}
+                            </p>
+                          )}
                         </div>
-                        <p className="truncate text-xs text-muted-foreground">{asset.fileName}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
+                {sourceAssets.length === 0 && !photosLocked ? (
+                  <SellerImagePanel
+                    projectId={project.id}
+                    enabled={Boolean(flags[FEATURE_FLAGS.PRODUCT_STUDIO])}
+                  />
+                ) : null}
                 {/*
                  * Photographs can be added or replaced until research has run
                  * (2026-10-26). A project opened in bulk starts with the store's
@@ -814,7 +848,8 @@ export default async function ProductStudioDetailPage({ params, searchParams }: 
                 </p>
                 {!hasSourcePhotos && ["draft", "failed"].includes(project.status) ? (
                   <p className="text-sm text-muted-foreground">
-                    Add at least one photograph in the source photographs card before researching.
+                    Add at least one photograph, or choose a seller&rsquo;s image, in the source
+                    photographs card before researching.
                   </p>
                 ) : null}
                 {canResearch ? (
