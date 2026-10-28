@@ -11,8 +11,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import {
+  countProductStudioProjectsByStatus,
   listProductStudioProjects,
   parseProjectSort,
+  parseProjectStatusFilter,
+  PROJECT_STATUS_FILTER_KEYS,
+  PROJECT_STATUS_FILTER_LABELS,
   summarizeProjectAssets,
 } from "@/server/services/product-studio";
 
@@ -22,7 +26,22 @@ import { ReportBar, STUDIO_REPORT_FORM_ID } from "./report-bar";
 export const metadata = { title: "Product Studio" };
 export const dynamic = "force-dynamic";
 
-type SearchParams = { batch?: string; view?: string; sort?: string; dir?: string };
+type SearchParams = {
+  batch?: string;
+  view?: string;
+  sort?: string;
+  dir?: string;
+  /** A status filter (2026-10-27): draft, in_progress, needs_review, approved or failed. */
+  status?: string;
+};
+
+/** The sort choices offered in both layouts; the list's column headers offer more. */
+const SORT_CHOICES = [
+  { key: undefined, dir: undefined, label: "Recently updated" },
+  { key: "created", dir: "desc", label: "Newest first" },
+  { key: "created", dir: "asc", label: "Oldest first" },
+  { key: "title", dir: "asc", label: "Title A–Z" },
+] as const;
 
 function SelectBox({ id, title }: { id: string; title: string }) {
   return (
@@ -54,18 +73,35 @@ export default async function ProductStudioPage({
   const view = params.view === "list" ? "list" : "cards";
   const sort = parseProjectSort(params.sort);
   const dir = params.dir === "desc" ? "desc" : "asc";
-  const projects = await listProductStudioProjects({ batchId, sort, dir });
+  const status = parseProjectStatusFilter(params.status);
+  const [projects, statusCounts] = await Promise.all([
+    listProductStudioProjects({ batchId, status, sort, dir }),
+    countProductStudioProjectsByStatus({ batchId }),
+  ]);
   const first = batchId ? projects[0] : null;
-  const carried = { batch: batchId ?? undefined, view };
-  const viewHref = (next: "cards" | "list") => {
+  const carried = { batch: batchId ?? undefined, view, status };
+  // One link builder for the layout toggle, the status pills and the sort
+  // choices: each changes one thing and keeps the rest.
+  const href = (next: {
+    view?: "cards" | "list";
+    status?: string | undefined;
+    sort?: string | undefined;
+    dir?: string | undefined;
+  }) => {
     const qs = new URLSearchParams();
     if (batchId) qs.set("batch", batchId);
-    if (next === "list") qs.set("view", "list");
-    if (sort) qs.set("sort", sort);
-    if (params.dir === "desc") qs.set("dir", "desc");
+    const nextView = "view" in next ? next.view : view;
+    if (nextView === "list") qs.set("view", "list");
+    const nextStatus = "status" in next ? next.status : status;
+    if (nextStatus) qs.set("status", nextStatus);
+    const nextSort = "sort" in next ? next.sort : sort;
+    const nextDir = "sort" in next ? next.dir : params.dir;
+    if (nextSort) qs.set("sort", nextSort);
+    if (nextSort && nextDir === "desc") qs.set("dir", "desc");
     const s = qs.toString();
     return `/products/studio${s ? `?${s}` : ""}`;
   };
+  const viewHref = (next: "cards" | "list") => href({ view: next });
   const rows = projects.map((project) => ({
     ...project,
     counts: summarizeProjectAssets(project.assets),
@@ -130,10 +166,56 @@ export default async function ProductStudioPage({
               </Button>
             ) : null}
             <Button asChild size="sm" variant="ghost">
-              <Link href="/products/studio">All projects</Link>
+              <Link href={view === "list" ? "/products/studio?view=list" : "/products/studio"}>
+                All projects
+              </Link>
             </Button>
           </div>
         ) : null}
+
+        {/*
+         * Status filter and sort (product owner, 2026-10-27). Both are plain
+         * links so they work in either layout; the counts honour the batch.
+         */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Status</span>
+          <FilterPill
+            href={href({ status: undefined })}
+            label="All"
+            count={statusCounts.all}
+            active={!status}
+          />
+          {PROJECT_STATUS_FILTER_KEYS.map((key) => (
+            <FilterPill
+              key={key}
+              href={href({ status: key })}
+              label={PROJECT_STATUS_FILTER_LABELS[key]}
+              count={statusCounts[key]}
+              active={status === key}
+            />
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Sort</span>
+          {SORT_CHOICES.map((choice) => {
+            const active =
+              choice.key === sort &&
+              (choice.key == null || (choice.dir === "desc") === (dir === "desc"));
+            return (
+              <FilterPill
+                key={choice.label}
+                href={href({ sort: choice.key, dir: choice.dir })}
+                label={choice.label}
+                active={active}
+              />
+            );
+          })}
+          {sort && !SORT_CHOICES.some((choice) => choice.key === sort) ? (
+            <span className="text-xs text-muted-foreground">
+              Sorted by the {sort} column, {dir === "desc" ? "descending" : "ascending"}.
+            </span>
+          ) : null}
+        </div>
 
         {projects.length > 0 ? (
           <ReportBar total={projects.length} canAutopilot={canAutopilot} />
@@ -142,8 +224,12 @@ export default async function ProductStudioPage({
         {projects.length === 0 ? (
           <EmptyState
             icon={Sparkles}
-            title="No Product Studio projects"
-            description="Create a project with one to four authoritative product photographs."
+            title={status ? "No projects with this status" : "No Product Studio projects"}
+            description={
+              status
+                ? "Choose another status above, or All."
+                : "Create a project with one to four authoritative product photographs."
+            }
           />
         ) : view === "list" ? (
           <DataTable>
@@ -295,5 +381,42 @@ export default async function ProductStudioPage({
         )}
       </div>
     </div>
+  );
+}
+
+function FilterPill({
+  href,
+  label,
+  count,
+  active,
+}: {
+  href: string;
+  label: string;
+  count?: number;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={
+        active
+          ? "inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+          : "inline-flex items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
+      }
+    >
+      {label}
+      {count != null ? (
+        <span
+          className={
+            active
+              ? "rounded bg-primary-foreground/20 px-1.5 py-0.5 tabular-nums"
+              : "rounded bg-muted px-1.5 py-0.5 tabular-nums text-foreground/70"
+          }
+        >
+          {count.toLocaleString()}
+        </span>
+      ) : null}
+    </Link>
   );
 }
