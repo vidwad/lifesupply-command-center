@@ -802,6 +802,25 @@ export async function publishProductStudioProject(args: {
   const failed = results.filter((item) => item.status === "failed");
   const sent = results.length - failed.length;
   const remaining = verdict.items.length - results.length;
+  // A project whose content reached the store is approved (product owner,
+  // 2026-10-28): what a Super Admin chose to publish is the listing now,
+  // whatever drafts were rejected along the way. Only a complete, successful
+  // publish does this, and only from needs_review; a failure leaves the
+  // status alone so the page still says what is outstanding.
+  if (failed.length === 0 && sent > 0 && row.status === "needs_review") {
+    await prisma.productStudioProject.update({
+      where: { id: row.id },
+      data: { status: "approved" },
+    });
+    await writeAudit({
+      actorUserId: args.actorUserId,
+      action: "product_studio.project_approved_on_publish",
+      entityType: "ProductStudioProject",
+      entityId: row.id,
+      beforeData: { status: row.status },
+      afterData: { status: "approved", publishedItems: sent },
+    });
+  }
   return {
     status: failed.length > 0 ? "failed" : "succeeded",
     items: results,

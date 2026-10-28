@@ -197,7 +197,7 @@ specification for `new_sealed`. Fabricated identifiers are a defect in both.
 | Source verification | Cited seller domains are validated against actual web-search tool evidence (tool calls and URL-citation annotations only — a URL the model merely wrote is not evidence). Since 2026-10-26 a citation whose domain is not in the evidence is **removed** rather than failing the whole research: the source and its price observations are dropped, the market range is recomputed from what remains, the dropped domains are recorded in the project's warnings and in the AI output record, and the benchmark listing is reassigned to a verified source. Research still fails if no verified source or no verified price observation remains, and the failure names the domains the evidence did cover. |
 | Provenance | Seller URLs, price observations, prompts, model names, hashes, actors, and timestamps are stored. |
 | External actions | One, added 2026-10-22: publishing upload-approved images and the full description to the linked BigCommerce product (§5.5), by a Super Admin on the publishing card or, since 2026-10-27, by an unattended run that Super Admin created with a publish mode (§5.6). Social publishing stays out of scope. |
-| Human review | Generated assets remain `needs_review` or `rejected` until a permitted user acts, except inside an unattended run (§5.6), where the run approves or rejects each draft from its QA scores and stamps the draft `autoReviewedAt` so the two kinds of review are never confused. |
+| Human review | Generated assets remain `needs_review` or `rejected` until a permitted user acts, except inside an unattended run (§5.6), where the run approves or rejects each draft from its QA scores and stamps the draft `autoReviewedAt` so the two kinds of review are never confused. A project in `needs_review` becomes `approved` once a publish of its marked content succeeds in full (product owner, 2026-10-28), whether from the publishing card or a run: what reached the store is the listing, whatever drafts were rejected; a failed publish leaves the status alone. Audited as `product_studio.project_approved_on_publish`. |
 | Unattended runs | `product_studio.autopilot`, default off, in the kill set, on top of the Studio and image-generation flags; creation and cancellation need the Super Admin-only publish permission; every step re-checks the flags; an Approval row records the creation; `autopilot-canaries.test.ts` holds the structure (§5.6). |
 | Audit | Project creation, research queue/result/failure, generation queue/result/failure, and review are logged. |
 
@@ -213,6 +213,10 @@ in the right column of the project page, and only a Super Admin sees it.
   upload", added to the product's images as a multipart upload from the stored bytes; and
 - the full description (`longDescription`), once marked "approved for upload", written as escaped
   `<p>` paragraphs and **replacing** the description on the store.
+
+**After a publish.** When every marked item reached the store, a project still in `needs_review`
+(some drafts rejected, or not every slot approved) is marked `approved` and audited (product owner,
+2026-10-28). A publish that stops at a failure leaves the status as it was.
 
 **Changing what was published (product owner, 2026-10-26).** Approval is not final:
 
