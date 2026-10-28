@@ -317,13 +317,31 @@ describe("report images", () => {
       await shrinkForReport({ contentType: "text/plain", data: new Uint8Array(10) }),
     ).toBeNull();
   });
-  it("the report builder embeds nothing it has not shrunk", () => {
+  it("the report builder reads stored thumbnails and never a full image itself", () => {
     const code = readFileSync(join(__dirname, "report.ts"), "utf8");
-    // Every stored image goes through shrinkForReport; the raw row's data
-    // never reaches a ReportImage.
-    expect(code).toContain("return shrinkForReport(await getProductStudioAsset(assetId));");
-    expect(code).not.toMatch(/format: "png"/);
-    expect(code).not.toMatch(/data: asset\.data/);
+    expect(code).toContain("reportImageForAsset(asset.id, budget)");
+    expect(code).toContain("MAX_LAZY_THUMBNAILS_PER_REPORT");
+    expect(code).not.toMatch(/getProductStudioAsset|data: true|format: "png"/);
+    // The web service reads a full image only inside the budgeted lazy fill.
+    const thumbs = readFileSync(join(__dirname, "report-thumbnails.ts"), "utf8");
+    expect(thumbs).toContain("if (budget.remaining <= 0) return { image: null, pending: true };");
+    expect(thumbs).toContain('AND "reportThumbnail" IS NULL');
+    // A cache fill is not audited and does not go through Prisma's update.
+    expect(thumbs).not.toMatch(/writeAudit|productStudioAsset\.update\(/);
+  });
+  it("every asset creation stores a thumbnail, and the worker backfills the rest", () => {
+    const studio = (name: string) => readFileSync(join(__dirname, name), "utf8");
+    expect(studio("index.ts")).toContain(
+      "reportThumbnail: await reportThumbnailFor(data, file.type)",
+    );
+    expect(studio("bulk.ts")).toContain(
+      "reportThumbnail: await reportThumbnailFor(seed.data, seed.contentType)",
+    );
+    expect(studio("jobs.ts")).toContain(
+      "reportThumbnailFor(generated.data, generated.contentType)",
+    );
+    const worker = readFileSync(join(__dirname, "..", "..", "..", "worker.ts"), "utf8");
+    expect(worker).toContain("void backfillReportThumbnails().catch(");
   });
 });
 

@@ -7,7 +7,7 @@
  */
 import { z } from "zod";
 
-import { MAX_BATCH_SIZE } from "./bulk";
+import { MAX_BATCH_SIZE } from "./limits";
 
 /** Products in one run; the bulk batch size, so the two never disagree. */
 export const MAX_RUN_PRODUCTS = MAX_BATCH_SIZE;

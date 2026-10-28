@@ -4,6 +4,7 @@ import { parseDepictableSpec, parseProductMode } from "./depiction";
 import { compileProductImagePrompt } from "./prompts";
 import { rebuildCompositionBrief, rebuildIdentity, rebuildListing } from "./recompile";
 import { isWorkflowBusy } from "./workflow-progress";
+import { reportThumbnailFor } from "./report-thumbnails";
 
 import type { Prisma, ProductStudioProjectStatus } from "@prisma/client";
 
@@ -36,6 +37,8 @@ export type PreparedSourceImage = {
   /** Buffer over a plain ArrayBuffer — the shape Prisma's Bytes field requires. */
   data: Buffer<ArrayBuffer>;
   contentHash: string;
+  /** The report-sized JPEG, stored beside the image (report-thumbnails.ts). */
+  reportThumbnail: Uint8Array<ArrayBuffer> | null;
 };
 
 /**
@@ -79,6 +82,7 @@ export async function prepareProductStudioIntake(args: {
         bytes: data.byteLength,
         data,
         contentHash: createHash("sha256").update(data).digest("hex"),
+        reportThumbnail: await reportThumbnailFor(data, file.type),
       };
     }),
   );

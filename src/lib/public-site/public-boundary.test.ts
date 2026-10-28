@@ -55,6 +55,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261028090000_openai_only",
   // Product list filters on image count and description length (product owner, 2026-10-27).
   "20261028110000_product_image_count_description_length",
+  // Product Studio report thumbnails (2026-10-28).
+  "20261028150000_product_studio_report_thumbnail",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */

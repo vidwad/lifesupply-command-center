@@ -23,8 +23,10 @@ import { prisma } from "@/server/db/client";
 import { requireFeature } from "@/server/services/feature-flags";
 
 import { ProductStudioInputError } from "./index";
+import { MAX_BATCH_SIZE } from "./limits";
+import { reportThumbnailFor } from "./report-thumbnails";
 
-export const MAX_BATCH_SIZE = 50;
+export { MAX_BATCH_SIZE };
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_SOURCE_BYTES = 8 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 15_000;
@@ -250,6 +252,7 @@ export async function createProductStudioBatch(args: {
                   contentType: seed.contentType,
                   bytes: seed.bytes,
                   data: seed.data,
+                  reportThumbnail: await reportThumbnailFor(seed.data, seed.contentType),
                   contentHash: createHash("sha256").update(seed.data).digest("hex"),
                 },
               ],

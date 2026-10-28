@@ -638,6 +638,10 @@ model ProductStudioAsset {
   contentType    String
   bytes          Int
   data           Bytes
+  /// The image as a report-sized JPEG (2026-10-28), written when the asset
+  /// is created and backfilled by the worker; the summary PDF reads this
+  /// alone. A derived cache, never the record of the image.
+  reportThumbnail Bytes?
   contentHash    String
   width          Int?
   height         Int?
