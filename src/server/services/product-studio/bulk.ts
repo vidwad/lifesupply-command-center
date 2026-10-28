@@ -156,6 +156,22 @@ export type BatchEntry = {
 export type BatchResult = { batchId: string; entries: BatchEntry[] };
 
 /**
+ * The unattended-run form's address for a batch (2026-10-28). A product that
+ * already had a live project is not re-created, so that project carries its
+ * original batch id, not this one; the form would miss it if it were sent
+ * the batch alone. Those projects travel as `id=` beside the batch, and the
+ * form merges the two. Before this, selecting products that had all been
+ * opened in the Studio once reached the form with nothing selected.
+ */
+export function runFormHrefForBatch(result: BatchResult): string {
+  const qs = new URLSearchParams({ batch: result.batchId });
+  for (const entry of result.entries) {
+    if (entry.projectId && entry.note?.startsWith("Already")) qs.append("id", entry.projectId);
+  }
+  return "/automation/product-studio/new?" + qs.toString();
+}
+
+/**
  * Creates one project per selected product, in the order selected, under one
  * batch id. A product that already has a live project is not duplicated; its
  * existing project is reported instead.

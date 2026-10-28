@@ -14,7 +14,10 @@ import {
   deleteProductStudioProject,
   recompileProductStudioPrompts,
 } from "@/server/services/product-studio";
-import { createProductStudioBatch } from "@/server/services/product-studio/bulk";
+import {
+  createProductStudioBatch,
+  runFormHrefForBatch,
+} from "@/server/services/product-studio/bulk";
 import {
   reformatProductStudioDescription,
   updateProductStudioLongDescription,
@@ -177,14 +180,15 @@ export async function bulkAutopilotAction(
   const productIds = formData
     .getAll("productId")
     .filter((value): value is string => typeof value === "string");
-  let batchId: string;
+  let batch: Awaited<ReturnType<typeof createProductStudioBatch>>;
   try {
-    ({ batchId } = await createProductStudioBatch({ actorUserId: user.id, productIds }));
+    batch = await createProductStudioBatch({ actorUserId: user.id, productIds });
   } catch (error) {
     return actionError(error);
   }
   revalidatePath("/products/studio");
-  redirect(`/automation/product-studio/new?batch=${batchId}`);
+  // Projects the products already had ride along as `id=`; see runFormHrefForBatch.
+  redirect(runFormHrefForBatch(batch));
 }
 
 export async function updateSourcePhotosAction(
