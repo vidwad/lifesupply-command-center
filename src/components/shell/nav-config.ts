@@ -78,6 +78,12 @@ export const PRIMARY_NAV: NavItem[] = [
     permission: PERMISSIONS.PRODUCTS_UPDATE,
   },
   {
+    label: "Product Studio runs",
+    href: "/automation/product-studio",
+    icon: Camera,
+    permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
+  },
+  {
     label: "Pricing Intelligence",
     href: "/products/pricing",
     icon: CircleDollarSign,
@@ -165,12 +171,6 @@ export const PRIMARY_NAV: NavItem[] = [
     label: "Automation Center",
     href: "/automation",
     icon: Wrench,
-    permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
-  },
-  {
-    label: "Product Studio runs",
-    href: "/automation/product-studio",
-    icon: Camera,
     permission: PERMISSIONS.ADMIN_MANAGE_INTEGRATIONS,
   },
   {
