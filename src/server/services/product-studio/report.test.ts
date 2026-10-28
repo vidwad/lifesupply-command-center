@@ -1,10 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 import { summarizeProjectAssets } from "./index";
 import { summarizeProject } from "./report";
+import { REPORT_IMAGE_EDGE, shrinkForReport } from "./report-images";
 
 const now = new Date("2026-10-26T12:00:00Z");
 
@@ -276,6 +278,52 @@ describe("the list's asset counts", () => {
         },
       ]),
     ).toEqual({ sourceCount: 1, approvedSlots: 1, publishedSlots: 1 });
+  });
+});
+
+describe("report images", () => {
+  it("shrinks a large PNG to a report-sized JPEG and converts WebP", async () => {
+    const big = await sharp({
+      create: { width: 2048, height: 1536, channels: 4, background: "#c0392b" },
+    })
+      .png()
+      .toBuffer();
+    const shrunk = await shrinkForReport({ contentType: "image/png", data: new Uint8Array(big) });
+    expect(shrunk?.format).toBe("jpg");
+    const meta = await sharp(Buffer.from(shrunk!.data)).metadata();
+    expect(meta.format).toBe("jpeg");
+    expect(Math.max(meta.width!, meta.height!)).toBe(REPORT_IMAGE_EDGE);
+    expect(shrunk!.data.byteLength).toBeLessThan(big.byteLength / 10);
+
+    const webp = await sharp({
+      create: { width: 300, height: 200, channels: 3, background: "#fff" },
+    })
+      .webp()
+      .toBuffer();
+    const converted = await shrinkForReport({
+      contentType: "image/webp",
+      data: new Uint8Array(webp),
+    });
+    expect(converted?.format).toBe("jpg");
+    // A small image is not enlarged.
+    expect((await sharp(Buffer.from(converted!.data)).metadata()).width).toBe(300);
+  });
+  it("returns null for a missing asset or bytes that are not an image", async () => {
+    expect(await shrinkForReport(null)).toBeNull();
+    expect(
+      await shrinkForReport({ contentType: "image/png", data: new Uint8Array([1, 2, 3]) }),
+    ).toBeNull();
+    expect(
+      await shrinkForReport({ contentType: "text/plain", data: new Uint8Array(10) }),
+    ).toBeNull();
+  });
+  it("the report builder embeds nothing it has not shrunk", () => {
+    const code = readFileSync(join(__dirname, "report.ts"), "utf8");
+    // Every stored image goes through shrinkForReport; the raw row's data
+    // never reaches a ReportImage.
+    expect(code).toContain("return shrinkForReport(await getProductStudioAsset(assetId));");
+    expect(code).not.toMatch(/format: "png"/);
+    expect(code).not.toMatch(/data: asset\.data/);
   });
 });
 

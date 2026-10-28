@@ -6,13 +6,15 @@
  * `summarizeProject` is pure and builds a plain snapshot from the loaded
  * rows; `buildProductStudioReport` loads the projects and attaches image
  * bytes for the latest draft of each composition and the first source
- * photographs. Nothing here writes anything.
+ * photographs, each shrunk to report size as it is loaded (see
+ * report-images.ts for why). Nothing here writes anything.
  */
 import { getProductStudioAsset, getProductStudioProject, summarizeProjectAssets } from "./index";
 import { stripListingLinks } from "./listing-copy";
 import { parseListingBlocks, type ListingBlock } from "./listing-format";
 import { latestGeneratedBySlot } from "./publish-eligibility";
 import { listPublishLogs } from "./publish-read";
+import { shrinkForReport } from "./report-images";
 import { storePriceContext, type StorePriceContext } from "./store-price";
 
 export const MAX_REPORT_PROJECTS = 50;
@@ -21,7 +23,7 @@ type Loaded = NonNullable<Awaited<ReturnType<typeof getProductStudioProject>>>;
 type Logs = Awaited<ReturnType<typeof listPublishLogs>>;
 
 export type ReportImage = {
-  /** JPEG or PNG bytes; WebP cannot be embedded and is left out. */
+  /** Report-sized JPEG bytes; see report-images.ts. */
   data: Uint8Array;
   format: "jpg" | "png";
 };
@@ -239,11 +241,12 @@ export function summarizeProject(project: Loaded, logs: Logs): Omit<ProjectRepor
   };
 }
 
-function imageOf(asset: { contentType: string; data: Uint8Array } | null): ReportImage | null {
-  if (!asset) return null;
-  if (asset.contentType === "image/jpeg") return { data: asset.data, format: "jpg" };
-  if (asset.contentType === "image/png") return { data: asset.data, format: "png" };
-  return null;
+/**
+ * One asset's bytes, loaded and shrunk in one step so the full-size image is
+ * released before the next one is read; the stored row is never kept.
+ */
+async function imageOf(assetId: string): Promise<ReportImage | null> {
+  return shrinkForReport(await getProductStudioAsset(assetId));
 }
 
 export async function buildProductStudioReport(args: {
@@ -268,11 +271,11 @@ export async function buildProductStudioReport(args: {
     const latest = latestGeneratedBySlot(project.assets);
     for (const composition of snapshot.compositions) {
       const asset = latest.find((item) => item.compositionSlot === composition.slot);
-      if (asset) composition.image = imageOf(await getProductStudioAsset(asset.id));
+      if (asset) composition.image = await imageOf(asset.id);
     }
     const sourcePhotos: ReportImage[] = [];
     for (const asset of project.assets.filter((item) => item.kind === "source").slice(0, 4)) {
-      const image = imageOf(await getProductStudioAsset(asset.id));
+      const image = await imageOf(asset.id);
       if (image) sourcePhotos.push(image);
     }
     projects.push({ ...snapshot, sourcePhotos });
