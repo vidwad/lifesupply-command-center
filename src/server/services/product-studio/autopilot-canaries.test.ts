@@ -62,6 +62,8 @@ describe("unattended runs keep their controls", () => {
       "product_studio.autopilot_run_cancel_requested",
       "product_studio.autopilot_item_completed",
       "product_studio.autopilot_item_needs_attention",
+      "product_studio.autopilot_seller_image_chosen",
+      "product_studio.autopilot_seller_image_not_found",
       "product_studio.autopilot_item_failed",
       "product_studio.autopilot_run_completed",
     ]) {

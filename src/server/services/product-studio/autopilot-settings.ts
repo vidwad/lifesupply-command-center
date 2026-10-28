@@ -76,6 +76,13 @@ export const autopilotSettingsSchema = z.object({
    * the setting existed still parse and behave as they did.
    */
   minApprovedImagesToPublish: z.number().int().min(0).max(4).default(4),
+  /**
+   * A product with no photograph first searches other sellers for one and
+   * takes the image most sellers share, else the best available, as its
+   * reference (product owner, 2026-10-28). Off, it stops for attention as
+   * before. Defaults on when absent.
+   */
+  sellerImageWhenNoPhoto: z.boolean().default(true),
   /** Open a Task for the creator listing products that need attention. */
   createTask: z.boolean(),
 });
@@ -94,6 +101,7 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   publishMode: "none",
   descriptionMode: "replace",
   minApprovedImagesToPublish: 4,
+  sellerImageWhenNoPhoto: true,
   createTask: true,
 };
 
@@ -173,6 +181,7 @@ export function autopilotSettingsFromForm(form: FormData): AutopilotSettings {
       "minApprovedImagesToPublish",
       d.minApprovedImagesToPublish,
     ),
+    sellerImageWhenNoPhoto: form.get("sellerImageWhenNoPhoto") === "1",
     createTask: form.get("createTask") === "1",
   });
 }
@@ -217,6 +226,9 @@ export function describeAutopilotSettings(settings: AutopilotSettings): string[]
       : settings.descriptionMode === "replace"
         ? "The store description is replaced."
         : "The store description is written only where the store has none.",
+    settings.sellerImageWhenNoPhoto
+      ? "A product with no photograph first searches other sellers for one and takes the image most sellers share, else the best available, as its reference."
+      : "A product with no photograph stops for attention.",
     settings.createTask
       ? "Open a Task for products that need attention."
       : "No Task is opened; the run page is the record.",

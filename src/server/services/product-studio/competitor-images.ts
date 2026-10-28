@@ -283,6 +283,89 @@ export async function fetchCandidateImage(url: string): Promise<FetchOutcome> {
   };
 }
 
+export type ChoosableCandidate = {
+  id: string;
+  sellerName: string;
+  sourceType: string | null;
+  imageKind: string | null;
+  matchConfidence: number | null;
+  width: number | null;
+  height: number | null;
+  contentHash: string | null;
+  fetchError: string | null;
+};
+
+const CHOICE_SOURCE_RANK: Record<string, number> = {
+  manufacturer: 0,
+  distributor: 1,
+  retailer: 2,
+  marketplace: 3,
+};
+const CHOICE_KIND_RANK: Record<string, number> = {
+  packshot: 0,
+  packaging: 1,
+  other: 2,
+  lifestyle: 3,
+};
+
+function rankCandidate(a: ChoosableCandidate, b: ChoosableCandidate): number {
+  return (
+    (CHOICE_SOURCE_RANK[a.sourceType ?? ""] ?? 9) - (CHOICE_SOURCE_RANK[b.sourceType ?? ""] ?? 9) ||
+    (CHOICE_KIND_RANK[a.imageKind ?? ""] ?? 9) - (CHOICE_KIND_RANK[b.imageKind ?? ""] ?? 9) ||
+    (b.matchConfidence ?? 0) - (a.matchConfidence ?? 0) ||
+    (b.width ?? 0) * (b.height ?? 0) - (a.width ?? 0) * (a.height ?? 0)
+  );
+}
+
+/**
+ * The seller image an unattended run takes as a product's reference
+ * (product owner, 2026-10-28). The image most sellers share wins: identical
+ * bytes (the same content hash) at two or more sellers is the product's
+ * stock image, usually the manufacturer's. When no image is shared, the best
+ * single one: manufacturer before distributor, retailer and marketplace;
+ * packshot before packaging and styled photography; then the model's match
+ * confidence; then resolution. Pure. Null when nothing was fetched.
+ */
+export function chooseSellerImage(
+  candidates: readonly ChoosableCandidate[],
+): { candidateId: string; reason: string } | null {
+  const usable = candidates.filter((item) => item.contentHash && !item.fetchError);
+  if (usable.length === 0) return null;
+  const byHash = new Map<string, ChoosableCandidate[]>();
+  for (const item of usable) {
+    const list = byHash.get(item.contentHash!) ?? [];
+    list.push(item);
+    byHash.set(item.contentHash!, list);
+  }
+  const groups = [...byHash.values()].sort(
+    (a, b) => b.length - a.length || rankCandidate(a[0]!, b[0]!),
+  );
+  const top = groups[0]!;
+  if (top.length >= 2) {
+    const chosen = [...top].sort(rankCandidate)[0]!;
+    return {
+      candidateId: chosen.id,
+      reason:
+        "the same image is used by " +
+        String(top.length) +
+        " sellers (" +
+        top.map((item) => item.sellerName).join(", ") +
+        ")",
+    };
+  }
+  const best = [...usable].sort(rankCandidate)[0]!;
+  return {
+    candidateId: best.id,
+    reason:
+      "no image is shared between sellers; the best single one is " +
+      (best.sourceType ?? "a seller") +
+      " " +
+      (best.imageKind ?? "image") +
+      " from " +
+      best.sellerName,
+  };
+}
+
 type SearchableProject = {
   id: string;
   status: string;
@@ -331,8 +414,26 @@ export async function queueCompetitorImageSearch(args: {
     where: { projectId: project.id, status: { in: ["queued", "running"] } },
   });
   if (live > 0) throw new ProductStudioInputError("A seller-image search is already running.");
+  const { identifiers, search } = await createSearchRow(project.id, args.actorUserId);
+  await inngest.send({
+    id: `product-studio-image-search-${search.id}`,
+    name: "product-studio/image-search.requested",
+    data: { searchId: search.id, projectId: project.id, actorUserId: args.actorUserId },
+  });
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: "product_studio.image_search_queued",
+    entityType: "ProductStudioProject",
+    entityId: project.id,
+    afterData: { searchId: search.id, identifiers },
+  });
+  return search.id;
+}
+
+/** The search row and the identifiers it was given, for the queue and for a run. */
+async function createSearchRow(projectId: string, actorUserId: string) {
   const detail = await prisma.productStudioProject.findUniqueOrThrow({
-    where: { id: project.id },
+    where: { id: projectId },
     select: {
       title: true,
       shortDescription: true,
@@ -348,26 +449,75 @@ export async function queueCompetitorImageSearch(args: {
   ].filter((item): item is string => item != null);
   const search = await prisma.productStudioImageSearch.create({
     data: {
-      projectId: project.id,
-      requestedById: args.actorUserId,
+      projectId,
+      requestedById: actorUserId,
       status: "queued",
       query: [detail.title, detail.shortDescription, ...identifiers].join("\n"),
     },
     select: { id: true },
   });
-  await inngest.send({
-    id: `product-studio-image-search-${search.id}`,
-    name: "product-studio/image-search.requested",
-    data: { searchId: search.id, projectId: project.id, actorUserId: args.actorUserId },
-  });
-  await writeAudit({
+  return { identifiers, search };
+}
+
+export type RunSellerImageOutcome = {
+  searchId: string;
+  candidates: number;
+  chosen: { assetId: string; sellerName: string; pageUrl: string; reason: string } | null;
+};
+
+/**
+ * The unattended run's path (product owner, 2026-10-28): search, choose
+ * the image most sellers share or else the best single one, and make it
+ * the product's photograph, all in one worker step while the run holds the
+ * project. The search is one bounded web-search call; the choice spends
+ * nothing. Returns what was chosen, or null when nothing usable was found,
+ * in which case the policy stops the product for a person.
+ */
+export async function sourceSellerImageForRun(args: {
+  projectId: string;
+  actorUserId: string;
+  runId: string;
+}): Promise<RunSellerImageOutcome> {
+  await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
+  const { search } = await createSearchRow(args.projectId, args.actorUserId);
+  const result = await runCompetitorImageSearch({
+    searchId: search.id,
     actorUserId: args.actorUserId,
-    action: "product_studio.image_search_queued",
-    entityType: "ProductStudioProject",
-    entityId: project.id,
-    afterData: { searchId: search.id, identifiers },
   });
-  return search.id;
+  const candidates = await prisma.productStudioImageCandidate.findMany({
+    where: { searchId: search.id },
+    select: {
+      id: true,
+      sellerName: true,
+      pageUrl: true,
+      sourceType: true,
+      imageKind: true,
+      matchConfidence: true,
+      width: true,
+      height: true,
+      contentHash: true,
+      fetchError: true,
+    },
+  });
+  const choice = chooseSellerImage(candidates);
+  if (!choice) return { searchId: search.id, candidates: result.candidates, chosen: null };
+  const chosen = candidates.find((item) => item.id === choice.candidateId)!;
+  const assetId = await selectCompetitorImage({
+    projectId: args.projectId,
+    candidateId: choice.candidateId,
+    actorUserId: args.actorUserId,
+    automatic: { runId: args.runId, reason: choice.reason },
+  });
+  return {
+    searchId: search.id,
+    candidates: result.candidates,
+    chosen: {
+      assetId,
+      sellerName: chosen.sellerName,
+      pageUrl: chosen.pageUrl,
+      reason: choice.reason,
+    },
+  };
 }
 
 export type ImageSearchJobResult = {
@@ -552,10 +702,13 @@ export async function selectCompetitorImage(args: {
   projectId: string;
   candidateId: string;
   actorUserId: string;
+  /** Set when an unattended run chose the image (sourceSellerImageForRun). */
+  automatic?: { runId: string; reason: string };
 }): Promise<string> {
   await requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO);
   const project = await loadSearchableProject(args.projectId);
-  await assertNotUnderAutopilot(project, "Choosing a seller image");
+  // The run holds the project while it chooses; a person is refused then.
+  if (!args.automatic) await assertNotUnderAutopilot(project, "Choosing a seller image");
   assertPhotosChangeable(project);
   const sourceCount = await prisma.productStudioAsset.count({
     where: { projectId: project.id, kind: "source" },
@@ -642,6 +795,7 @@ export async function selectCompetitorImage(args: {
       pageUrl: candidate.pageUrl,
       imageUrl: candidate.imageUrl,
       contentHash: outcome.image.contentHash,
+      automatic: args.automatic ?? null,
     },
   });
   return assetId;

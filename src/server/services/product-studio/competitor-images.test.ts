@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  chooseSellerImage,
   hostOf,
   imageUrlProblem,
   isOwnStoreHost,
@@ -157,6 +158,79 @@ describe("seller-image search: which listings are kept", () => {
   });
 });
 
+describe("seller-image search: the image an unattended run takes", () => {
+  const base = {
+    sourceType: "retailer",
+    imageKind: "packshot",
+    matchConfidence: 0.9,
+    width: 800,
+    height: 800,
+    fetchError: null,
+  };
+  it("takes the image most sellers share, named by its sellers", () => {
+    const choice = chooseSellerImage([
+      { ...base, id: "a", sellerName: "Shop A", contentHash: "h1" },
+      { ...base, id: "b", sellerName: "Shop B", contentHash: "h2", sourceType: "manufacturer" },
+      { ...base, id: "c", sellerName: "Shop C", contentHash: "h1" },
+      { ...base, id: "d", sellerName: "Shop D", contentHash: null, fetchError: "HTTP 404" },
+    ]);
+    expect(choice?.candidateId).toBe("a");
+    expect(choice?.reason).toBe("the same image is used by 2 sellers (Shop A, Shop C)");
+  });
+  it("otherwise takes the best single one: manufacturer packshot first, then confidence, then size", () => {
+    const choice = chooseSellerImage([
+      { ...base, id: "a", sellerName: "Shop A", contentHash: "h1", matchConfidence: 0.99 },
+      {
+        ...base,
+        id: "b",
+        sellerName: "Maker",
+        contentHash: "h2",
+        sourceType: "manufacturer",
+        imageKind: "lifestyle",
+      },
+      {
+        ...base,
+        id: "c",
+        sellerName: "Maker too",
+        contentHash: "h3",
+        sourceType: "manufacturer",
+        matchConfidence: 0.8,
+      },
+    ]);
+    expect(choice?.candidateId).toBe("c");
+    expect(choice?.reason).toContain("no image is shared between sellers");
+    expect(
+      chooseSellerImage([
+        { ...base, id: "x", sellerName: "X", contentHash: "h", width: 400, height: 400 },
+        { ...base, id: "y", sellerName: "Y", contentHash: "g", width: 1200, height: 1200 },
+      ])?.candidateId,
+    ).toBe("y");
+  });
+  it("chooses nothing when no image was fetched", () => {
+    expect(chooseSellerImage([])).toBeNull();
+    expect(
+      chooseSellerImage([
+        { ...base, id: "a", sellerName: "A", contentHash: null, fetchError: "x" },
+      ]),
+    ).toBeNull();
+  });
+  it("the run's path skips the person-only lock but nothing else, and audits the choice", () => {
+    const service = here("competitor-images.ts");
+    expect(service).toContain(
+      'if (!args.automatic) await assertNotUnderAutopilot(project, "Choosing a seller image");',
+    );
+    expect(service).toContain("automatic: { runId: args.runId, reason: choice.reason },");
+    expect(service).toContain("automatic: args.automatic ?? null,");
+    const policy = here("autopilot-policy.ts");
+    expect(policy).toContain(
+      "if (settings.sellerImageWhenNoPhoto && project.sellerImageSearches === 0) {",
+    );
+    const run = here("autopilot.ts");
+    expect(run).toContain('case "source_image": {');
+    expect(run).toContain("sellerImageSearches: project._count.imageSearches,");
+  });
+});
+
 describe("seller-image search: what may be fetched", () => {
   it("accepts public HTTP(S) host names only", () => {
     expect(imageUrlProblem("https://cdn.example.com/a.jpg")).toBeNull();
@@ -253,8 +327,9 @@ describe("seller-image search: shape of the service, page and worker", () => {
   const service = here("competitor-images.ts");
 
   it("re-checks the Studio flag, the run lock and the photograph lock on every entry", () => {
+    // Queue, run, select, and the unattended run's own entry (2026-10-28).
     expect(service.match(/await requireFeature\(FEATURE_FLAGS\.PRODUCT_STUDIO\);/g)?.length).toBe(
-      3,
+      4,
     );
     expect(service).toContain('await assertNotUnderAutopilot(project, "Searching sellers");');
     expect(service).toContain('await assertNotUnderAutopilot(project, "Choosing a seller image");');

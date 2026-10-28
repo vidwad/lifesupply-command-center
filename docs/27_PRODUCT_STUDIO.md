@@ -114,8 +114,13 @@ project has none and its photographs may still change, a **seller-image search**
   refused while an unattended run owns the project or once research has locked the photographs,
   and are audited (`product_studio.image_search_queued`, `_completed`, `_failed`,
   `product_studio.seller_image_selected`). The search is recorded as an AI output
-  (`product_studio_image_search`) with the evidence URLs and the dropped listings. Unattended
-  runs do not search: a product with no photograph still stops for attention, as before.
+  (`product_studio_image_search`) with the evidence URLs and the dropped listings. An unattended
+  run searches too, when its "seller image when no photograph" criterion is on (the default,
+  product owner, 2026-10-28): it takes the image most sellers share (identical bytes at two or
+  more sellers), else the best single one (manufacturer before distributor, retailer and
+  marketplace; packshot before packaging and styled photography; then match confidence, then
+  resolution), makes it the product's photograph with the choice audited, and carries on with
+  research. One search per product; if nothing usable is found the product stops for attention.
 - **Choice of image.** A manufacturer's packshot is identity evidence of a mass-produced product
   and the right choice; a retailer's styled photograph carries that retailer's creative work, and
   the panel says so. The operator makes the call and the record shows which image was chosen.
@@ -306,6 +311,7 @@ creator is no longer an active user.
 | Publish to BigCommerce | none | `none` leaves approved drafts for the publishing card. `images` adds the approved drafts to the listing; `images_and_description` also replaces the store description; `all` also makes the first composition the main image. Any mode but `none` needs `product_studio.publish` and `external.writebacks` on when the run is created and again when each product publishes. |
 | Store description | replace | With a publishing mode that includes the description: replace what the store has, or write it only where the store's description is empty. |
 | Minimum approved images to publish | every image | With a publishing mode: a product whose images did not all pass is still published when at least this many are approved (product owner, 2026-10-28). The approved images go up, and the description if the mode includes it. Once that publish succeeds the product is finished and its project marked approved, with the item's note naming the images that were not published (product owner, 2026-10-28): the minimum was the criterion, and it was met. A refused or failed publish, or one with nothing to send, still leaves the product for attention. At the default nothing changes: only fully approved products publish. 0 publishes the description even when no image passed. Never applies to a product that stopped before its images (no photograph, research below the confidence threshold, no research). Capped at the images per product. |
+| Seller image when no photograph | yes | A product with no photograph first searches other sellers for one (§2.6) and takes the image most sellers share, else the best single one, as its reference, then continues as any other product (product owner, 2026-10-28). One search per product; nothing usable found stops the product for attention. Off, such a product stops for attention without searching. |
 | Open a Task | yes | On completion, a Task for the creator lists the products needing attention. |
 
 **Publishing from a run.** When the mode is not `none`, a product whose requested images are all
