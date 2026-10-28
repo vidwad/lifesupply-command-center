@@ -262,9 +262,21 @@ function parseJson<T>(raw: string, parser: { parse: (value: unknown) => T }): T 
   return parser.parse(JSON.parse(trimmed));
 }
 
+/** A parseable absolute HTTP(S) URL with a host. */
+function isHttpUrl(value: string): boolean {
+  if (!/^https?:\/\/\S/i.test(value)) return false;
+  try {
+    return new URL(value).hostname.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 function collectHttpUrls(value: unknown, found: Set<string>): Set<string> {
   if (typeof value === "string") {
-    if (/^https?:\/\//i.test(value)) found.add(value);
+    // The search tool's output has carried a bare "https://" (2026-10-28);
+    // a string that does not parse as a URL is not evidence of anything.
+    if (isHttpUrl(value)) found.add(value);
     return found;
   }
   if (Array.isArray(value)) {
@@ -314,7 +326,11 @@ export function collectWebSearchEvidenceUrls(output: unknown): string[] {
 }
 
 function hostname(value: string): string {
-  return new URL(value).hostname.replace(/^www\./i, "").toLowerCase();
+  try {
+    return new URL(value).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 /**

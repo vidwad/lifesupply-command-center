@@ -4,12 +4,14 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  hostOf,
   imageUrlProblem,
   isOwnStoreHost,
   isPrivateAddress,
   MAX_IMAGE_CANDIDATES,
   reconcileCandidatesWithEvidence,
 } from "./competitor-images";
+import { collectWebSearchEvidenceUrls } from "./openai";
 import { buildProductResearchPrompt, buildSellerImageSearchPrompt } from "./prompts";
 import { sellerImageSearchSchema, type SellerImageCandidate } from "./types";
 
@@ -127,6 +129,25 @@ describe("seller-image search: which listings are kept", () => {
     );
     expect(kept).toEqual([]);
     expect(dropped[0]?.reason).toBe("IP address rather than a host name");
+  });
+
+  it("survives a malformed evidence string, as the search tool has produced", () => {
+    // Production, 2026-10-28: the web-search output carried a bare "https://"
+    // and the host parser threw, failing the whole search.
+    expect(hostOf("https://")).toBe("");
+    expect(
+      collectWebSearchEvidenceUrls([
+        {
+          type: "web_search_call",
+          action: { sources: [{ url: "https://" }, { url: "https://ok.example/p" }] },
+        },
+      ]),
+    ).toEqual(["https://ok.example/p"]);
+    const { kept } = reconcileCandidatesWithEvidence(
+      [candidate({ pageUrl: "https://ok.example/p" })],
+      ["https://", "https://ok.example/p", "not a url"],
+    );
+    expect(kept).toHaveLength(1);
   });
 
   it("knows the operator's own storefronts", () => {
