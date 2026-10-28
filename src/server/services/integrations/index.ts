@@ -37,7 +37,6 @@ export type IntegrationField = {
  * storefronts / properties (each gets its own credential set).
  */
 export const INTEGRATION_DEFAULT_NAMES: Partial<Record<IntegrationType, string | string[]>> = {
-  anthropic: "Anthropic Claude API",
   openai: "OpenAI API",
   bigcommerce: [
     "BigCommerce — LifeSupply.ca",
@@ -51,15 +50,6 @@ export const INTEGRATION_DEFAULT_NAMES: Partial<Record<IntegrationType, string |
 };
 
 export const INTEGRATION_FIELDS: Partial<Record<IntegrationType, IntegrationField[]>> = {
-  anthropic: [
-    {
-      name: "apiKey",
-      label: "API key",
-      placeholder: "sk-ant-...",
-      secret: true,
-      envVarName: "ANTHROPIC_API_KEY",
-    },
-  ],
   openai: [
     {
       name: "apiKey",

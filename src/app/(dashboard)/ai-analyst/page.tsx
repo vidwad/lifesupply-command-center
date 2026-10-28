@@ -55,7 +55,7 @@ export default async function AiAnalystPage() {
       <PageHeader
         title="AI Analyst"
         description="Ask questions about your operating, financial, marketing, and customer data. Server-side only — prompts and outputs are logged."
-        breadcrumb="Powered by Anthropic Claude"
+        breadcrumb="Powered by OpenAI"
         actions={
           <div className="flex items-center gap-2">
             <Link

@@ -35,18 +35,13 @@ afterEach(() => {
 
 describe("the OpenAI text model", () => {
   it("falls back to the built-in default when nothing is configured", async () => {
-    settings.set("ai.default_provider", "anthropic");
     expect(await resolveOpenAiModel()).toBe(DEFAULT_OPENAI_MODEL);
   });
-  it("uses the shared default model only when the provider is OpenAI", async () => {
-    settings.set("ai.default_provider", "openai");
+  it("uses the shared default model when no dedicated one is set", async () => {
     settings.set("ai.default_model", "gpt-5");
     expect(await resolveOpenAiModel()).toBe("gpt-5");
-    settings.set("ai.default_provider", "anthropic");
-    expect(await resolveOpenAiModel()).toBe(DEFAULT_OPENAI_MODEL);
   });
   it("prefers the dedicated Product Studio setting over the shared one", async () => {
-    settings.set("ai.default_provider", "openai");
     settings.set("ai.default_model", "gpt-5");
     settings.set("ai.openai_model", "gpt-4.1");
     expect(await resolveOpenAiModel()).toBe("gpt-4.1");

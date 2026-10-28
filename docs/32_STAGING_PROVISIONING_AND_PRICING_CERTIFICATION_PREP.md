@@ -126,7 +126,6 @@ Set by hand after the first deploy (all `sync: false`):
 | `INNGEST_EVENT_KEY` | web, worker | Staging Inngest environment only |
 | `INNGEST_SIGNING_KEY` | worker | Staging Inngest environment only |
 | `AUTH_URL`, `NEXT_PUBLIC_APP_URL` | web | The staging URL, after Render assigns it |
-| `ANTHROPIC_API_KEY` | web | Staging key so rotation is independent |
 | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_IMAGE_MODEL` | web, worker | Or use the vault. Not required for the pricing exercise |
 | `S3_*` (five) | web | Leave unset until `DEC-03` |
 | `RESEND_API_KEY`, `INVESTOR_FROM_EMAIL` | web | Not required for the pricing exercise |

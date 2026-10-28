@@ -2,7 +2,6 @@ import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 
 export type SettingKey =
-  | "ai.default_provider"
   | "ai.default_model"
   | "ai.max_output_tokens"
   | "ai.temperature"
@@ -12,8 +11,7 @@ export type SettingKey =
   | "ai.openai_image_model";
 
 export const SETTING_DEFAULTS: Record<SettingKey, string> = {
-  "ai.default_provider": "anthropic",
-  "ai.default_model": "claude-sonnet-4-6",
+  "ai.default_model": "gpt-5-mini",
   "ai.max_output_tokens": "4096",
   "ai.temperature": "0.3",
   "ai.openai_model": "",

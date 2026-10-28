@@ -55,7 +55,7 @@ some features will be inactive until you set them. Find them in
 |---|---|---|
 | `AUTH_URL` | yes (after first deploy) | `https://lifesupply-cc-web.onrender.com` initially; update to your custom domain later |
 | `NEXT_PUBLIC_APP_URL` | yes | same as `AUTH_URL` |
-| `ANTHROPIC_API_KEY` | for AI features | from https://console.anthropic.com |
+| `OPENAI_API_KEY` | for AI features | from https://platform.openai.com (or set it in the vault at `/admin/integrations`) |
 | `RESEND_API_KEY` | for investor email | from https://resend.com |
 | `INVESTOR_FROM_EMAIL` | for investor email | a verified sender |
 | `SUPPLIER_PORTAL_BBM01_URL` | for live BBM01 portal | leave blank to use in-repo mock |
@@ -175,7 +175,7 @@ You only do this once. Subsequent admin users are created via
 ## 4. Verify
 
 1. Visit `https://lifesupply-cc-web.onrender.com/api/health` —
-   should return `{"status": "ok"}` with DB ping + Anthropic credential.
+   should return `{"status": "ok"}` with DB ping + OpenAI credential.
 2. Sign in at `/login` with the seeded credentials.
 3. Set up integrations at `/admin/integrations`.
 4. Review feature flags at `/admin/feature-flags` (all OFF by default).
@@ -297,7 +297,7 @@ For high-risk schema changes use expand-contract (see `docs/OPS_RUNBOOK.md` §5)
 | Postgres Basic 256 MB | $6 |
 | Cron Starter | $7 |
 | **Subtotal** | **$27** |
-| Anthropic | $5–50 (usage) |
+| OpenAI | $5–50 (usage) |
 | Resend Free | $0 (3k emails/mo) |
 
 Total: **$32–77/mo** depending on AI volume.

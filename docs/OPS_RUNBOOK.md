@@ -12,7 +12,7 @@ that needs to be done outside the application UI lives here.
 
 | Check | URL | What it tells you |
 |---|---|---|
-| Application health | `/api/health` | DB reachable, Anthropic credential present, high-risk feature-flag posture |
+| Application health | `/api/health` | DB reachable, OpenAI credential present, high-risk feature-flag posture |
 | Audit log | `/admin/audit-logs` | Material actions across the platform |
 | Automation runs | `/automation/runs` | Latest supplier-portal workflow runs + statuses |
 | Integration sync logs | `/automation` | BigCommerce / QuickBooks import + sync history |

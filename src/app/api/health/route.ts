@@ -3,7 +3,7 @@
  *   - status: ok | degraded | failing
  *   - timestamp + uptime
  *   - DB reachability (raw SELECT 1)
- *   - Anthropic credential present
+ *   - OpenAI credential present
  *   - High-risk feature-flag posture (any kill-switch on?)
  *
  * NEVER exposes secrets or row counts. Designed for uptime probes + the
@@ -46,15 +46,15 @@ async function checkDatabase(): Promise<Check> {
   }
 }
 
-async function checkAnthropic(): Promise<Check> {
+async function checkOpenAi(): Promise<Check> {
   try {
-    const key = await resolveCredential("anthropic", "apiKey");
+    const key = await resolveCredential("openai", "apiKey");
     return key
-      ? { name: "anthropic", status: "ok" }
-      : { name: "anthropic", status: "skipped", detail: "no credential" };
+      ? { name: "openai", status: "ok" }
+      : { name: "openai", status: "skipped", detail: "no credential" };
   } catch {
     // resolveCredential should not throw; defensive.
-    return { name: "anthropic", status: "skipped", detail: "credential resolution failed" };
+    return { name: "openai", status: "skipped", detail: "credential resolution failed" };
   }
 }
 
@@ -126,7 +126,7 @@ export async function GET() {
       },
     );
   }
-  const checks = await Promise.all([checkDatabase(), checkAnthropic(), checkFeatureFlags()]);
+  const checks = await Promise.all([checkDatabase(), checkOpenAi(), checkFeatureFlags()]);
   const failing = checks.some((c) => c.status === "failing");
   const degraded = checks.some((c) => c.status === "degraded");
   const status: CheckStatus = failing ? "failing" : degraded ? "degraded" : "ok";

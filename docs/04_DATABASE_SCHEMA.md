@@ -1136,7 +1136,7 @@ Integration types:
 - mailchimp
 - ga4
 - openai
-- anthropic
+- anthropic (retired October 27, 2026; kept for existing rows)
 - supplier_portal
 - manual_import
 

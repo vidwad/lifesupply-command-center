@@ -68,7 +68,6 @@ Selection criteria:
 - Mailchimp API
 - Google Analytics 4 Data API
 - OpenAI API
-- Anthropic Claude API
 - Supplier portals through Playwright
 
 ### Automation
@@ -223,7 +222,6 @@ src/server/
     mailchimp/
     ga4/
     openai/
-    anthropic/
   services/
     orders/
     customers/

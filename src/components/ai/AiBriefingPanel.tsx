@@ -31,7 +31,7 @@ export function AiBriefingPanel({ briefing, canRegenerate = false }: Props) {
           <EmptyState
             icon={Bot}
             title="No AI briefings yet"
-            description="Once ANTHROPIC_API_KEY is set, click Regenerate to produce a fresh briefing from today's data."
+            description="Once an OpenAI API key is configured, click Regenerate to produce a fresh briefing from today's data."
             className="w-full"
           />
         </CardContent>

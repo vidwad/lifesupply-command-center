@@ -47,7 +47,7 @@ const TYPE_LABEL: Record<string, string> = {
   mailchimp: "Mailchimp",
   ga4: "Google Analytics 4",
   openai: "OpenAI",
-  anthropic: "Anthropic Claude",
+  anthropic: "Anthropic Claude (retired)",
   supplier_portal: "Supplier portal",
   manual_import: "Manual import",
 };

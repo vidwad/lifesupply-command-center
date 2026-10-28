@@ -98,7 +98,7 @@ after setting it in the Render dashboard.
 | `AUTH_URL`, `NEXT_PUBLIC_APP_URL` | web | Operator, after first deploy | The staging onrender.com URL |
 | `INNGEST_EVENT_KEY` | web, worker | Operator | From the **staging** Inngest environment |
 | `INNGEST_SIGNING_KEY` | worker | Operator | Staging Inngest environment |
-| `ANTHROPIC_API_KEY` | web | Operator | May be a low-limit key; set independently of production |
+| `OPENAI_API_KEY` | web, worker | Operator | May be a low-limit key; set independently of production |
 | `AUDIT_RETENTION_DAYS` | web, cron | Blueprint | `365` |
 | `S3_*` (5 vars) | web | **Blocked on DEC-03** | Leave unset; app treats storage as optional |
 | `RESEND_API_KEY`, `INVESTOR_FROM_*` | web | Operator (optional) | Test sender only; never a real audience |
@@ -169,7 +169,7 @@ in the body. A passing run is the 11B-07 evidence.
   "uptimeSeconds": 123,
   "checks": [
     { "name": "database", "status": "ok" },
-    { "name": "anthropic", "status": "ok" },
+    { "name": "openai", "status": "ok" },
     { "name": "feature_flags", "status": "ok", "detail": "no high-risk flags on" }
   ]
 }

@@ -9,13 +9,7 @@ import type { OpenAiModelListing } from "@/server/integrations/openai/models";
 
 import { saveAiSettingsAction, type AiSettingsActionState } from "./actions";
 
-const PROVIDERS = [
-  { value: "anthropic", label: "Anthropic Claude" },
-  { value: "openai", label: "OpenAI" },
-] as const;
-
 const COMMON_MODELS: Record<string, string[]> = {
-  anthropic: ["claude-opus-4-7", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"],
   openai: ["gpt-5", "gpt-5-mini", "gpt-4.1"],
 };
 
@@ -87,20 +81,17 @@ function EnvOverrideNote({ name, value }: { name: string; value: string | null }
 
 export function AiSettingsForm({
   values,
-  envOverride,
   openAiEnv,
   openAiDefaults,
   openAiModels,
 }: {
   values: {
-    "ai.default_provider": string;
     "ai.default_model": string;
     "ai.max_output_tokens": string;
     "ai.temperature": string;
     "ai.openai_model": string;
     "ai.openai_image_model": string;
   };
-  envOverride: string | null;
   /** The OpenAI env overrides, when set on the server. */
   openAiEnv: { model: string | null; imageModel: string | null };
   /** What each OpenAI field falls back to when left empty. */
@@ -120,35 +111,12 @@ export function AiSettingsForm({
       <section className="space-y-4 rounded-md border bg-card p-4">
         <h2 className="text-sm font-medium">Default model</h2>
         <p className="text-xs text-muted-foreground">
-          Used by daily briefings, the AI Analyst, and opportunity analysis. Per-feature overrides
-          are not exposed yet.
+          OpenAI is the only provider. This model runs the daily briefing, the AI Analyst,
+          opportunity analysis, campaign and investor-update drafts and the agents. Product Studio
+          has its own fields below. Per-feature overrides are not exposed yet.
         </p>
-        {envOverride && (
-          <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
-            <strong>ANTHROPIC_MODEL is set in the environment ({envOverride}).</strong> Env always
-            wins. Saved settings here will be ignored until that env var is removed.
-          </p>
-        )}
+        <EnvOverrideNote name="OPENAI_MODEL" value={openAiEnv.model} />
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="ai.default_provider">Provider</Label>
-            <select
-              id="ai.default_provider"
-              name="ai.default_provider"
-              defaultValue={values["ai.default_provider"]}
-              className="flex h-10 w-full rounded-md border bg-background px-3 text-sm"
-            >
-              {PROVIDERS.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-foreground">
-              Anthropic is wired end-to-end for the analysis features. Product Studio always uses
-              OpenAI, configured below.
-            </p>
-          </div>
           <div className="space-y-1.5">
             <Label htmlFor="ai.default_model">Model name</Label>
             <Input
@@ -159,7 +127,7 @@ export function AiSettingsForm({
               autoComplete="off"
             />
             <datalist id="ai-model-suggestions">
-              {COMMON_MODELS[values["ai.default_provider"]]?.map((m) => (
+              {COMMON_MODELS.openai?.map((m) => (
                 <option key={m} value={m} />
               ))}
             </datalist>
@@ -202,8 +170,8 @@ export function AiSettingsForm({
         <p className="text-xs text-muted-foreground">
           The text model runs retailer research, image QA and description reformatting. The image
           model generates the drafts. Leave a field empty to fall back: the text model to the
-          default model above when the provider is OpenAI, otherwise to {openAiDefaults.model}; the
-          image model to {openAiDefaults.imageModel}.
+          default model above, then to {openAiDefaults.model}; the image model to{" "}
+          {openAiDefaults.imageModel}.
         </p>
         <EnvOverrideNote name="OPENAI_MODEL" value={openAiEnv.model} />
         <EnvOverrideNote name="OPENAI_IMAGE_MODEL" value={openAiEnv.imageModel} />

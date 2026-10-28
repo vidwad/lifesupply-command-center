@@ -9,7 +9,6 @@ import { requirePermission } from "@/server/permissions";
 export type AiSettingsActionState = { error?: string; ok?: string } | undefined;
 
 const ALLOWED_KEYS: SettingKey[] = [
-  "ai.default_provider",
   "ai.default_model",
   "ai.max_output_tokens",
   "ai.temperature",

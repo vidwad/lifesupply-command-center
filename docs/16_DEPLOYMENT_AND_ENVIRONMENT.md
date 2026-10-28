@@ -194,7 +194,6 @@ Secrets must be environment-specific and never committed to the repository.
 - Mailchimp API keys.
 - GA4 credentials.
 - OpenAI API key.
-- Anthropic API key.
 - Storage credentials.
 - Email service credentials.
 - Supplier credentials or vault references.

@@ -6,7 +6,6 @@
  */
 
 import { prisma } from "@/server/db/client";
-import { pingAnthropic } from "@/server/integrations/anthropic/ping";
 import { pingBigCommerceByConnectionName } from "@/server/integrations/bigcommerce/client";
 import { pingMailchimp } from "@/server/integrations/mailchimp/ping";
 import { pingOpenAi } from "@/server/integrations/openai/ping";
@@ -34,12 +33,6 @@ export async function testIntegrationConnection(
 
   try {
     switch (conn.integrationType) {
-      case "anthropic": {
-        const r = await pingAnthropic(conn.id);
-        return r.ok
-          ? { ok: true, status: 200, message: r.detail, detail: { model: r.model } }
-          : { ok: false, status: r.status, message: r.message };
-      }
       case "openai": {
         const r = await pingOpenAi(conn.id);
         return r.ok

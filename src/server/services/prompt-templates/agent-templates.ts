@@ -36,7 +36,7 @@ function agentTemplate(args: {
     version: 1,
     name: args.name,
     description: args.description,
-    provider: "anthropic",
+    provider: "openai",
     modelHint: null,
     systemPrompt: `${SHARED_GUARDRAILS}\n\nYOUR ROLE: ${args.role}`,
     userTemplate: `${args.taskInstruction}\n\nRun parameters: {{params}}\n\n{{context}}`,
