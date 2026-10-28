@@ -9,15 +9,21 @@ import { PRIMARY_NAV, type NavItem } from "./nav-config";
 
 type Props = {
   permissions: string[];
+  /** Called after a link is chosen; the mobile drawer uses it to close. */
+  onNavigate?: () => void;
 };
 
-export function SidebarNav({ permissions }: Props) {
+export function SidebarNav({ permissions, onNavigate }: Props) {
   const pathname = usePathname();
   const visibleItems = PRIMARY_NAV.filter((item) => permissions.includes(item.permission));
 
   return (
     <nav className="flex h-full flex-col gap-1 p-3">
-      <Link href="/dashboard" className="mb-3 flex items-center gap-2 px-3 py-2">
+      <Link
+        href="/dashboard"
+        onClick={onNavigate}
+        className="mb-3 flex items-center gap-2 px-3 py-2"
+      >
         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <span className="text-sm font-bold">LS</span>
         </div>
@@ -29,7 +35,7 @@ export function SidebarNav({ permissions }: Props) {
 
       <div className="flex-1 space-y-1 overflow-y-auto">
         {visibleItems.map((item) => (
-          <SidebarNavLink key={item.href} item={item} pathname={pathname} />
+          <SidebarNavLink key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
         ))}
       </div>
 
@@ -42,13 +48,23 @@ export function SidebarNav({ permissions }: Props) {
   );
 }
 
-function SidebarNavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+function SidebarNavLink({
+  item,
+  pathname,
+  onNavigate,
+}: {
+  item: NavItem;
+  pathname: string;
+  onNavigate?: () => void;
+}) {
   const Icon = item.icon;
   const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "group flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
         active

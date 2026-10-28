@@ -3,17 +3,23 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, Layers } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 type Option = { value: string; label: string };
 
 type Props = {
   divisions: Option[];
   periods: Option[];
+  /** Replaces the default wrapper classes (hidden below `lg`). */
+  className?: string;
+  /** Stretch each select to its container; used inside the mobile drawer. */
+  fullWidth?: boolean;
 };
 
 const PERIOD_PARAM = "period";
 const DIVISION_PARAM = "division";
 
-export function ContextSelectors({ divisions, periods }: Props) {
+export function ContextSelectors({ divisions, periods, className, fullWidth }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -28,15 +34,20 @@ export function ContextSelectors({ divisions, periods }: Props) {
   const selectedPeriod = searchParams.get(PERIOD_PARAM) ?? "";
   const selectedDivision = searchParams.get(DIVISION_PARAM) ?? "";
 
+  const selectClass = cn(
+    "h-9 appearance-none rounded-md border border-input bg-background pl-7 pr-7 text-xs font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    fullWidth && "w-full",
+  );
+
   return (
-    <div className="hidden items-center gap-2 lg:flex">
+    <div className={className ?? "hidden items-center gap-2 lg:flex"}>
       <div className="relative">
         <Layers className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <select
           aria-label="Division"
           value={selectedDivision}
           onChange={(e) => updateParam(DIVISION_PARAM, e.target.value)}
-          className="h-9 appearance-none rounded-md border border-input bg-background pl-7 pr-7 text-xs font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={selectClass}
         >
           <option value="">All divisions</option>
           {divisions.map((d) => (
@@ -52,7 +63,7 @@ export function ContextSelectors({ divisions, periods }: Props) {
           aria-label="Period"
           value={selectedPeriod}
           onChange={(e) => updateParam(PERIOD_PARAM, e.target.value)}
-          className="h-9 appearance-none rounded-md border border-input bg-background pl-7 pr-7 text-xs font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={selectClass}
         >
           <option value="">Open period</option>
           {periods.map((p) => (
