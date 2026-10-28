@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-This document defines how artificial intelligence should be used inside the LifeSupply Command Center after the MVP stage. The platform is expected to use both OpenAI and Anthropic Claude APIs, but AI must be used in a controlled, auditable, business-oriented manner.
+This document defines how artificial intelligence should be used inside the LifeSupply Command Center after the MVP stage. The platform uses the OpenAI API (the only provider since October 27, 2026, `DEC-17`; Anthropic was retired), and AI must be used in a controlled, auditable, business-oriented manner.
 
 The AI layer should increase management leverage by helping the team analyze data, draft reports, identify exceptions, create recommendations, improve product and marketing content, and prepare strategic materials. It must not become an uncontrolled action engine.
 
@@ -120,7 +120,7 @@ All structured extraction must include confidence scores and review status where
 
 ## 4. Model Routing Principles
 
-The platform may use both OpenAI and Claude. The implementation should support model routing so the application can choose the best model for each task.
+OpenAI is the only provider since October 27, 2026. The model abstraction below is kept so a second provider could be added again behind the same wrapper; nothing routes to one today.
 
 ### 4.1 OpenAI Use Cases
 
@@ -138,9 +138,9 @@ Examples:
 - Data quality scoring.
 - AI analyst queries over structured data.
 
-### 4.2 Claude Use Cases
+### 4.2 Claude Use Cases (retired)
 
-Use Claude where the task benefits from longer-form reasoning, document analysis, business memo drafting, strategic synthesis, or nuanced financial/management analysis.
+These ran on Anthropic Claude until October 27, 2026 and now run on OpenAI. The list is kept for the record.
 
 Examples:
 

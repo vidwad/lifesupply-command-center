@@ -18,7 +18,6 @@ The application will aggregate data from:
 - Supplier portals
 - Manual uploads
 - OpenAI API
-- Anthropic Claude API
 - Future marketing, finance, inventory, CRM, and M&A data sources
 
 The platform is intended to help management review day-to-day activity, investigate exceptions, summarize operating and financial performance, plan future activity, identify growth opportunities, support capital raising, and execute on strategic initiatives.
@@ -99,7 +98,6 @@ The initial MVP should include:
 - Auth.js, Clerk, or Supabase Auth
 - Playwright
 - OpenAI API
-- Anthropic Claude API
 - BigCommerce API
 - QuickBooks Online API and/or controlled file imports
 - Mailchimp API

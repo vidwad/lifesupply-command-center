@@ -43,7 +43,6 @@ const envSchema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string().optional(),
 
   OPENAI_API_KEY: z.string().optional(),
-  ANTHROPIC_API_KEY: z.string().optional(),
 
   S3_ENDPOINT: z.string().url().optional(),
   S3_REGION: z.string().default("auto"),

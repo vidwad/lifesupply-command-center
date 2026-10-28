@@ -818,8 +818,8 @@ async function seedAiOutputs(prisma: PrismaClient) {
     await prisma.aiOutput.create({
       data: {
         userId: admin.id,
-        modelProvider: "anthropic",
-        modelName: "claude-opus-4-7",
+        modelProvider: "openai",
+        modelName: "gpt-5",
         module: a.module,
         prompt: a.prompt,
         output: a.output,
@@ -909,7 +909,6 @@ type IntegrationSeed = {
     | "mailchimp"
     | "ga4"
     | "openai"
-    | "anthropic"
     | "supplier_portal"
     | "manual_import";
   name: string;
@@ -979,7 +978,6 @@ const INTEGRATIONS: IntegrationSeed[] = [
     lastSuccessfulSyncDaysAgo: 0,
   },
   { type: "openai", name: "OpenAI API", status: "configured" },
-  { type: "anthropic", name: "Anthropic Claude API", status: "configured" },
   {
     type: "supplier_portal",
     name: "BBM01 — Best Buy Medical Portal",

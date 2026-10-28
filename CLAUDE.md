@@ -153,7 +153,7 @@ The LifeSupply platform includes, or may include, the following business areas:
 - **Customer database** — including historical, current, lapsed, B2B, clinic, retail, high-value, and guest checkout customers.
 - **Financial reporting layer** — QuickBooks Online and/or controlled QuickBooks exports by entity.
 - **Marketing layer** — Mailchimp, customer reactivation, campaign tracking, Google Analytics 4, Search Console, social media planning, and possible future CRM/campaign channels.
-- **AI layer** — OpenAI API and Anthropic Claude API for summaries, reports, analysis, campaign drafting, product optimization, and management recommendations.
+- **AI layer** — OpenAI API for summaries, reports, analysis, campaign drafting, product optimization, and management recommendations. (Anthropic was retired on October 27, 2026, `DEC-17`; OpenAI is the only provider.)
 - **Automation layer** — browser automation / RPA / Playwright for suppliers that do not provide APIs.
 
 Known working assumptions to validate during implementation:
@@ -180,7 +180,7 @@ Build a secure, role-based management platform that allows LifeSupply management
 5. Reactivate customers and manage B2B/institutional accounts in a compliant, segmented, approval-based manner.
 6. Automate repetitive order, supplier, and reporting workflows where appropriate.
 7. Generate management, board, investor, and lender-ready reports.
-8. Use OpenAI and Claude APIs to analyze data, summarize performance, draft reports, and recommend actions.
+8. Use the OpenAI API to analyze data, summarize performance, draft reports, and recommend actions.
 9. Support future capital raising, acquisitions, investor relations, and M&A opportunity tracking.
 
 ---
@@ -197,7 +197,7 @@ Use this stack unless the product owner explicitly changes direction:
 - **Authentication:** Auth.js / NextAuth as currently implemented
 - **Background jobs:** Inngest and worker process as currently implemented
 - **Browser automation:** Playwright
-- **AI APIs:** OpenAI API and Anthropic Claude API through secure server-side wrappers
+- **AI APIs:** OpenAI API through secure server-side wrappers (the only provider since October 27, 2026)
 - **Reporting:** Server-side PDF generation plus CSV/XLSX exports
 - **File storage:** Add cloud storage such as S3, Cloudflare R2, Supabase Storage, or equivalent when durable evidence/report storage is needed
 - **Hosting:** Render is currently preferred for web + database + cron + worker because Playwright and long-running jobs fit better there; Vercel remains an alternate for web-only deployment
@@ -364,7 +364,7 @@ If a command fails, fix the failure within the phase scope. If the fix is out of
 - AI must not send customer communications, alter product prices, place supplier orders, update financial records, or export/distribute sensitive data unless an approved workflow permits it.
 - Log AI prompts, outputs, model used, user, timestamp, source data references, and approval status where relevant.
 - Clearly distinguish facts, assumptions, limitations, and recommendations in AI-generated management content.
-- Use server-side model wrappers. Do not expose OpenAI or Claude API keys in client-side code.
+- Use server-side model wrappers. Do not expose the OpenAI API key in client-side code.
 
 ---
 

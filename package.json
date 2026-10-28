@@ -38,7 +38,6 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.95.1",
     "@auth/prisma-adapter": "^2.11.2",
     "@mailchimp/mailchimp_marketing": "^3.0.80",
     "@prisma/client": "^6",

@@ -47,7 +47,7 @@ Recommended stack:
 - Server-side API routes or backend services.
 - Background job processor for syncs and automation.
 - Playwright for browser automation.
-- OpenAI and Anthropic APIs through server-side wrappers.
+- OpenAI API through a server-side wrapper.
 - PDF and XLSX generation services.
 
 ---
@@ -229,7 +229,6 @@ Suggested folder pattern:
 src/lib/ai/
   providers/
     openai.ts
-    anthropic.ts
   prompt-templates/
   schemas/
   ai-service.ts
@@ -394,7 +393,6 @@ QUICKBOOKS_CLIENT_SECRET=
 MAILCHIMP_API_KEY=
 GA4_PROPERTY_ID=
 OPENAI_API_KEY=
-ANTHROPIC_API_KEY=
 STORAGE_BUCKET=
 ```
 

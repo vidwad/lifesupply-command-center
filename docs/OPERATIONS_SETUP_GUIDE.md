@@ -19,8 +19,8 @@ Before touching anything, verify the foundation.
 1. **Visit `https://<your-render-url>/api/health`.**
    Expect `{"status":"ok","db":"ok","ai":"ok"|"skipped",...}`.
    - `db: ok` = Postgres reachable
-   - `ai: skipped` = no Anthropic key yet (expected at this point)
-   - `ai: ok` = Anthropic key resolves
+   - `ai: skipped` = no OpenAI key yet (expected at this point)
+   - `ai: ok` = OpenAI key resolves
 
 2. **Sign in at `/login`** with the seed credentials you set via
    `DEV_ADMIN_EMAIL` / `DEV_ADMIN_PASSWORD`.
@@ -41,8 +41,7 @@ integration cards (auto-created on first load):
 
 | Card | Required to actually work |
 |---|---|
-| Anthropic Claude API | `apiKey` |
-| OpenAI API | `apiKey` *(optional fallback for AI)* |
+| OpenAI API | `apiKey` *(the only AI provider)* |
 | BigCommerce — LifeSupply.ca | `storeHash`, `apiToken` |
 | BigCommerce — WellmartMedical.com | `storeHash`, `apiToken` |
 | BigCommerce — Balkowitsch Worldwide | `storeHash`, `apiToken` |
@@ -62,8 +61,8 @@ service restart.
 
 Set them in this order so each unlocks the next layer of features:
 
-1. **Anthropic** — unlocks the AI briefing, AI Analyst, campaign drafts,
-   investor-update copy. Get a key at https://console.anthropic.com.
+1. **OpenAI** — unlocks the AI briefing, AI Analyst, campaign drafts,
+   investor-update copy and Product Studio. Get a key at https://platform.openai.com.
    Paste into the API key field; save; refresh `/api/health` and confirm
    `ai: ok`.
 
@@ -103,7 +102,7 @@ After each save, the card's badge flips from `not configured` to
 
 Before pulling real data, prove each connection works.
 
-1. **Anthropic** — go to `/dashboard`, click **Generate briefing**. If
+1. **OpenAI** — go to `/dashboard`, click **Generate briefing**. If
    the AI key is good, you get a 3-paragraph summary in ~10 seconds. If
    it errors, the message tells you exactly which field is missing.
 
@@ -321,7 +320,7 @@ Every flag toggle is audit-logged, visible at `/admin/audit-logs`.
 | Symptom | Where to look |
 |---|---|
 | Login fails | `/login`, then check `AUTH_URL` env var in Render |
-| AI briefing errors | `/admin/integrations` → Anthropic card; `/api/health` |
+| AI briefing errors | `/admin/integrations` → OpenAI card; `/api/health` |
 | BigCommerce import row count zero | `/automation` → most recent sync log → errorSummary |
 | Mailchimp export silently does nothing | `/admin/feature-flags` → `mailchimp.send` is OFF |
 | Supplier check returns canned data | `SUPPLIER_PORTAL_BBM01_URL` env var unset → using mock |

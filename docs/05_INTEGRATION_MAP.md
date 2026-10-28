@@ -337,9 +337,13 @@ Use OpenAI for structured analysis, summaries, report drafting, customer segment
 
 ---
 
-## 10. Anthropic Claude API Integration
+## 10. Anthropic Claude API Integration (retired October 27, 2026)
 
-## 10.1 Purpose
+**Retired by the product owner (`DEC-17`).** OpenAI is the only AI provider. The use cases below
+now run on OpenAI through the same server-side wrapper, and the integration, credential, health
+check and settings for Anthropic were removed. The section is kept for the record.
+
+## 10.1 Purpose (historical)
 
 Use Claude for long-form analysis, business reporting, strategic memos, investor reporting, M&A summaries, complex document analysis, and larger-context reasoning.
 

@@ -51,6 +51,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261026210000_product_studio_main_image",
   // Product Studio unattended runs (product owner, 2026-10-27).
   "20261027120000_product_studio_autopilot",
+  // OpenAI is the only AI provider (product owner, 2026-10-27).
+  "20261028090000_openai_only",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */

@@ -30,7 +30,7 @@ export async function getOpenAiClient(): Promise<OpenAI | null> {
  *
  *   1. env OPENAI_MODEL — the environment always wins;
  *   2. SystemSetting `ai.openai_model`, the admin's Product Studio choice;
- *   3. SystemSetting `ai.default_model`, when the system provider is OpenAI;
+ *   3. SystemSetting `ai.default_model`, the shared default;
  *   4. the built-in default.
  */
 export async function resolveOpenAiModel(): Promise<string> {
@@ -38,11 +38,8 @@ export async function resolveOpenAiModel(): Promise<string> {
   if (env) return env;
   const dedicated = (await getSetting("ai.openai_model")).trim();
   if (dedicated) return dedicated;
-  const provider = await getSetting("ai.default_provider");
-  if (provider === "openai") {
-    const shared = (await getSetting("ai.default_model")).trim();
-    if (shared) return shared;
-  }
+  const shared = (await getSetting("ai.default_model")).trim();
+  if (shared) return shared;
   return DEFAULT_OPENAI_MODEL;
 }
 

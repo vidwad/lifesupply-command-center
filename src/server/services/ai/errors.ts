@@ -6,14 +6,14 @@
 export class AiNotConfiguredError extends Error {
   constructor() {
     super(
-      "AI provider is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in the environment, or add a credential at /admin/integrations.",
+      "AI provider is not configured. Set OPENAI_API_KEY in the environment, or add a credential at /admin/integrations.",
     );
     this.name = "AiNotConfiguredError";
   }
 }
 
 export class AiProviderNotConfiguredError extends Error {
-  constructor(public readonly provider: "anthropic" | "openai") {
+  constructor(public readonly provider: "openai") {
     super(
       `AI provider "${provider}" is not configured. Add a credential at /admin/integrations or switch the template's provider.`,
     );

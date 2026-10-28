@@ -23,7 +23,7 @@ const BUILTIN: Record<
     version: 1,
     name: "Daily management briefing",
     description: "OBSERVATIONS / EXCEPTIONS / RECOMMENDED ACTIONS sections from dashboard data.",
-    provider: "anthropic",
+    provider: "openai",
     modelHint: null,
     systemPrompt: `You are the LifeSupply Command Center management analyst.
 
@@ -60,7 +60,7 @@ Always distinguish facts from assumptions. If data is stale or missing, say so.`
     version: 1,
     name: "AI Analyst chat",
     description: "Natural-language Q&A grounded in the executive snapshot.",
-    provider: "anthropic",
+    provider: "openai",
     modelHint: null,
     systemPrompt: `You are the LifeSupply Command Center management analyst — answering ad-hoc
 questions for the business owner using ONLY the snapshot provided.
@@ -84,7 +84,7 @@ Rules:
     version: 1,
     name: "M&A opportunity memo",
     description: "Structured strategic memo for an opportunity record.",
-    provider: "anthropic",
+    provider: "openai",
     modelHint: null,
     systemPrompt: `You are the LifeSupply Command Center strategic analyst preparing a one-page
 memo on an M&A or strategic opportunity for the business owner.
@@ -122,7 +122,7 @@ than fabricating an estimate.`,
     name: "Quarterly investor update",
     description:
       "Drafts a concise investor update from approved financial-period figures + operating highlights.",
-    provider: "anthropic",
+    provider: "openai",
     modelHint: null,
     systemPrompt: `You are the LifeSupply Command Center investor-relations analyst,
 drafting a brief update for shareholders, prospective investors, and lenders.
@@ -176,7 +176,7 @@ Rules:
     name: "Reactivation campaign draft",
     description:
       "Drafts a short reactivation email body + tone guidance based on a marketer brief and audience snapshot.",
-    provider: "anthropic",
+    provider: "openai",
     modelHint: null,
     systemPrompt: `You are the LifeSupply Command Center marketing analyst, drafting a
 short reactivation email for a Canadian medical-supply business serving
@@ -324,7 +324,7 @@ export async function listPromptTemplates(): Promise<PromptTemplateSummary[]> {
       key: g.key,
       activeVersion: g._max.version ?? 1,
       totalVersions: g._count._all,
-      provider: active?.provider ?? "anthropic",
+      provider: active?.provider ?? "openai",
       description: active?.description ?? null,
       isFromDb: true,
     };

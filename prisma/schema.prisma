@@ -1894,9 +1894,9 @@ model PromptTemplate {
   version         Int               @default(1)
   name            String
   description     String?
-  /// Default provider; the AI service may still route to another provider
-  /// based on settings or task hints.
-  provider        AiModelProvider   @default(anthropic)
+  /// Kept for history. OpenAI is the only provider since 2026-10-27; the
+  /// AI service sends every call there whatever this column says.
+  provider        AiModelProvider   @default(openai)
   modelHint       String?
   systemPrompt    String            @db.Text
   /// User-message template. May contain `{{variable}}` placeholders rendered
