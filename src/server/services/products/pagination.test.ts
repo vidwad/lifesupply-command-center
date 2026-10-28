@@ -143,8 +143,18 @@ describe("zero cost is unknown, not free", () => {
 });
 
 describe("sortable columns", () => {
-  it("only offers sort keys the database can actually order by", () => {
-    expect([...PRODUCT_SORT_KEYS]).toEqual(["name", "sku", "category", "store", "quality"]);
+  it("only offers sort keys that order the whole matching set", () => {
+    // `images` is a column the sync maintains; `revenue` is ordered from the
+    // sales index across the whole matching set, then paged (2026-10-27).
+    expect([...PRODUCT_SORT_KEYS]).toEqual([
+      "name",
+      "sku",
+      "category",
+      "store",
+      "quality",
+      "images",
+      "revenue",
+    ]);
   });
 
   it("excludes the columns derived after the query", () => {

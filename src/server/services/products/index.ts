@@ -7,6 +7,7 @@ import {
   segmentIdFilter,
   type PerformanceIndex,
   type PerformanceSegment,
+  type ProductSales,
 } from "./performance";
 
 export type ListProductsFilters = {
@@ -23,6 +24,10 @@ export type ListProductsFilters = {
    */
   performance?: PerformanceSegment;
   performanceIndex?: PerformanceIndex;
+  /** Products the store lists with at most this many images (2026-10-27). */
+  maxImages?: number;
+  /** Products whose description text, markup stripped, is shorter than this many characters. */
+  maxDescriptionChars?: number;
   search?: string;
   /** 1-based. Out-of-range values are clamped by the caller, not here. */
   page?: number;
@@ -47,9 +52,32 @@ export type SortDirection = "asc" | "desc";
  * 51,114 products that would present a page-local shuffle as a catalogue-wide
  * ordering — the same class of lie as the truncated count in F-14. Sorting
  * those properly needs denormalised columns on Product, populated by the sync.
+ *
+ * `images` is such a column (`imageCount`, 2026-10-27). `revenue` is the
+ * one exception to "in the database": the 90-day figure lives in the sales
+ * index, so `listProducts` orders the whole matching set by it in code and
+ * then fetches the requested page — a true catalogue-wide ordering, not a
+ * page-local one. See `listProductsByRevenue`.
  */
-export const PRODUCT_SORT_KEYS = ["name", "sku", "category", "store", "quality"] as const;
+export const PRODUCT_SORT_KEYS = [
+  "name",
+  "sku",
+  "category",
+  "store",
+  "quality",
+  "images",
+  "revenue",
+] as const;
 export type ProductSortKey = (typeof PRODUCT_SORT_KEYS)[number];
+
+/**
+ * A whole number of zero or more from a query string, or undefined for
+ * anything else, so a hand-edited URL cannot turn into a surprising filter.
+ */
+export function parseNonNegativeInt(value: string | undefined): number | undefined {
+  if (value == null || !/^\d{1,9}$/.test(value.trim())) return undefined;
+  return Number.parseInt(value.trim(), 10);
+}
 
 /** Narrows an arbitrary query-string value to a supported sort key. */
 export function parseProductSort(value: string | undefined): ProductSortKey | undefined {
@@ -84,6 +112,12 @@ function productOrderBy(
       return [{ store: { name: dir } }, { id: "asc" }];
     case "quality":
       return [{ imageStatus: dir }, { descriptionStatus: dir }, { id: "asc" }];
+    case "images":
+      return [{ imageCount: dir }, { id: "asc" }];
+    case "revenue":
+      // Handled by listProductsByRevenue; this is the fallback when no
+      // sales index was supplied.
+      return [{ isFeatured: "desc" }, { name: "asc" }, { id: "asc" }];
     default:
       // Unsorted default: featured first, then alphabetical.
       return [{ isFeatured: "desc" }, { name: "asc" }, { id: "asc" }];
@@ -108,6 +142,10 @@ function productWhere(filters: ListProductsFilters): Prisma.ProductWhereInput {
   if (filters.imageStatus === "needs_review") where.imageStatus = "needs_review";
   if (filters.performance && filters.performanceIndex) {
     where.id = segmentIdFilter(filters.performance, filters.performanceIndex);
+  }
+  if (filters.maxImages != null) where.imageCount = { lte: filters.maxImages };
+  if (filters.maxDescriptionChars != null) {
+    where.descriptionLength = { lt: filters.maxDescriptionChars };
   }
   if (filters.search) {
     const q = filters.search.trim();
@@ -226,28 +264,119 @@ const positiveOrNull = (d: Prisma.Decimal | null | undefined): number | null => 
 const numOrNull = (d: Prisma.Decimal | null | undefined): number | null =>
   d == null ? null : Number(d);
 
+const PRODUCT_LIST_INCLUDE = {
+  store: { select: { id: true, name: true } },
+  category: { select: { id: true, name: true } },
+  variants: {
+    select: { id: true, sku: true, price: true, costPrice: true, stockLevel: true },
+  },
+  supplierProducts: {
+    where: { isPreferred: true },
+    select: { id: true, cost: true, supplier: { select: { name: true, code: true } } },
+    take: 1,
+  },
+} satisfies Prisma.ProductInclude;
+
+type ProductListRecord = Prisma.ProductGetPayload<{ include: typeof PRODUCT_LIST_INCLUDE }>;
+
+/**
+ * The ids of every product that sold in the window, highest revenue first
+ * (or lowest first for `asc`), ties broken by units then id so the order is
+ * stable between requests. Products with no revenue are not listed: they
+ * follow (or precede) this list in the default catalogue order.
+ */
+export function rankIdsByRevenue(stats: Map<string, ProductSales>, dir: SortDirection): string[] {
+  const sold: { id: string; revenue: number; units: number }[] = [];
+  for (const [id, sales] of stats) {
+    if (sales.revenue90 > 0) sold.push({ id, revenue: sales.revenue90, units: sales.units90 });
+  }
+  sold.sort((a, b) => b.revenue - a.revenue || b.units - a.units || a.id.localeCompare(b.id));
+  const ids = sold.map((s) => s.id);
+  return dir === "asc" ? ids.reverse() : ids;
+}
+
+/**
+ * Revenue ordering across the whole matching set (2026-10-27). Descending
+ * lists the products that sold, by revenue, then every other matching
+ * product in the default order; ascending is the reverse. Only the ids of
+ * the sellers are held in memory; the rest is paged in the database.
+ */
+async function listProductsByRevenue(
+  where: Prisma.ProductWhereInput,
+  index: PerformanceIndex,
+  dir: SortDirection,
+  page: number,
+): Promise<ProductListRecord[]> {
+  const ranked = rankIdsByRevenue(index.stats, dir);
+  const soldMatching = await prisma.product.findMany({
+    where: { AND: [where, { id: { in: ranked } }] },
+    select: { id: true },
+  });
+  const matching = new Set(soldMatching.map((row) => row.id));
+  const soldOrdered = ranked.filter((id) => matching.has(id));
+  const unsoldWhere: Prisma.ProductWhereInput = { AND: [where, { id: { notIn: ranked } }] };
+  const unsoldOrder = productOrderBy(undefined, "asc");
+
+  const start = (page - 1) * PRODUCTS_PAGE_SIZE;
+  const pageIds: string[] = [];
+  if (dir === "desc") {
+    pageIds.push(...soldOrdered.slice(start, start + PRODUCTS_PAGE_SIZE));
+    if (pageIds.length < PRODUCTS_PAGE_SIZE) {
+      const unsold = await prisma.product.findMany({
+        where: unsoldWhere,
+        orderBy: unsoldOrder,
+        skip: Math.max(0, start - soldOrdered.length),
+        take: PRODUCTS_PAGE_SIZE - pageIds.length,
+        select: { id: true },
+      });
+      pageIds.push(...unsold.map((row) => row.id));
+    }
+  } else {
+    const unsoldCount = await prisma.product.count({ where: unsoldWhere });
+    if (start < unsoldCount) {
+      const unsold = await prisma.product.findMany({
+        where: unsoldWhere,
+        orderBy: unsoldOrder,
+        skip: start,
+        take: Math.min(PRODUCTS_PAGE_SIZE, unsoldCount - start),
+        select: { id: true },
+      });
+      pageIds.push(...unsold.map((row) => row.id));
+    }
+    if (pageIds.length < PRODUCTS_PAGE_SIZE) {
+      const soldStart = Math.max(0, start - unsoldCount);
+      pageIds.push(
+        ...soldOrdered.slice(soldStart, soldStart + PRODUCTS_PAGE_SIZE - pageIds.length),
+      );
+    }
+  }
+
+  if (pageIds.length === 0) return [];
+  const rows = await prisma.product.findMany({
+    where: { id: { in: pageIds } },
+    include: PRODUCT_LIST_INCLUDE,
+  });
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return pageIds.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [row] : [];
+  });
+}
+
 export async function listProducts(filters: ListProductsFilters = {}) {
   const where = productWhere(filters);
   const page = Math.max(1, Math.trunc(filters.page ?? 1));
 
-  const products = await prisma.product.findMany({
-    where,
-    orderBy: productOrderBy(filters.sort, filters.dir ?? "asc"),
-    skip: (page - 1) * PRODUCTS_PAGE_SIZE,
-    take: PRODUCTS_PAGE_SIZE,
-    include: {
-      store: { select: { id: true, name: true } },
-      category: { select: { id: true, name: true } },
-      variants: {
-        select: { id: true, sku: true, price: true, costPrice: true, stockLevel: true },
-      },
-      supplierProducts: {
-        where: { isPreferred: true },
-        select: { id: true, cost: true, supplier: { select: { name: true, code: true } } },
-        take: 1,
-      },
-    },
-  });
+  const products =
+    filters.sort === "revenue" && filters.performanceIndex
+      ? await listProductsByRevenue(where, filters.performanceIndex, filters.dir ?? "desc", page)
+      : await prisma.product.findMany({
+          where,
+          orderBy: productOrderBy(filters.sort, filters.dir ?? "asc"),
+          skip: (page - 1) * PRODUCTS_PAGE_SIZE,
+          take: PRODUCTS_PAGE_SIZE,
+          include: PRODUCT_LIST_INCLUDE,
+        });
 
   return products.map((p) => {
     // Aggregate price/cost from first variant (primary)
@@ -268,7 +397,8 @@ export async function listProducts(filters: ListProductsFilters = {}) {
     const stock = p.variants.reduce((sum, v) => sum + (v.stockLevel ?? 0), 0);
 
     return {
-      imageCount: storeImageCount(p.metadata),
+      imageCount: p.imageCount,
+      descriptionLength: p.descriptionLength,
       id: p.id,
       name: p.name,
       sku: p.sku,
