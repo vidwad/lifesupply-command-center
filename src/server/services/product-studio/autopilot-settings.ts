@@ -64,6 +64,18 @@ export const autopilotSettingsSchema = z.object({
   stopAfterConsecutiveFailures: z.number().int().min(1).max(10),
   publishMode: z.enum(PUBLISH_MODES),
   descriptionMode: z.enum(DESCRIPTION_MODES),
+  /**
+   * With a publish mode chosen, a product whose images did not all pass is
+   * still published when at least this many are approved (product owner,
+   * 2026-10-28): the approved images go up, and the description when the
+   * mode includes it, and the product is still marked for attention for the
+   * images that failed. Equal to imagesPerProduct (the default) publishes
+   * only fully approved products; 0 publishes the description even when no
+   * image passed. Read through publishThreshold(), which caps it at the
+   * images the run asks for. Defaults when absent, so runs frozen before
+   * the setting existed still parse and behave as they did.
+   */
+  minApprovedImagesToPublish: z.number().int().min(0).max(4).default(4),
   /** Open a Task for the creator listing products that need attention. */
   createTask: z.boolean(),
 });
@@ -81,8 +93,16 @@ export const DEFAULT_AUTOPILOT_SETTINGS: AutopilotSettings = {
   stopAfterConsecutiveFailures: 3,
   publishMode: "none",
   descriptionMode: "replace",
+  minApprovedImagesToPublish: 4,
   createTask: true,
 };
+
+/** Approved images a product needs before a run publishes it; never more than it asks for. */
+export function publishThreshold(
+  settings: Pick<AutopilotSettings, "minApprovedImagesToPublish" | "imagesPerProduct">,
+): number {
+  return Math.min(settings.minApprovedImagesToPublish, settings.imagesPerProduct);
+}
 
 /** Whether the settings send anything to the store. */
 export function publishesToStore(settings: Pick<AutopilotSettings, "publishMode">): boolean {
@@ -148,6 +168,11 @@ export function autopilotSettingsFromForm(form: FormData): AutopilotSettings {
     ),
     publishMode,
     descriptionMode,
+    minApprovedImagesToPublish: numberField(
+      form,
+      "minApprovedImagesToPublish",
+      d.minApprovedImagesToPublish,
+    ),
     createTask: form.get("createTask") === "1",
   });
 }
@@ -165,6 +190,13 @@ export function estimateMaxImages(settings: AutopilotSettings, productCount: num
 /** One line per setting, for the run page and the audit record. */
 export function describeAutopilotSettings(settings: AutopilotSettings): string[] {
   const pct = (value: number) => `${Math.round(value * 100)}%`;
+  const threshold = publishThreshold(settings);
+  const when =
+    threshold >= settings.imagesPerProduct
+      ? "Once a product's images are approved"
+      : threshold === 0
+        ? "Once a product's images have been tried, whether or not any was approved"
+        : `Once at least ${threshold} of a product's ${settings.imagesPerProduct} images are approved, even if the rest failed`;
   return [
     `Approve a draft when its lowest QA score is at least ${pct(settings.minImageScore)}; otherwise reject and regenerate.`,
     `Up to ${settings.maxRegenerationsPerSlot} regeneration${settings.maxRegenerationsPerSlot === 1 ? "" : "s"} per image before the slot is left for a person.`,
@@ -176,10 +208,10 @@ export function describeAutopilotSettings(settings: AutopilotSettings): string[]
     settings.publishMode === "none"
       ? "Nothing is sent to BigCommerce; approved drafts wait for a Super Admin to publish."
       : settings.publishMode === "images"
-        ? "Once a product's images are approved, publish them to its BigCommerce listing."
+        ? `${when}, publish the approved ones to its BigCommerce listing.`
         : settings.publishMode === "images_and_description"
-          ? "Once a product's images are approved, publish them and the full description to its BigCommerce listing."
-          : "Once a product's images are approved, publish them and the full description to its BigCommerce listing, and make the first composition the main image.",
+          ? `${when}, publish the approved ones and the full description to its BigCommerce listing.`
+          : `${when}, publish the approved ones and the full description to its BigCommerce listing, and make the first composition the main image.`,
     settings.publishMode === "none"
       ? "The store description is not touched."
       : settings.descriptionMode === "replace"

@@ -98,10 +98,15 @@ describe("unattended runs keep their controls", () => {
     expect(publish.indexOf("setAssetUploadMark({")).toBeLessThan(
       publish.indexOf("publishProductStudioProject({"),
     );
-    // The run service calls it only from the completion step, gated on the mode.
+    // The run service calls it only from the finishing step, gated on the
+    // mode, and for a product short of images only under the run's minimum.
     const service = stripComments(read(SERVICE));
     expect(service.match(/await publishForRun\(\{/g)?.length).toBe(1);
     expect(service).toContain("if (publishesToStore(settings)) {");
+    expect(service).toContain("if (!partial || mayPublishPartially(next, settings)) {");
+    const policy = stripComments(read(POLICY));
+    expect(policy).toContain("next.imagesFinal &&");
+    expect(policy).toContain("next.approvedSlots >= publishThreshold(settings)");
   });
 
   it("publishing from a run checks the approval, the creator's current permissions and the flags first", () => {

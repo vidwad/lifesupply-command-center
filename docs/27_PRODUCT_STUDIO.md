@@ -266,10 +266,12 @@ creator is no longer an active user.
 | Stop after consecutive failures | 3 | A provider outage stops the run rather than failing every product. |
 | Publish to BigCommerce | none | `none` leaves approved drafts for the publishing card. `images` adds the approved drafts to the listing; `images_and_description` also replaces the store description; `all` also makes the first composition the main image. Any mode but `none` needs `product_studio.publish` and `external.writebacks` on when the run is created and again when each product publishes. |
 | Store description | replace | With a publishing mode that includes the description: replace what the store has, or write it only where the store's description is empty. |
+| Minimum approved images to publish | every image | With a publishing mode: a product whose images did not all pass is still published when at least this many are approved (product owner, 2026-10-28). The approved images go up, and the description if the mode includes it, and the product stays marked for attention for the images that failed. At the default nothing changes: only fully approved products publish. 0 publishes the description even when no image passed. Never applies to a product that stopped before its images (no photograph, research below the confidence threshold, no research). Capped at the images per product. |
 | Open a Task | yes | On completion, a Task for the creator lists the products needing attention. |
 
 **Publishing from a run.** When the mode is not `none`, a product whose requested images are all
-approved goes through `autopilot-publish.ts`, the one module outside the publish server actions that
+approved, or that is short of images but has at least the run's minimum approved and nothing more
+to try (`mayPublishPartially` in `autopilot-policy.ts`), goes through `autopilot-publish.ts`, the one module outside the publish server actions that
 may call the publish service, and the only way content reaches a store without a person pressing
 "Publish" on that project. In order: the run's Approval row must exist and be approved; the creator
 must hold the publish permission *now*, read from the roles tables rather than from any snapshot;

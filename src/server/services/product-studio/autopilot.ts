@@ -47,6 +47,7 @@ import {
   evaluateGeneratedImage,
   finalizeRunStatus,
   LIVE_RUN_STATUSES,
+  mayPublishPartially,
   qaScoresFrom,
   TERMINAL_ITEM_STAGES,
   type ItemOutcome,
@@ -57,6 +58,7 @@ import {
   describeAutopilotSettings,
   parseAutopilotSettings,
   publishesToStore,
+  publishThreshold,
   type AutopilotSettings,
 } from "./autopilot-settings";
 import { ProductStudioInputError, reviewProductStudioAsset } from "./index";
@@ -592,36 +594,49 @@ export async function processRunItemStep(args: {
         }
         return { kind: "continue", step: steps };
       }
-      case "complete": {
+      case "complete":
+      case "attention": {
+        // A product is finished either way. "complete" has every requested
+        // image approved; "attention" stopped short and stays marked for a
+        // person whatever happens next.
+        const partial = next.action === "attention";
         const approved = `${next.approvedSlots} image${next.approvedSlots === 1 ? "" : "s"} approved automatically.`;
+        const lead = partial ? next.reason + " " + approved : approved;
         // Publishing, when the run's settings ask for it (2026-10-27): the
         // one place a run reaches the store, through the publish module and
         // its gates. A refusal or failure leaves the product for a person.
+        // Since 2026-10-28 a product left for attention publishes too, when
+        // its images are final and at least the run's minimum passed.
         let publishedItems = 0;
-        let stage: "done" | "attention" = "done";
-        let note = approved + " Nothing was sent to the store.";
+        let stage: "done" | "attention" = partial ? "attention" : "done";
+        let note = partial ? next.reason : approved + " Nothing was sent to the store.";
         if (publishesToStore(settings)) {
-          await prisma.productStudioRunItem.update({
-            where: { id: item.id },
-            data: { stage: "publishing" },
-          });
-          const outcome = await publishForRun({
-            runId: run.id,
-            approvalId: run.approvalId,
-            projectId: project.id,
-            actorUserId,
-            settings,
-          });
-          if (outcome.status === "published") {
-            publishedItems = outcome.publishedItems;
-            note = approved + " " + outcome.message;
-          } else if (outcome.status === "nothing") {
-            note = approved + " " + outcome.message;
+          if (!partial || mayPublishPartially(next, settings)) {
+            await prisma.productStudioRunItem.update({
+              where: { id: item.id },
+              data: { stage: "publishing" },
+            });
+            const outcome = await publishForRun({
+              runId: run.id,
+              approvalId: run.approvalId,
+              projectId: project.id,
+              actorUserId,
+              settings,
+            });
+            if (outcome.status === "published") {
+              publishedItems = outcome.publishedItems;
+              note = lead + " " + outcome.message;
+            } else if (outcome.status === "nothing") {
+              note = lead + " " + outcome.message;
+            } else {
+              publishedItems = outcome.publishedItems;
+              stage = "attention";
+              note = lead + " " + outcome.message + " Publish from the project page once resolved.";
+            }
           } else {
-            publishedItems = outcome.publishedItems;
-            stage = "attention";
             note =
-              approved + " " + outcome.message + " Publish from the project page once resolved.";
+              lead +
+              ` Nothing was sent to the store: the run publishes only from ${publishThreshold(settings)} approved image${publishThreshold(settings) === 1 ? "" : "s"}.`;
           }
         }
         await prisma.productStudioRunItem.update({
@@ -648,6 +663,7 @@ export async function processRunItemStep(args: {
           entityId: project.id,
           afterData: {
             runId: run.id,
+            reason: partial ? next.reason : null,
             approvedSlots: next.approvedSlots,
             publishMode: settings.publishMode,
             publishedItems,
@@ -655,26 +671,6 @@ export async function processRunItemStep(args: {
           },
         });
         return { kind: "item_finished", stage };
-      }
-      case "attention": {
-        await finishItem({
-          itemId: item.id,
-          stage: "attention",
-          approvedSlots: next.approvedSlots,
-          note: next.reason,
-        });
-        await prisma.productStudioRun.update({
-          where: { id: run.id },
-          data: { consecutiveFailures: 0 },
-        });
-        await writeAudit({
-          actorUserId,
-          action: "product_studio.autopilot_item_needs_attention",
-          entityType: "ProductStudioProject",
-          entityId: project.id,
-          afterData: { runId: run.id, reason: next.reason, approvedSlots: next.approvedSlots },
-        });
-        return { kind: "item_finished", stage: "attention" };
       }
     }
   } catch (error) {
