@@ -132,3 +132,30 @@ export const productStudioQaSchema = z.object({
 });
 
 export type ProductStudioQa = z.infer<typeof productStudioQaSchema>;
+
+/**
+ * One seller's listing image of the same product, from the seller-image
+ * search run when a project has no photograph (product owner, 2026-10-28).
+ */
+export const sellerImageCandidateSchema = z.object({
+  sellerName: z.string().min(1),
+  pageTitle: z.string().nullable(),
+  pageUrl: httpUrl,
+  /** The image file itself, not the page: what a browser would load. */
+  imageUrl: httpUrl,
+  sourceType: z.enum(["manufacturer", "distributor", "retailer", "marketplace"]),
+  imageKind: z.enum(["packshot", "packaging", "lifestyle", "other"]),
+  /** Why the listing is the same product: matching identifiers, size, pack. */
+  whyMatch: z.string().min(1),
+  matchConfidence: z.number().min(0).max(1),
+});
+
+export const sellerImageSearchSchema = z.object({
+  /** One line naming the exact product the search settled on. */
+  productIdentified: z.string().min(1),
+  candidates: z.array(sellerImageCandidateSchema).max(12),
+  warnings: z.array(z.string()),
+});
+
+export type SellerImageCandidate = z.infer<typeof sellerImageCandidateSchema>;
+export type SellerImageSearch = z.infer<typeof sellerImageSearchSchema>;

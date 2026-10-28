@@ -57,6 +57,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261028110000_product_image_count_description_length",
   // Product Studio report thumbnails (2026-10-28).
   "20261028150000_product_studio_report_thumbnail",
+  // Product Studio seller-image search for projects with no photograph (product owner, 2026-10-28).
+  "20261028180000_product_studio_competitor_images",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */

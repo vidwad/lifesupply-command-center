@@ -117,17 +117,39 @@ export async function runProductStudioResearch(args: {
     include: {
       assets: {
         where: { kind: "source" },
-        select: { fileName: true, contentType: true, data: true },
+        select: { id: true, fileName: true, contentType: true, data: true },
         orderBy: { createdAt: "asc" },
       },
     },
   });
 
   try {
+    // A photograph chosen from a seller's listing (competitor-images.ts) is
+    // identity evidence, not a photograph of the operator's stock; research
+    // is told which ones those are so it does not read condition from them.
+    const sellerImages = await prisma.productStudioImageCandidate.findMany({
+      where: { assetId: { in: project.assets.map((asset) => asset.id) } },
+      select: { assetId: true, sellerName: true, pageUrl: true, imageUrl: true },
+    });
+    const referenceNotes = project.assets.flatMap((asset, index) => {
+      const seller = sellerImages.find((item) => item.assetId === asset.id);
+      return seller
+        ? [
+            "Photograph " +
+              String(index + 1) +
+              " is a seller's listing image from " +
+              new URL(seller.pageUrl).hostname.replace(/^www\./i, "") +
+              " (" +
+              seller.sellerName +
+              "), chosen by the operator because no photograph of the operator's own stock exists.",
+          ]
+        : [];
+    });
     const call = await researchProduct({
       title: project.title,
       shortDescription: project.shortDescription,
       references: project.assets,
+      referenceNotes,
     });
     const research = call.result;
     const warnings = [...research.warnings];
@@ -226,6 +248,11 @@ export async function runProductStudioResearch(args: {
           sourceReferences: {
             projectId: project.id,
             sourceImageCount: project.assets.length,
+            sellerReferenceImages: sellerImages.map((item) => ({
+              sellerName: item.sellerName,
+              pageUrl: item.pageUrl,
+              imageUrl: item.imageUrl,
+            })),
             retailerUrls: research.sources.map((source) => source.url),
             verifiedWebSearchUrls: call.verifiedSourceUrls,
             droppedSourceDomains: call.droppedSourceDomains,

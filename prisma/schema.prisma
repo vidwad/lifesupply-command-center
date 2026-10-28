@@ -82,6 +82,7 @@ model User {
   productStudioPublishesWritten ProductStudioPublishLog[] @relation("ProductStudioPublishWriter")
   productStudioRunsCreated    ProductStudioRun[]     @relation("ProductStudioRunCreator")
   productStudioRunsCancelled  ProductStudioRun[]     @relation("ProductStudioRunCanceller")
+  productStudioImageSearches  ProductStudioImageSearch[] @relation("ProductStudioImageSearchRequester")
   pricingRunsCreated          PricingRun[]           @relation("PricingRunCreator")
   priceRecommendationsApproved PriceRecommendation[] @relation("PriceRecommendationApprover")
   priceRecommendationsRejected PriceRecommendation[] @relation("PriceRecommendationRejecter")
@@ -510,6 +511,8 @@ model ProductStudioProject {
   compositions      ProductStudioComposition[]
   publishLogs       ProductStudioPublishLog[]
   runItems          ProductStudioRunItem[]
+  imageSearches     ProductStudioImageSearch[]
+  imageCandidates   ProductStudioImageCandidate[]
 
   @@index([productId])
   @@index([createdById])
@@ -666,6 +669,8 @@ model ProductStudioAsset {
   project          ProductStudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
   uploadApprovedBy User?                @relation("ProductStudioAssetUploadApprover", fields: [uploadApprovedById], references: [id], onDelete: SetNull)
   publishLogs      ProductStudioPublishLog[]
+  /// Set when this photograph was chosen from a seller's listing (2026-10-28).
+  sellerCandidate  ProductStudioImageCandidate?
 
   @@unique([projectId, kind, compositionSlot, revision])
   @@index([projectId])
@@ -757,6 +762,75 @@ model ProductStudioResearchSource {
   @@map("product_studio_research_sources")
 }
 
+/// A search of sellers for an image of the same product, run when a project
+/// has no photograph of its own (product owner, 2026-10-28). One row per
+/// search; the page shows the latest. Candidates hold a thumbnail each for
+/// choosing; the full image is fetched again only for the one selected.
+model ProductStudioImageSearch {
+  id            String                         @id @default(cuid())
+  projectId     String
+  requestedById String?
+  status        ProductStudioImageSearchStatus @default(queued)
+  /// What the search was given: title, description and catalogue identifiers.
+  query         String                         @db.Text
+  modelName     String?
+  errorMessage  String?                        @db.Text
+  warnings      String[]
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
+
+  project     ProductStudioProject          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requestedBy User?                         @relation("ProductStudioImageSearchRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  candidates  ProductStudioImageCandidate[]
+
+  @@index([projectId, createdAt])
+  @@map("product_studio_image_searches")
+}
+
+/// One seller's product image found by a search. The listing and image URLs
+/// and the seller come from the model, verified against the web-search
+/// evidence; the image facts, hash and thumbnail come from fetching the image.
+model ProductStudioImageCandidate {
+  id              String    @id @default(cuid())
+  searchId        String
+  projectId       String
+  sellerName      String
+  pageTitle       String?
+  pageUrl         String
+  imageUrl        String
+  /// manufacturer, distributor, retailer or marketplace.
+  sourceType      String?
+  /// packshot, packaging, lifestyle or other.
+  imageKind       String?
+  /// Why the model believes the listing is the same product.
+  notes           String?   @db.Text
+  matchConfidence Float?
+  sortOrder       Int       @default(0)
+  /// Facts of the fetched image; all null when the fetch failed (fetchError says why).
+  contentType     String?
+  bytes           Int?
+  width           Int?
+  height          Int?
+  contentHash     String?
+  /// A small JPEG for choosing. Never the record of the image.
+  thumbnail       Bytes?
+  fetchError      String?   @db.Text
+  /// Set when an operator made this image the project's photograph.
+  selectedAt      DateTime?
+  assetId         String?   @unique
+  createdAt       DateTime  @default(now())
+
+  search  ProductStudioImageSearch @relation(fields: [searchId], references: [id], onDelete: Cascade)
+  project ProductStudioProject     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  asset   ProductStudioAsset?      @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([searchId, sortOrder])
+  @@map("product_studio_image_candidates")
+}
+
 model ProductStudioPriceObservation {
   id                  String   @id @default(cuid())
   projectId           String
@@ -798,6 +872,13 @@ model ProductStudioComposition {
   @@index([projectId])
   @@index([status])
   @@map("product_studio_compositions")
+}
+
+enum ProductStudioImageSearchStatus {
+  queued
+  running
+  succeeded
+  failed
 }
 
 enum ProductStudioCompositionStatus {
