@@ -5,7 +5,7 @@ import { compileProductImagePrompt } from "./prompts";
 import { rebuildCompositionBrief, rebuildIdentity, rebuildListing } from "./recompile";
 import { isWorkflowBusy } from "./workflow-progress";
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma, ProductStudioProjectStatus } from "@prisma/client";
 
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { writeAudit } from "@/server/audit";
@@ -129,6 +129,38 @@ export async function createProductStudioProject(args: {
   return project.id;
 }
 
+/**
+ * Status filters for the project list (product owner, 2026-10-27). Each
+ * groups the statuses an operator thinks of together: the four working
+ * states read as "in progress".
+ */
+export const PROJECT_STATUS_FILTERS = {
+  draft: ["draft"],
+  in_progress: ["research_queued", "researching", "ready_to_generate", "generating"],
+  needs_review: ["needs_review"],
+  approved: ["approved"],
+  failed: ["failed"],
+} as const satisfies Record<string, readonly ProductStudioProjectStatus[]>;
+export type ProjectStatusFilter = keyof typeof PROJECT_STATUS_FILTERS;
+export const PROJECT_STATUS_FILTER_KEYS = Object.keys(
+  PROJECT_STATUS_FILTERS,
+) as ProjectStatusFilter[];
+export const PROJECT_STATUS_FILTER_LABELS: Record<ProjectStatusFilter, string> = {
+  draft: "Draft",
+  in_progress: "In progress",
+  needs_review: "Needs review",
+  approved: "Approved",
+  failed: "Failed",
+};
+
+export function parseProjectStatusFilter(
+  value: string | undefined,
+): ProjectStatusFilter | undefined {
+  return value != null && Object.hasOwn(PROJECT_STATUS_FILTERS, value)
+    ? (value as ProjectStatusFilter)
+    : undefined;
+}
+
 export const PROJECT_SORT_KEYS = ["updated", "created", "title", "status", "product"] as const;
 export type ProjectSortKey = (typeof PROJECT_SORT_KEYS)[number];
 
@@ -164,11 +196,48 @@ function projectOrderBy(
   }
 }
 
-export async function listProductStudioProjects(
-  filter: { batchId?: string | null; sort?: ProjectSortKey; dir?: "asc" | "desc" } = {},
-) {
+export type ListProjectsFilter = {
+  batchId?: string | null;
+  status?: ProjectStatusFilter;
+  sort?: ProjectSortKey;
+  dir?: "asc" | "desc";
+};
+
+/** The where clause the list and its counts share, so they cannot disagree. */
+function projectWhere(filter: ListProjectsFilter): Prisma.ProductStudioProjectWhereInput {
+  const where: Prisma.ProductStudioProjectWhereInput = {};
+  if (filter.batchId) where.batchId = filter.batchId;
+  if (filter.status) where.status = { in: [...PROJECT_STATUS_FILTERS[filter.status]] };
+  return where;
+}
+
+/**
+ * How many projects each status filter would show under the current batch,
+ * plus the total, for the filter pills.
+ */
+export async function countProductStudioProjectsByStatus(
+  filter: Pick<ListProjectsFilter, "batchId">,
+): Promise<Record<ProjectStatusFilter | "all", number>> {
+  const grouped = await prisma.productStudioProject.groupBy({
+    by: ["status"],
+    where: projectWhere(filter),
+    _count: { _all: true },
+  });
+  const byStatus = new Map(grouped.map((row) => [row.status, row._count._all]));
+  const counts = { all: 0 } as Record<ProjectStatusFilter | "all", number>;
+  for (const key of PROJECT_STATUS_FILTER_KEYS) {
+    counts[key] = PROJECT_STATUS_FILTERS[key].reduce(
+      (sum, status) => sum + (byStatus.get(status) ?? 0),
+      0,
+    );
+  }
+  counts.all = grouped.reduce((sum, row) => sum + row._count._all, 0);
+  return counts;
+}
+
+export async function listProductStudioProjects(filter: ListProjectsFilter = {}) {
   return prisma.productStudioProject.findMany({
-    where: filter.batchId ? { batchId: filter.batchId } : undefined,
+    where: projectWhere(filter),
     orderBy: projectOrderBy(filter.sort, filter.dir ?? "asc", Boolean(filter.batchId)),
     take: 100,
     include: {
