@@ -70,6 +70,8 @@ export function evaluateGeneratedImage(
 export type ProjectSnapshot = {
   status: string;
   sourceCount: number;
+  /** Seller-image searches already run on the project (competitor-images.ts), any outcome. */
+  sellerImageSearches: number;
   compositions: readonly { slot: number; status: string }[];
   /** Generated assets only, any revision. */
   assets: readonly { compositionSlot: number | null; revision: number; status: string }[];
@@ -83,6 +85,8 @@ export type RunCounters = {
 };
 
 export type NextAction =
+  /** No photograph: search sellers for one and take the best (2026-10-28). */
+  | { action: "source_image" }
   | { action: "research" }
   | { action: "generate"; slot: number; regeneration: boolean }
   | { action: "review"; slot: number }
@@ -129,9 +133,17 @@ export function decideNextAction(
   const approvedSlots = [...latest.values()].filter((a) => a.status === "approved").length;
 
   if (project.sourceCount === 0) {
+    // One search per product per run: a search that found nothing usable
+    // is not repeated, and the product stops for a person.
+    if (settings.sellerImageWhenNoPhoto && project.sellerImageSearches === 0) {
+      return { action: "source_image" };
+    }
     return {
       action: "attention",
-      reason: "No authoritative photograph. Add one on the project page and research by hand.",
+      reason:
+        project.sellerImageSearches > 0
+          ? "No authoritative photograph, and no usable seller image was found. Add one on the project page and research by hand."
+          : "No authoritative photograph. Add one on the project page and research by hand.",
       approvedSlots,
       imagesFinal: false,
     };

@@ -61,6 +61,7 @@ import {
   publishThreshold,
   type AutopilotSettings,
 } from "./autopilot-settings";
+import { sourceSellerImageForRun } from "./competitor-images";
 import { ProductStudioInputError, reviewProductStudioAsset } from "./index";
 import { runProductStudioGeneration, runProductStudioResearch } from "./jobs";
 import { flagsBlockingPublish } from "./publish-read";
@@ -356,6 +357,7 @@ async function loadSnapshot(projectId: string) {
       id: true,
       status: true,
       researchSummary: true,
+      _count: { select: { imageSearches: true } },
       compositions: { select: { slot: true, status: true } },
       assets: {
         select: {
@@ -384,6 +386,7 @@ function toPolicySnapshot(project: Snapshot) {
   return {
     status: project.status,
     sourceCount: project.assets.filter((asset) => asset.kind === "source").length,
+    sellerImageSearches: project._count.imageSearches,
     compositions: project.compositions,
     assets: generated.map((asset) => ({
       compositionSlot: asset.compositionSlot,
@@ -532,6 +535,40 @@ export async function processRunItemStep(args: {
 
   try {
     switch (next.action) {
+      case "source_image": {
+        // No photograph (product owner, 2026-10-28): search other sellers
+        // and take the image most of them share, else the best single one.
+        // One search per product; the policy stops the product afterwards
+        // if nothing usable was found.
+        await prisma.productStudioRunItem.update({
+          where: { id: item.id },
+          data: { stage: "researching", note: "Searching other sellers for a product image." },
+        });
+        const sourced = await sourceSellerImageForRun({
+          projectId: project.id,
+          actorUserId,
+          runId: run.id,
+        });
+        const note = sourced.chosen
+          ? `Reference image taken from ${sourced.chosen.sellerName}: ${sourced.chosen.reason}.`
+          : `No usable seller image among ${sourced.candidates} candidate${sourced.candidates === 1 ? "" : "s"}.`;
+        await prisma.productStudioRunItem.update({ where: { id: item.id }, data: { note } });
+        await writeAudit({
+          actorUserId,
+          action: sourced.chosen
+            ? "product_studio.autopilot_seller_image_chosen"
+            : "product_studio.autopilot_seller_image_not_found",
+          entityType: "ProductStudioProject",
+          entityId: project.id,
+          afterData: {
+            runId: run.id,
+            searchId: sourced.searchId,
+            candidates: sourced.candidates,
+            chosen: sourced.chosen,
+          },
+        });
+        return { kind: "continue", step: steps };
+      }
       case "research": {
         await prisma.productStudioRunItem.update({
           where: { id: item.id },
@@ -705,7 +742,7 @@ export async function processRunItemStep(args: {
     await finishItem({
       itemId: item.id,
       stage: "failed",
-      note: `${next.action === "research" ? "Research" : "Image generation"} failed: ${message}`,
+      note: `${next.action === "research" ? "Research" : next.action === "source_image" ? "Seller-image search" : "Image generation"} failed: ${message}`,
     });
     await writeAudit({
       actorUserId,

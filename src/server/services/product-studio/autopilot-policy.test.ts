@@ -30,6 +30,7 @@ function snapshot(over: Partial<ProjectSnapshot> = {}): ProjectSnapshot {
   return {
     status: "ready_to_generate",
     sourceCount: 1,
+    sellerImageSearches: 0,
     compositions,
     assets: [],
     identityConfidence: 0.95,
@@ -67,9 +68,20 @@ describe("approving or regenerating a draft from its QA scores", () => {
 });
 
 describe("the next step for a product", () => {
-  it("stops a product without a photograph before spending", () => {
-    const next = decideNextAction(snapshot({ sourceCount: 0, compositions: [] }), settings, run);
-    expect(next.action).toBe("attention");
+  it("searches sellers once for a product without a photograph, then stops it", () => {
+    // Product owner, 2026-10-28: the run finds a reference image itself.
+    const none = snapshot({ sourceCount: 0, compositions: [] });
+    expect(decideNextAction(none, settings, run).action).toBe("source_image");
+    // One search per product: after it, no photograph means a person.
+    const searched = decideNextAction({ ...none, sellerImageSearches: 1 }, settings, run);
+    expect(searched.action).toBe("attention");
+    expect((searched as { reason: string }).reason).toContain("no usable seller image was found");
+    // The setting off keeps the old behaviour.
+    const off = decideNextAction(none, { ...settings, sellerImageWhenNoPhoto: false }, run);
+    expect(off.action).toBe("attention");
+    expect((off as { reason: string }).reason).toBe(
+      "No authoritative photograph. Add one on the project page and research by hand.",
+    );
   });
   it("researches a draft or failed project with no compositions", () => {
     expect(
@@ -139,7 +151,11 @@ describe("the next step for a product", () => {
     expect(mayPublishPartially(ceiling, { ...settings, minApprovedImagesToPublish: 0 })).toBe(true);
     // A product that stopped before its images never publishes, whatever the minimum.
     for (const early of [
-      decideNextAction(snapshot({ sourceCount: 0, compositions: [] }), settings, run),
+      decideNextAction(
+        snapshot({ sourceCount: 0, sellerImageSearches: 1, compositions: [] }),
+        settings,
+        run,
+      ),
       decideNextAction(snapshot({ identityConfidence: 0.6 }), settings, run),
       decideNextAction(snapshot({ status: "researching", compositions: [] }), settings, run),
     ]) {

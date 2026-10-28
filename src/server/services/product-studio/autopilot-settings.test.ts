@@ -39,8 +39,11 @@ describe("unattended run settings", () => {
     expect(settings.imagesPerProduct).toBe(2);
     expect(settings.parallelProducts).toBe(3);
     expect(settings.createTask).toBe(false);
+    expect(settings.sellerImageWhenNoPhoto).toBe(false);
     form.set("createTask", "1");
+    form.set("sellerImageWhenNoPhoto", "1");
     expect(autopilotSettingsFromForm(form).createTask).toBe(true);
+    expect(autopilotSettingsFromForm(form).sellerImageWhenNoPhoto).toBe(true);
   });
 
   it("falls back to the defaults for empty fields and names the first bad one", () => {
@@ -49,7 +52,11 @@ describe("unattended run settings", () => {
     expect(autopilotSettingsFromForm(empty)).toEqual({
       ...DEFAULT_AUTOPILOT_SETTINGS,
       createTask: false,
+      sellerImageWhenNoPhoto: false,
     });
+    // A run frozen before the seller-image setting existed searches, as the owner asked.
+    const { sellerImageWhenNoPhoto: _omit, ...before } = DEFAULT_AUTOPILOT_SETTINGS;
+    expect(parseAutopilotSettings(before).sellerImageWhenNoPhoto).toBe(true);
     const bad = new FormData();
     bad.set("imagesPerProduct", "9");
     expect(() => autopilotSettingsFromForm(bad)).toThrow(AutopilotSettingsError);
@@ -120,7 +127,8 @@ describe("unattended run settings", () => {
 
   it("describes every setting in one line each", () => {
     const lines = describeAutopilotSettings(DEFAULT_AUTOPILOT_SETTINGS);
-    expect(lines).toHaveLength(10);
+    expect(lines).toHaveLength(11);
+    expect(lines.join(" ")).toContain("takes the image most sellers share");
     expect(lines.join(" ")).toContain("80%");
     expect(lines.join(" ")).toContain("Nothing is sent to BigCommerce");
     const publishing = describeAutopilotSettings({

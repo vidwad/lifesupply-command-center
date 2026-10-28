@@ -284,6 +284,20 @@ export function RunForm({
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
+            name="sellerImageWhenNoPhoto"
+            value="1"
+            defaultChecked={d.sellerImageWhenNoPhoto}
+            className="mt-0.5 h-4 w-4 accent-primary"
+          />
+          <span>
+            For a product with no photograph, search other sellers for one and use the image most
+            sellers share, else the best available, as its reference. Unticked, such a product stops
+            for attention.
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
             name="createTask"
             value="1"
             defaultChecked={d.createTask}
