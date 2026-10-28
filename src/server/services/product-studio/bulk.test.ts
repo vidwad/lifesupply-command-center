@@ -3,7 +3,12 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { firstStoreImageUrl, isStoreImageHost, storeDescriptionToText } from "./bulk";
+import {
+  firstStoreImageUrl,
+  isStoreImageHost,
+  runFormHrefForBatch,
+  storeDescriptionToText,
+} from "./bulk";
 import { sourcePhotosLocked } from "./source-photos";
 
 describe("picking the store image", () => {
@@ -66,6 +71,48 @@ describe("the photograph lock", () => {
   });
 });
 
+describe("the run form address for a batch", () => {
+  it("carries the projects that already existed beside the batch id", () => {
+    const href = runFormHrefForBatch({
+      batchId: "batch-1",
+      entries: [
+        { productId: "p1", productName: "New", projectId: "proj-new", seeded: true, note: null },
+        {
+          productId: "p2",
+          productName: "Old",
+          projectId: "proj-old",
+          seeded: false,
+          note: "Already has a project; opened that one instead.",
+        },
+        {
+          productId: "p3",
+          productName: "p3",
+          projectId: null,
+          seeded: false,
+          note: "Product not found.",
+        },
+        {
+          productId: "p4",
+          productName: "No image",
+          projectId: "proj-noimg",
+          seeded: false,
+          note: "The store has no image; add a photo on the project page.",
+        },
+      ],
+    });
+    const url = new URL(href, "http://x");
+    expect(url.pathname).toBe("/automation/product-studio/new");
+    expect(url.searchParams.get("batch")).toBe("batch-1");
+    // Only the pre-existing project is repeated: the new ones are found by the batch.
+    expect(url.searchParams.getAll("id")).toEqual(["proj-old"]);
+  });
+  it("is the batch alone when every product was new", () => {
+    expect(runFormHrefForBatch({ batchId: "b", entries: [] })).toBe(
+      "/automation/product-studio/new?batch=b",
+    );
+  });
+});
+
 describe("bulk creation spends nothing", () => {
   const ROOT = join(__dirname, "..", "..", "..", "..");
   const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
@@ -89,5 +136,15 @@ describe("bulk creation spends nothing", () => {
     expect(bulk).toContain("createProductStudioBatch({");
     expect(bulk).toContain("redirect(`/products/studio?batch=${batchId}`)");
     expect(bulk).not.toMatch(/queue|Generation|Research/);
+  });
+  it("the unattended-run action sends the whole selection to the run form", () => {
+    const actions = stripComments(read("src/app/(dashboard)/products/studio/actions.ts"));
+    const run = actions.slice(
+      actions.indexOf("export async function bulkAutopilotAction"),
+      actions.indexOf("export async function updateSourcePhotosAction"),
+    );
+    expect(run).toContain("createProductStudioBatch({");
+    expect(run).toContain("redirect(runFormHrefForBatch(batch))");
+    expect(run).not.toMatch(/queue|Generation|Research/);
   });
 });

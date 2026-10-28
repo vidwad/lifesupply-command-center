@@ -50,7 +50,9 @@ export default async function NewProductStudioRunPage({
     : blocked.length > 0
       ? "Remove the projects marked unavailable from your selection and try again."
       : eligible.length === 0
-        ? "Select at least one project on the Product Studio list first."
+        ? batchId || fromQuery.length > 0
+          ? "None of the selected products has a project that can be run. Open them in Product Studio first, or select projects on the Product Studio list."
+          : "Select at least one project on the Product Studio list first."
         : null;
 
   return (
