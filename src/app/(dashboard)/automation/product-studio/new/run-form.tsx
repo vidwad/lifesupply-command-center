@@ -239,6 +239,24 @@ export function RunForm({
               : "Publishing from a run needs product_studio.publish and external.writebacks on. They are off, so this run leaves approved drafts for a Super Admin to publish."}
           </p>
         </div>
+        {publishMode !== "none" ? (
+          <Field
+            id="minApprovedImagesToPublish"
+            label="Minimum approved images to publish"
+            help={`A product whose images did not all pass is still published when at least this many are approved: the approved images go up, and the description if the mode includes it, and the product stays marked for attention for the rest. ${String(imagesPerProduct)} (every image) publishes only fully approved products; 0 publishes the description even when no image passed.`}
+          >
+            <Input
+              id="minApprovedImagesToPublish"
+              name="minApprovedImagesToPublish"
+              type="number"
+              min={0}
+              max={imagesPerProduct}
+              step={1}
+              defaultValue={Math.min(d.minApprovedImagesToPublish, imagesPerProduct)}
+              required
+            />
+          </Field>
+        ) : null}
         {publishMode !== "none" && unlinkedCount > 0 ? (
           <p
             role="alert"

@@ -4,6 +4,7 @@ import {
   decideNextAction,
   evaluateGeneratedImage,
   finalizeRunStatus,
+  mayPublishPartially,
   qaScoresFrom,
   type ProjectSnapshot,
 } from "./autopilot-policy";
@@ -115,6 +116,48 @@ describe("the next step for a product", () => {
     expect(next.action).toBe("attention");
     expect((next as { reason: string }).reason).toContain("image 1 was rejected 3 times");
     expect((next as { approvedSlots: number }).approvedSlots).toBe(3);
+    expect((next as { imagesFinal: boolean }).imagesFinal).toBe(true);
+  });
+  it("publishes a product short of images only when its images are final and the minimum passed", () => {
+    const spent = snapshot({
+      assets: [
+        { compositionSlot: 1, revision: 1, status: "rejected" },
+        { compositionSlot: 1, revision: 2, status: "rejected" },
+        { compositionSlot: 1, revision: 3, status: "rejected" },
+        { compositionSlot: 2, revision: 1, status: "approved" },
+        { compositionSlot: 3, revision: 1, status: "approved" },
+        { compositionSlot: 4, revision: 1, status: "approved" },
+      ],
+    });
+    const stuck = decideNextAction(spent, settings, run);
+    // The default minimum is every image: as before, nothing is published.
+    expect(mayPublishPartially(stuck, settings)).toBe(false);
+    expect(mayPublishPartially(stuck, { ...settings, minApprovedImagesToPublish: 3 })).toBe(true);
+    expect(mayPublishPartially(stuck, { ...settings, minApprovedImagesToPublish: 0 })).toBe(true);
+    // The ceiling also leaves the images final.
+    const ceiling = decideNextAction(snapshot(), settings, { imagesGenerated: 80 });
+    expect(mayPublishPartially(ceiling, { ...settings, minApprovedImagesToPublish: 0 })).toBe(true);
+    // A product that stopped before its images never publishes, whatever the minimum.
+    for (const early of [
+      decideNextAction(snapshot({ sourceCount: 0, compositions: [] }), settings, run),
+      decideNextAction(snapshot({ identityConfidence: 0.6 }), settings, run),
+      decideNextAction(snapshot({ status: "researching", compositions: [] }), settings, run),
+    ]) {
+      expect(early.action).toBe("attention");
+      expect(mayPublishPartially(early, { ...settings, minApprovedImagesToPublish: 0 })).toBe(
+        false,
+      );
+    }
+    // A complete product is not "partial".
+    const done = decideNextAction(
+      snapshot({
+        assets: [1, 2, 3, 4].map((s) => ({ compositionSlot: s, revision: 1, status: "approved" })),
+      }),
+      settings,
+      run,
+    );
+    expect(done.action).toBe("complete");
+    expect(mayPublishPartially(done, settings)).toBe(false);
   });
   it("skips approved slots and only works the ones the settings ask for", () => {
     const two = { ...settings, imagesPerProduct: 2 };

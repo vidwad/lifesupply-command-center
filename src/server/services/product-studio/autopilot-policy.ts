@@ -11,7 +11,7 @@
  * numbers say. The QA model's own confidence in its verdict is not used as
  * the threshold: it rates the model's certainty, not the image.
  */
-import type { AutopilotSettings } from "./autopilot-settings";
+import { publishThreshold, type AutopilotSettings } from "./autopilot-settings";
 
 export type QaScores = {
   identityScore: number;
@@ -87,7 +87,18 @@ export type NextAction =
   | { action: "generate"; slot: number; regeneration: boolean }
   | { action: "review"; slot: number }
   | { action: "complete"; approvedSlots: number }
-  | { action: "attention"; reason: string; approvedSlots: number };
+  | {
+      action: "attention";
+      reason: string;
+      approvedSlots: number;
+      /**
+       * True when every image the run will attempt has been attempted, so
+       * what is approved is final and may be published under the run's
+       * minimum. False when the product stopped before its images: nothing
+       * of it should reach the store.
+       */
+      imagesFinal: boolean;
+    };
 
 /** The latest revision per generated slot. */
 function latestBySlot(assets: ProjectSnapshot["assets"]) {
@@ -122,6 +133,7 @@ export function decideNextAction(
       action: "attention",
       reason: "No authoritative photograph. Add one on the project page and research by hand.",
       approvedSlots,
+      imagesFinal: false,
     };
   }
   if (project.compositions.length === 0) {
@@ -130,6 +142,7 @@ export function decideNextAction(
       action: "attention",
       reason: `Project is "${project.status}" with no research; finish or re-queue it by hand.`,
       approvedSlots,
+      imagesFinal: false,
     };
   }
   if (
@@ -140,6 +153,7 @@ export function decideNextAction(
       action: "attention",
       reason: `Research is ${Math.round(project.identityConfidence * 100)}% sure of the exact product, below the ${Math.round(settings.minIdentityConfidence * 100)}% threshold. Confirm the model before generating.`,
       approvedSlots,
+      imagesFinal: false,
     };
   }
 
@@ -157,6 +171,7 @@ export function decideNextAction(
           action: "attention",
           reason: `The run's image ceiling of ${settings.maxImagesTotal} was reached before image ${slot}.`,
           approvedSlots,
+          imagesFinal: true,
         };
       }
       return { action: "generate", slot, regeneration: false };
@@ -175,6 +190,7 @@ export function decideNextAction(
           action: "attention",
           reason: `The run's image ceiling of ${settings.maxImagesTotal} was reached before image ${slot} could be regenerated.`,
           approvedSlots,
+          imagesFinal: true,
         };
       }
       return { action: "generate", slot, regeneration: true };
@@ -189,9 +205,26 @@ export function decideNextAction(
       action: "attention",
       reason: "Left for review: " + stuck.join("; ") + ".",
       approvedSlots,
+      imagesFinal: true,
     };
   }
   return { action: "complete", approvedSlots };
+}
+
+/**
+ * Whether a product left for attention may still publish what was approved
+ * (product owner, 2026-10-28): its images are final and at least the run's
+ * minimum passed. Never true for a product that stopped before its images.
+ */
+export function mayPublishPartially(
+  next: NextAction,
+  settings: Pick<AutopilotSettings, "minApprovedImagesToPublish" | "imagesPerProduct">,
+): boolean {
+  return (
+    next.action === "attention" &&
+    next.imagesFinal &&
+    next.approvedSlots >= publishThreshold(settings)
+  );
 }
 
 export type ItemOutcome = "done" | "attention" | "failed" | "skipped" | "cancelled";

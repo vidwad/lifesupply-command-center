@@ -9,6 +9,7 @@ import {
   MAX_RUN_PRODUCTS,
   parseAutopilotSettings,
   publishesToStore,
+  publishThreshold,
 } from "./autopilot-settings";
 import { MAX_BATCH_SIZE } from "./bulk";
 
@@ -78,6 +79,36 @@ describe("unattended run settings", () => {
       publishMode: "all",
       descriptionMode: "fill_empty",
     });
+  });
+
+  it("publishes a product short of images only from the run's minimum, never above what it asks for", () => {
+    // The default is every image, so a run behaves as before unless lowered.
+    expect(DEFAULT_AUTOPILOT_SETTINGS.minApprovedImagesToPublish).toBe(4);
+    expect(publishThreshold(DEFAULT_AUTOPILOT_SETTINGS)).toBe(4);
+    // Runs frozen before the setting existed parse to the old behaviour.
+    const { minApprovedImagesToPublish: _omitted, ...frozen } = DEFAULT_AUTOPILOT_SETTINGS;
+    expect(parseAutopilotSettings(frozen).minApprovedImagesToPublish).toBe(4);
+    expect(publishThreshold({ minApprovedImagesToPublish: 4, imagesPerProduct: 2 })).toBe(2);
+    expect(publishThreshold({ minApprovedImagesToPublish: 0, imagesPerProduct: 4 })).toBe(0);
+    const form = new FormData();
+    form.set("minApprovedImagesToPublish", "2");
+    expect(autopilotSettingsFromForm(form).minApprovedImagesToPublish).toBe(2);
+    form.set("minApprovedImagesToPublish", "5");
+    expect(() => autopilotSettingsFromForm(form)).toThrow(/minApprovedImagesToPublish/);
+    const lowered = describeAutopilotSettings({
+      ...DEFAULT_AUTOPILOT_SETTINGS,
+      publishMode: "images",
+      minApprovedImagesToPublish: 2,
+    }).join(" ");
+    expect(lowered).toContain(
+      "at least 2 of a product's 4 images are approved, even if the rest failed",
+    );
+    const none = describeAutopilotSettings({
+      ...DEFAULT_AUTOPILOT_SETTINGS,
+      publishMode: "images_and_description",
+      minApprovedImagesToPublish: 0,
+    }).join(" ");
+    expect(none).toContain("whether or not any was approved");
   });
 
   it("estimates the worst-case spend and caps it at the run ceiling", () => {
