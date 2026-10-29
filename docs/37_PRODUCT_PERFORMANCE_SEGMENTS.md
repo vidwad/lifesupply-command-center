@@ -19,15 +19,18 @@ orders, excluding cancelled and refunded orders. Windows: 90 days overall, 30 da
 
 | Segment | Definition |
 | --- | --- |
-| Top sellers | The 50 products with the most revenue (line subtotal) in the last 90 days, ranked. |
+| Top sellers | The N products with the most revenue (line subtotal) in the last 90 days, ranked. N is the "Top sellers" input on the list, 200 unless changed (product owner, 2026-10-28; it was a fixed 50 before), at most 5,000. |
 | Promising | Sold at least 2 units in the last 30 days and more than in the 30 days before, or all of its sales are that recent. |
 | Cold | Has sold before but nothing in the last 90 days. |
 | Non-sellers | Has never sold. |
 
 The figures are computed once per request with four grouped aggregates, so the rows, the total
 and every pill count read the same numbers. With a segment active the list shows two extra
-columns, units and revenue over the window. Top sellers are at most 50, which fits one page, so
-their revenue ordering is a true ordering of the whole segment.
+columns, units and revenue over the window. With "Top sellers" active and no column chosen, the
+segment is ordered by revenue across all of its pages through the same whole-set revenue ordering
+the Revenue column uses, so page two continues the ranking rather than reshuffling a page. The
+chosen count travels on the list's links as `top=` only when it differs from the default, so an
+address made before the input existed still means what it meant.
 
 ## 3. Phase two: traffic-based segments
 
@@ -43,6 +46,8 @@ Both will carry their definitions beside the filter in the same way.
 
 ## 4. Tests
 
-`performance.test.ts` covers the classification: the top-seller ranking and cap, cold and sold
-sets, the promising rule including the two-unit floor, non-sellers as the complement of sold, and
-that each segment carries a definition naming its window.
+`performance.test.ts` covers the classification: the top-seller ranking, its default cap of 200
+and a chosen cap, the parsing of the count (default for anything that is not a whole number from
+1 up, held to the ceiling), the definition stating the chosen count, cold and sold sets, the
+promising rule including the two-unit floor, non-sellers as the complement of sold, and that each
+segment carries a definition naming its window.
