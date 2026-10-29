@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   classifyProducts,
   parsePerformanceSegment,
+  parseTopSellerLimit,
+  performanceDefinitions,
   PERFORMANCE_DEFINITIONS,
   PERFORMANCE_SEGMENTS,
   segmentIdFilter,
-  TOP_SELLER_LIMIT,
+  TOP_SELLER_DEFAULT,
+  TOP_SELLER_MAX,
   type ProductSales,
 } from "./performance";
 
@@ -22,15 +25,27 @@ const sales = (over: Partial<ProductSales>): ProductSales => ({
 const now = new Date("2026-10-26T12:00:00Z");
 
 describe("classifying products by sales", () => {
-  it("ranks top sellers by 90-day revenue and caps the list", () => {
+  it("ranks top sellers by 90-day revenue and caps the list at 200 by default", () => {
     const stats = new Map<string, ProductSales>();
-    for (let i = 0; i < TOP_SELLER_LIMIT + 5; i += 1) {
+    for (let i = 0; i < TOP_SELLER_DEFAULT + 5; i += 1) {
       stats.set("p" + String(i), sales({ unitsLifetime: 1, units90: 1, revenue90: 1000 - i }));
     }
     const index = classifyProducts(stats, now);
-    expect(index.topIds).toHaveLength(TOP_SELLER_LIMIT);
+    expect(TOP_SELLER_DEFAULT).toBe(200);
+    expect(index.topIds).toHaveLength(TOP_SELLER_DEFAULT);
+    expect(index.topLimit).toBe(TOP_SELLER_DEFAULT);
     expect(index.topIds[0]).toBe("p0");
-    expect(index.topIds).not.toContain("p" + String(TOP_SELLER_LIMIT + 4));
+    expect(index.topIds).not.toContain("p" + String(TOP_SELLER_DEFAULT + 4));
+  });
+
+  it("caps the top sellers at the number the reader asked for", () => {
+    const stats = new Map<string, ProductSales>();
+    for (let i = 0; i < 10; i += 1) {
+      stats.set("p" + String(i), sales({ unitsLifetime: 1, units90: 1, revenue90: 100 - i }));
+    }
+    const index = classifyProducts(stats, now, 3);
+    expect(index.topIds).toEqual(["p0", "p1", "p2"]);
+    expect(index.topLimit).toBe(3);
   });
 
   it("calls a product cold when it sold before but not in the window", () => {
@@ -75,6 +90,32 @@ describe("classifying products by sales", () => {
     expect(index.soldIds).toEqual([]);
     expect(segmentIdFilter("non_seller", index)).toEqual({ notIn: [] });
     expect(segmentIdFilter("top", index)).toEqual({ in: [] });
+  });
+});
+
+describe("the top-seller count", () => {
+  it("defaults to 200 for anything that is not a whole number from 1 up", () => {
+    expect(parseTopSellerLimit(undefined)).toBe(200);
+    expect(parseTopSellerLimit("")).toBe(200);
+    expect(parseTopSellerLimit("0")).toBe(200);
+    expect(parseTopSellerLimit("-5")).toBe(200);
+    expect(parseTopSellerLimit("12.5")).toBe(200);
+    expect(parseTopSellerLimit("fifty")).toBe(200);
+  });
+
+  it("takes a whole number and holds it to the ceiling", () => {
+    expect(parseTopSellerLimit("50")).toBe(50);
+    expect(parseTopSellerLimit(" 300 ")).toBe(300);
+    expect(parseTopSellerLimit("1")).toBe(1);
+    expect(parseTopSellerLimit("999999999")).toBe(TOP_SELLER_MAX);
+  });
+
+  it("states the chosen count in the top-seller definition", () => {
+    expect(performanceDefinitions(300).top.definition).toBe(
+      "The 300 products with the most revenue in the last 90 days.",
+    );
+    expect(PERFORMANCE_DEFINITIONS.top.definition).toContain("The 200 products");
+    expect(performanceDefinitions(300).cold).toEqual(PERFORMANCE_DEFINITIONS.cold);
   });
 });
 

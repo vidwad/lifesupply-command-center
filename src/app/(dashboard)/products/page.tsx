@@ -24,8 +24,11 @@ import {
 import {
   buildPerformanceIndex,
   parsePerformanceSegment,
-  PERFORMANCE_DEFINITIONS,
+  parseTopSellerLimit,
+  performanceDefinitions,
   PERFORMANCE_SEGMENTS,
+  TOP_SELLER_DEFAULT,
+  TOP_SELLER_MAX,
   WINDOW_DAYS,
 } from "@/server/services/products/performance";
 import { requirePermission, userHasPermission } from "@/server/permissions";
@@ -41,6 +44,8 @@ type SearchParams = {
   flag?: "missing_image" | "needs_review";
   /** A sales performance segment (2026-10-26). */
   perf?: string;
+  /** How many products count as top sellers (2026-10-28); absent means the default. */
+  top?: string;
   /** Set by the shell's Division selector. */
   division?: string;
   /** At most this many store images (2026-10-27). */
@@ -75,11 +80,23 @@ export default async function ProductsPage({
   const sort = parseProductSort(params.sort);
   const dir = parseSortDirection(params.dir);
   const perf = parsePerformanceSegment(params.perf);
+  const topLimit = parseTopSellerLimit(params.top);
+  // Carried on links only when it differs from the default, so ordinary
+  // addresses stay short and a bookmark made before the input existed still
+  // means what it meant.
+  const topParam = topLimit === TOP_SELLER_DEFAULT ? undefined : String(topLimit);
+  const definitions = performanceDefinitions(topLimit);
   const maxImages = parseNonNegativeInt(params.img);
   const maxDescriptionChars = parseNonNegativeInt(params.desc);
+  // The top sellers are a ranked list, so with that segment active and no
+  // column chosen the whole segment is ordered by revenue across its pages
+  // (listProductsByRevenue), never a page-local shuffle. A chosen column
+  // takes precedence.
+  const effectiveSort = sort ?? (perf === "top" ? "revenue" : undefined);
+  const effectiveDir = sort ? dir : perf === "top" ? "desc" : dir;
   // Computed once per request from the synced order lines; the rows, the
   // total and every pill count read these same figures.
-  const performanceIndex = await buildPerformanceIndex();
+  const performanceIndex = await buildPerformanceIndex(new Date(), topLimit);
   const filters: ListProductsFilters = {
     performance: perf,
     performanceIndex,
@@ -95,8 +112,8 @@ export default async function ProductsPage({
           ? "needs_review"
           : undefined,
     page,
-    sort,
-    dir,
+    sort: effectiveSort,
+    dir: effectiveDir,
   };
 
   // The count uses the same filters as the rows, so the header total and the
@@ -110,15 +127,7 @@ export default async function ProductsPage({
     countProductsByPerformance(filters, performanceIndex),
   ]);
   const salesFor = (id: string) => performanceIndex.stats.get(id);
-  // Top sellers are a ranked list of at most 50, which fits one page, so
-  // ordering them by revenue here is a true ordering of the whole segment and
-  // not a page-local shuffle. A chosen column sort takes precedence.
-  const products =
-    perf === "top" && !sort
-      ? [...listed].sort(
-          (a, b) => (salesFor(b.id)?.revenue90 ?? 0) - (salesFor(a.id)?.revenue90 ?? 0),
-        )
-      : listed;
+  const products = listed;
 
   // Changing the flag resets to page 1 — staying on page 7 of a different
   // filter would usually land on an empty page. Sort is preserved: it is a
@@ -127,6 +136,7 @@ export default async function ProductsPage({
     const qs = new URLSearchParams();
     if (flag) qs.set("flag", flag);
     if (segment) qs.set("perf", segment);
+    if (topParam) qs.set("top", topParam);
     if (params.q) qs.set("q", params.q);
     if (params.division) qs.set("division", params.division);
     if (maxImages != null) qs.set("img", String(maxImages));
@@ -144,6 +154,7 @@ export default async function ProductsPage({
     q: params.q,
     flag: params.flag,
     perf,
+    top: topParam,
     division: params.division,
     img: maxImages != null ? String(maxImages) : undefined,
     desc: maxDescriptionChars != null ? String(maxDescriptionChars) : undefined,
@@ -198,14 +209,14 @@ export default async function ProductsPage({
             <FilterPill
               key={segment}
               href={perfHref(segment)}
-              label={PERFORMANCE_DEFINITIONS[segment].label}
+              label={definitions[segment].label}
               count={performanceCounts[segment]}
               active={perf === segment}
             />
           ))}
           <span className="basis-full text-xs text-muted-foreground sm:basis-auto sm:pl-2">
             {perf
-              ? PERFORMANCE_DEFINITIONS[perf].definition
+              ? definitions[perf].definition
               : `From orders synced from the stores, excluding cancelled and refunded orders; figures cover the last ${WINDOW_DAYS} days.`}
           </span>
         </div>
@@ -254,6 +265,24 @@ export default async function ProductsPage({
             />
             characters
           </label>
+          {/* How many products the "Top sellers" segment holds (product
+              owner, 2026-10-28). It changes the definition beside the
+              filters and the pill count, not which rows the other
+              segments return. */}
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            Top sellers
+            <input
+              type="number"
+              name="top"
+              min={1}
+              max={TOP_SELLER_MAX}
+              step={1}
+              defaultValue={topLimit}
+              aria-label="Number of products counted as top sellers"
+              className="h-9 w-20 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            products
+          </label>
           <button
             type="submit"
             className="inline-flex h-9 items-center rounded-md border bg-background px-3 text-xs font-medium hover:bg-accent"
@@ -262,7 +291,7 @@ export default async function ProductsPage({
           </button>
           {anyTextFilter ? (
             <Link
-              href={buildHrefWithout(params, perf, sort)}
+              href={buildHrefWithout(params, perf, topParam, sort)}
               className="text-xs text-muted-foreground underline-offset-2 hover:underline"
             >
               Clear
@@ -350,8 +379,8 @@ export default async function ProductsPage({
                 <SortHeader
                   label={`Revenue ${WINDOW_DAYS}d`}
                   sortKey="revenue"
-                  activeKey={sort}
-                  activeDir={dir}
+                  activeKey={effectiveSort}
+                  activeDir={effectiveDir}
                   basePath="/products"
                   params={carried}
                   align="right"
@@ -494,11 +523,13 @@ export default async function ProductsPage({
 function buildHrefWithout(
   params: SearchParams,
   perf: string | undefined,
+  top: string | undefined,
   sort: string | undefined,
 ): string {
   const qs = new URLSearchParams();
   if (params.flag) qs.set("flag", params.flag);
   if (perf) qs.set("perf", perf);
+  if (top) qs.set("top", top);
   if (params.division) qs.set("division", params.division);
   if (sort) qs.set("sort", sort);
   if (params.dir === "desc") qs.set("dir", "desc");

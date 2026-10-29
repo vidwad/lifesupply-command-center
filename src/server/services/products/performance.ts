@@ -18,7 +18,14 @@ import { prisma } from "@/server/db/client";
 
 export const WINDOW_DAYS = 90;
 export const RECENT_DAYS = 30;
-export const TOP_SELLER_LIMIT = 50;
+/**
+ * How many products count as top sellers unless the reader chooses another
+ * number on the list (product owner, 2026-10-28: 200 rather than 50, and an
+ * input). The ceiling keeps a hand-edited URL from asking for the whole
+ * catalogue under the name "top".
+ */
+export const TOP_SELLER_DEFAULT = 200;
+export const TOP_SELLER_MAX = 5000;
 /** A product needs this many units in the recent window before it is "promising". */
 export const PROMISING_MIN_UNITS = 2;
 
@@ -31,28 +38,48 @@ export function parsePerformanceSegment(value: string | undefined): PerformanceS
     : undefined;
 }
 
-/** Labels and plain-language definitions, shown beside the filters. */
-export const PERFORMANCE_DEFINITIONS: Record<
+/**
+ * The top-seller count a reader asked for. Anything that is not a whole
+ * number from 1 up is the default; larger numbers are held to the ceiling.
+ */
+export function parseTopSellerLimit(value: string | undefined): number {
+  if (value == null) return TOP_SELLER_DEFAULT;
+  const trimmed = value.trim();
+  if (!/^\d{1,9}$/.test(trimmed)) return TOP_SELLER_DEFAULT;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (parsed < 1) return TOP_SELLER_DEFAULT;
+  return Math.min(parsed, TOP_SELLER_MAX);
+}
+
+export type PerformanceDefinitions = Record<
   PerformanceSegment,
   { label: string; definition: string }
-> = {
-  top: {
-    label: "Top sellers",
-    definition: `The ${TOP_SELLER_LIMIT} products with the most revenue in the last ${WINDOW_DAYS} days.`,
-  },
-  promising: {
-    label: "Promising",
-    definition: `Sold at least ${PROMISING_MIN_UNITS} units in the last ${RECENT_DAYS} days and more than in the ${RECENT_DAYS} days before, or all of its sales are that recent.`,
-  },
-  cold: {
-    label: "Cold",
-    definition: `Has sold before but nothing in the last ${WINDOW_DAYS} days.`,
-  },
-  non_seller: {
-    label: "Non-sellers",
-    definition: "Has never sold.",
-  },
-};
+>;
+
+/** Labels and plain-language definitions, shown beside the filters. */
+export function performanceDefinitions(topLimit = TOP_SELLER_DEFAULT): PerformanceDefinitions {
+  return {
+    top: {
+      label: "Top sellers",
+      definition: `The ${topLimit} products with the most revenue in the last ${WINDOW_DAYS} days.`,
+    },
+    promising: {
+      label: "Promising",
+      definition: `Sold at least ${PROMISING_MIN_UNITS} units in the last ${RECENT_DAYS} days and more than in the ${RECENT_DAYS} days before, or all of its sales are that recent.`,
+    },
+    cold: {
+      label: "Cold",
+      definition: `Has sold before but nothing in the last ${WINDOW_DAYS} days.`,
+    },
+    non_seller: {
+      label: "Non-sellers",
+      definition: "Has never sold.",
+    },
+  };
+}
+
+/** The definitions at the default top-seller count. */
+export const PERFORMANCE_DEFINITIONS: PerformanceDefinitions = performanceDefinitions();
 
 export type ProductSales = {
   unitsLifetime: number;
@@ -65,7 +92,10 @@ export type ProductSales = {
 export type PerformanceIndex = {
   /** Sales by product id, for every product that has ever sold. */
   stats: Map<string, ProductSales>;
+  /** The top sellers, highest revenue first, at most `topLimit` of them. */
   topIds: string[];
+  /** How many products were allowed into `topIds`. */
+  topLimit: number;
   promisingIds: string[];
   coldIds: string[];
   /** Every product that has ever sold; non-sellers are the complement. */
@@ -79,7 +109,11 @@ const num = (value: unknown): number => {
 };
 
 /** Pure classification over the per-product figures. */
-export function classifyProducts(stats: Map<string, ProductSales>, now: Date): PerformanceIndex {
+export function classifyProducts(
+  stats: Map<string, ProductSales>,
+  now: Date,
+  topLimit = TOP_SELLER_DEFAULT,
+): PerformanceIndex {
   const soldIds: string[] = [];
   const promisingIds: string[] = [];
   const coldIds: string[] = [];
@@ -97,7 +131,8 @@ export function classifyProducts(stats: Map<string, ProductSales>, now: Date): P
   sellers90.sort((a, b) => b.revenue - a.revenue || b.units - a.units || a.id.localeCompare(b.id));
   return {
     stats,
-    topIds: sellers90.slice(0, TOP_SELLER_LIMIT).map((row) => row.id),
+    topIds: sellers90.slice(0, topLimit).map((row) => row.id),
+    topLimit,
     promisingIds,
     coldIds,
     soldIds,
@@ -123,9 +158,13 @@ async function sumByProduct(orderWhere: Prisma.OrderWhereInput) {
 
 /**
  * Loads the figures and classifies them. Four aggregate queries, grouped by
- * product in the database, so the cost does not grow with the page size.
+ * product in the database, so the cost does not grow with the page size or
+ * with the top-seller count.
  */
-export async function buildPerformanceIndex(now = new Date()): Promise<PerformanceIndex> {
+export async function buildPerformanceIndex(
+  now = new Date(),
+  topLimit = TOP_SELLER_DEFAULT,
+): Promise<PerformanceIndex> {
   const [lifetime, window, recent, prior] = await Promise.all([
     sumByProduct({}),
     sumByProduct({ orderDate: { gte: daysAgo(now, WINDOW_DAYS) } }),
@@ -155,7 +194,7 @@ export async function buildPerformanceIndex(now = new Date()): Promise<Performan
     if (row.productId) entry(row.productId).units30 = num(row._sum?.quantity);
   for (const row of prior)
     if (row.productId) entry(row.productId).unitsPrior30 = num(row._sum?.quantity);
-  return classifyProducts(stats, now);
+  return classifyProducts(stats, now, topLimit);
 }
 
 /** The id constraint a segment adds to the product query. */
