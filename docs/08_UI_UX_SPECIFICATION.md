@@ -46,8 +46,10 @@ The main application should use:
 
 - Left navigation sidebar. Below the `md` breakpoint (768px) the sidebar is not rendered; a menu
   button at the left of the top bar opens the same navigation as a left drawer, with the division
-  and period selectors at its foot. The drawer closes after a link is chosen. (Added
-  October 27, 2026.)
+  and period selectors at its foot. In the drawer these are expandable option lists of plain
+  buttons, not native selects: a select inside the modal drawer did not always open on a phone's
+  first touch (October 29, 2026). The drawer scrolls as one, and closes after a link is chosen.
+  (Added October 27, 2026.)
 - Page headers stack the title above the actions below the `sm` breakpoint (640px), and page
   content uses 16px padding below `md`, 24px from `md` up. Data tables keep their desktop
   columns and scroll sideways inside their own container. (October 27, 2026.)

@@ -1,52 +1,34 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, Layers } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
-type Option = { value: string; label: string };
+import { type ContextOption, useContextParams } from "./context-params";
 
 type Props = {
-  divisions: Option[];
-  periods: Option[];
-  /** Replaces the default wrapper classes (hidden below `lg`). */
-  className?: string;
-  /** Stretch each select to its container; used inside the mobile drawer. */
-  fullWidth?: boolean;
+  divisions: ContextOption[];
+  periods: ContextOption[];
 };
 
-const PERIOD_PARAM = "period";
-const DIVISION_PARAM = "division";
+const selectClass =
+  "h-9 appearance-none rounded-md border border-input bg-background pl-7 pr-7 text-xs font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export function ContextSelectors({ divisions, periods, className, fullWidth }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const updateParam = (key: string, value: string) => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (value) next.set(key, value);
-    else next.delete(key);
-    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-  };
-
-  const selectedPeriod = searchParams.get(PERIOD_PARAM) ?? "";
-  const selectedDivision = searchParams.get(DIVISION_PARAM) ?? "";
-
-  const selectClass = cn(
-    "h-9 appearance-none rounded-md border border-input bg-background pl-7 pr-7 text-xs font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    fullWidth && "w-full",
-  );
+/**
+ * The top bar's division and period selectors, shown from `lg` up. Native
+ * selects suit a pointer; the navigation drawer below `lg` uses
+ * ContextOptionLists instead, because a native select inside the modal
+ * drawer did not reliably open on a phone's first touch (2026-10-29).
+ */
+export function ContextSelectors({ divisions, periods }: Props) {
+  const { selectedDivision, selectedPeriod, setDivision, setPeriod } = useContextParams();
 
   return (
-    <div className={className ?? "hidden items-center gap-2 lg:flex"}>
+    <div className="hidden items-center gap-2 lg:flex">
       <div className="relative">
         <Layers className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <select
           aria-label="Division"
           value={selectedDivision}
-          onChange={(e) => updateParam(DIVISION_PARAM, e.target.value)}
+          onChange={(e) => setDivision(e.target.value)}
           className={selectClass}
         >
           <option value="">All divisions</option>
@@ -62,7 +44,7 @@ export function ContextSelectors({ divisions, periods, className, fullWidth }: P
         <select
           aria-label="Period"
           value={selectedPeriod}
-          onChange={(e) => updateParam(PERIOD_PARAM, e.target.value)}
+          onChange={(e) => setPeriod(e.target.value)}
           className={selectClass}
         >
           <option value="">Open period</option>

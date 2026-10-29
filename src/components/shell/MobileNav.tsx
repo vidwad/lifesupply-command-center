@@ -7,7 +7,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-import { ContextSelectors } from "./ContextSelectors";
+import { ContextOptionLists } from "./ContextOptionLists";
 import { SidebarNav } from "./SidebarNav";
 
 type Option = { value: string; label: string };
@@ -22,7 +22,10 @@ type Props = {
  * Below the `md` breakpoint the sidebar is not rendered, so this button
  * opens the same navigation as a left drawer. The division and period
  * selectors, hidden from the top bar below `lg`, live here too so a phone
- * can still change context. The drawer closes itself after navigation.
+ * can still change context. They are plain option lists rather than native
+ * selects: a select inside this modal drawer did not always open on the
+ * first touch (2026-10-29). The whole drawer scrolls as one, so an expanded
+ * list is reachable. The drawer closes itself after navigation.
  */
 export function MobileNav({ permissions, divisions, periods }: Props) {
   const [open, setOpen] = useState(false);
@@ -55,20 +58,19 @@ export function MobileNav({ permissions, divisions, periods }: Props) {
         description="Modules and context"
         hideClose
       >
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {/* A plain block, so the navigation's full-height layout resolves
+              to its content height and it does not scroll inside itself. */}
+          <div>
             <SidebarNav permissions={permissions} onNavigate={() => setOpen(false)} />
           </div>
           <div className="border-t p-3">
             <p className="mb-2 px-3 text-[10px] uppercase tracking-widest text-muted-foreground">
               Context
             </p>
-            <ContextSelectors
-              divisions={divisions}
-              periods={periods}
-              className="flex flex-col gap-2 px-3"
-              fullWidth
-            />
+            <div className="px-3">
+              <ContextOptionLists divisions={divisions} periods={periods} />
+            </div>
           </div>
         </div>
       </SheetContent>

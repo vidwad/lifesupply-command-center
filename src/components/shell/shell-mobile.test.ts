@@ -26,18 +26,42 @@ describe("the app shell keeps a navigation route on narrow screens", () => {
     expect(mobile).toContain('aria-label="Open navigation"');
   });
 
-  it("the drawer reuses the sidebar navigation and the context selectors, and closes on navigation", () => {
+  it("the drawer reuses the sidebar navigation and offers the context as option lists, and closes on navigation", () => {
     const mobile = read("MobileNav.tsx");
     expect(mobile).toContain(
       "<SidebarNav permissions={permissions} onNavigate={() => setOpen(false)} />",
     );
-    expect(mobile).toContain("<ContextSelectors");
-    expect(mobile).toContain("fullWidth");
+    expect(mobile).toContain("<ContextOptionLists divisions={divisions} periods={periods} />");
+    // The navigation and the context scroll as one, so an expanded list
+    // below a long navigation is reachable.
+    expect(mobile).toMatch(
+      /<div className="min-h-0 flex-1 overflow-y-auto">[\s\S]*?<SidebarNav[\s\S]*?<ContextOptionLists/,
+    );
     expect(mobile).toMatch(
       /if \(seenPathname !== pathname\) \{\s*setSeenPathname\(pathname\);\s*setOpen\(false\);/,
     );
     const sidebar = read("SidebarNav.tsx");
     expect(sidebar.match(/onClick=\{onNavigate\}/g)?.length).toBe(2);
+  });
+
+  it("the drawer's context controls are buttons, never a native select, and carry no hover styles", () => {
+    // A native select inside the modal drawer did not always open on the
+    // first touch (product owner, 2026-10-29): its picker is the operating
+    // system's and depends on the dialog's focus trap and scroll lock. The
+    // drawer's lists are ordinary buttons; the top bar keeps its selects.
+    const lists = read("ContextOptionLists.tsx");
+    expect(lists).not.toContain("<select");
+    expect(lists).not.toMatch(/\bhover:/);
+    expect(lists).toContain('role="radiogroup"');
+    expect(lists).toContain("aria-checked={active}");
+    expect(lists).toContain('emptyLabel="All divisions"');
+    expect(lists).toContain('emptyLabel="Open period"');
+    const mobile = read("MobileNav.tsx");
+    expect(mobile).not.toContain("ContextSelectors");
+    // Both selectors change the same two address parameters.
+    const selectors = read("ContextSelectors.tsx");
+    expect(selectors).toContain('from "./context-params"');
+    expect(lists).toContain('from "./context-params"');
   });
 
   it("the page header stacks its title above its actions below `sm`", () => {
