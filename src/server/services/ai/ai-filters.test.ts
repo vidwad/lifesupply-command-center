@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { filterDashboardForAi } from "./index";
+import { filterDashboardForAi, redactReactivationForAi } from "./index";
 
 // Minimal stand-in for the real DashboardData. We only need fields the
 // filter touches; everything else is filled with safe defaults so the cast
@@ -39,7 +39,6 @@ function makeDashboard() {
         attributedRevenue: 800,
       },
     ],
-    reactivation: { candidateCount: 12, activeSegmentCount: 2, topSegmentName: "Lapsed" },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
@@ -79,7 +78,6 @@ describe("filterDashboardForAi", () => {
     expect(result.data.topProducts.length).toBe(0);
     expect(result.data.lowMarginProducts.length).toBe(0);
     expect(result.data.campaigns.length).toBe(0);
-    expect(result.data.reactivation.candidateCount).toBe(0);
     // Financials must remain visible.
     expect(result.data.revenue.current).toBe(1000);
   });
@@ -97,5 +95,21 @@ describe("filterDashboardForAi", () => {
     const original = JSON.parse(JSON.stringify(data));
     filterDashboardForAi(data, []);
     expect(data).toEqual(original);
+  });
+});
+
+describe("redactReactivationForAi", () => {
+  const reactivation = { candidateCount: 12, activeSegmentCount: 2, topSegmentName: "Lapsed" };
+
+  it("keeps the counts for a user with customer context", () => {
+    expect(redactReactivationForAi(reactivation, ["ai.use_customer_context"])).toEqual(
+      reactivation,
+    );
+  });
+
+  it("zeroes the counts without customer context", () => {
+    const result = redactReactivationForAi(reactivation, ["ai.use_financial_context"]);
+    expect(result.candidateCount).toBe(0);
+    expect(result.activeSegmentCount).toBe(0);
   });
 });
