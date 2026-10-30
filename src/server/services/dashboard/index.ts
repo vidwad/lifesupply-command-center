@@ -1,5 +1,6 @@
 import type { OrderStatus, Prisma } from "@prisma/client";
 
+import { createTtlCache } from "@/server/cache/ttl-cache";
 import { prisma } from "@/server/db/client";
 
 // -----------------------------------------------------------------------------
@@ -161,38 +162,16 @@ export function rankProductAggregates(rows: ProductAggregate[]): RankedProducts 
 // -----------------------------------------------------------------------------
 // Cache. The dashboard is the same for every user, and its queries cost
 // seconds on the production database, so one load serves every request for a
-// short while. Concurrent requests share the in-flight load; a failed load is
-// not kept. Regenerating the briefing clears it so the new text shows at once.
+// minute; past that the last figures are shown while the next load runs, so
+// no reader waits. Regenerating the briefing clears it so the new text shows
+// at once.
 // -----------------------------------------------------------------------------
 
 export const DASHBOARD_CACHE_TTL_MS = 60_000;
 
-export type TtlCache<T> = {
-  get(load: () => Promise<T>): Promise<T>;
-  clear(): void;
-};
-
-export function createTtlCache<T>(ttlMs: number, now: () => number = Date.now): TtlCache<T> {
-  let entry: { expiresAt: number; value: Promise<T> } | null = null;
-  return {
-    get(load) {
-      const at = now();
-      if (entry && entry.expiresAt > at) return entry.value;
-      const value = load();
-      const next = { expiresAt: at + ttlMs, value };
-      entry = next;
-      value.catch(() => {
-        if (entry === next) entry = null;
-      });
-      return value;
-    },
-    clear() {
-      entry = null;
-    },
-  };
-}
-
-const dashboardCache = createTtlCache<DashboardData>(DASHBOARD_CACHE_TTL_MS);
+const dashboardCache = createTtlCache<DashboardData>(DASHBOARD_CACHE_TTL_MS, {
+  staleWhileRevalidate: true,
+});
 
 export function getDashboardData(): Promise<DashboardData> {
   return dashboardCache.get(loadDashboardData);

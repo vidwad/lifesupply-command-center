@@ -164,26 +164,22 @@ export async function countProducts(filters: ListProductsFilters = {}): Promise<
 }
 
 /**
- * How many products each performance segment would return under the other
- * active filters, for the segment pills. Four counts against id sets the
- * caller already computed; the performance filter itself is ignored so each
- * pill reads as "what you would get if you clicked this".
+ * One row per product under the filters other than the quality and
+ * performance ones (2026-10-30). The page derives every count it shows from
+ * this one scan — the header total, the quality pills and the segment pills —
+ * where it used to run six counts, each a scan of the catalogue or thousands
+ * of id probes, which took several seconds on the production database.
  */
-export async function countProductsByPerformance(
+export type ProductPopulationRow = { id: string; imageStatus: string };
+
+export async function loadProductPopulation(
   filters: ListProductsFilters,
-  index: PerformanceIndex,
-): Promise<Record<PerformanceSegment, number>> {
-  const { performance: _ignored, ...rest } = filters;
-  const counts = await Promise.all(
-    PERFORMANCE_SEGMENTS.map((segment) =>
-      prisma.product.count({
-        where: productWhere({ ...rest, performance: segment, performanceIndex: index }),
-      }),
-    ),
-  );
-  return Object.fromEntries(
-    PERFORMANCE_SEGMENTS.map((segment, i) => [segment, counts[i] ?? 0]),
-  ) as Record<PerformanceSegment, number>;
+): Promise<ProductPopulationRow[]> {
+  const { imageStatus: _quality, performance: _segment, ...base } = filters;
+  return prisma.product.findMany({
+    where: productWhere(base),
+    select: { id: true, imageStatus: true },
+  });
 }
 
 /** How many products each quality filter would return, given the other active filters. */
@@ -193,30 +189,67 @@ export type ProductFilterCounts = {
   needsReview: number;
 };
 
+export type ProductCounts = {
+  /** Products matching every active filter: the header total and the page count. */
+  total: number;
+  /** Each quality pill under the other active filters, the quality filter itself ignored. */
+  quality: ProductFilterCounts;
+  /** Each segment pill under the other active filters, the segment filter itself ignored. */
+  performance: Record<PerformanceSegment, number>;
+};
+
 /**
- * Counts for the quality filter pills.
- *
- * Each count honours the **other** active filters — search and division — but
- * not the quality filter itself, so the pills read as "what would I get if I
- * clicked this", not "what am I looking at now". One groupBy rather than three
- * counts: at 51,114 rows the difference is worth the small amount of mapping.
+ * Pure. Applies the quality and segment predicates exactly as productWhere
+ * does — imageStatus equality and membership of the segment's id set — so the
+ * total agrees with the rows listProducts pages through. Each pill ignores
+ * its own filter and honours the other, so it reads as "what you would get
+ * if you clicked this".
  */
-export async function countProductsByQuality(
-  filters: ListProductsFilters = {},
-): Promise<ProductFilterCounts> {
-  const { imageStatus: _ignored, ...rest } = filters;
-  const grouped = await prisma.product.groupBy({
-    by: ["imageStatus"],
-    where: productWhere(rest),
-    _count: { _all: true },
-  });
-  const by = new Map(grouped.map((row) => [row.imageStatus, row._count._all]));
-  const all = grouped.reduce((sum, row) => sum + row._count._all, 0);
-  return {
-    all,
-    missingImage: by.get("missing") ?? 0,
-    needsReview: by.get("needs_review") ?? 0,
+export function summarizeProductCounts(
+  population: ProductPopulationRow[],
+  filters: Pick<ListProductsFilters, "imageStatus" | "performance">,
+  index: PerformanceIndex,
+): ProductCounts {
+  const inSegment = new Map<PerformanceSegment, (id: string) => boolean>(
+    PERFORMANCE_SEGMENTS.map((segment) => {
+      const constraint = segmentIdFilter(segment, index);
+      if ("in" in constraint) {
+        const ids = new Set(constraint.in);
+        return [segment, (id) => ids.has(id)];
+      }
+      const ids = new Set(constraint.notIn);
+      return [segment, (id) => !ids.has(id)];
+    }),
+  );
+  const segmentOk = (id: string) =>
+    filters.performance ? inSegment.get(filters.performance)!(id) : true;
+  const qualityOk = (status: string) =>
+    filters.imageStatus ? status === filters.imageStatus : true;
+
+  let total = 0;
+  const quality: ProductFilterCounts = { all: 0, missingImage: 0, needsReview: 0 };
+  const performance: Record<PerformanceSegment, number> = {
+    top: 0,
+    promising: 0,
+    cold: 0,
+    non_seller: 0,
   };
+  for (const row of population) {
+    const inChosenSegment = segmentOk(row.id);
+    const ofChosenQuality = qualityOk(row.imageStatus);
+    if (inChosenSegment && ofChosenQuality) total += 1;
+    if (inChosenSegment) {
+      quality.all += 1;
+      if (row.imageStatus === "missing") quality.missingImage += 1;
+      else if (row.imageStatus === "needs_review") quality.needsReview += 1;
+    }
+    if (ofChosenQuality) {
+      for (const segment of PERFORMANCE_SEGMENTS) {
+        if (inSegment.get(segment)!(row.id)) performance[segment] += 1;
+      }
+    }
+  }
+  return { total, quality, performance };
 }
 
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));

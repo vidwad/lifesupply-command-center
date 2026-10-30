@@ -11,14 +11,13 @@ import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
-  countProducts,
-  countProductsByPerformance,
-  countProductsByQuality,
   listProducts,
+  loadProductPopulation,
   parseNonNegativeInt,
   parseProductSort,
   parseSortDirection,
   PRODUCTS_PAGE_SIZE,
+  summarizeProductCounts,
   type ListProductsFilters,
 } from "@/server/services/products";
 import {
@@ -94,8 +93,9 @@ export default async function ProductsPage({
   // takes precedence.
   const effectiveSort = sort ?? (perf === "top" ? "revenue" : undefined);
   const effectiveDir = sort ? dir : perf === "top" ? "desc" : dir;
-  // Computed once per request from the synced order lines; the rows, the
-  // total and every pill count read these same figures.
+  // Classified from the sales figures the process shares (loaded once,
+  // fresh within ten minutes); the rows, the total and every pill count
+  // read these same figures.
   const performanceIndex = await buildPerformanceIndex(new Date(), topLimit);
   const filters: ListProductsFilters = {
     performance: perf,
@@ -116,16 +116,18 @@ export default async function ProductsPage({
     dir: effectiveDir,
   };
 
-  // The count uses the same filters as the rows, so the header total and the
-  // page count can never disagree with what is actually listed. The quality
-  // counts ignore the quality filter itself, so each pill reads as "what you
-  // would get if you clicked this".
-  const [listed, totalProducts, qualityCounts, performanceCounts] = await Promise.all([
+  // The header total, the quality pills and the segment pills all come from
+  // one scan of the products under the other filters, judged by the same
+  // predicates the rows use, so the total can never disagree with what is
+  // listed, and each pill reads as "what you would get if you clicked this".
+  const [listed, population] = await Promise.all([
     listProducts(filters),
-    countProducts(filters),
-    countProductsByQuality(filters),
-    countProductsByPerformance(filters, performanceIndex),
+    loadProductPopulation(filters),
   ]);
+  const counts = summarizeProductCounts(population, filters, performanceIndex);
+  const totalProducts = counts.total;
+  const qualityCounts = counts.quality;
+  const performanceCounts = counts.performance;
   const salesFor = (id: string) => performanceIndex.stats.get(id);
   const products = listed;
 

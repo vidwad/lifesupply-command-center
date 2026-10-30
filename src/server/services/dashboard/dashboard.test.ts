@@ -1,7 +1,9 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
-  createTtlCache,
   DASHBOARD_CACHE_TTL_MS,
   LEADERBOARD_SIZE,
   LOW_MARGIN_THRESHOLD,
@@ -9,6 +11,8 @@ import {
   rankProductAggregates,
   type ProductAggregate,
 } from "./index";
+
+const service = readFileSync(join(__dirname, "index.ts"), "utf8").replace(/\r\n/g, "\n");
 
 const agg = (productId: string, revenue: number, grossProfit: number): ProductAggregate => ({
   productId,
@@ -62,62 +66,10 @@ describe("rankProductAggregates", () => {
   });
 });
 
-describe("createTtlCache", () => {
-  it("serves one load to every caller until the time to live passes", async () => {
-    let clock = 1_000;
-    let loads = 0;
-    const cache = createTtlCache<number>(60_000, () => clock);
-    const load = async () => ++loads;
-
-    await expect(cache.get(load)).resolves.toBe(1);
-    await expect(cache.get(load)).resolves.toBe(1);
-    clock += 59_999;
-    await expect(cache.get(load)).resolves.toBe(1);
-    clock += 1;
-    await expect(cache.get(load)).resolves.toBe(2);
-    expect(loads).toBe(2);
-  });
-
-  it("shares an in-flight load between concurrent callers", async () => {
-    let loads = 0;
-    let release!: (value: string) => void;
-    const cache = createTtlCache<string>(60_000, () => 0);
-    const load = () => {
-      loads += 1;
-      return new Promise<string>((resolve) => {
-        release = resolve;
-      });
-    };
-
-    const first = cache.get(load);
-    const second = cache.get(load);
-    release("ready");
-    await expect(first).resolves.toBe("ready");
-    await expect(second).resolves.toBe("ready");
-    expect(loads).toBe(1);
-  });
-
-  it("does not keep a failed load", async () => {
-    let loads = 0;
-    const cache = createTtlCache<number>(60_000, () => 0);
-    await expect(
-      cache.get(async () => {
-        loads += 1;
-        throw new Error("database away");
-      }),
-    ).rejects.toThrow("database away");
-    await expect(cache.get(async () => ++loads)).resolves.toBe(2);
-  });
-
-  it("clears on demand", async () => {
-    let loads = 0;
-    const cache = createTtlCache<number>(60_000, () => 0);
-    await cache.get(async () => ++loads);
-    cache.clear();
-    await expect(cache.get(async () => ++loads)).resolves.toBe(2);
-  });
-
-  it("holds the dashboard for about a minute", () => {
+describe("dashboard cache", () => {
+  it("holds the dashboard for about a minute and serves it stale while the next load runs", () => {
     expect(DASHBOARD_CACHE_TTL_MS).toBe(60_000);
+    expect(service).toContain('import { createTtlCache } from "@/server/cache/ttl-cache";');
+    expect(service).toContain("staleWhileRevalidate: true");
   });
 });

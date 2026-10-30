@@ -440,6 +440,8 @@ model Product {
   @@index([status])
   @@index([imageCount])
   @@index([descriptionLength])
+  // The list's default order, featured first then by name, over the live catalogue (2026-10-30).
+  @@index([deletedAt, isFeatured(sort: Desc), name, id])
   @@map("products")
 }
 
