@@ -4,17 +4,17 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { summarizeProductCounts, type ProductPopulationRow } from "./index";
-import { classifyProducts, type ProductSales } from "./performance";
+import { classifyProducts, presetRange, type ProductSales } from "./performance";
 
 const ROOT = join(__dirname, "..", "..", "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
 
 const sales = (over: Partial<ProductSales>): ProductSales => ({
   unitsLifetime: 0,
-  units90: 0,
-  revenue90: 0,
-  units30: 0,
-  unitsPrior30: 0,
+  unitsRange: 0,
+  revenueRange: 0,
+  unitsRecent: 0,
+  unitsEarlier: 0,
   ...over,
 });
 
@@ -25,11 +25,20 @@ const now = new Date("2026-10-30T12:00:00Z");
 // division, say), so it must not be counted anywhere.
 const index = classifyProducts(
   new Map([
-    ["hot", sales({ unitsLifetime: 10, units90: 10, revenue90: 500, units30: 6, unitsPrior30: 4 })],
+    [
+      "hot",
+      sales({
+        unitsLifetime: 10,
+        unitsRange: 10,
+        revenueRange: 500,
+        unitsRecent: 6,
+        unitsEarlier: 4,
+      }),
+    ],
     ["cold", sales({ unitsLifetime: 1 })],
-    ["hidden", sales({ unitsLifetime: 3, units90: 3, revenue90: 90 })],
+    ["hidden", sales({ unitsLifetime: 3, unitsRange: 3, revenueRange: 90 })],
   ]),
-  now,
+  presetRange("90d", now),
 );
 
 const population: ProductPopulationRow[] = [
@@ -92,8 +101,9 @@ describe("the products page reads one scan and shared sales figures", () => {
     expect(service).toContain("select: { id: true, imageStatus: true }");
   });
 
-  it("loads the sales figures in one filtered aggregate and shares them for ten minutes", () => {
-    expect(performance.match(/FILTER \(WHERE/g)).toHaveLength(4);
+  it("loads the sales figures by product and day in one query and shares them for ten minutes", () => {
+    expect(performance).toContain(`(o."orderDate"::date - DATE '1970-01-01')::int AS "day"`);
+    expect(performance).toContain("GROUP BY 1, 2");
     expect(performance).toContain(`AND o."status" NOT IN ('cancelled', 'refunded')`);
     expect(performance).toContain("PRODUCT_SALES_TTL_MS = 10 * 60_000");
     expect(performance).toContain("staleWhileRevalidate: true");
@@ -102,5 +112,18 @@ describe("the products page reads one scan and shared sales figures", () => {
 
   it("warms the figures when the web process starts", () => {
     expect(instrumentation).toContain("warmProductSales");
+  });
+
+  it("offers the range presets and a custom start and end date, and labels the columns with the range", () => {
+    expect(page).toContain("const range = parsePerformanceRange(params);");
+    expect(page).toContain("buildPerformanceIndex(range, topLimit)");
+    expect(page).toContain("performanceDefinitions(topLimit, range)");
+    expect(page).toContain("{RANGE_PRESETS.map((preset) => (");
+    expect(page).toContain('name="from"');
+    expect(page).toContain('name="to"');
+    expect(page).toContain("Units ({range.short})");
+    expect(page).toContain("label={`Revenue (${range.short})`}");
+    expect(page).toContain("figures cover ${range.description}");
+    expect(page).not.toContain("WINDOW_DAYS");
   });
 });
