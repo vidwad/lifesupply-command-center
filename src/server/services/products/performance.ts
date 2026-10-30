@@ -12,9 +12,9 @@
  *
  * Cancelled and refunded orders are excluded throughout.
  */
-import type { Prisma } from "@prisma/client";
-
+import { createTtlCache } from "@/server/cache/ttl-cache";
 import { prisma } from "@/server/db/client";
+import { logger } from "@/server/logger";
 
 export const WINDOW_DAYS = 90;
 export const RECENT_DAYS = 30;
@@ -28,6 +28,12 @@ export const TOP_SELLER_DEFAULT = 200;
 export const TOP_SELLER_MAX = 5000;
 /** A product needs this many units in the recent window before it is "promising". */
 export const PROMISING_MIN_UNITS = 2;
+/**
+ * How long one load of the sales figures serves every reader in the process
+ * (2026-10-30). The figures change only when orders sync, and loading them
+ * reads the whole order history from disk on the production database.
+ */
+export const PRODUCT_SALES_TTL_MS = 10 * 60_000;
 
 export const PERFORMANCE_SEGMENTS = ["top", "promising", "cold", "non_seller"] as const;
 export type PerformanceSegment = (typeof PERFORMANCE_SEGMENTS)[number];
@@ -144,57 +150,93 @@ function daysAgo(now: Date, days: number): Date {
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 }
 
-const SOLD_ORDER: Prisma.OrderWhereInput = { status: { notIn: ["cancelled", "refunded"] } };
+type SalesRow = {
+  productId: string;
+  unitsLifetime: number;
+  units90: number;
+  revenue90: number;
+  units30: number;
+  unitsPrior30: number;
+};
 
-// The return type is left to inference: Prisma's groupBy is typed through
-// overloads, and an explicit annotation breaks their resolution.
-async function sumByProduct(orderWhere: Prisma.OrderWhereInput) {
-  return prisma.orderItem.groupBy({
-    by: ["productId"],
-    where: { productId: { not: null }, order: { ...SOLD_ORDER, ...orderWhere } },
-    _sum: { quantity: true, lineSubtotal: true },
-  });
+/**
+ * One pass over the sold order lines, grouped by product, with each window
+ * summed as a filtered aggregate. One query where there were four: on the
+ * production database each of them read the whole order_items and orders
+ * tables from disk, about ten seconds apiece, so the number of queries set
+ * the cost, not their shape. Sums are cast to float8 so they arrive as
+ * numbers.
+ */
+export async function loadProductSales(now = new Date()): Promise<Map<string, ProductSales>> {
+  const windowStart = daysAgo(now, WINDOW_DAYS);
+  const recentStart = daysAgo(now, RECENT_DAYS);
+  const priorStart = daysAgo(now, RECENT_DAYS * 2);
+  const rows = await prisma.$queryRaw<SalesRow[]>`
+    SELECT
+      oi."productId" AS "productId",
+      coalesce(sum(oi."quantity"), 0)::float8 AS "unitsLifetime",
+      coalesce(sum(oi."quantity") FILTER (WHERE o."orderDate" >= ${windowStart}), 0)::float8 AS "units90",
+      coalesce(sum(oi."lineSubtotal") FILTER (WHERE o."orderDate" >= ${windowStart}), 0)::float8 AS "revenue90",
+      coalesce(sum(oi."quantity") FILTER (WHERE o."orderDate" >= ${recentStart}), 0)::float8 AS "units30",
+      coalesce(sum(oi."quantity") FILTER (WHERE o."orderDate" >= ${priorStart} AND o."orderDate" < ${recentStart}), 0)::float8 AS "unitsPrior30"
+    FROM "order_items" oi
+    JOIN "orders" o ON o."id" = oi."orderId"
+    WHERE oi."productId" IS NOT NULL
+      AND o."status" NOT IN ('cancelled', 'refunded')
+    GROUP BY oi."productId"
+  `;
+  const stats = new Map<string, ProductSales>();
+  for (const row of rows) {
+    stats.set(row.productId, {
+      unitsLifetime: num(row.unitsLifetime),
+      units90: num(row.units90),
+      revenue90: num(row.revenue90),
+      units30: num(row.units30),
+      unitsPrior30: num(row.unitsPrior30),
+    });
+  }
+  return stats;
+}
+
+// One load serves every reader for ten minutes; past that the last figures
+// are shown while the next load runs, so no reader waits for the database.
+const salesCache = createTtlCache<Map<string, ProductSales>>(PRODUCT_SALES_TTL_MS, {
+  staleWhileRevalidate: true,
+});
+
+/** The sales figures every reader shares. */
+export function getProductSales(): Promise<Map<string, ProductSales>> {
+  return salesCache.get(() => loadProductSales());
+}
+
+/** Drops the shared figures so the next reader loads them anew. */
+export function invalidateProductSales(): void {
+  salesCache.clear();
 }
 
 /**
- * Loads the figures and classifies them. Four aggregate queries, grouped by
- * product in the database, so the cost does not grow with the page size or
- * with the top-seller count.
+ * Loads the figures ahead of the first reader, at process start, so the
+ * first products list of the day does not wait on them. Never throws: a
+ * database that is not ready yet is logged, and the first reader loads.
+ */
+export async function warmProductSales(): Promise<void> {
+  try {
+    const stats = await getProductSales();
+    logger.info({ products: stats.size }, "product sales figures warmed");
+  } catch (err) {
+    logger.warn({ err }, "product sales figures could not be warmed");
+  }
+}
+
+/**
+ * Classifies the shared figures. Cheap once they are loaded, so a different
+ * top-seller count costs nothing more than the classification.
  */
 export async function buildPerformanceIndex(
   now = new Date(),
   topLimit = TOP_SELLER_DEFAULT,
 ): Promise<PerformanceIndex> {
-  const [lifetime, window, recent, prior] = await Promise.all([
-    sumByProduct({}),
-    sumByProduct({ orderDate: { gte: daysAgo(now, WINDOW_DAYS) } }),
-    sumByProduct({ orderDate: { gte: daysAgo(now, RECENT_DAYS) } }),
-    sumByProduct({
-      orderDate: { gte: daysAgo(now, RECENT_DAYS * 2), lt: daysAgo(now, RECENT_DAYS) },
-    }),
-  ]);
-  const stats = new Map<string, ProductSales>();
-  const entry = (id: string): ProductSales => {
-    let current = stats.get(id);
-    if (!current) {
-      current = { unitsLifetime: 0, units90: 0, revenue90: 0, units30: 0, unitsPrior30: 0 };
-      stats.set(id, current);
-    }
-    return current;
-  };
-  for (const row of lifetime)
-    if (row.productId) entry(row.productId).unitsLifetime = num(row._sum?.quantity);
-  for (const row of window) {
-    if (!row.productId) continue;
-    const e = entry(row.productId);
-    e.units90 = num(row._sum?.quantity);
-    e.revenue90 = num(row._sum?.lineSubtotal);
-  }
-  for (const row of recent)
-    if (row.productId) entry(row.productId).units30 = num(row._sum?.quantity);
-  for (const row of prior)
-    if (row.productId) entry(row.productId).unitsPrior30 = num(row._sum?.quantity);
-  return classifyProducts(stats, now, topLimit);
+  return classifyProducts(await getProductSales(), now, topLimit);
 }
 
 /** The id constraint a segment adds to the product query. */

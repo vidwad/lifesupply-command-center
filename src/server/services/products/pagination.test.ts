@@ -57,7 +57,8 @@ describe("count and list agree", () => {
   });
 
   it("the header total comes from the count, not from the current page's length", () => {
-    expect(page).toContain("countProducts(filters)");
+    expect(page).toContain("summarizeProductCounts(population, filters, performanceIndex)");
+    expect(page).toContain("const totalProducts = counts.total;");
     expect(page).toContain("totalProducts.toLocaleString()");
     expect(page).not.toContain("${products.length} ${products.length === 1");
   });
@@ -210,17 +211,23 @@ describe("sortable columns", () => {
 });
 
 describe("filter pill counts", () => {
-  it("counts ignore the quality filter but honour the others", () => {
+  it("counts ignore the quality and segment filters but honour the others", () => {
     // Each pill must answer "what would I get if I clicked this", so the
-    // active quality filter is stripped before counting.
-    expect(service).toContain("const { imageStatus: _ignored, ...rest } = filters;");
-    expect(service).toContain("where: productWhere(rest)");
+    // population is loaded under the other filters only and each pill
+    // applies the predicate it does not own (counts.test.ts has the cases).
+    expect(service).toContain(
+      "const { imageStatus: _quality, performance: _segment, ...base } = filters;",
+    );
+    expect(service).toContain("where: productWhere(base)");
   });
 
-  it("derives every pill count from one grouped query", () => {
-    expect(service).toContain('by: ["imageStatus"]');
-    expect(service).toContain('missingImage: by.get("missing") ?? 0');
-    expect(service).toContain('needsReview: by.get("needs_review") ?? 0');
+  it("derives every pill count from one scan of the population", () => {
+    expect(service).toContain("select: { id: true, imageStatus: true }");
+    expect(service).toContain('if (row.imageStatus === "missing") quality.missingImage += 1;');
+    expect(service).toContain(
+      'else if (row.imageStatus === "needs_review") quality.needsReview += 1;',
+    );
+    expect(service).not.toContain('by: ["imageStatus"]');
   });
 
   it("renders a count on each pill", () => {

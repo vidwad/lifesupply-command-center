@@ -32,6 +32,10 @@ the Revenue column uses, so page two continues the ranking rather than reshuffli
 chosen count travels on the list's links as `top=` only when it differs from the default, so an
 address made before the input existed still means what it meant.
 
+### Where the figures come from (October 30, 2026)
+
+The per-product figures are one query over the sold order lines, with each window summed as a filtered aggregate, where there were four queries before. One load serves every reader of the web process for ten minutes; after that the last figures are shown while the next load runs, so no reader waits for the database, and the web process loads them as it starts. The products list derives its header total and every pill count from a single scan of the products under the other filters, judged by the same predicates the rows use, rather than from six separate counts. The list's default order has its own index.
+
 ## 3. Phase two: traffic-based segments
 
 "Most abandoned" and "products to improve" compare views and carts against purchases. The

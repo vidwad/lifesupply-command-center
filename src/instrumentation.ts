@@ -17,6 +17,11 @@ export async function register(): Promise<void> {
       { deployEnv: process.env.DEPLOY_ENV ?? "unknown" },
       "web process started (instrumentation registered)",
     );
+    // The product sales figures read the whole order history (about ten
+    // seconds on the production database). Load them now so the first
+    // reader of the products list does not wait; failure is logged only.
+    const { warmProductSales } = await import("@/server/services/products/performance");
+    void warmProductSales();
   }
 }
 
