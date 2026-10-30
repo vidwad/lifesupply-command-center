@@ -185,6 +185,10 @@ First row KPI cards:
 - Cash / working capital.
 - Priority exceptions.
 
+Open orders are the orders still to be fulfilled: received, processing, awaiting supplier, in the supplier queue, or awaiting human review. Shipped orders are history, not open; counting them had put nearly every imported order in the KPI (October 30, 2026).
+
+The dashboard's figures are the same for every viewer, so one load serves every request for a minute and concurrent requests share it. Its queries run together rather than one after another, and the two product leaderboards come from a single aggregate of the last 90 days of order items. Regenerating the briefing refreshes the data at once. The reactivation counts the briefing quotes are loaded only when a briefing is generated, because the page does not show them.
+
 Second row:
 
 - Revenue trend chart.

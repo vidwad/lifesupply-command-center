@@ -88,12 +88,17 @@ export type DashboardData = {
     openRate: number | null;
     attributedRevenue: number;
   }[];
+};
 
-  reactivation: {
-    candidateCount: number;
-    activeSegmentCount: number;
-    topSegmentName: string | null;
-  };
+/**
+ * Reactivation counts for the AI briefing. The dashboard page does not show
+ * them, and the candidate count is a full scan of the customers table, so
+ * they are loaded only when a briefing is generated (2026-10-30).
+ */
+export type ReactivationSummary = {
+  candidateCount: number;
+  activeSegmentCount: number;
+  topSegmentName: string | null;
 };
 
 // -----------------------------------------------------------------------------
@@ -107,37 +112,189 @@ function deltaPct(current: number, previous: number | null): number | null {
   return (current - previous) / previous;
 }
 
-const OPEN_ORDER_STATUSES: OrderStatus[] = [
+/**
+ * Orders still to be fulfilled. Shipped orders are not open: the stores
+ * record most completed history as "shipped", so counting them put nearly
+ * every order ever imported in this KPI and made it the slowest query on the
+ * page (2026-10-30).
+ */
+export const OPEN_ORDER_STATUSES: OrderStatus[] = [
   "received",
   "processing",
   "awaiting_supplier",
   "in_supplier_queue",
   "awaiting_human_review",
-  "shipped",
 ];
+
+export const LEADERBOARD_SIZE = 5;
+export const LOW_MARGIN_THRESHOLD = 0.35;
+export const PRODUCT_WINDOW_DAYS = 90;
+
+export type ProductAggregate = {
+  productId: string;
+  revenue: number;
+  quantity: number;
+  grossProfit: number;
+};
+
+export type RankedProducts = {
+  top: ProductAggregate[];
+  lowMargin: (ProductAggregate & { marginPct: number })[];
+};
+
+/**
+ * Both leaderboards come from one aggregate of the window's order items: the
+ * top sellers by revenue, and the products whose margin on that revenue is
+ * below the threshold, lowest margin first.
+ */
+export function rankProductAggregates(rows: ProductAggregate[]): RankedProducts {
+  const top = [...rows].sort((a, b) => b.revenue - a.revenue).slice(0, LEADERBOARD_SIZE);
+  const lowMargin = rows
+    .filter((r) => r.revenue > 0)
+    .map((r) => ({ ...r, marginPct: r.grossProfit / r.revenue }))
+    .filter((r) => r.marginPct < LOW_MARGIN_THRESHOLD)
+    .sort((a, b) => a.marginPct - b.marginPct)
+    .slice(0, LEADERBOARD_SIZE);
+  return { top, lowMargin };
+}
+
+// -----------------------------------------------------------------------------
+// Cache. The dashboard is the same for every user, and its queries cost
+// seconds on the production database, so one load serves every request for a
+// short while. Concurrent requests share the in-flight load; a failed load is
+// not kept. Regenerating the briefing clears it so the new text shows at once.
+// -----------------------------------------------------------------------------
+
+export const DASHBOARD_CACHE_TTL_MS = 60_000;
+
+export type TtlCache<T> = {
+  get(load: () => Promise<T>): Promise<T>;
+  clear(): void;
+};
+
+export function createTtlCache<T>(ttlMs: number, now: () => number = Date.now): TtlCache<T> {
+  let entry: { expiresAt: number; value: Promise<T> } | null = null;
+  return {
+    get(load) {
+      const at = now();
+      if (entry && entry.expiresAt > at) return entry.value;
+      const value = load();
+      const next = { expiresAt: at + ttlMs, value };
+      entry = next;
+      value.catch(() => {
+        if (entry === next) entry = null;
+      });
+      return value;
+    },
+    clear() {
+      entry = null;
+    },
+  };
+}
+
+const dashboardCache = createTtlCache<DashboardData>(DASHBOARD_CACHE_TTL_MS);
+
+export function getDashboardData(): Promise<DashboardData> {
+  return dashboardCache.get(loadDashboardData);
+}
+
+export function invalidateDashboardCache(): void {
+  dashboardCache.clear();
+}
 
 // -----------------------------------------------------------------------------
 
-export async function getDashboardData(): Promise<DashboardData> {
-  // ------- periods --------
-  const consolidated = await prisma.division.findUnique({ where: { code: "CONS" } });
+async function loadDashboardData(): Promise<DashboardData> {
+  const now = new Date();
 
-  const currentPeriod = await prisma.financialPeriod.findFirst({
-    orderBy: { startDate: "desc" },
-    where: { status: { in: ["open", "imported", "under_review"] } },
-  });
-  // Most recently approved/closed period — for prior-period comparison
-  const previousPeriod = await prisma.financialPeriod.findFirst({
-    orderBy: { startDate: "desc" },
-    where: {
-      status: { in: ["approved", "closed"] },
-      ...(currentPeriod ? { startDate: { lt: currentPeriod.startDate } } : {}),
-    },
-  });
+  // ------- periods: everything else hangs off these two --------
+  const [consolidated, currentPeriod] = await Promise.all([
+    prisma.division.findUnique({ where: { code: "CONS" } }),
+    prisma.financialPeriod.findFirst({
+      orderBy: { startDate: "desc" },
+      where: { status: { in: ["open", "imported", "under_review"] } },
+    }),
+  ]);
 
-  const currentSummary =
+  const periodStart = currentPeriod?.startDate ?? new Date(now.getFullYear(), 0, 1);
+  const windowStart = new Date(now);
+  windowStart.setDate(windowStart.getDate() - PRODUCT_WINDOW_DAYS);
+
+  // Most recently approved/closed period, for the prior-period comparison.
+  const loadPrevious = async () => {
+    const previousPeriod = await prisma.financialPeriod.findFirst({
+      orderBy: { startDate: "desc" },
+      where: {
+        status: { in: ["approved", "closed"] },
+        ...(currentPeriod ? { startDate: { lt: currentPeriod.startDate } } : {}),
+      },
+    });
+    const previousSummary =
+      consolidated && previousPeriod
+        ? await prisma.financialSummary.findUnique({
+            where: {
+              financialPeriodId_divisionId: {
+                financialPeriodId: previousPeriod.id,
+                divisionId: consolidated.id,
+              },
+            },
+          })
+        : null;
+    return { previousPeriod, previousSummary };
+  };
+
+  const loadProducts = async () => {
+    const rows = await prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: {
+        productId: { not: null },
+        order: { orderDate: { gte: windowStart }, status: { not: "cancelled" } },
+      },
+      _sum: { lineSubtotal: true, quantity: true, estimatedGrossProfit: true },
+    });
+    const aggregates: ProductAggregate[] = rows.flatMap((r) =>
+      r.productId == null
+        ? []
+        : [
+            {
+              productId: r.productId,
+              revenue: num(r._sum.lineSubtotal),
+              quantity: r._sum.quantity ?? 0,
+              grossProfit: num(r._sum.estimatedGrossProfit),
+            },
+          ],
+    );
+    const ranked = rankProductAggregates(aggregates);
+    const ids = Array.from(new Set([...ranked.top, ...ranked.lowMargin].map((r) => r.productId)));
+    const records =
+      ids.length === 0
+        ? []
+        : await prisma.product.findMany({
+            where: { id: { in: ids } },
+            select: { id: true, name: true, sku: true },
+          });
+    return { ranked, products: new Map(records.map((p) => [p.id, p])) };
+  };
+
+  const [
+    { previousPeriod, previousSummary },
+    currentSummary,
+    trendPeriods,
+    openOrders,
+    exceptionOrders,
+    awaitingSupplier,
+    awaitingHumanReview,
+    completedThisPeriod,
+    cancelledThisPeriod,
+    { ranked, products },
+    exceptionList,
+    priorityTaskRecords,
+    briefing,
+    campaignRecords,
+  ] = await Promise.all([
+    loadPrevious(),
     consolidated && currentPeriod
-      ? await prisma.financialSummary.findUnique({
+      ? prisma.financialSummary.findUnique({
           where: {
             financialPeriodId_divisionId: {
               financialPeriodId: currentPeriod.id,
@@ -145,30 +302,58 @@ export async function getDashboardData(): Promise<DashboardData> {
             },
           },
         })
-      : null;
-
-  const previousSummary =
-    consolidated && previousPeriod
-      ? await prisma.financialSummary.findUnique({
-          where: {
-            financialPeriodId_divisionId: {
-              financialPeriodId: previousPeriod.id,
-              divisionId: consolidated.id,
-            },
-          },
-        })
-      : null;
+      : null,
+    prisma.financialPeriod.findMany({
+      orderBy: { startDate: "desc" },
+      take: 6,
+      include: {
+        summaries: consolidated
+          ? { where: { divisionId: consolidated.id } }
+          : { where: { divisionId: "__none__" } },
+      },
+    }),
+    prisma.order.count({ where: { status: { in: OPEN_ORDER_STATUSES } } }),
+    prisma.order.count({ where: { exceptionStatus: { in: ["flagged", "in_review"] } } }),
+    prisma.order.count({ where: { status: "awaiting_supplier" } }),
+    prisma.order.count({ where: { status: "awaiting_human_review" } }),
+    prisma.order.count({ where: { status: "completed", orderDate: { gte: periodStart } } }),
+    prisma.order.count({ where: { status: "cancelled", orderDate: { gte: periodStart } } }),
+    loadProducts(),
+    prisma.order.findMany({
+      where: { exceptionStatus: { in: ["flagged", "in_review"] } },
+      orderBy: { orderDate: "desc" },
+      include: {
+        store: { select: { name: true } },
+        customer: { select: { firstName: true, lastName: true, companyName: true, email: true } },
+      },
+      take: 5,
+    }),
+    prisma.task.findMany({
+      where: {
+        status: { in: ["open", "in_progress", "awaiting_approval", "blocked"] },
+        OR: [
+          { priority: { in: ["high", "urgent"] } },
+          { dueDate: { lte: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 3) } }, // due in next 3 days
+        ],
+      },
+      orderBy: [{ priority: "desc" }, { dueDate: "asc" }],
+      take: 6,
+    }),
+    prisma.aiOutput.findFirst({
+      where: { module: "dashboard_briefing" },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.campaign.findMany({
+      where: { status: "sent" },
+      orderBy: { sentAt: "desc" },
+      take: 4,
+      include: {
+        metrics: { orderBy: { measuredAt: "desc" }, take: 1 },
+      },
+    }),
+  ]);
 
   // ------- last 6 periods trend --------
-  const trendPeriods = await prisma.financialPeriod.findMany({
-    orderBy: { startDate: "desc" },
-    take: 6,
-    include: {
-      summaries: consolidated
-        ? { where: { divisionId: consolidated.id } }
-        : { where: { divisionId: "__none__" } },
-    },
-  });
   const trend = trendPeriods.reverse().map((p) => {
     const summary = p.summaries[0];
     return {
@@ -179,112 +364,21 @@ export async function getDashboardData(): Promise<DashboardData> {
     };
   });
 
-  // ------- operations counts (live from orders) --------
-  const periodStart = currentPeriod?.startDate ?? new Date(new Date().getFullYear(), 0, 1);
-
-  const [
-    openOrders,
-    exceptionOrders,
-    awaitingSupplier,
-    awaitingHumanReview,
-    completedThisPeriod,
-    cancelledThisPeriod,
-  ] = await Promise.all([
-    prisma.order.count({ where: { status: { in: OPEN_ORDER_STATUSES } } }),
-    prisma.order.count({ where: { exceptionStatus: { in: ["flagged", "in_review"] } } }),
-    prisma.order.count({ where: { status: "awaiting_supplier" } }),
-    prisma.order.count({ where: { status: "awaiting_human_review" } }),
-    prisma.order.count({
-      where: { status: "completed", orderDate: { gte: periodStart } },
-    }),
-    prisma.order.count({
-      where: { status: "cancelled", orderDate: { gte: periodStart } },
-    }),
-  ]);
-
-  // ------- top products by revenue (last 90 days) --------
-  const ninetyDaysAgo = new Date();
-  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-
-  const topRows = await prisma.orderItem.groupBy({
-    by: ["productId"],
-    where: {
-      productId: { not: null },
-      order: { orderDate: { gte: ninetyDaysAgo }, status: { not: "cancelled" } },
-    },
-    _sum: { lineSubtotal: true, quantity: true },
-    orderBy: { _sum: { lineSubtotal: "desc" } },
-    take: 5,
+  // ------- product leaderboards --------
+  const topProducts = ranked.top.flatMap((r) => {
+    const p = products.get(r.productId);
+    return p
+      ? [{ id: p.id, name: p.name, sku: p.sku, revenue: r.revenue, quantity: r.quantity }]
+      : [];
   });
-  const topProductIds = topRows.map((r) => r.productId).filter((id): id is string => id != null);
-  const topProductRecords = await prisma.product.findMany({
-    where: { id: { in: topProductIds } },
-    select: { id: true, name: true, sku: true },
+  const lowMarginProducts = ranked.lowMargin.flatMap((r) => {
+    const p = products.get(r.productId);
+    return p
+      ? [{ id: p.id, name: p.name, sku: p.sku, revenue: r.revenue, marginPct: r.marginPct }]
+      : [];
   });
-  const topProductMap = new Map(topProductRecords.map((p) => [p.id, p]));
-  const topProducts = topRows
-    .map((r) => {
-      const p = r.productId ? topProductMap.get(r.productId) : undefined;
-      if (!p) return null;
-      return {
-        id: p.id,
-        name: p.name,
-        sku: p.sku,
-        revenue: num(r._sum.lineSubtotal),
-        quantity: r._sum.quantity ?? 0,
-      };
-    })
-    .filter((x): x is NonNullable<typeof x> => x != null);
-
-  // ------- low-margin products (margin < 35%, last 90 days) --------
-  const lowMarginRows = await prisma.orderItem.groupBy({
-    by: ["productId"],
-    where: {
-      productId: { not: null },
-      order: { orderDate: { gte: ninetyDaysAgo }, status: { not: "cancelled" } },
-    },
-    _sum: { lineSubtotal: true, estimatedGrossProfit: true },
-  });
-  const lowMargin = lowMarginRows
-    .map((r) => {
-      const revenue = num(r._sum.lineSubtotal);
-      const gp = num(r._sum.estimatedGrossProfit);
-      const margin = revenue > 0 ? gp / revenue : 0;
-      return { productId: r.productId, revenue, margin };
-    })
-    .filter((r) => r.productId != null && r.margin < 0.35 && r.revenue > 0)
-    .sort((a, b) => a.margin - b.margin)
-    .slice(0, 5);
-  const lowMarginIds = lowMargin.map((r) => r.productId).filter((id): id is string => id != null);
-  const lowMarginRecords = await prisma.product.findMany({
-    where: { id: { in: lowMarginIds } },
-    select: { id: true, name: true, sku: true },
-  });
-  const lowMarginMap = new Map(lowMarginRecords.map((p) => [p.id, p]));
-  const lowMarginProducts = lowMargin
-    .map((r) => {
-      const p = r.productId ? lowMarginMap.get(r.productId) : undefined;
-      if (!p) return null;
-      return {
-        id: p.id,
-        name: p.name,
-        sku: p.sku,
-        revenue: r.revenue,
-        marginPct: r.margin,
-      };
-    })
-    .filter((x): x is NonNullable<typeof x> => x != null);
 
   // ------- exception orders --------
-  const exceptionList = await prisma.order.findMany({
-    where: { exceptionStatus: { in: ["flagged", "in_review"] } },
-    orderBy: { orderDate: "desc" },
-    include: {
-      store: { select: { name: true } },
-      customer: { select: { firstName: true, lastName: true, companyName: true, email: true } },
-    },
-    take: 5,
-  });
   const exceptions = exceptionList.map((o) => {
     const customerLabel =
       o.customer?.companyName ??
@@ -304,18 +398,6 @@ export async function getDashboardData(): Promise<DashboardData> {
   });
 
   // ------- priority tasks --------
-  const now = new Date();
-  const priorityTaskRecords = await prisma.task.findMany({
-    where: {
-      status: { in: ["open", "in_progress", "awaiting_approval", "blocked"] },
-      OR: [
-        { priority: { in: ["high", "urgent"] } },
-        { dueDate: { lte: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 3) } }, // due in next 3 days
-      ],
-    },
-    orderBy: [{ priority: "desc" }, { dueDate: "asc" }],
-    take: 6,
-  });
   const priorityTasks = priorityTaskRecords.map((t) => ({
     id: t.id,
     title: t.title,
@@ -327,10 +409,6 @@ export async function getDashboardData(): Promise<DashboardData> {
   }));
 
   // ------- AI briefing (latest dashboard_briefing) --------
-  const briefing = await prisma.aiOutput.findFirst({
-    where: { module: "dashboard_briefing" },
-    orderBy: { createdAt: "desc" },
-  });
   const aiBriefing = briefing
     ? {
         id: briefing.id,
@@ -342,14 +420,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     : null;
 
   // ------- campaign performance (recent sent campaigns) --------
-  const campaignRecords = await prisma.campaign.findMany({
-    where: { status: "sent" },
-    orderBy: { sentAt: "desc" },
-    take: 4,
-    include: {
-      metrics: { orderBy: { measuredAt: "desc" }, take: 1 },
-    },
-  });
   const campaigns = campaignRecords.map((c) => {
     const m = c.metrics[0];
     return {
@@ -360,23 +430,6 @@ export async function getDashboardData(): Promise<DashboardData> {
       openRate: m && m.sentCount > 0 ? m.openCount / m.sentCount : null,
       attributedRevenue: num(m?.attributedRevenue),
     };
-  });
-
-  // ------- reactivation summary --------
-  const reactivationCandidates = await prisma.customer.count({
-    where: {
-      consentStatus: "subscribed",
-      lastOrderAt: { lt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 90) },
-      reactivationScore: { gte: 50 },
-    },
-  });
-  const segmentCount = await prisma.customerSegment.count({
-    where: { isActive: true, segmentType: "reactivation" },
-  });
-  const topSegment = await prisma.customerSegment.findFirst({
-    where: { isActive: true, segmentType: "reactivation" },
-    orderBy: { createdAt: "asc" },
-    select: { name: true },
   });
 
   // ------- assemble --------
@@ -431,10 +484,29 @@ export async function getDashboardData(): Promise<DashboardData> {
     priorityTasks,
     aiBriefing,
     campaigns,
-    reactivation: {
-      candidateCount: reactivationCandidates,
-      activeSegmentCount: segmentCount,
-      topSegmentName: topSegment?.name ?? null,
-    },
   };
+}
+
+// -----------------------------------------------------------------------------
+
+export async function getReactivationSummary(): Promise<ReactivationSummary> {
+  const now = Date.now();
+  const [candidateCount, activeSegmentCount, topSegment] = await Promise.all([
+    prisma.customer.count({
+      where: {
+        consentStatus: "subscribed",
+        lastOrderAt: { lt: new Date(now - 1000 * 60 * 60 * 24 * 90) },
+        reactivationScore: { gte: 50 },
+      },
+    }),
+    prisma.customerSegment.count({
+      where: { isActive: true, segmentType: "reactivation" },
+    }),
+    prisma.customerSegment.findFirst({
+      where: { isActive: true, segmentType: "reactivation" },
+      orderBy: { createdAt: "asc" },
+      select: { name: true },
+    }),
+  ]);
+  return { candidateCount, activeSegmentCount, topSegmentName: topSegment?.name ?? null };
 }

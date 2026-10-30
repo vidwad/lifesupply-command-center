@@ -4,13 +4,21 @@ import type { AiOutput } from "@prisma/client";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
-import { getDashboardData } from "@/server/services/dashboard";
+import {
+  getDashboardData,
+  getReactivationSummary,
+  invalidateDashboardCache,
+  type ReactivationSummary,
+} from "@/server/services/dashboard";
 
 import { aiCall } from "./call";
 
 export { AiNotConfiguredError, AiProviderNotConfiguredError } from "./errors";
 
-function buildBriefingContext(data: Awaited<ReturnType<typeof getDashboardData>>): string {
+function buildBriefingContext(
+  data: Awaited<ReturnType<typeof getDashboardData>>,
+  reactivation: ReactivationSummary,
+): string {
   const periodLabel = data.period?.name ?? "no open period";
   const prevLabel = data.previousPeriod?.name ?? "n/a";
   const fmt = (n: number) =>
@@ -91,7 +99,7 @@ function buildBriefingContext(data: Awaited<ReturnType<typeof getDashboardData>>
 
   lines.push("");
   lines.push(
-    `## Reactivation: ${data.reactivation.candidateCount} candidates across ${data.reactivation.activeSegmentCount} active segments`,
+    `## Reactivation: ${reactivation.candidateCount} candidates across ${reactivation.activeSegmentCount} active segments`,
   );
 
   return lines.join("\n");
@@ -145,7 +153,6 @@ export function filterDashboardForAi(
       topProducts: [],
       lowMarginProducts: [],
       campaigns: [],
-      reactivation: { ...next.reactivation, candidateCount: 0, activeSegmentCount: 0 },
     };
     redactedSections.push("customer / product / campaign data");
   }
@@ -153,9 +160,20 @@ export function filterDashboardForAi(
   return { data: next, redactedSections };
 }
 
+/** The reactivation counts are customer data: zeroed without `ai.use_customer_context`. */
+export function redactReactivationForAi(
+  reactivation: ReactivationSummary,
+  permissions: string[],
+): ReactivationSummary {
+  if (permissions.includes("ai.use_customer_context")) return reactivation;
+  return { ...reactivation, candidateCount: 0, activeSegmentCount: 0 };
+}
+
 export async function generateDashboardBriefing(userId: string): Promise<AiOutput> {
-  const data = await getDashboardData();
-  const context = buildBriefingContext(data);
+  // Reactivation counts are loaded here only: the page never shows them and
+  // the candidate count scans the customers table.
+  const [data, reactivation] = await Promise.all([getDashboardData(), getReactivationSummary()]);
+  const context = buildBriefingContext(data, reactivation);
 
   const result = await aiCall("dashboard_briefing", { context });
 
@@ -208,6 +226,9 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
     },
   });
 
+  // The page shares one load of its data for a minute; drop it so the new
+  // briefing shows at once.
+  invalidateDashboardCache();
   revalidatePath("/dashboard");
   return aiOutput;
 }
@@ -226,9 +247,13 @@ export async function askAiAnalyst(args: {
   const trimmed = args.question.trim();
   if (!trimmed) throw new Error("Question is required.");
 
-  const data = await getDashboardData();
-  const filtered = filterDashboardForAi(data, args.userPermissions ?? []);
-  const context = buildBriefingContext(filtered.data);
+  const permissions = args.userPermissions ?? [];
+  const [data, reactivation] = await Promise.all([getDashboardData(), getReactivationSummary()]);
+  const filtered = filterDashboardForAi(data, permissions);
+  const context = buildBriefingContext(
+    filtered.data,
+    redactReactivationForAi(reactivation, permissions),
+  );
 
   const result = await aiCall("analyst_query", { context, question: trimmed });
 
