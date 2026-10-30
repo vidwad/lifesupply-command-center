@@ -2,9 +2,13 @@
  * Product performance segments (product owner, 2026-10-26).
  *
  * Close equivalents of BigCommerce Insights' sales segments, computed from
- * the order line items the sync already holds, with the windows stated so a
+ * the order line items the sync already holds, with the range stated so a
  * reader knows exactly what each word means here. BigCommerce does not
  * publish its own formulas, so these are not the same numbers.
+ *
+ * The range is the reader's choice (product owner, 2026-10-30): the last 30,
+ * 60 or 90 days, the last 6 months, the last year, or any start and end
+ * date. Every segment, column and count on the list reads that one range.
  *
  * Only sales-based segments live here. "Most abandoned" and "products to
  * improve" compare views and carts against purchases, which needs the GA4
@@ -16,8 +20,6 @@ import { createTtlCache } from "@/server/cache/ttl-cache";
 import { prisma } from "@/server/db/client";
 import { logger } from "@/server/logger";
 
-export const WINDOW_DAYS = 90;
-export const RECENT_DAYS = 30;
 /**
  * How many products count as top sellers unless the reader chooses another
  * number on the list (product owner, 2026-10-28: 200 rather than 50, and an
@@ -26,7 +28,7 @@ export const RECENT_DAYS = 30;
  */
 export const TOP_SELLER_DEFAULT = 200;
 export const TOP_SELLER_MAX = 5000;
-/** A product needs this many units in the recent window before it is "promising". */
+/** A product needs this many units in the recent half of the range before it is "promising". */
 export const PROMISING_MIN_UNITS = 2;
 /**
  * How long one load of the sales figures serves every reader in the process
@@ -57,25 +59,177 @@ export function parseTopSellerLimit(value: string | undefined): number {
   return Math.min(parsed, TOP_SELLER_MAX);
 }
 
+// -----------------------------------------------------------------------------
+// The range
+// -----------------------------------------------------------------------------
+
+export const RANGE_PRESETS = [
+  { key: "30d", label: "Last 30 days", days: 30 },
+  { key: "60d", label: "Last 60 days", days: 60 },
+  { key: "90d", label: "Last 90 days", days: 90 },
+  { key: "6m", label: "Last 6 months", months: 6 },
+  { key: "1y", label: "Last year", months: 12 },
+] as const;
+export type RangePresetKey = (typeof RANGE_PRESETS)[number]["key"];
+export const DEFAULT_RANGE_KEY: RangePresetKey = "90d";
+
+/**
+ * A span of whole days in UTC. `start` is the first day and `end` the day
+ * after the last, so a line counts when `start <= orderDate < end`.
+ */
+export type PerformanceRange = {
+  key: RangePresetKey | "custom";
+  start: Date;
+  end: Date;
+  /** The first and last day as YYYY-MM-DD, for the date inputs and the address. */
+  from: string;
+  to: string;
+  days: number;
+  /** Fits after "in": "the last 90 days", "Jan 1, 2026 to Mar 31, 2026". */
+  description: string;
+  /** Fits in a column header: "90d", "6m", "custom". */
+  short: string;
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const utcDay = (date: Date): number => Math.floor(date.getTime() / DAY_MS);
+const dayToDate = (day: number): Date => new Date(day * DAY_MS);
+const isoDay = (day: number): string => dayToDate(day).toISOString().slice(0, 10);
+const longDay = (day: number): string =>
+  dayToDate(day).toLocaleDateString("en-CA", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+/** A strict YYYY-MM-DD, as a UTC day number; anything else is null. */
+export function parseIsoDay(value: string | undefined): number | null {
+  if (value == null) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const [, y, m, d] = match;
+  const date = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)));
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== `${y}-${m}-${d}`) {
+    return null;
+  }
+  return utcDay(date);
+}
+
+function rangeFromDays(
+  key: PerformanceRange["key"],
+  startDay: number,
+  endDay: number,
+  description: string,
+  short: string,
+): PerformanceRange {
+  return {
+    key,
+    start: dayToDate(startDay),
+    end: dayToDate(endDay),
+    from: isoDay(startDay),
+    to: isoDay(endDay - 1),
+    days: endDay - startDay,
+    description,
+    short,
+  };
+}
+
+/** A preset ending today (UTC), today included. */
+export function presetRange(key: RangePresetKey, today = new Date()): PerformanceRange {
+  const preset = RANGE_PRESETS.find((p) => p.key === key) ?? RANGE_PRESETS[2];
+  const endDay = utcDay(today) + 1;
+  let startDay: number;
+  if ("days" in preset) {
+    startDay = endDay - preset.days;
+  } else {
+    const first = dayToDate(endDay);
+    startDay = utcDay(
+      new Date(
+        Date.UTC(first.getUTCFullYear(), first.getUTCMonth() - preset.months, first.getUTCDate()),
+      ),
+    );
+  }
+  return rangeFromDays(
+    preset.key,
+    startDay,
+    endDay,
+    `the ${preset.label.toLowerCase()}`,
+    preset.key,
+  );
+}
+
+/** Any start and end date, both included; the end may not precede the start. */
+export function customRange(fromDay: number, toDay: number): PerformanceRange {
+  return rangeFromDays(
+    "custom",
+    fromDay,
+    toDay + 1,
+    `${longDay(fromDay)} to ${longDay(toDay)}`,
+    "custom",
+  );
+}
+
+/**
+ * The range a reader asked for. Dates win: a valid start date makes a custom
+ * range to the end date, or to today without one. Otherwise a preset key, or
+ * the default. An end before the start, or a start after today, is ignored.
+ */
+export function parsePerformanceRange(
+  params: { range?: string; from?: string; to?: string },
+  today = new Date(),
+): PerformanceRange {
+  const fromDay = parseIsoDay(params.from);
+  if (fromDay != null) {
+    const toDay =
+      params.to == null || params.to.trim() === "" ? utcDay(today) : parseIsoDay(params.to);
+    if (toDay != null && toDay >= fromDay) return customRange(fromDay, toDay);
+  }
+  const preset = RANGE_PRESETS.find((p) => p.key === params.range);
+  return presetRange(preset?.key ?? DEFAULT_RANGE_KEY, today);
+}
+
+/**
+ * What the list's links and form carry for a range: nothing for the default
+ * preset, so ordinary addresses stay short; the key for another preset; the
+ * two dates for a custom range.
+ */
+export function rangeSearchParams(range: PerformanceRange): {
+  range?: string;
+  from?: string;
+  to?: string;
+} {
+  if (range.key === "custom") return { from: range.from, to: range.to };
+  if (range.key === DEFAULT_RANGE_KEY) return {};
+  return { range: range.key };
+}
+
+// -----------------------------------------------------------------------------
+// Definitions
+// -----------------------------------------------------------------------------
+
 export type PerformanceDefinitions = Record<
   PerformanceSegment,
   { label: string; definition: string }
 >;
 
 /** Labels and plain-language definitions, shown beside the filters. */
-export function performanceDefinitions(topLimit = TOP_SELLER_DEFAULT): PerformanceDefinitions {
+export function performanceDefinitions(
+  topLimit = TOP_SELLER_DEFAULT,
+  range: PerformanceRange = presetRange(DEFAULT_RANGE_KEY),
+): PerformanceDefinitions {
   return {
     top: {
       label: "Top sellers",
-      definition: `The ${topLimit} products with the most revenue in the last ${WINDOW_DAYS} days.`,
+      definition: `The ${topLimit} products with the most revenue in ${range.description}.`,
     },
     promising: {
       label: "Promising",
-      definition: `Sold at least ${PROMISING_MIN_UNITS} units in the last ${RECENT_DAYS} days and more than in the ${RECENT_DAYS} days before, or all of its sales are that recent.`,
+      definition: `Sold at least ${PROMISING_MIN_UNITS} units in the second half of ${range.description} and more than in the first half, or all of its sales ever fall in that second half.`,
     },
     cold: {
       label: "Cold",
-      definition: `Has sold before but nothing in the last ${WINDOW_DAYS} days.`,
+      definition: `Has sold at some time but nothing in ${range.description}.`,
     },
     non_seller: {
       label: "Non-sellers",
@@ -84,18 +238,40 @@ export function performanceDefinitions(topLimit = TOP_SELLER_DEFAULT): Performan
   };
 }
 
-/** The definitions at the default top-seller count. */
+/** The definitions at the default top-seller count and range. */
 export const PERFORMANCE_DEFINITIONS: PerformanceDefinitions = performanceDefinitions();
 
+// -----------------------------------------------------------------------------
+// Figures
+// -----------------------------------------------------------------------------
+
+/** A product's sales for one range. */
 export type ProductSales = {
+  /** Units ever sold, any date. */
   unitsLifetime: number;
-  units90: number;
-  revenue90: number;
-  units30: number;
-  unitsPrior30: number;
+  unitsRange: number;
+  revenueRange: number;
+  /** Units in the second half of the range. */
+  unitsRecent: number;
+  /** Units in the first half of the range. */
+  unitsEarlier: number;
 };
 
+/**
+ * A product's sold units and revenue by day (UTC day numbers, ascending).
+ * Any range is a sum over this, so one load answers every range.
+ */
+export type ProductDaySeries = {
+  days: number[];
+  units: number[];
+  revenue: number[];
+  unitsLifetime: number;
+};
+
+export type ProductSalesSeries = Map<string, ProductDaySeries>;
+
 export type PerformanceIndex = {
+  range: PerformanceRange;
   /** Sales by product id, for every product that has ever sold. */
   stats: Map<string, ProductSales>;
   /** The top sellers, highest revenue first, at most `topLimit` of them. */
@@ -114,30 +290,72 @@ const num = (value: unknown): number => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-/** Pure classification over the per-product figures. */
+/** Pure. Sums each product's days into the range, split at its midpoint. */
+export function salesInRange(
+  series: ProductSalesSeries,
+  range: PerformanceRange,
+): Map<string, ProductSales> {
+  const startDay = utcDay(range.start);
+  const endDay = utcDay(range.end);
+  const midDay = endDay - Math.ceil(range.days / 2);
+  const stats = new Map<string, ProductSales>();
+  for (const [id, product] of series) {
+    let unitsRange = 0;
+    let revenueRange = 0;
+    let unitsRecent = 0;
+    let unitsEarlier = 0;
+    for (let i = 0; i < product.days.length; i += 1) {
+      const day = product.days[i]!;
+      if (day < startDay || day >= endDay) continue;
+      const units = product.units[i]!;
+      unitsRange += units;
+      revenueRange += product.revenue[i]!;
+      if (day >= midDay) unitsRecent += units;
+      else unitsEarlier += units;
+    }
+    stats.set(id, {
+      unitsLifetime: product.unitsLifetime,
+      unitsRange,
+      revenueRange,
+      unitsRecent,
+      unitsEarlier,
+    });
+  }
+  return stats;
+}
+
+/** Pure classification over the per-product figures for a range. */
 export function classifyProducts(
   stats: Map<string, ProductSales>,
-  now: Date,
+  range: PerformanceRange,
   topLimit = TOP_SELLER_DEFAULT,
+  now = new Date(),
 ): PerformanceIndex {
   const soldIds: string[] = [];
   const promisingIds: string[] = [];
   const coldIds: string[] = [];
-  const sellers90: { id: string; revenue: number; units: number }[] = [];
+  const sellers: { id: string; revenue: number; units: number }[] = [];
   for (const [id, sales] of stats) {
     if (sales.unitsLifetime <= 0) continue;
     soldIds.push(id);
-    if (sales.units90 > 0) sellers90.push({ id, revenue: sales.revenue90, units: sales.units90 });
-    else coldIds.push(id);
-    const allRecent = sales.unitsPrior30 === 0 && sales.units30 === sales.unitsLifetime;
-    if (sales.units30 >= PROMISING_MIN_UNITS && (sales.units30 > sales.unitsPrior30 || allRecent)) {
+    if (sales.unitsRange > 0) {
+      sellers.push({ id, revenue: sales.revenueRange, units: sales.unitsRange });
+    } else {
+      coldIds.push(id);
+    }
+    const allRecent = sales.unitsEarlier === 0 && sales.unitsRecent === sales.unitsLifetime;
+    if (
+      sales.unitsRecent >= PROMISING_MIN_UNITS &&
+      (sales.unitsRecent > sales.unitsEarlier || allRecent)
+    ) {
       promisingIds.push(id);
     }
   }
-  sellers90.sort((a, b) => b.revenue - a.revenue || b.units - a.units || a.id.localeCompare(b.id));
+  sellers.sort((a, b) => b.revenue - a.revenue || b.units - a.units || a.id.localeCompare(b.id));
   return {
+    range,
     stats,
-    topIds: sellers90.slice(0, topLimit).map((row) => row.id),
+    topIds: sellers.slice(0, topLimit).map((row) => row.id),
     topLimit,
     promisingIds,
     coldIds,
@@ -146,72 +364,59 @@ export function classifyProducts(
   };
 }
 
-function daysAgo(now: Date, days: number): Date {
-  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-}
-
-type SalesRow = {
-  productId: string;
-  unitsLifetime: number;
-  units90: number;
-  revenue90: number;
-  units30: number;
-  unitsPrior30: number;
-};
+type SeriesRow = { productId: string; day: number; units: number; revenue: number };
 
 /**
- * One pass over the sold order lines, grouped by product, with each window
- * summed as a filtered aggregate. One query where there were four: on the
- * production database each of them read the whole order_items and orders
- * tables from disk, about ten seconds apiece, so the number of queries set
- * the cost, not their shape. Sums are cast to float8 so they arrive as
- * numbers.
+ * One pass over the sold order lines, grouped by product and day. On the
+ * production database this reads the whole order_items and orders tables
+ * from disk, about ten seconds, so it runs once and is shared (below), and
+ * every range is then a sum in memory. Sums are cast to float8 so they
+ * arrive as numbers; the day is a count of days since 1970-01-01.
  */
-export async function loadProductSales(now = new Date()): Promise<Map<string, ProductSales>> {
-  const windowStart = daysAgo(now, WINDOW_DAYS);
-  const recentStart = daysAgo(now, RECENT_DAYS);
-  const priorStart = daysAgo(now, RECENT_DAYS * 2);
-  const rows = await prisma.$queryRaw<SalesRow[]>`
+export async function loadProductSalesSeries(): Promise<ProductSalesSeries> {
+  const rows = await prisma.$queryRaw<SeriesRow[]>`
     SELECT
       oi."productId" AS "productId",
-      coalesce(sum(oi."quantity"), 0)::float8 AS "unitsLifetime",
-      coalesce(sum(oi."quantity") FILTER (WHERE o."orderDate" >= ${windowStart}), 0)::float8 AS "units90",
-      coalesce(sum(oi."lineSubtotal") FILTER (WHERE o."orderDate" >= ${windowStart}), 0)::float8 AS "revenue90",
-      coalesce(sum(oi."quantity") FILTER (WHERE o."orderDate" >= ${recentStart}), 0)::float8 AS "units30",
-      coalesce(sum(oi."quantity") FILTER (WHERE o."orderDate" >= ${priorStart} AND o."orderDate" < ${recentStart}), 0)::float8 AS "unitsPrior30"
+      (o."orderDate"::date - DATE '1970-01-01')::int AS "day",
+      coalesce(sum(oi."quantity"), 0)::float8 AS "units",
+      coalesce(sum(oi."lineSubtotal"), 0)::float8 AS "revenue"
     FROM "order_items" oi
     JOIN "orders" o ON o."id" = oi."orderId"
     WHERE oi."productId" IS NOT NULL
       AND o."status" NOT IN ('cancelled', 'refunded')
-    GROUP BY oi."productId"
+    GROUP BY 1, 2
+    ORDER BY 1, 2
   `;
-  const stats = new Map<string, ProductSales>();
+  const series: ProductSalesSeries = new Map();
   for (const row of rows) {
-    stats.set(row.productId, {
-      unitsLifetime: num(row.unitsLifetime),
-      units90: num(row.units90),
-      revenue90: num(row.revenue90),
-      units30: num(row.units30),
-      unitsPrior30: num(row.unitsPrior30),
-    });
+    let product = series.get(row.productId);
+    if (!product) {
+      product = { days: [], units: [], revenue: [], unitsLifetime: 0 };
+      series.set(row.productId, product);
+    }
+    const units = num(row.units);
+    product.days.push(num(row.day));
+    product.units.push(units);
+    product.revenue.push(num(row.revenue));
+    product.unitsLifetime += units;
   }
-  return stats;
+  return series;
 }
 
 // One load serves every reader for ten minutes; past that the last figures
 // are shown while the next load runs, so no reader waits for the database.
-const salesCache = createTtlCache<Map<string, ProductSales>>(PRODUCT_SALES_TTL_MS, {
+const seriesCache = createTtlCache<ProductSalesSeries>(PRODUCT_SALES_TTL_MS, {
   staleWhileRevalidate: true,
 });
 
 /** The sales figures every reader shares. */
-export function getProductSales(): Promise<Map<string, ProductSales>> {
-  return salesCache.get(() => loadProductSales());
+export function getProductSalesSeries(): Promise<ProductSalesSeries> {
+  return seriesCache.get(loadProductSalesSeries);
 }
 
 /** Drops the shared figures so the next reader loads them anew. */
 export function invalidateProductSales(): void {
-  salesCache.clear();
+  seriesCache.clear();
 }
 
 /**
@@ -221,22 +426,22 @@ export function invalidateProductSales(): void {
  */
 export async function warmProductSales(): Promise<void> {
   try {
-    const stats = await getProductSales();
-    logger.info({ products: stats.size }, "product sales figures warmed");
+    const series = await getProductSalesSeries();
+    logger.info({ products: series.size }, "product sales figures warmed");
   } catch (err) {
     logger.warn({ err }, "product sales figures could not be warmed");
   }
 }
 
 /**
- * Classifies the shared figures. Cheap once they are loaded, so a different
- * top-seller count costs nothing more than the classification.
+ * The index for a range and top-seller count. Cheap once the figures are
+ * loaded: a sum over about 70,000 product-days and a sort of the sellers.
  */
 export async function buildPerformanceIndex(
-  now = new Date(),
+  range: PerformanceRange,
   topLimit = TOP_SELLER_DEFAULT,
 ): Promise<PerformanceIndex> {
-  return classifyProducts(await getProductSales(), now, topLimit);
+  return classifyProducts(salesInRange(await getProductSalesSeries(), range), range, topLimit);
 }
 
 /** The id constraint a segment adds to the product query. */

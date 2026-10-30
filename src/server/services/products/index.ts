@@ -54,8 +54,8 @@ export type SortDirection = "asc" | "desc";
  * those properly needs denormalised columns on Product, populated by the sync.
  *
  * `images` is such a column (`imageCount`, 2026-10-27). `revenue` is the
- * one exception to "in the database": the 90-day figure lives in the sales
- * index, so `listProducts` orders the whole matching set by it in code and
+ * one exception to "in the database": the chosen range's figure lives in the
+ * sales index, so `listProducts` orders the whole matching set by it in code and
  * then fetches the requested page — a true catalogue-wide ordering, not a
  * page-local one. See `listProductsByRevenue`.
  */
@@ -313,7 +313,7 @@ const PRODUCT_LIST_INCLUDE = {
 type ProductListRecord = Prisma.ProductGetPayload<{ include: typeof PRODUCT_LIST_INCLUDE }>;
 
 /**
- * The ids of every product that sold in the window, highest revenue first
+ * The ids of every product that sold in the range, highest revenue first
  * (or lowest first for `asc`), ties broken by units then id so the order is
  * stable between requests. Products with no revenue are not listed: they
  * follow (or precede) this list in the default catalogue order.
@@ -321,7 +321,9 @@ type ProductListRecord = Prisma.ProductGetPayload<{ include: typeof PRODUCT_LIST
 export function rankIdsByRevenue(stats: Map<string, ProductSales>, dir: SortDirection): string[] {
   const sold: { id: string; revenue: number; units: number }[] = [];
   for (const [id, sales] of stats) {
-    if (sales.revenue90 > 0) sold.push({ id, revenue: sales.revenue90, units: sales.units90 });
+    if (sales.revenueRange > 0) {
+      sold.push({ id, revenue: sales.revenueRange, units: sales.unitsRange });
+    }
   }
   sold.sort((a, b) => b.revenue - a.revenue || b.units - a.units || a.id.localeCompare(b.id));
   const ids = sold.map((s) => s.id);

@@ -22,13 +22,16 @@ import {
 } from "@/server/services/products";
 import {
   buildPerformanceIndex,
+  DEFAULT_RANGE_KEY,
+  parsePerformanceRange,
   parsePerformanceSegment,
   parseTopSellerLimit,
   performanceDefinitions,
   PERFORMANCE_SEGMENTS,
+  RANGE_PRESETS,
+  rangeSearchParams,
   TOP_SELLER_DEFAULT,
   TOP_SELLER_MAX,
-  WINDOW_DAYS,
 } from "@/server/services/products/performance";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 import { SyncButtons } from "@/components/sync/SyncButtons";
@@ -45,6 +48,11 @@ type SearchParams = {
   perf?: string;
   /** How many products count as top sellers (2026-10-28); absent means the default. */
   top?: string;
+  /** The sales range (2026-10-30): a preset key, or absent for the last 90 days. */
+  range?: string;
+  /** A custom range's first and last day, YYYY-MM-DD; dates win over the preset. */
+  from?: string;
+  to?: string;
   /** Set by the shell's Division selector. */
   division?: string;
   /** At most this many store images (2026-10-27). */
@@ -84,7 +92,11 @@ export default async function ProductsPage({
   // addresses stay short and a bookmark made before the input existed still
   // means what it meant.
   const topParam = topLimit === TOP_SELLER_DEFAULT ? undefined : String(topLimit);
-  const definitions = performanceDefinitions(topLimit);
+  // The sales range every segment, count and sales column reads (product
+  // owner, 2026-10-30). Carried on links only when it is not the default.
+  const range = parsePerformanceRange(params);
+  const rangeParams = rangeSearchParams(range);
+  const definitions = performanceDefinitions(topLimit, range);
   const maxImages = parseNonNegativeInt(params.img);
   const maxDescriptionChars = parseNonNegativeInt(params.desc);
   // The top sellers are a ranked list, so with that segment active and no
@@ -96,7 +108,7 @@ export default async function ProductsPage({
   // Classified from the sales figures the process shares (loaded once,
   // fresh within ten minutes); the rows, the total and every pill count
   // read these same figures.
-  const performanceIndex = await buildPerformanceIndex(new Date(), topLimit);
+  const performanceIndex = await buildPerformanceIndex(range, topLimit);
   const filters: ListProductsFilters = {
     performance: perf,
     performanceIndex,
@@ -134,11 +146,16 @@ export default async function ProductsPage({
   // Changing the flag resets to page 1 — staying on page 7 of a different
   // filter would usually land on an empty page. Sort is preserved: it is a
   // view preference, not a filter.
-  const buildHref = (flag: SearchParams["flag"], segment: string | undefined): string => {
+  const buildHref = (
+    flag: SearchParams["flag"],
+    segment: string | undefined,
+    rangeOverride: Record<string, string | undefined> = rangeParams,
+  ): string => {
     const qs = new URLSearchParams();
     if (flag) qs.set("flag", flag);
     if (segment) qs.set("perf", segment);
     if (topParam) qs.set("top", topParam);
+    for (const [key, value] of Object.entries(rangeOverride)) if (value) qs.set(key, value);
     if (params.q) qs.set("q", params.q);
     if (params.division) qs.set("division", params.division);
     if (maxImages != null) qs.set("img", String(maxImages));
@@ -150,6 +167,8 @@ export default async function ProductsPage({
   };
   const pillHref = (flag: SearchParams["flag"]): string => buildHref(flag, perf);
   const perfHref = (segment: string | undefined): string => buildHref(params.flag, segment);
+  const rangeHref = (key: string): string =>
+    buildHref(params.flag, perf, key === DEFAULT_RANGE_KEY ? {} : { range: key });
 
   // Params every header link and the pagination footer must carry forward.
   const carried = {
@@ -157,6 +176,7 @@ export default async function ProductsPage({
     flag: params.flag,
     perf,
     top: topParam,
+    ...rangeParams,
     division: params.division,
     img: maxImages != null ? String(maxImages) : undefined,
     desc: maxDescriptionChars != null ? String(maxDescriptionChars) : undefined,
@@ -200,6 +220,32 @@ export default async function ProductsPage({
         </div>
 
         {/*
+         * The sales range (product owner, 2026-10-30). Every segment, count
+         * and sales column below reads this one range; a custom start and
+         * end date are set in the form further down.
+         */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Range</span>
+          {RANGE_PRESETS.map((preset) => (
+            <FilterPill
+              key={preset.key}
+              href={rangeHref(preset.key)}
+              label={preset.label}
+              active={range.key === preset.key}
+            />
+          ))}
+          <span
+            className={
+              range.key === "custom"
+                ? "inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+                : "inline-flex items-center rounded-md border border-dashed px-3 py-1.5 text-xs font-medium text-muted-foreground"
+            }
+          >
+            {range.key === "custom" ? range.description : "Custom: set the dates below"}
+          </span>
+        </div>
+
+        {/*
          * Sales segments (2026-10-26), close equivalents of BigCommerce
          * Insights computed from the synced order lines. The definition of the
          * active segment is spelled out so "cold" means one stated thing here.
@@ -219,7 +265,7 @@ export default async function ProductsPage({
           <span className="basis-full text-xs text-muted-foreground sm:basis-auto sm:pl-2">
             {perf
               ? definitions[perf].definition
-              : `From orders synced from the stores, excluding cancelled and refunded orders; figures cover the last ${WINDOW_DAYS} days.`}
+              : `From orders synced from the stores, excluding cancelled and refunded orders; figures cover ${range.description}.`}
           </span>
         </div>
 
@@ -233,6 +279,7 @@ export default async function ProductsPage({
           {params.flag && <input type="hidden" name="flag" value={params.flag} />}
           {params.division && <input type="hidden" name="division" value={params.division} />}
           {perf && <input type="hidden" name="perf" value={perf} />}
+          {rangeParams.range && <input type="hidden" name="range" value={rangeParams.range} />}
           {sort && <input type="hidden" name="sort" value={sort} />}
           {params.dir === "desc" && <input type="hidden" name="dir" value="desc" />}
           <input
@@ -267,6 +314,28 @@ export default async function ProductsPage({
             />
             characters
           </label>
+          {/* A custom sales range (product owner, 2026-10-30). Dates win over
+              the preset pills above; clearing both returns to the preset. */}
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            From
+            <input
+              type="date"
+              name="from"
+              defaultValue={range.key === "custom" ? range.from : ""}
+              aria-label="Sales range start date"
+              className="h-9 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            To
+            <input
+              type="date"
+              name="to"
+              defaultValue={range.key === "custom" ? range.to : ""}
+              aria-label="Sales range end date"
+              className="h-9 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </label>
           {/* How many products the "Top sellers" segment holds (product
               owner, 2026-10-28). It changes the definition beside the
               filters and the pill count, not which rows the other
@@ -293,7 +362,7 @@ export default async function ProductsPage({
           </button>
           {anyTextFilter ? (
             <Link
-              href={buildHrefWithout(params, perf, topParam, sort)}
+              href={buildHrefWithout(params, perf, topParam, sort, rangeParams)}
               className="text-xs text-muted-foreground underline-offset-2 hover:underline"
             >
               Clear
@@ -375,11 +444,11 @@ export default async function ProductsPage({
                 <TH align="right">Cost</TH>
                 <TH align="right">Margin</TH>
                 <TH align="right">Stock</TH>
-                <TH align="right">Units {WINDOW_DAYS}d</TH>
+                <TH align="right">Units ({range.short})</TH>
                 {/* Revenue orders the whole matching set from the sales index
                     (see listProductsByRevenue); first click is descending. */}
                 <SortHeader
-                  label={`Revenue ${WINDOW_DAYS}d`}
+                  label={`Revenue (${range.short})`}
                   sortKey="revenue"
                   activeKey={effectiveSort}
                   activeDir={effectiveDir}
@@ -466,10 +535,10 @@ export default async function ProductsPage({
                     {p.stock}
                   </TD>
                   <TD align="right" className="tabular-nums">
-                    {salesFor(p.id)?.units90 ?? 0}
+                    {salesFor(p.id)?.unitsRange ?? 0}
                   </TD>
                   <TD align="right" className="tabular-nums">
-                    {formatCurrency(salesFor(p.id)?.revenue90 ?? 0)}
+                    {formatCurrency(salesFor(p.id)?.revenueRange ?? 0)}
                   </TD>
                   <TD
                     align="right"
@@ -527,11 +596,13 @@ function buildHrefWithout(
   perf: string | undefined,
   top: string | undefined,
   sort: string | undefined,
+  rangeParams: Record<string, string | undefined>,
 ): string {
   const qs = new URLSearchParams();
   if (params.flag) qs.set("flag", params.flag);
   if (perf) qs.set("perf", perf);
   if (top) qs.set("top", top);
+  for (const [key, value] of Object.entries(rangeParams)) if (value) qs.set(key, value);
   if (params.division) qs.set("division", params.division);
   if (sort) qs.set("sort", sort);
   if (params.dir === "desc") qs.set("dir", "desc");

@@ -15,26 +15,30 @@ these are equivalents with stated windows, not the same numbers.
 ## 2. Phase one: sales-based segments
 
 Computed by `src/server/services/products/performance.ts` from `OrderItem` rows joined to their
-orders, excluding cancelled and refunded orders. Windows: 90 days overall, 30 days recent.
+orders, excluding cancelled and refunded orders, over a range the reader chooses (product owner,
+October 30, 2026): the last 30, 60 or 90 days, the last 6 months, the last year, or any start and
+end date. The default is the last 90 days. Presets end today, today included; months are counted
+by the calendar; a custom range includes both of its dates. Dates win over a preset, an end before
+the start or a start after today falls back to the preset, and the range travels on the list's
+links as `range=` for a preset other than the default or as `from=` and `to=` for custom dates.
 
 | Segment | Definition |
 | --- | --- |
-| Top sellers | The N products with the most revenue (line subtotal) in the last 90 days, ranked. N is the "Top sellers" input on the list, 200 unless changed (product owner, 2026-10-28; it was a fixed 50 before), at most 5,000. |
-| Promising | Sold at least 2 units in the last 30 days and more than in the 30 days before, or all of its sales are that recent. |
-| Cold | Has sold before but nothing in the last 90 days. |
+| Top sellers | The N products with the most revenue (line subtotal) in the range, ranked. N is the "Top sellers" input on the list, 200 unless changed (product owner, 2026-10-28; it was a fixed 50 before), at most 5,000. |
+| Promising | Sold at least 2 units in the second half of the range and more than in the first half, or all of its sales ever fall in that second half. Before October 30, 2026 the halves were a fixed last 30 days against the 30 before. |
+| Cold | Has sold at some time but nothing in the range. |
 | Non-sellers | Has never sold. |
 
-The figures are computed once per request with four grouped aggregates, so the rows, the total
-and every pill count read the same numbers. With a segment active the list shows two extra
-columns, units and revenue over the window. With "Top sellers" active and no column chosen, the
-segment is ordered by revenue across all of its pages through the same whole-set revenue ordering
-the Revenue column uses, so page two continues the ranking rather than reshuffling a page. The
-chosen count travels on the list's links as `top=` only when it differs from the default, so an
-address made before the input existed still means what it meant.
+The rows, the total and every pill count read the same figures. With a segment active the list
+shows two extra columns, units and revenue over the range, labelled with it. With "Top sellers"
+active and no column chosen, the segment is ordered by revenue across all of its pages through the
+same whole-set revenue ordering the Revenue column uses, so page two continues the ranking rather
+than reshuffling a page. The chosen count travels on the list's links as `top=` only when it
+differs from the default, so an address made before the input existed still means what it meant.
 
 ### Where the figures come from (October 30, 2026)
 
-The per-product figures are one query over the sold order lines, with each window summed as a filtered aggregate, where there were four queries before. One load serves every reader of the web process for ten minutes; after that the last figures are shown while the next load runs, so no reader waits for the database, and the web process loads them as it starts. The products list derives its header total and every pill count from a single scan of the products under the other filters, judged by the same predicates the rows use, rather than from six separate counts. The list's default order has its own index.
+The figures are one query over the sold order lines grouped by product and day (about 70,000 product-days in production), so any range, preset or custom, is a sum in memory; there were four fixed-window queries before. One load serves every reader of the web process for ten minutes; after that the last figures are shown while the next load runs, so no reader waits for the database, and the web process loads them as it starts. The products list derives its header total and every pill count from a single scan of the products under the other filters, judged by the same predicates the rows use, rather than from six separate counts. The list's default order has its own index.
 
 ## 3. Phase two: traffic-based segments
 

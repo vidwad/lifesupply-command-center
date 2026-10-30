@@ -20,12 +20,12 @@ const page = readFileSync(
   "utf8",
 ).replace(/\r\n/g, "\n");
 
-const sales = (revenue90: number, units90 = 1): ProductSales => ({
-  unitsLifetime: units90,
-  units90,
-  revenue90,
-  units30: 0,
-  unitsPrior30: 0,
+const sales = (revenueRange: number, unitsRange = 1): ProductSales => ({
+  unitsLifetime: unitsRange,
+  unitsRange,
+  revenueRange,
+  unitsRecent: 0,
+  unitsEarlier: 0,
 });
 
 describe("ranking products by revenue", () => {
