@@ -9,15 +9,103 @@ export type ListCustomersFilters = {
   search?: string;
   /** 1-based page (post-roadmap pagination). */
   page?: number;
+  sort?: CustomerSortKey;
+  dir?: SortDirection;
 };
 
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
 
 export const CUSTOMERS_PAGE_SIZE = 50;
 
-export async function listCustomers(filters: ListCustomersFilters = {}) {
-  const where: Prisma.CustomerWhereInput = { deletedAt: null };
+export type SortDirection = "asc" | "desc";
 
+/**
+ * Columns the customers list can sort by **in the database**, so the order
+ * holds across the whole matching set rather than the fetched page. Every
+ * key is a column or a direct relation of the customer row.
+ */
+export const CUSTOMER_SORT_KEYS = [
+  "name",
+  "type",
+  "store",
+  "consent",
+  "value",
+  "orders",
+  "lastOrder",
+  "reactivation",
+] as const;
+export type CustomerSortKey = (typeof CUSTOMER_SORT_KEYS)[number];
+
+/** Narrows an arbitrary query-string value to a supported sort key. */
+export function parseCustomerSort(value: string | undefined): CustomerSortKey | undefined {
+  return CUSTOMER_SORT_KEYS.includes(value as CustomerSortKey)
+    ? (value as CustomerSortKey)
+    : undefined;
+}
+
+export function parseSortDirection(value: string | undefined): SortDirection {
+  return value === "desc" ? "desc" : "asc";
+}
+
+/**
+ * Builds the orderBy. Every branch ends with `id` so paging is deterministic:
+ * without a unique final key, rows sharing a sort value can swap between
+ * pages and one is never shown.
+ *
+ * Optional columns sort nulls last in both directions. A customer who has
+ * never ordered is not the "latest" last order, and a customer with no
+ * reactivation score is not the best candidate; both are absences and
+ * belong at the end whichever way the column is sorted.
+ */
+export function customerOrderBy(
+  sort: CustomerSortKey | undefined,
+  dir: SortDirection,
+): Prisma.CustomerOrderByWithRelationInput[] {
+  const nullsLast = { sort: dir, nulls: "last" } as const;
+  switch (sort) {
+    case "name":
+      // The display name is the company, else the person's name, else the
+      // email, so the order follows the same precedence.
+      return [
+        { companyName: nullsLast },
+        { lastName: nullsLast },
+        { firstName: nullsLast },
+        { email: nullsLast },
+        { id: "asc" },
+      ];
+    case "type":
+      return [{ customerType: dir }, { id: "asc" }];
+    case "store":
+      return [{ store: { name: dir } }, { id: "asc" }];
+    case "consent":
+      return [{ consentStatus: dir }, { id: "asc" }];
+    case "value":
+      return [{ lifetimeValue: dir }, { id: "asc" }];
+    case "orders":
+      return [{ orderCount: dir }, { id: "asc" }];
+    case "lastOrder":
+      return [{ lastOrderAt: nullsLast }, { createdAt: dir }, { id: "asc" }];
+    case "reactivation":
+      return [{ reactivationScore: nullsLast }, { id: "asc" }];
+    default:
+      // Unsorted default: most recent order first, customers who have never
+      // ordered last, newest of those first. The index
+      // customers_deletedAt_lastOrderAt_createdAt_id_idx matches this order.
+      return [
+        { lastOrderAt: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+        { id: "asc" },
+      ];
+  }
+}
+
+/**
+ * Filter clause shared by listCustomers and countCustomers. The two must
+ * agree exactly, or the pagination footer computes its page count from a
+ * different population than the rows it is paging through.
+ */
+function customerWhere(filters: ListCustomersFilters): Prisma.CustomerWhereInput {
+  const where: Prisma.CustomerWhereInput = { deletedAt: null };
   if (filters.customerType) where.customerType = filters.customerType;
   if (filters.storeId) where.storeId = filters.storeId;
   if (filters.consent) where.consentStatus = filters.consent;
@@ -30,10 +118,13 @@ export async function listCustomers(filters: ListCustomersFilters = {}) {
       { companyName: { contains: q, mode: "insensitive" } },
     ];
   }
+  return where;
+}
 
+export async function listCustomers(filters: ListCustomersFilters = {}) {
   const customers = await prisma.customer.findMany({
-    where,
-    orderBy: [{ lastOrderAt: "desc" }, { createdAt: "desc" }],
+    where: customerWhere(filters),
+    orderBy: customerOrderBy(filters.sort, filters.dir ?? "asc"),
     skip: (Math.max(1, filters.page ?? 1) - 1) * CUSTOMERS_PAGE_SIZE,
     take: CUSTOMERS_PAGE_SIZE,
     include: {
@@ -60,20 +151,7 @@ export type CustomerListRow = Awaited<ReturnType<typeof listCustomers>>[number];
 
 /** Total Customer rows matching filters (NOT capped — used for the page header). */
 export async function countCustomers(filters: ListCustomersFilters = {}): Promise<number> {
-  const where: Prisma.CustomerWhereInput = { deletedAt: null };
-  if (filters.customerType) where.customerType = filters.customerType;
-  if (filters.storeId) where.storeId = filters.storeId;
-  if (filters.consent) where.consentStatus = filters.consent;
-  if (filters.search) {
-    const q = filters.search.trim();
-    where.OR = [
-      { email: { contains: q, mode: "insensitive" } },
-      { firstName: { contains: q, mode: "insensitive" } },
-      { lastName: { contains: q, mode: "insensitive" } },
-      { companyName: { contains: q, mode: "insensitive" } },
-    ];
-  }
-  return prisma.customer.count({ where });
+  return prisma.customer.count({ where: customerWhere(filters) });
 }
 
 export async function getCustomerById(id: string) {

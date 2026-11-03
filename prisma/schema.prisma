@@ -300,6 +300,9 @@ model Customer {
   @@index([customerType])
   @@index([divisionId])
   @@index([storeId])
+  /// Default order of the customers list. The migration declares lastOrderAt
+  /// DESC NULLS LAST, which Prisma cannot express here; keep them matched.
+  @@index([deletedAt, lastOrderAt(sort: Desc), createdAt(sort: Desc), id])
   @@map("customers")
 }
 

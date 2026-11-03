@@ -61,6 +61,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261028180000_product_studio_competitor_images",
   // Index for the products list's default order (product owner, 2026-10-30).
   "20261030210000_products_default_list_index",
+  // Index for the customers list's default order, with sorting and filters (product owner, 2026-11-02).
+  "20261102230000_customers_default_list_index",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */
