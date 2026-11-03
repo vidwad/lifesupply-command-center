@@ -7,6 +7,7 @@ import {
   firstStoreImageUrl,
   isStoreImageHost,
   runFormHrefForBatch,
+  runFormHrefForIds,
   studioHrefForBatch,
   storeDescriptionToText,
 } from "./bulk";
@@ -137,6 +138,38 @@ describe("the run form address for a batch", () => {
     expect(url.searchParams.get("batch")).toBe("b");
     expect(url.searchParams.getAll("id")).toEqual(["proj-old"]);
     expect(studioHrefForBatch({ batchId: "b", entries: [] })).toBe("/products/studio?batch=b");
+  });
+});
+
+describe("the run form address after removing a project", () => {
+  it("lists the remaining projects as ids, in order, once each", () => {
+    expect(runFormHrefForIds(["a", "b", " b ", "c", ""])).toBe(
+      "/automation/product-studio/new?id=a&id=b&id=c",
+    );
+  });
+  it("is the bare form when nothing is left", () => {
+    expect(runFormHrefForIds([])).toBe("/automation/product-studio/new");
+    expect(runFormHrefForIds([" "])).toBe("/automation/product-studio/new");
+  });
+  it("the form page removes one project per row and all unavailable ones at once", () => {
+    const page = readFileSync(
+      join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "app",
+        "(dashboard)",
+        "automation",
+        "product-studio",
+        "new",
+        "page.tsx",
+      ),
+      "utf8",
+    );
+    expect(page).toContain("hrefWithout([project])");
+    expect(page).toContain("hrefWithout(blocked)");
+    expect(page).toContain("runFormHrefForIds(");
   });
 });
 

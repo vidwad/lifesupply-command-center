@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ShieldAlert, X } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { PageHeader } from "@/components/shell/PageHeader";
@@ -12,7 +12,7 @@ import {
   autopilotFlagState,
   listRunCandidates,
 } from "@/server/services/product-studio/autopilot-read";
-import { listBatchProjects } from "@/server/services/product-studio/bulk";
+import { listBatchProjects, runFormHrefForIds } from "@/server/services/product-studio/bulk";
 import { publishFlagState } from "@/server/services/product-studio/publish-read";
 
 import { RunForm } from "./run-form";
@@ -25,6 +25,16 @@ type SearchParams = Promise<{ id?: string | string[]; batch?: string }>;
 /**
  * The run form. Projects arrive as `?id=` from the Product Studio list's
  * checkboxes, or as `?batch=` from a batch just created on the products list.
+ * Each listed project has a "Remove" link that reopens the form with the rest,
+ * so an unavailable project can be dropped here rather than by starting the
+ * selection again; nothing is stored, the selection lives in the address.
+ *
+ * Those links are plain anchors, not `Link`. Verified on 2026-11-03 with Next
+ * 16.2.6: a client-side navigation on this route to an address that drops one
+ * of the repeated `id` values updates the address bar but never commits the
+ * new tree (the RSC response is correct), and in production the prefetches
+ * then loop until the tab crashes. A full load is cheap here and always
+ * right; it does reset criteria typed before removing, so remove first.
  */
 export default async function NewProductStudioRunPage({
   searchParams,
@@ -45,10 +55,14 @@ export default async function NewProductStudioRunPage({
       project.status === "archived",
   );
   const eligible = candidates.filter((project) => !blocked.includes(project));
+  const hrefWithout = (removed: readonly { id: string }[]) =>
+    runFormHrefForIds(
+      candidates.filter((project) => !removed.includes(project)).map((project) => project.id),
+    );
   const disabledReason = !flags.enabled
     ? "Unattended runs are disabled until these flags are on: " + flags.disabledFlags.join(", ")
     : blocked.length > 0
-      ? "Remove the projects marked unavailable from your selection and try again."
+      ? "Remove the projects marked unavailable from the selection, using the Remove link beside each one, and try again."
       : eligible.length === 0
         ? batchId || fromQuery.length > 0
           ? "None of the selected products has a project that can be run. Open them in Product Studio first, or select projects on the Product Studio list."
@@ -76,7 +90,7 @@ export default async function NewProductStudioRunPage({
         }
       />
       <div className="grid gap-6 p-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+        <div className="min-w-0 lg:col-span-3">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Criteria</CardTitle>
@@ -95,11 +109,24 @@ export default async function NewProductStudioRunPage({
             </CardContent>
           </Card>
         </div>
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                {candidates.length} project{candidates.length === 1 ? "" : "s"} selected
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                <span>
+                  {candidates.length} project{candidates.length === 1 ? "" : "s"} selected
+                </span>
+                {blocked.length > 0 ? (
+                  <a
+                    href={hrefWithout(blocked)}
+                    className="text-xs font-medium text-destructive underline-offset-4 hover:underline"
+                  >
+                    Remove{" "}
+                    {blocked.length === 1
+                      ? "the unavailable project"
+                      : `all ${blocked.length} unavailable`}
+                  </a>
+                ) : null}
               </CardTitle>
               <CardDescription className="text-xs">
                 What each one already has. Work already done is kept: research is not repeated,
@@ -124,6 +151,11 @@ export default async function NewProductStudioRunPage({
                       <TH>Status</TH>
                       <TH align="right">Photos</TH>
                       <TH align="right">Approved</TH>
+                      {/* Positioned so the hidden label is clipped by the table's
+                          scroll wrapper instead of widening the page. */}
+                      <TH className="relative">
+                        <span className="sr-only">Remove</span>
+                      </TH>
                     </tr>
                   </THead>
                   <TBody>
@@ -163,6 +195,16 @@ export default async function NewProductStudioRunPage({
                           </TD>
                           <TD align="right" className="tabular-nums">
                             {counts.approvedSlots}
+                          </TD>
+                          <TD className="pl-0 pr-3">
+                            <a
+                              href={hrefWithout([project])}
+                              aria-label={`Remove ${project.confirmedTitle ?? project.title} from this run`}
+                              title="Remove from this run"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                              <X className="h-4 w-4" />
+                            </a>
                           </TD>
                         </TR>
                       );
