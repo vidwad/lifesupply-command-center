@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
 
-import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
+import { DataTable, TBody, TD, THead, TR } from "@/components/data/DataTable";
 import { ExportButton } from "@/components/data/ExportButton";
+import { SortHeader } from "@/components/data/SortHeader";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PageHeader } from "@/components/shell/PageHeader";
@@ -13,8 +14,11 @@ import {
   countCustomers,
   CUSTOMERS_PAGE_SIZE,
   listCustomers,
+  parseCustomerSort,
+  parseSortDirection,
   type ListCustomersFilters,
 } from "@/server/services/customers";
+import { listStores } from "@/server/services/stores";
 import { requirePermission, userHasPermission } from "@/server/permissions";
 
 import { SyncButtons } from "@/components/sync/SyncButtons";
@@ -23,11 +27,18 @@ export const metadata = { title: "Customers" };
 export const dynamic = "force-dynamic";
 
 const TYPE_FILTERS = [
-  { label: "All", value: "" },
+  { label: "All types", value: "" },
   { label: "B2B", value: "b2b" },
   { label: "Clinic", value: "clinic" },
   { label: "Institutional", value: "institutional" },
   { label: "Retail", value: "retail" },
+] as const;
+
+const CONSENT_FILTERS = [
+  { label: "Any consent", value: "" },
+  { label: "Subscribed", value: "subscribed" },
+  { label: "Unsubscribed", value: "unsubscribed" },
+  { label: "Transactional", value: "transactional" },
 ] as const;
 
 const CONSENT_BADGE: Record<string, "success" | "destructive" | "secondary" | "outline"> = {
@@ -39,7 +50,19 @@ const CONSENT_BADGE: Record<string, "success" | "destructive" | "secondary" | "o
   unknown: "outline",
 };
 
-type SearchParams = { type?: string; consent?: string; q?: string; page?: string };
+type SearchParams = {
+  type?: string;
+  consent?: string;
+  store?: string;
+  q?: string;
+  page?: string;
+  sort?: string;
+  dir?: string;
+};
+
+const PILL_ACTIVE = "rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground";
+const PILL_IDLE =
+  "rounded-md border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent";
 
 export default async function CustomersPage({
   searchParams,
@@ -50,23 +73,85 @@ export default async function CustomersPage({
   const params = await searchParams;
   const canExport = userHasPermission(user, PERMISSIONS.CUSTOMERS_EXPORT);
 
+  // Unknown sort keys fall back to the default ordering rather than erroring,
+  // so a stale bookmark still renders the list.
+  const sort = parseCustomerSort(params.sort);
+  const dir = parseSortDirection(params.dir);
+  const stores = await listStores();
+  const storeId = stores.some((s) => s.id === params.store) ? params.store : undefined;
+  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+
   const filters: ListCustomersFilters = {
-    customerType: TYPE_FILTERS.some((t) => t.value === params.type)
+    customerType: TYPE_FILTERS.some((t) => t.value && t.value === params.type)
       ? (params.type as ListCustomersFilters["customerType"])
       : undefined,
-    consent:
-      params.consent === "subscribed" || params.consent === "unsubscribed"
-        ? params.consent
-        : undefined,
+    consent: CONSENT_FILTERS.some((c) => c.value && c.value === params.consent)
+      ? (params.consent as ListCustomersFilters["consent"])
+      : undefined,
+    storeId,
     search: params.q?.trim() || undefined,
-    page: Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1),
+    page,
+    sort,
+    dir,
   };
 
   const [customers, totalCustomers] = await Promise.all([
     listCustomers(filters),
     countCustomers(filters),
   ]);
-  const activeType = filters.customerType ?? "";
+
+  // The filters in force, as query-string values. A pill link overrides one
+  // of them; the search form, the sort headers and the pagination footer
+  // carry all of them forward.
+  const active = {
+    type: filters.customerType ?? "",
+    consent: filters.consent ?? "",
+    store: storeId ?? "",
+    q: filters.search ?? "",
+  };
+  const anyFilter = Boolean(active.type || active.consent || active.store || active.q);
+
+  // Changing a filter resets to page 1: staying on page 7 of a different
+  // filter would usually land on an empty page. Sort is preserved, since it
+  // is a view preference rather than a filter.
+  const filterHref = (override: Partial<typeof active>): string => {
+    const next = { ...active, ...override };
+    const qs = new URLSearchParams();
+    for (const [key, value] of Object.entries(next)) if (value) qs.set(key, value);
+    if (sort) qs.set("sort", sort);
+    if (sort && dir === "desc") qs.set("dir", "desc");
+    const s = qs.toString();
+    return `/customers${s ? `?${s}` : ""}`;
+  };
+
+  // Params every sort header and the pagination footer must carry forward.
+  const carried = {
+    type: active.type || undefined,
+    consent: active.consent || undefined,
+    store: active.store || undefined,
+    q: active.q || undefined,
+  };
+  const sortHeader = (
+    label: string,
+    sortKey: string,
+    options: { align?: "left" | "right"; defaultDir?: "asc" | "desc" } = {},
+  ) => (
+    <SortHeader
+      label={label}
+      sortKey={sortKey}
+      activeKey={sort}
+      activeDir={dir}
+      basePath="/customers"
+      params={carried}
+      align={options.align}
+      defaultDir={options.defaultDir}
+    />
+  );
+
+  const exportQuery = new URLSearchParams({
+    ...(active.type && { type: active.type }),
+    ...(active.consent && { consent: active.consent }),
+  }).toString();
 
   return (
     <div>
@@ -79,7 +164,7 @@ export default async function CustomersPage({
             <SyncButtons entity="customers" />
             {canExport ? (
               <ExportButton
-                href={`/api/exports/customers${params.type || params.consent ? `?${new URLSearchParams({ ...(params.type && { type: params.type }), ...(params.consent && { consent: params.consent }) }).toString()}` : ""}`}
+                href={`/api/exports/customers${exportQuery ? `?${exportQuery}` : ""}`}
               />
             ) : null}
           </div>
@@ -88,41 +173,76 @@ export default async function CustomersPage({
 
       <div className="space-y-4 p-4 md:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          {TYPE_FILTERS.map((f) => {
-            const isActive = activeType === f.value;
-            const next = new URLSearchParams();
-            if (f.value) next.set("type", f.value);
-            if (params.q) next.set("q", params.q);
-            if (params.consent) next.set("consent", params.consent);
-            const href = `/customers${next.toString() ? `?${next}` : ""}`;
-            return (
-              <Link
-                key={f.value || "all"}
-                href={href}
-                className={
-                  isActive
-                    ? "rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
-                    : "rounded-md border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
-                }
-              >
-                {f.label}
-              </Link>
-            );
-          })}
+          {TYPE_FILTERS.map((f) => (
+            <Link
+              key={f.value || "all"}
+              href={filterHref({ type: f.value })}
+              aria-current={active.type === f.value ? "true" : undefined}
+              className={active.type === f.value ? PILL_ACTIVE : PILL_IDLE}
+            >
+              {f.label}
+            </Link>
+          ))}
 
           <form action="/customers" className="ml-auto flex items-center gap-2">
-            {filters.customerType && (
-              <input type="hidden" name="type" value={filters.customerType} />
-            )}
-            {filters.consent && <input type="hidden" name="consent" value={filters.consent} />}
+            {active.type && <input type="hidden" name="type" value={active.type} />}
+            {active.consent && <input type="hidden" name="consent" value={active.consent} />}
+            {active.store && <input type="hidden" name="store" value={active.store} />}
+            {sort && <input type="hidden" name="sort" value={sort} />}
+            {sort && dir === "desc" && <input type="hidden" name="dir" value="desc" />}
             <input
               type="search"
               name="q"
-              defaultValue={params.q ?? ""}
+              defaultValue={active.q}
               placeholder="Search name, company, email…"
-              className="h-9 w-64 rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-9 w-64 max-w-full rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </form>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {CONSENT_FILTERS.map((f) => (
+            <Link
+              key={f.value || "any"}
+              href={filterHref({ consent: f.value })}
+              aria-current={active.consent === f.value ? "true" : undefined}
+              className={active.consent === f.value ? PILL_ACTIVE : PILL_IDLE}
+            >
+              {f.label}
+            </Link>
+          ))}
+
+          {stores.length > 1 ? (
+            <>
+              <span className="mx-1 hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
+              <Link
+                href={filterHref({ store: "" })}
+                aria-current={active.store === "" ? "true" : undefined}
+                className={active.store === "" ? PILL_ACTIVE : PILL_IDLE}
+              >
+                All stores
+              </Link>
+              {stores.map((s) => (
+                <Link
+                  key={s.id}
+                  href={filterHref({ store: s.id })}
+                  aria-current={active.store === s.id ? "true" : undefined}
+                  className={active.store === s.id ? PILL_ACTIVE : PILL_IDLE}
+                >
+                  {s.name}
+                </Link>
+              ))}
+            </>
+          ) : null}
+
+          {anyFilter ? (
+            <Link
+              href={filterHref({ type: "", consent: "", store: "", q: "" })}
+              className="ml-auto text-xs text-muted-foreground underline-offset-4 hover:underline"
+            >
+              Clear filters
+            </Link>
+          ) : null}
         </div>
 
         {customers.length === 0 ? (
@@ -135,14 +255,14 @@ export default async function CustomersPage({
           <DataTable>
             <THead>
               <tr>
-                <TH>Customer</TH>
-                <TH>Type</TH>
-                <TH>Store</TH>
-                <TH>Consent</TH>
-                <TH align="right">Lifetime value</TH>
-                <TH align="right">Orders</TH>
-                <TH>Last order</TH>
-                <TH align="right">Reactivation</TH>
+                {sortHeader("Customer", "name")}
+                {sortHeader("Type", "type")}
+                {sortHeader("Store", "store")}
+                {sortHeader("Consent", "consent")}
+                {sortHeader("Lifetime value", "value", { align: "right", defaultDir: "desc" })}
+                {sortHeader("Orders", "orders", { align: "right", defaultDir: "desc" })}
+                {sortHeader("Last order", "lastOrder", { defaultDir: "desc" })}
+                {sortHeader("Reactivation", "reactivation", { align: "right", defaultDir: "desc" })}
               </tr>
             </THead>
             <TBody>
@@ -183,10 +303,10 @@ export default async function CustomersPage({
 
         <Pagination
           basePath="/customers"
-          page={Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1)}
+          page={page}
           pageSize={CUSTOMERS_PAGE_SIZE}
           totalCount={totalCustomers}
-          params={{ type: params.type, consent: params.consent, q: params.q }}
+          params={{ ...carried, sort, dir: sort && dir === "desc" ? "desc" : undefined }}
         />
       </div>
     </div>
