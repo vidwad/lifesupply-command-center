@@ -158,6 +158,20 @@ export type BatchEntry = {
 export type BatchResult = { batchId: string; entries: BatchEntry[] };
 
 /**
+ * The unattended-run form's address for an explicit selection (2026-11-02).
+ * The form's "Remove" links rebuild its address from the projects still
+ * listed, so a selection that arrived as a batch becomes a plain `id=` list
+ * once anything is removed. An empty selection is the bare form.
+ */
+export function runFormHrefForIds(projectIds: readonly string[]): string {
+  const ids = [...new Set(projectIds.map((id) => id.trim()).filter(Boolean))];
+  if (ids.length === 0) return "/automation/product-studio/new";
+  const qs = new URLSearchParams();
+  for (const id of ids) qs.append("id", id);
+  return "/automation/product-studio/new?" + qs.toString();
+}
+
+/**
  * The unattended-run form's address for a batch (2026-10-28). A product that
  * already had a live project is not re-created, so that project carries its
  * original batch id, not this one; the form would miss it if it were sent
