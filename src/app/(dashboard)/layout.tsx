@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   // browser bar (product owner, 2026-11-04). The manifest in app/manifest.ts
   // carries the rest; this is the iOS-specific half, and it belongs to the
   // dashboard surface only, not the public website that shares the root.
-  appleWebApp: { capable: true, title: "Command Center", statusBarStyle: "default" },
+  // `black-translucent` runs the app full screen under the status bar. With
+  // "default" iOS insets the app below the bar but reports the full height,
+  // so the dock fixed to the bottom was cut off by the bar's height (owner
+  // screenshot, 2026-11-04). The shell draws the bar's band itself.
+  appleWebApp: { capable: true, title: "Command Center", statusBarStyle: "black-translucent" },
 };
 
 export const dynamic = "force-dynamic";

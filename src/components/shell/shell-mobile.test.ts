@@ -106,8 +106,13 @@ describe("the phone has function keys along the bottom (2026-11-03, dock 2026-11
 
   it("is fixed at the foot, hidden from md up, and the main area pads for it below md", () => {
     expect(dock).toContain(
-      'className="phone-dock fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur md:hidden"',
+      '"phone-dock fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur md:hidden"',
     );
+    // Hidden while the on-screen keyboard is up, and the window scrolled back
+    // when it goes: iOS scrolls the window for the keyboard instead of moving
+    // a fixed element.
+    expect(dock).toContain('keyboardUp && "hidden"');
+    expect(dock).toContain("if (!isUp && window.scrollY > 0) window.scrollTo({ top: 0 });");
     const shell = read("AppShell.tsx");
     expect(shell).toContain('className="flex-1 overflow-y-auto md:pb-0"');
     expect(shell).toContain(
@@ -165,7 +170,14 @@ describe("the Command Center opens from the Home Screen as an app (2026-11-04)",
   });
 
   it("tells iOS the same, and sizes the body to the visible viewport so the top bar cannot scroll away", () => {
-    expect(dashboardLayout).toContain("appleWebApp: { capable: true");
+    expect(dashboardLayout).toContain(
+      'appleWebApp: { capable: true, title: "Command Center", statusBarStyle: "black-translucent" }',
+    );
+    // Full screen under the status bar, the shell draws the bar's band.
+    expect(read("AppShell.tsx")).toContain(
+      'className="shrink-0 bg-slate-950 pt-[env(safe-area-inset-top)] md:hidden"',
+    );
+    expect(readRoot("src/components/ui/sidebar.tsx")).toContain("pt-[env(safe-area-inset-top)]");
     expect(layout).not.toContain("appleWebApp");
     expect(layout).toContain('viewportFit: "cover"');
     expect(layout).toContain(

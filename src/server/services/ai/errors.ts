@@ -49,3 +49,17 @@ export class AiBudgetExceededError extends Error {
     this.name = "AiBudgetExceededError";
   }
 }
+
+/**
+ * The model used its whole output allowance before writing an answer
+ * (2026-11-04). Reasoning models spend the allowance thinking first, so a
+ * low cap can leave nothing. Raised instead of storing an empty answer.
+ */
+export class AiOutputTruncatedError extends Error {
+  constructor(public readonly maxOutputTokens: number) {
+    super(
+      `The model ran out of room (${maxOutputTokens} tokens) before it could answer. Ask a narrower question, or raise "Max output tokens" in Admin → AI Settings.`,
+    );
+    this.name = "AiOutputTruncatedError";
+  }
+}

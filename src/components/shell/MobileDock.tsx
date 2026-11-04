@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bot,
   Boxes,
@@ -74,6 +74,38 @@ export const DOCK_NAV: NavKey[] = [
   },
 ];
 
+/**
+ * Whether the phone's on-screen keyboard is up (2026-11-04). iOS does not
+ * move a fixed element for the keyboard; it scrolls the window instead,
+ * which left the dock floating mid-screen and the header scrolled away
+ * after the keyboard closed in the Home Screen app (owner screenshot). The
+ * dock hides while the keyboard is up, and when it goes the window is
+ * scrolled back to the top, where this layout always keeps it.
+ */
+function useKeyboardUp(): boolean {
+  const [up, setUp] = useState(false);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    let wasUp = false;
+    const check = () => {
+      const isUp = viewport.height < window.innerHeight * 0.75;
+      if (isUp !== wasUp) {
+        wasUp = isUp;
+        setUp(isUp);
+        if (!isUp && window.scrollY > 0) window.scrollTo({ top: 0 });
+      }
+    };
+    viewport.addEventListener("resize", check);
+    viewport.addEventListener("scroll", check);
+    return () => {
+      viewport.removeEventListener("resize", check);
+      viewport.removeEventListener("scroll", check);
+    };
+  }, []);
+  return up;
+}
+
 /** Height of the keys row, without the bottom padding. Main pads by the same. */
 export const DOCK_HEIGHT_PX = 72;
 
@@ -107,6 +139,7 @@ export function MobileDock({
   const pathname = usePathname();
   const { toggleSidebar } = useSidebar();
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const keyboardUp = useKeyboardUp();
 
   const allowed = DOCK_NAV.filter((key) => permissions.includes(key.permission));
   const home = allowed.find((key) => key.id === "home");
@@ -182,7 +215,7 @@ export function MobileDock({
     <>
       {assistant && assistantOpen && (
         <div
-          className="fixed inset-x-0 z-30 px-3 pb-2 md:hidden"
+          className="fixed inset-x-0 z-30 px-3 pb-2 pt-[env(safe-area-inset-top)] md:hidden"
           style={{ bottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))` }}
         >
           <div className="relative mx-auto max-w-xl">
@@ -202,7 +235,10 @@ export function MobileDock({
       )}
       <nav
         aria-label="Quick access"
-        className="phone-dock fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur md:hidden"
+        className={cn(
+          "phone-dock fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur md:hidden",
+          keyboardUp && "hidden",
+        )}
       >
         <div
           className="mx-auto grid max-w-xl px-2"
