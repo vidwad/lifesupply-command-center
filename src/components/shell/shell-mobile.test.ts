@@ -77,6 +77,9 @@ describe("the phone has function keys along the bottom (2026-11-03)", () => {
 
   it("sits in the shell's column below the scrolling area, so it covers nothing", () => {
     const shell = read("AppShell.tsx");
+    // The column is the phone's visible height, not the address-bar-hidden
+    // height, or the bar ends up behind the browser's toolbar.
+    expect(shell).toContain('className="flex h-dvh h-screen w-full overflow-hidden bg-muted/20"');
     expect(shell).toMatch(
       /<main className="flex-1 overflow-y-auto">\{children\}<\/main>[\s\S]*?<BottomTabBar/,
     );
