@@ -84,8 +84,15 @@ describe("the phone has function keys along the bottom (2026-11-03)", () => {
       /<main className="flex-1 overflow-y-auto">\{children\}<\/main>[\s\S]*?<BottomTabBar/,
     );
     expect(bar).toContain(
-      'className="shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"',
+      'className="phone-key-bar shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"',
     );
+    // iOS Safari floats its toolbar over the page and reports only the home
+    // indicator as the inset, so the bar clears the toolbar there explicitly.
+    const css = readFileSync(join(__dirname, "..", "..", "styles", "globals.css"), "utf8");
+    expect(css).toMatch(
+      /@supports \(-webkit-touch-callout: none\) \{\s*\.phone-key-bar \{\s*padding-bottom: calc\(max\(env\(safe-area-inset-bottom, 0px\), 20px\) \+ 48px\);/,
+    );
+    expect(css).toMatch(/@media \(display-mode: standalone\) \{\s*\.phone-key-bar/);
   });
 
   it("offers home, orders, customers, tasks and the AI tool, each behind its sidebar permission", () => {
