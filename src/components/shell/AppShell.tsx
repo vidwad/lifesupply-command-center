@@ -1,6 +1,7 @@
 import { prisma } from "@/server/db/client";
 import { getNotificationCounts } from "@/server/services/notifications";
 
+import { BottomTabBar } from "./BottomTabBar";
 import { SidebarNav } from "./SidebarNav";
 import { TopBar } from "./TopBar";
 
@@ -49,6 +50,14 @@ export async function AppShell({ user, signOutAction, children }: Props) {
           signOutAction={signOutAction}
         />
         <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* The phone's function keys, below the scrolling area (2026-11-03). */}
+        <BottomTabBar
+          permissions={user.permissions}
+          counts={{
+            approvalsCanDecide: notificationCounts.approvalsCanDecide,
+            myOverdueTasks: notificationCounts.myOverdueTasks,
+          }}
+        />
       </div>
     </div>
   );
