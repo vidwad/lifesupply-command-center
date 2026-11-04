@@ -33,8 +33,13 @@ export async function AppShell({ user, signOutAction, children }: Props) {
     }),
   ]);
 
+  // `h-dvh` is the phone's visible height with the browser's address bar and
+  // toolbar in whatever state they are in; `100vh` is the height with them
+  // hidden, which left the bottom key bar behind the toolbar (product owner,
+  // 2026-11-03). `h-screen` stays as the fallback for a browser without
+  // dynamic viewport units.
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-muted/20">
+    <div className="flex h-dvh h-screen w-full overflow-hidden bg-muted/20">
       <aside className="hidden w-64 shrink-0 border-r bg-background md:flex md:flex-col">
         <SidebarNav permissions={user.permissions} />
       </aside>
