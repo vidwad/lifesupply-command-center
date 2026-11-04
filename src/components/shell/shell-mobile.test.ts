@@ -6,7 +6,7 @@
  * These hold the replacement in place: a menu button in the top bar that
  * opens the same navigation as a drawer, carrying the context selectors.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -111,5 +111,56 @@ describe("the phone has function keys along the bottom (2026-11-03)", () => {
     expect(bar).toContain("counts.myOverdueTasks + counts.approvalsCanDecide");
     // Each key is a full-height target a thumb can hit.
     expect(bar).toContain("min-h-14");
+  });
+});
+
+describe("the Command Center opens from the Home Screen as an app (2026-11-04)", () => {
+  const ROOT = join(__dirname, "..", "..", "..");
+  const layout = readFileSync(join(ROOT, "src/app/layout.tsx"), "utf8");
+  const dashboardLayout = readFileSync(join(ROOT, "src/app/(dashboard)/layout.tsx"), "utf8");
+  const manifest = readFileSync(join(ROOT, "src/app/manifest.ts"), "utf8");
+
+  it("declares a standalone manifest with the dashboard as its start address and the icons it needs", () => {
+    expect(manifest).toContain('display: "standalone"');
+    expect(manifest).toContain('start_url: "/dashboard"');
+    for (const icon of ["icon-192.png", "icon-512.png", "icon-512-maskable.png"]) {
+      expect(manifest).toContain(`/icons/${icon}`);
+      expect(existsSync(join(ROOT, "public/icons", icon))).toBe(true);
+    }
+  });
+
+  it("tells iOS the same, and sizes the body to the visible viewport so the top bar cannot scroll away", () => {
+    expect(dashboardLayout).toContain("appleWebApp: { capable: true");
+    expect(layout).not.toContain("appleWebApp");
+    expect(layout).toContain('viewportFit: "cover"');
+    expect(layout).toContain(
+      'className="min-h-dvh min-h-screen bg-background font-sans text-foreground antialiased"',
+    );
+  });
+});
+
+describe("the Products page folds its secondary filters on a phone (2026-11-04)", () => {
+  const ROOT = join(__dirname, "..", "..", "..");
+  const page = readFileSync(join(ROOT, "src/app/(dashboard)/products/page.tsx"), "utf8");
+  const disclosure = readFileSync(
+    join(ROOT, "src/components/data/PhoneFilterDisclosure.tsx"),
+    "utf8",
+  );
+
+  it("keeps the quality pills visible and folds the range, performance and threshold rows", () => {
+    const pills = page.indexOf('label="Missing images"');
+    const fold = page.indexOf("<PhoneFilterDisclosure summary={filterSummary}>");
+    const form = page.indexOf('<form action="/products"');
+    const end = page.indexOf("</PhoneFilterDisclosure>");
+    expect(pills).toBeGreaterThan(0);
+    expect(fold).toBeGreaterThan(pills);
+    expect(form).toBeGreaterThan(fold);
+    expect(end).toBeGreaterThan(form);
+  });
+
+  it("the control is phone-only and the rows stay as they were from md up", () => {
+    expect(disclosure).toContain("md:hidden");
+    expect(disclosure).toContain('open ? "block" : "hidden md:block"');
+    expect(disclosure).toContain("aria-expanded={open}");
   });
 });
