@@ -76,7 +76,11 @@ AssistantDrawer (client)                 /api/ai/assistant/chat  ─────
 
 Routes live under the dashboard surface on Render. Nothing is added to the Vercel public build.
 
-### 4.3 Tools (first set)
+### 4.3 Tools as built (November 4, 2026)
+
+The owner widened the brief on November 4: the assistant answers from the whole database, the public website, the BigCommerce storefronts' APIs, and the outside world. The registry in `tools.ts` holds the curated tools below plus four windows: `website_content` (the public content modules, flattened), `bigcommerce_read` (GET only, an allowlist of paths, pages capped at 50), `database_schema` and `database_query` (one SELECT inside a read-only transaction with a 10-second timeout and a 200-row cap, refused for credential and user tables), and the model's own web search. The two SQL tools are offered only to an account holding all three AI context permissions and system-settings administration, which is the owner's. Each tool is gated by permissions at offer time and again at run time; `tools.test.ts` pins that nothing in the directory writes except the answer's own `AiOutput` row. Conversation memory chains turns with the Responses API's previous response id; the client sends it back with each question.
+
+### 4.3a Tools (first set, as planned)
 
 All read-only, all bounded, all permission-checked. They reuse existing services rather than new queries.
 
@@ -185,7 +189,7 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 | Stage | Deliverable | Status |
 |---|---|---|
 | 0 | Usage ledger and daily budgets enforced at the client; live-dialog model, voice and transcription settings; feature flag; this document. | Delivered November 3, 2026 (this PR). |
-| 1 | Page context contract and provider; the tool registry with the first tools and their tests; the text chat route with streaming and the tool loop; `AiOutput` and audit rows. No UI beyond a test page. | Next. |
+| 1 | The brain: the tool registry (`src/server/services/ai/assistant/tools.ts`), the tool loop on the Responses API with web search (`answer.ts`), the page-context type, `AiOutput` and audit rows; the AI Analyst page and the dock panel run on it. Streaming deferred. | Delivered November 4, 2026. See §4.3 as built. |
 | 2 | The drawer: bottom sheet in the shell, text mode, tool-call rows, budget strip, phone layout, Playwright checks at 390 px and desktop. | |
 | 3 | Live voice: session, tool and usage routes; WebRTC client; transcript; dictation; cutoffs; the flag turned on in staging only. | |
 | 4 | Page registrations across the main modules (dashboard, customers, orders, products, sales intelligence, operations, finance), and `draft_task`. | |
