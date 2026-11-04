@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { mapBcOrderToUpsert, type BcOrderPayload } from "./order-mapper";
+import { bcOrderCountsAsSale, mapBcOrderToUpsert, type BcOrderPayload } from "./order-mapper";
 
 const baseBc: BcOrderPayload = {
   id: 1001,
@@ -237,5 +237,54 @@ describe("mapBcOrderToUpsert", () => {
     expect(create.shippingTotal).toBe(0);
     expect(create.taxTotal).toBe(0);
     expect(create.grandTotal).toBe(0);
+  });
+});
+
+describe("bcOrderCountsAsSale", () => {
+  const header = (overrides: Partial<BcOrderPayload>): BcOrderPayload => ({
+    ...baseBc,
+    ...overrides,
+  });
+
+  it("counts shipped, completed, awaiting and pending orders", () => {
+    expect(bcOrderCountsAsSale(header({ status_id: 2, payment_status: "captured" }))).toBe(true);
+    expect(bcOrderCountsAsSale(header({ status_id: 10, payment_status: "paid" }))).toBe(true);
+    expect(bcOrderCountsAsSale(header({ status_id: 11, payment_status: "" }))).toBe(true);
+    expect(bcOrderCountsAsSale(header({ status_id: 7, payment_status: "pending" }))).toBe(true);
+  });
+
+  it("excludes Cancelled, Declined and Refunded status ids", () => {
+    expect(bcOrderCountsAsSale(header({ status_id: 5, payment_status: "" }))).toBe(false);
+    expect(bcOrderCountsAsSale(header({ status_id: 6, payment_status: "" }))).toBe(false);
+    expect(bcOrderCountsAsSale(header({ status_id: 4, payment_status: "" }))).toBe(false);
+  });
+
+  it("excludes an Incomplete checkout whose payment was declined", () => {
+    // Production carries 1,005 of these: BC status "Incomplete" with
+    // payment_status "declined", which arrive as received + failed.
+    expect(bcOrderCountsAsSale(header({ status_id: 0, payment_status: "declined" }))).toBe(false);
+    expect(bcOrderCountsAsSale(header({ status_id: 0, payment_status: "" }))).toBe(true);
+  });
+
+  it("excludes a full refund on an otherwise normal status, but not a partial one", () => {
+    expect(
+      bcOrderCountsAsSale(
+        header({ status_id: 2, total_inc_tax: "100.00", refunded_amount: "100.00" }),
+      ),
+    ).toBe(false);
+    expect(
+      bcOrderCountsAsSale(
+        header({ status_id: 2, total_inc_tax: "100.00", refunded_amount: "40.00" }),
+      ),
+    ).toBe(true);
+  });
+
+  it("excludes Disputed orders, whose payment maps to failed", () => {
+    expect(bcOrderCountsAsSale(header({ status_id: 13, payment_status: "" }))).toBe(false);
+  });
+
+  it("needs only the status fields, so a slim header walk can call it", () => {
+    expect(bcOrderCountsAsSale({ status_id: 5 })).toBe(false);
+    expect(bcOrderCountsAsSale({ status_id: 2 })).toBe(true);
   });
 });

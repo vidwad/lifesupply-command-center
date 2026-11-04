@@ -9,7 +9,10 @@
  *
  *   DATE-RANGE DETAIL (one bounded /v2/orders header walk over the range):
  *     order count, revenue (total_inc_tax), refunds (refunded_amount),
- *     item units (items_total) — vs the CC sums for the same range.
+ *     item units (items_total) — vs the CC sums for the same range — plus,
+ *     since 2026-11-03, the count and revenue of orders that count as a
+ *     sale under the shared rule, which is the pair to compare with the
+ *     figures BigCommerce itself reports.
  *
  *   INFORMATIONAL (CC-only, no BC total to compare):
  *     guest customers
@@ -21,8 +24,10 @@
  */
 import { prisma } from "@/server/db/client";
 import { createException } from "@/server/services/exceptions";
+import { SALE_ORDER_WHERE } from "@/server/services/orders/sale-rule";
 
 import { GUEST_SOURCE_SYSTEM } from "./guest-customer";
+import { bcOrderCountsAsSale, type BcOrderStatusFields } from "./order-mapper";
 import {
   evaluateReconciliation,
   type MetricInput,
@@ -107,7 +112,15 @@ async function fetchOrdersCount(
   }
 }
 
-type BcRangeTotals = { count: number; revenue: number; refunds: number; itemUnits: number };
+type BcRangeTotals = {
+  count: number;
+  revenue: number;
+  refunds: number;
+  itemUnits: number;
+  /** Orders that count as a sale under the shared rule, and their total. */
+  saleCount: number;
+  saleRevenue: number;
+};
 
 /** Walk /v2/orders headers over the date range, summing reporting totals. */
 async function fetchBcRangeTotals(
@@ -116,14 +129,19 @@ async function fetchBcRangeTotals(
   rangeStart: Date,
   rangeEnd: Date,
 ): Promise<BcRangeTotals | null> {
-  const totals: BcRangeTotals = { count: 0, revenue: 0, refunds: 0, itemUnits: 0 };
+  const totals: BcRangeTotals = {
+    count: 0,
+    revenue: 0,
+    refunds: 0,
+    itemUnits: 0,
+    saleCount: 0,
+    saleRevenue: 0,
+  };
   const range =
     `&min_date_created=${encodeURIComponent(rangeStart.toISOString())}` +
     `&max_date_created=${encodeURIComponent(rangeEnd.toISOString())}`;
 
-  type BcOrderHeader = {
-    total_inc_tax?: string | number;
-    refunded_amount?: string | number;
+  type BcOrderHeader = BcOrderStatusFields & {
     items_total?: number;
   };
 
@@ -144,10 +162,15 @@ async function fetchBcRangeTotals(
     }
     if (!Array.isArray(orders) || orders.length === 0) break;
     for (const o of orders) {
+      const total = Number(o.total_inc_tax) || 0;
       totals.count++;
-      totals.revenue += Number(o.total_inc_tax) || 0;
+      totals.revenue += total;
       totals.refunds += Number(o.refunded_amount) || 0;
       totals.itemUnits += typeof o.items_total === "number" ? o.items_total : 0;
+      if (bcOrderCountsAsSale(o)) {
+        totals.saleCount++;
+        totals.saleRevenue += total;
+      }
     }
     if (orders.length < PAGE_SIZE) break;
     page++;
@@ -172,7 +195,7 @@ export async function runBigCommerceReconciliation(
 
   // ---- CC-side totals ----
   const rangeWhere = { storeId, orderDate: { gte: rangeStart, lte: rangeEnd } };
-  const [ccCustomers, ccGuests, ccProducts, ccOrdersLifetime, ccRangeAgg, ccItemUnits] =
+  const [ccCustomers, ccGuests, ccProducts, ccOrdersLifetime, ccRangeAgg, ccSaleAgg, ccItemUnits] =
     await Promise.all([
       prisma.customer.count({ where: { storeId, sourceSystem: SOURCE_SYSTEM } }),
       prisma.customer.count({ where: { storeId, sourceSystem: GUEST_SOURCE_SYSTEM } }),
@@ -182,6 +205,15 @@ export async function runBigCommerceReconciliation(
         where: { ...rangeWhere, sourceSystem: SOURCE_SYSTEM },
         _count: { id: true },
         _sum: { grandTotal: true, refundedTotal: true },
+      }),
+      // The same range under the shared sale rule (2026-11-03): this is the
+      // pair to hold against BigCommerce's own sales figures, which leave out
+      // cancelled, declined and refunded orders, where the raw pair above
+      // checks that the dataset itself is complete.
+      prisma.order.aggregate({
+        where: { ...rangeWhere, sourceSystem: SOURCE_SYSTEM, ...SALE_ORDER_WHERE },
+        _count: { id: true },
+        _sum: { grandTotal: true },
       }),
       prisma.orderItem.aggregate({
         where: { sourceSystem: SOURCE_SYSTEM, order: rangeWhere },
@@ -232,6 +264,22 @@ export async function runBigCommerceReconciliation(
       kind: "money",
       ccValue: round2(Number(ccRangeAgg._sum.grandTotal ?? 0)),
       bcValue: bcRange ? round2(bcRange.revenue) : null,
+    },
+    {
+      metric: "orders.range.sales.count",
+      label: "Sales (range) — orders that count as a sale",
+      kind: "count",
+      ccValue: ccSaleAgg._count.id,
+      bcValue: bcRange?.saleCount ?? null,
+      note: "Excludes cancelled, declined and refunded orders on both sides (services/orders/sale-rule.ts).",
+    },
+    {
+      metric: "orders.range.sales.revenue",
+      label: "Sales revenue (range) — orders that count as a sale",
+      kind: "money",
+      ccValue: round2(Number(ccSaleAgg._sum.grandTotal ?? 0)),
+      bcValue: bcRange ? round2(bcRange.saleRevenue) : null,
+      note: "The figure to hold against BigCommerce's own sales reporting; the raw revenue row above checks dataset completeness.",
     },
     {
       metric: "orders.range.refunds",

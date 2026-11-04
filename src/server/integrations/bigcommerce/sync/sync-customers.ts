@@ -14,6 +14,13 @@
  *   - "full"        — walks ALL orders + customers
  *   - "incremental" — walks orders with min_date_modified={sinceIso} and
  *                     customers with date_modified:min={sinceIso}
+ *
+ * Aggregates (2026-11-03): only orders that count as a sale contribute —
+ * cancelled, declined and refunded orders are skipped (`ordersExcluded`), so
+ * lifetime value no longer carries failed transactions. An incremental run's
+ * walk is partial, so it preserves existing customers' aggregates rather
+ * than overwriting them with a few weeks' spend; the order sync recomputes
+ * every customer's figures from the Order table at the end of each run.
  */
 import { prisma } from "@/server/db/client";
 
@@ -25,12 +32,13 @@ import {
   type BcCustomerPayload,
   type SlimOrderAggregate,
 } from "./customer-mapper";
+import { bcOrderCountsAsSale, type BcOrderStatusFields } from "./order-mapper";
 
 const PAGE_SIZE = 250;
 const HARD_CAP_ORDERS = 500_000;
 const HARD_CAP_CUSTOMERS = 250_000;
 
-type BcOrder = {
+type BcOrder = BcOrderStatusFields & {
   id: number;
   customer_id: number;
   date_created: string;
@@ -51,6 +59,8 @@ export type SyncCustomersInput = {
 
 export type SyncCustomersCounts = {
   ordersScanned: number;
+  /** Orders walked but left out of the aggregates because they are not sales. */
+  ordersExcluded: number;
   customersUpserted: number;
   customersCreated: number;
   customersUpdated: number;
@@ -98,11 +108,16 @@ async function buildOrderAggregates(args: {
   storeRoot: string;
   apiToken: string;
   sinceIso?: string;
-}): Promise<{ aggByCustomer: Map<number, SlimOrderAggregate>; ordersScanned: number }> {
+}): Promise<{
+  aggByCustomer: Map<number, SlimOrderAggregate>;
+  ordersScanned: number;
+  ordersExcluded: number;
+}> {
   const aggByCustomer = new Map<number, SlimOrderAggregate>();
   const sinceParam = args.sinceIso ? `&min_date_modified=${encodeURIComponent(args.sinceIso)}` : "";
   let page = 1;
   let ordersScanned = 0;
+  let ordersExcluded = 0;
 
   while (ordersScanned < HARD_CAP_ORDERS) {
     const url =
@@ -125,6 +140,10 @@ async function buildOrderAggregates(args: {
       ordersScanned++;
       if (ordersScanned > HARD_CAP_ORDERS) break;
       if (!o.customer_id || o.customer_id <= 0) continue; // guests handled separately later
+      if (!bcOrderCountsAsSale(o)) {
+        ordersExcluded++;
+        continue;
+      }
       const orderMs = new Date(o.date_created).getTime();
       const total = Number(o.total_inc_tax) || 0;
       let agg = aggByCustomer.get(o.customer_id);
@@ -143,7 +162,7 @@ async function buildOrderAggregates(args: {
     page++;
   }
 
-  return { aggByCustomer, ordersScanned };
+  return { aggByCustomer, ordersScanned, ordersExcluded };
 }
 
 /** Walk /v3/customers and upsert each, joined with the order aggregate. */
@@ -154,6 +173,8 @@ async function walkAndUpsertCustomers(args: {
   divisionId: string | null;
   aggByCustomer: Map<number, SlimOrderAggregate>;
   sinceIso?: string;
+  /** True on incremental runs, whose partial walk must not overwrite lifetime figures. */
+  preserveAggregates: boolean;
   counts: SyncCustomersCounts;
   onProgress?: (counts: SyncCustomersCounts) => void | Promise<void>;
 }): Promise<void> {
@@ -184,6 +205,7 @@ async function walkAndUpsertCustomers(args: {
           storeId: args.storeId,
           divisionId: args.divisionId,
           aggregate: args.aggByCustomer.get(bc.id),
+          preserveAggregates: args.preserveAggregates,
         });
         const result = await prisma.customer.upsert({
           where: {
@@ -222,6 +244,7 @@ export async function syncBigCommerceCustomers(
 ): Promise<SyncCustomersCounts> {
   const counts: SyncCustomersCounts = {
     ordersScanned: 0,
+    ordersExcluded: 0,
     customersUpserted: 0,
     customersCreated: 0,
     customersUpdated: 0,
@@ -229,12 +252,13 @@ export async function syncBigCommerceCustomers(
     errorMessages: [],
   };
 
-  const { aggByCustomer, ordersScanned } = await buildOrderAggregates({
+  const { aggByCustomer, ordersScanned, ordersExcluded } = await buildOrderAggregates({
     storeRoot: input.storeRoot,
     apiToken: input.apiToken,
     sinceIso: input.mode === "incremental" ? input.sinceIso : undefined,
   });
   counts.ordersScanned = ordersScanned;
+  counts.ordersExcluded = ordersExcluded;
   if (input.onProgress) await input.onProgress({ ...counts });
 
   await walkAndUpsertCustomers({
@@ -244,6 +268,7 @@ export async function syncBigCommerceCustomers(
     divisionId: input.divisionId,
     aggByCustomer,
     sinceIso: input.mode === "incremental" ? input.sinceIso : undefined,
+    preserveAggregates: input.mode === "incremental",
     counts,
     onProgress: input.onProgress,
   });

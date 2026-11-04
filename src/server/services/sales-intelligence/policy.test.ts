@@ -2,12 +2,14 @@ import { OrderStatus } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 
 import {
+  EXCLUDED_PAYMENT_STATUSES,
   EXCLUDED_STATUSES,
   grossMargin,
   marginOpportunity,
   numOrZero,
   positiveOrNull,
   rangeDays,
+  REVENUE_ORDER_WHERE,
   REVENUE_STATUSES,
   salesVelocity,
   targetMarginFromMultiplier,
@@ -168,5 +170,18 @@ describe("numOrZero", () => {
   it("preserves a legitimate zero and real values", () => {
     expect(numOrZero(0)).toBe(0);
     expect(numOrZero("12.5")).toBe(12.5);
+  });
+});
+
+describe("which payments count as revenue", () => {
+  it("excludes failed and fully refunded payments, and nothing else", () => {
+    expect([...EXCLUDED_PAYMENT_STATUSES].sort()).toEqual(["failed", "refunded"]);
+  });
+
+  it("combines both exclusions into the filter the query builders spread", () => {
+    expect(REVENUE_ORDER_WHERE).toEqual({
+      status: { notIn: ["cancelled", "refunded"] },
+      paymentStatus: { notIn: ["failed", "refunded"] },
+    });
   });
 });

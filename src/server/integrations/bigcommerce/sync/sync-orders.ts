@@ -26,8 +26,14 @@
  * Modes:
  *   - "full"        — walks ALL orders for the store
  *   - "incremental" — walks orders with min_date_modified={sinceIso}
+ *
+ * When the walk finishes, every customer's lifetime value, order count and
+ * first/last order dates are recomputed from the Order table under the
+ * shared sale rule (2026-11-03), so the figures stay current with each
+ * order sync and guests get them too.
  */
 import { prisma } from "@/server/db/client";
+import { recomputeCustomerLifetimeMetrics } from "@/server/services/customers/lifetime-metrics";
 
 import type { Prisma } from "@prisma/client";
 
@@ -64,6 +70,12 @@ export type SyncOrdersInput = {
    * items, so the extra API cost is limited to fulfilled orders.
    */
   syncShipments?: boolean;
+  /**
+   * Recompute every customer's lifetime value, order count and first/last
+   * order dates from the Order table when the walk finishes (2026-11-03).
+   * Defaults to true; the figures only count orders that are sales.
+   */
+  recomputeCustomerMetrics?: boolean;
   /** Optional callback invoked after each order page is processed. */
   onProgress?: (counts: SyncOrdersCounts) => void | Promise<void>;
 };
@@ -86,6 +98,7 @@ export type SyncOrdersCounts = {
   shipmentsUpserted: number; // shipment rows created/updated
   shipmentsDeleted: number; // stale BC shipment rows removed
   shipmentsFailed: number; // orders whose shipment sync raised
+  customersRecomputed: number; // customers whose lifetime figures changed in the end-of-run recompute
   errorMessages: string[];
 };
 
@@ -398,6 +411,7 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
     shipmentsUpserted: 0,
     shipmentsDeleted: 0,
     shipmentsFailed: 0,
+    customersRecomputed: 0,
     errorMessages: [],
   };
 
@@ -516,6 +530,24 @@ export async function syncBigCommerceOrders(input: SyncOrdersInput): Promise<Syn
     if (input.onProgress) await input.onProgress({ ...counts });
     if (orders.length < PAGE_SIZE) break;
     page++;
+  }
+
+  // Lifetime figures come from the Order table now that it is current
+  // (2026-11-03): one grouped statement over the store's orders refreshes
+  // every customer whose figures changed, guests included. A failure here
+  // is reported rather than thrown so a finished order walk is not marked
+  // failed by its follow-up.
+  if (input.recomputeCustomerMetrics !== false) {
+    try {
+      counts.customersRecomputed = await recomputeCustomerLifetimeMetrics({
+        storeId: input.storeId,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "unknown error";
+      if (counts.errorMessages.length < 20) {
+        counts.errorMessages.push(`Customer lifetime metrics: ${msg}`);
+      }
+    }
   }
 
   return counts;

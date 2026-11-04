@@ -30,6 +30,8 @@ import {
   type FulfillmentStatus,
 } from "@prisma/client";
 
+import { countsAsSale } from "@/server/services/orders/sale-rule";
+
 export type BcOrderPayload = {
   id: number;
   customer_id: number;
@@ -119,7 +121,29 @@ const PAYMENT_STATUS_MAP: Record<string, PaymentStatus> = {
   "partially refunded": "partially_refunded",
 };
 
-function deriveStatus(bc: BcOrderPayload): StatusTriple {
+/** The header fields the status derivation reads; a slim order walk can supply just these. */
+export type BcOrderStatusFields = Pick<
+  BcOrderPayload,
+  | "status_id"
+  | "payment_status"
+  | "refunded_amount"
+  | "total_inc_tax"
+  | "items_total"
+  | "items_shipped"
+>;
+
+/**
+ * Whether a BigCommerce order header counts as a sale (2026-11-03). Derives
+ * the same status triple the order sync stores and applies the shared rule,
+ * so the customer sync's aggregate walk, the CSV export and the
+ * reconciliation's BigCommerce side all agree with the Order table.
+ */
+export function bcOrderCountsAsSale(bc: BcOrderStatusFields): boolean {
+  const { order, payment } = deriveStatus(bc);
+  return countsAsSale({ status: order, paymentStatus: payment });
+}
+
+export function deriveStatus(bc: BcOrderStatusFields): StatusTriple {
   const fromStatusId = bc.status_id != null ? STATUS_MAP[bc.status_id] : undefined;
   let triple: StatusTriple = fromStatusId ?? FALLBACK_TRIPLE;
 

@@ -185,6 +185,8 @@ Margin analysis needs a cost source — supplier price lists, QuickBooks COGS, o
 
 This layer does not silently "fix" the dashboard. Changing a headline revenue figure that management may have been reading for months is a product-owner decision, not a side effect of adding a service. **Recorded here as a discrepancy to be resolved deliberately.**
 
+**Addendum, November 3, 2026.** The rule now lives in `src/server/services/orders/sale-rule.ts`, shared with the customer lifetime figures and the BigCommerce reconciliation, and it also excludes a `failed` or fully `refunded` payment whatever the order status. That removed BigCommerce "Incomplete" checkouts whose card was declined, which arrived as `received` + `failed` and had been counted as revenue ($163,473 of September 2026's $294,016). The dashboard leaderboard is still unchanged; `docs/42` §7 carries the decision (D-1) and the audit behind it.
+
 ### 7.2 A zero cost means unknown, never free
 
 `positiveOrNull()` requires a strictly positive value. This matches `positive()` in the pricing engine and the upload parser's *"treats a zero cost as absent, never as a zero floor"* — and avoids the trap that produced a fabricated 100% margin across 50,024 variants (`docs/35` F-16).

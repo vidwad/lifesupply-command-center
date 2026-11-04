@@ -128,3 +128,40 @@ describe("mapBcCustomerToUpsert", () => {
     }
   });
 });
+
+describe("preserveAggregates", () => {
+  const aggregate = {
+    count: 3,
+    spend: 450.5,
+    firstMs: 1_700_000_000_000,
+    lastMs: 1_750_000_000_000,
+  };
+
+  it("writes the computed fields to both payloads by default", () => {
+    const { create, update } = mapBcCustomerToUpsert(baseBc, {
+      storeId: "s1",
+      divisionId: null,
+      aggregate,
+    });
+    expect(create.lifetimeValue).toBe(450.5);
+    expect(update.lifetimeValue).toBe(450.5);
+    expect(update.orderCount).toBe(3);
+  });
+
+  it("keeps an existing customer's figures when the walk was partial", () => {
+    // An incremental sync only walks recently modified orders; writing its
+    // aggregate would replace lifetime value with a few weeks' spend.
+    const { create, update } = mapBcCustomerToUpsert(baseBc, {
+      storeId: "s1",
+      divisionId: null,
+      aggregate,
+      preserveAggregates: true,
+    });
+    expect(create.lifetimeValue).toBe(450.5); // a new customer still gets what was seen
+    expect(update).not.toHaveProperty("lifetimeValue");
+    expect(update).not.toHaveProperty("orderCount");
+    expect(update).not.toHaveProperty("firstOrderAt");
+    expect(update).not.toHaveProperty("lastOrderAt");
+    expect(update.email).toBe("alice@example.com"); // BC-owned fields still refresh
+  });
+});

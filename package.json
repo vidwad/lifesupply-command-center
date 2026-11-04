@@ -29,6 +29,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "pricing:bootstrap": "tsx scripts/pricing/bootstrap-pricing-production.ts",
     "sales:backfill:plan": "tsx scripts/sales-intelligence/plan-historical-backfill.ts",
+    "customers:recompute": "tsx scripts/customers/recompute-lifetime-metrics.ts",
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "perf:seed": "tsx scripts/perf/seed-volume.ts",

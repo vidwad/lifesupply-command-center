@@ -24,13 +24,12 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db/client";
 
 import {
-  EXCLUDED_STATUSES,
   grossMargin,
   marginOpportunity,
   numOrZero,
   positiveOrNull,
   rangeDays,
-  REVENUE_STATUSES,
+  REVENUE_ORDER_WHERE,
   salesVelocity,
   targetMarginFromMultiplier,
 } from "./policy";
@@ -60,10 +59,11 @@ export function lastNDays(days: number, now: Date): SalesRange {
  * isolation.
  */
 function orderFilter(range: SalesRange, scope: SalesScope = {}): Prisma.OrderWhereInput {
-  // Order has no soft-delete column; status is the only exclusion axis.
+  // Order has no soft-delete column; the order and payment statuses are the
+  // only exclusion axes, and they come from the shared sale rule.
   const where: Prisma.OrderWhereInput = {
     orderDate: { gte: range.from, lt: range.to },
-    status: { in: REVENUE_STATUSES },
+    ...REVENUE_ORDER_WHERE,
   };
   if (scope.storeId) where.storeId = scope.storeId;
   if (scope.divisionId) where.divisionId = scope.divisionId;
@@ -545,7 +545,7 @@ export async function getSalesDataReadiness(scope: SalesScope = {}): Promise<Sal
     prisma.orderItem.groupBy({
       by: ["productId"],
       where: {
-        order: { ...orderScope, status: { notIn: EXCLUDED_STATUSES } },
+        order: { ...orderScope, ...REVENUE_ORDER_WHERE },
         productId: { not: null },
         unitCost: { gt: 0 },
       },

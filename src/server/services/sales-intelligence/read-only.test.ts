@@ -96,7 +96,7 @@ describe("no outbound call exists", () => {
     expect(allCode).not.toContain("BigCommerce");
   });
 
-  it("imports only the two modules it is allowed to", () => {
+  it("imports only the modules it is allowed to", () => {
     /**
      * An allowlist rather than a denylist of forbidden paths. A denylist can
      * only forbid what someone thought of; this enumerates everything the
@@ -106,8 +106,17 @@ describe("no outbound call exists", () => {
      * It also avoids naming forbidden module paths as string literals, which
      * would trip the repo's other import canaries (`rollback-canaries.test.ts`
      * scans every file for quoted references to the rollback service).
+     *
+     * `orders/sale-rule` is the shared, pure "what counts as a sale" rule
+     * (2026-11-03): constants and one predicate over the generated enums,
+     * no client, no I/O. Its own test file pins that.
      */
-    const allowed = new Set(["@prisma/client", "@/server/db/client", "./policy"]);
+    const allowed = new Set([
+      "@prisma/client",
+      "@/server/db/client",
+      "@/server/services/orders/sale-rule",
+      "./policy",
+    ]);
     const specifiers = [...allCode.matchAll(/from\s+["']([^"']+)["']/g)].map((m) => m[1]);
     expect(specifiers.length).toBeGreaterThan(0);
     for (const spec of specifiers) {
@@ -148,10 +157,9 @@ describe("policy is genuinely pure", () => {
     expect(policy).not.toContain("@/server/db");
   });
 
-  it("imports nothing but the generated status enum", () => {
-    const imports = policy.match(/^import .*$/gm) ?? [];
-    expect(imports).toHaveLength(1);
-    expect(imports[0]).toContain("@prisma/client");
+  it("imports nothing but the generated status enums and the shared sale rule", () => {
+    const specifiers = [...policy.matchAll(/from\s+["']([^"']+)["']/g)].map((m) => m[1]);
+    expect(specifiers.sort()).toEqual(["@/server/services/orders/sale-rule", "@prisma/client"]);
   });
 
   it("is free of ambient time and randomness, so its results are reproducible", () => {
