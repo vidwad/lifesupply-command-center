@@ -7,6 +7,7 @@ import { SortHeader } from "@/components/data/SortHeader";
 import { ExportButton } from "@/components/data/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { PhoneFilterDisclosure } from "@/components/data/PhoneFilterDisclosure";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -182,6 +183,16 @@ export default async function ProductsPage({
     desc: maxDescriptionChars != null ? String(maxDescriptionChars) : undefined,
   };
   const anyTextFilter = Boolean(params.q || maxImages != null || maxDescriptionChars != null);
+  // What the folded phone control says is applied (2026-11-04).
+  const filterSummary = [
+    range.description,
+    perf ? definitions[perf].label : "any performance",
+    params.q ? `“${params.q}”` : null,
+    maxImages != null ? `≤ ${maxImages} images` : null,
+    maxDescriptionChars != null ? `< ${maxDescriptionChars} chars` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div>
@@ -219,171 +230,174 @@ export default async function ProductsPage({
           />
         </div>
 
-        {/*
-         * The sales range (product owner, 2026-10-30). Every segment, count
-         * and sales column below reads this one range; a custom start and
-         * end date are set in the form further down.
-         */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Range</span>
-          {RANGE_PRESETS.map((preset) => (
-            <FilterPill
-              key={preset.key}
-              href={rangeHref(preset.key)}
-              label={preset.label}
-              active={range.key === preset.key}
-            />
-          ))}
-          <span
-            className={
-              range.key === "custom"
-                ? "inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
-                : "inline-flex items-center rounded-md border border-dashed px-3 py-1.5 text-xs font-medium text-muted-foreground"
-            }
-          >
-            {range.key === "custom" ? range.description : "Custom: set the dates below"}
-          </span>
-        </div>
+        {/* On a phone the rows below fold behind one control; from `md` up they render as they are. */}
+        <PhoneFilterDisclosure summary={filterSummary}>
+          {/*
+           * The sales range (product owner, 2026-10-30). Every segment, count
+           * and sales column below reads this one range; a custom start and
+           * end date are set in the form further down.
+           */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Range</span>
+            {RANGE_PRESETS.map((preset) => (
+              <FilterPill
+                key={preset.key}
+                href={rangeHref(preset.key)}
+                label={preset.label}
+                active={range.key === preset.key}
+              />
+            ))}
+            <span
+              className={
+                range.key === "custom"
+                  ? "inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+                  : "inline-flex items-center rounded-md border border-dashed px-3 py-1.5 text-xs font-medium text-muted-foreground"
+              }
+            >
+              {range.key === "custom" ? range.description : "Custom: set the dates below"}
+            </span>
+          </div>
 
-        {/*
-         * Sales segments (2026-10-26), close equivalents of BigCommerce
-         * Insights computed from the synced order lines. The definition of the
-         * active segment is spelled out so "cold" means one stated thing here.
-         */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground">Performance</span>
-          <FilterPill href={perfHref(undefined)} label="Any" count={undefined} active={!perf} />
-          {PERFORMANCE_SEGMENTS.map((segment) => (
-            <FilterPill
-              key={segment}
-              href={perfHref(segment)}
-              label={definitions[segment].label}
-              count={performanceCounts[segment]}
-              active={perf === segment}
-            />
-          ))}
-          <span className="basis-full text-xs text-muted-foreground sm:basis-auto sm:pl-2">
-            {perf
-              ? definitions[perf].definition
-              : `From orders synced from the stores, excluding cancelled and refunded orders; figures cover ${range.description}.`}
-          </span>
-        </div>
+          {/*
+           * Sales segments (2026-10-26), close equivalents of BigCommerce
+           * Insights computed from the synced order lines. The definition of the
+           * active segment is spelled out so "cold" means one stated thing here.
+           */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Performance</span>
+            <FilterPill href={perfHref(undefined)} label="Any" count={undefined} active={!perf} />
+            {PERFORMANCE_SEGMENTS.map((segment) => (
+              <FilterPill
+                key={segment}
+                href={perfHref(segment)}
+                label={definitions[segment].label}
+                count={performanceCounts[segment]}
+                active={perf === segment}
+              />
+            ))}
+            <span className="basis-full text-xs text-muted-foreground sm:basis-auto sm:pl-2">
+              {perf
+                ? definitions[perf].definition
+                : `From orders synced from the stores, excluding cancelled and refunded orders; figures cover ${range.description}.`}
+            </span>
+          </div>
 
-        {/*
-         * Search and the catalogue thresholds (product owner, 2026-10-27) in
-         * one form, so Apply keeps all three together. Both thresholds are
-         * database filters on columns the sync maintains, so they apply to
-         * the whole catalogue and the counts above honour them.
-         */}
-        <form action="/products" className="flex flex-wrap items-center gap-2">
-          {params.flag && <input type="hidden" name="flag" value={params.flag} />}
-          {params.division && <input type="hidden" name="division" value={params.division} />}
-          {perf && <input type="hidden" name="perf" value={perf} />}
-          {rangeParams.range && <input type="hidden" name="range" value={rangeParams.range} />}
-          {sort && <input type="hidden" name="sort" value={sort} />}
-          {params.dir === "desc" && <input type="hidden" name="dir" value="desc" />}
-          <input
-            type="search"
-            name="q"
-            defaultValue={params.q ?? ""}
-            placeholder="Search name, SKU, brand…"
-            className="h-9 w-full rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-64"
-          />
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Images at most
+          {/*
+           * Search and the catalogue thresholds (product owner, 2026-10-27) in
+           * one form, so Apply keeps all three together. Both thresholds are
+           * database filters on columns the sync maintains, so they apply to
+           * the whole catalogue and the counts above honour them.
+           */}
+          <form action="/products" className="flex flex-wrap items-center gap-2">
+            {params.flag && <input type="hidden" name="flag" value={params.flag} />}
+            {params.division && <input type="hidden" name="division" value={params.division} />}
+            {perf && <input type="hidden" name="perf" value={perf} />}
+            {rangeParams.range && <input type="hidden" name="range" value={rangeParams.range} />}
+            {sort && <input type="hidden" name="sort" value={sort} />}
+            {params.dir === "desc" && <input type="hidden" name="dir" value="desc" />}
             <input
-              type="number"
-              name="img"
-              min={0}
-              step={1}
-              defaultValue={maxImages ?? ""}
-              aria-label="Maximum number of store images"
-              className="h-9 w-16 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              type="search"
+              name="q"
+              defaultValue={params.q ?? ""}
+              placeholder="Search name, SKU, brand…"
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-64"
             />
-          </label>
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Description under
-            <input
-              type="number"
-              name="desc"
-              min={1}
-              step={1}
-              defaultValue={maxDescriptionChars ?? ""}
-              aria-label="Maximum description length in characters"
-              className="h-9 w-20 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            characters
-          </label>
-          {/* A custom sales range (product owner, 2026-10-30). Dates win over
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              Images at most
+              <input
+                type="number"
+                name="img"
+                min={0}
+                step={1}
+                defaultValue={maxImages ?? ""}
+                aria-label="Maximum number of store images"
+                className="h-9 w-16 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              Description under
+              <input
+                type="number"
+                name="desc"
+                min={1}
+                step={1}
+                defaultValue={maxDescriptionChars ?? ""}
+                aria-label="Maximum description length in characters"
+                className="h-9 w-20 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              characters
+            </label>
+            {/* A custom sales range (product owner, 2026-10-30). Dates win over
               the preset pills above; clearing both returns to the preset. */}
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            From
-            <input
-              type="date"
-              name="from"
-              defaultValue={range.key === "custom" ? range.from : ""}
-              aria-label="Sales range start date"
-              className="h-9 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </label>
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            To
-            <input
-              type="date"
-              name="to"
-              defaultValue={range.key === "custom" ? range.to : ""}
-              aria-label="Sales range end date"
-              className="h-9 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </label>
-          {/* How many products the "Top sellers" segment holds (product
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              From
+              <input
+                type="date"
+                name="from"
+                defaultValue={range.key === "custom" ? range.from : ""}
+                aria-label="Sales range start date"
+                className="h-9 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              To
+              <input
+                type="date"
+                name="to"
+                defaultValue={range.key === "custom" ? range.to : ""}
+                aria-label="Sales range end date"
+                className="h-9 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </label>
+            {/* How many products the "Top sellers" segment holds (product
               owner, 2026-10-28). It changes the definition beside the
               filters and the pill count, not which rows the other
               segments return. */}
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Top sellers
-            <input
-              type="number"
-              name="top"
-              min={1}
-              max={TOP_SELLER_MAX}
-              step={1}
-              defaultValue={topLimit}
-              aria-label="Number of products counted as top sellers"
-              className="h-9 w-20 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            products
-          </label>
-          <button
-            type="submit"
-            className="inline-flex h-9 items-center rounded-md border bg-background px-3 text-xs font-medium hover:bg-accent"
-          >
-            Apply
-          </button>
-          {anyTextFilter ? (
-            <Link
-              href={buildHrefWithout(params, perf, topParam, sort, rangeParams)}
-              className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              Top sellers
+              <input
+                type="number"
+                name="top"
+                min={1}
+                max={TOP_SELLER_MAX}
+                step={1}
+                defaultValue={topLimit}
+                aria-label="Number of products counted as top sellers"
+                className="h-9 w-20 rounded-md border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              products
+            </label>
+            <button
+              type="submit"
+              className="inline-flex h-9 items-center rounded-md border bg-background px-3 text-xs font-medium hover:bg-accent"
             >
-              Clear
-            </Link>
-          ) : null}
-          {maxImages != null || maxDescriptionChars != null ? (
-            <span className="basis-full text-xs text-muted-foreground">
-              {[
-                maxImages != null
-                  ? `at most ${maxImages} store ${maxImages === 1 ? "image" : "images"}`
-                  : null,
-                maxDescriptionChars != null
-                  ? `description text under ${maxDescriptionChars.toLocaleString()} characters, markup excluded`
-                  : null,
-              ]
-                .filter(Boolean)
-                .join(" and ")}
-              . Both read what the last sync stored.
-            </span>
-          ) : null}
-        </form>
+              Apply
+            </button>
+            {anyTextFilter ? (
+              <Link
+                href={buildHrefWithout(params, perf, topParam, sort, rangeParams)}
+                className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Clear
+              </Link>
+            ) : null}
+            {maxImages != null || maxDescriptionChars != null ? (
+              <span className="basis-full text-xs text-muted-foreground">
+                {[
+                  maxImages != null
+                    ? `at most ${maxImages} store ${maxImages === 1 ? "image" : "images"}`
+                    : null,
+                  maxDescriptionChars != null
+                    ? `description text under ${maxDescriptionChars.toLocaleString()} characters, markup excluded`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" and ")}
+                . Both read what the last sync stored.
+              </span>
+            ) : null}
+          </form>
+        </PhoneFilterDisclosure>
 
         {canStudio && products.length > 0 ? <BulkStudioBar canAutopilot={canAutopilot} /> : null}
 

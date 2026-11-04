@@ -51,7 +51,16 @@ const lifeSupplyDisplay = Roboto_Condensed({
  * `viewport-fit=cover` lets the phone's bottom key bar pad itself above the
  * home indicator with `env(safe-area-inset-bottom)` (2026-11-03).
  */
-export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  // The standalone app's status bar and the browser's address bar colour.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#020817" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: {
@@ -69,7 +78,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${sans.variable} ${mono.variable} ${lifeSupplyBody.variable} ${lifeSupplyDisplay.variable}`}
     >
-      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
+      {/* `min-h-dvh` is the phone's visible height; `min-h-screen` (100vh) is the
+          taller address-bar-hidden height, which let the document scroll by the
+          difference and carry the dashboard's top bar off the screen
+          (2026-11-04). The first stays as the fallback. */}
+      <body className="min-h-dvh min-h-screen bg-background font-sans text-foreground antialiased">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
