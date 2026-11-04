@@ -1,38 +1,172 @@
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 
 import {
   EXCLUDED_STATUSES,
+  GROSS_SALES_STATUSES,
   grossMargin,
   marginOpportunity,
+  netSales,
   numOrZero,
+  orderRefundAmount,
   positiveOrNull,
   rangeDays,
+  refundRate,
   REVENUE_STATUSES,
   salesVelocity,
+  summariseRefunds,
   targetMarginFromMultiplier,
 } from "./policy";
 
-describe("which orders count as revenue", () => {
-  it("excludes cancelled and refunded, and nothing else", () => {
-    expect([...EXCLUDED_STATUSES].sort()).toEqual(["cancelled", "refunded"]);
+describe("which orders count toward Gross Sales", () => {
+  it("excludes cancelled only — a cancelled order was never a sale", () => {
+    expect([...EXCLUDED_STATUSES]).toEqual(["cancelled"]);
+  });
+
+  it("INCLUDES refunded, because a refund reverses a sale that did happen", () => {
+    // DEC-SI-01: refunds belong in gross and are deducted to reach net.
+    expect(GROSS_SALES_STATUSES).toContain(OrderStatus.refunded);
   });
 
   it("covers every OrderStatus exactly once across the two lists", () => {
     // A status added to the schema later must force a decision here rather
-    // than silently vanishing from revenue.
+    // than silently vanishing from gross.
     const all = Object.values(OrderStatus).sort();
-    const covered = [...REVENUE_STATUSES, ...EXCLUDED_STATUSES].sort();
+    const covered = [...GROSS_SALES_STATUSES, ...EXCLUDED_STATUSES].sort();
     expect(covered).toEqual(all);
     expect(new Set(covered).size).toBe(covered.length);
   });
 
-  it("counts in-flight orders as revenue", () => {
-    // The order was placed and the money is expected; only cancellation or
-    // refund undoes that.
+  it("counts in-flight orders", () => {
     for (const s of ["received", "processing", "shipped", "completed"] as const) {
-      expect(REVENUE_STATUSES).toContain(s);
+      expect(GROSS_SALES_STATUSES).toContain(s);
     }
+  });
+
+  it("keeps the deprecated alias pointing at gross so old imports do not change meaning silently", () => {
+    expect(REVENUE_STATUSES).toEqual(GROSS_SALES_STATUSES);
+  });
+});
+
+describe("orderRefundAmount", () => {
+  const order = (over: Partial<Parameters<typeof orderRefundAmount>[0]>) => ({
+    status: OrderStatus.completed,
+    paymentStatus: PaymentStatus.paid,
+    grandTotal: 100,
+    refundedTotal: 0,
+    ...over,
+  });
+
+  it("trusts a recorded refund whatever the status — this is what makes partial refunds work", () => {
+    // 25 production orders carry a recorded partial refund without a
+    // `refunded` status; ignoring them would drop real refund value.
+    expect(orderRefundAmount(order({ refundedTotal: 30 }))).toEqual({
+      amount: 30,
+      source: "recorded",
+    });
+  });
+
+  it("infers a full refund when the status says refunded and no amount was recorded", () => {
+    // 9,180 production orders are in exactly this state.
+    expect(orderRefundAmount(order({ status: OrderStatus.refunded }))).toEqual({
+      amount: 100,
+      source: "inferred",
+    });
+  });
+
+  it("does NOT infer a full refund for a known-partial one", () => {
+    // Inferring $100 for a partial refund overstates it. 27 production orders
+    // would be overstated by up to $17,366 without this branch.
+    expect(
+      orderRefundAmount(
+        order({ status: OrderStatus.refunded, paymentStatus: PaymentStatus.partially_refunded }),
+      ),
+    ).toEqual({ amount: 0, source: "unquantified" });
+  });
+
+  it("prefers a recorded amount over the partial-status branch", () => {
+    expect(
+      orderRefundAmount(
+        order({
+          status: OrderStatus.refunded,
+          paymentStatus: PaymentStatus.partially_refunded,
+          refundedTotal: 12.5,
+        }),
+      ),
+    ).toEqual({ amount: 12.5, source: "recorded" });
+  });
+
+  it("returns nothing for an ordinary order", () => {
+    expect(orderRefundAmount(order({}))).toEqual({ amount: 0, source: "none" });
+  });
+
+  it("treats a zero recorded refund as absent, not as a refund of zero", () => {
+    expect(orderRefundAmount(order({ refundedTotal: 0 })).source).toBe("none");
+  });
+});
+
+describe("summariseRefunds", () => {
+  it("splits measured from inferred and reports confidence", () => {
+    const r = summariseRefunds({
+      recorded: 46882.03,
+      inferred: 2542941.72,
+      inferredOrderCount: 9180,
+    });
+    expect(r.total).toBeCloseTo(2589823.75, 2);
+    // Production reality: only 1.8% of refund value is measured.
+    expect(r.confidence).toBeCloseTo(0.0181, 3);
+  });
+
+  it("reports full confidence when there are no refunds at all", () => {
+    // 0/0 must not become NaN — "nothing was refunded" is a certain statement.
+    const r = summariseRefunds({ recorded: 0, inferred: 0, inferredOrderCount: 0 });
+    expect(r.total).toBe(0);
+    expect(r.confidence).toBe(1);
+  });
+
+  it("reports full confidence when every refund was measured", () => {
+    expect(summariseRefunds({ recorded: 500, inferred: 0, inferredOrderCount: 0 }).confidence).toBe(
+      1,
+    );
+  });
+
+  it("keeps unquantified partials out of the total but visible in the count", () => {
+    // Their refund is real and unmeasurable; the count states that the total
+    // is an understatement of known size.
+    const r = summariseRefunds({
+      recorded: 100,
+      inferred: 0,
+      inferredOrderCount: 0,
+      unquantifiedOrderCount: 27,
+    });
+    expect(r.total).toBe(100);
+    expect(r.unquantifiedOrderCount).toBe(27);
+  });
+});
+
+describe("netSales", () => {
+  it("is gross less refunds", () => {
+    expect(netSales(20463182.16, 2589823.75)).toBeCloseTo(17873358.41, 2);
+  });
+
+  it("is NOT floored at zero", () => {
+    // Refunds exceeding a period's gross is a real signal — returns landing
+    // against sales booked earlier. Clamping would hide the case worth seeing.
+    expect(netSales(100, 250)).toBe(-150);
+  });
+
+  it("equals gross when nothing was refunded", () => {
+    expect(netSales(1000, 0)).toBe(1000);
+  });
+});
+
+describe("refundRate", () => {
+  it("expresses refunds as a share of gross", () => {
+    expect(refundRate(1000, 100)).toBeCloseTo(0.1, 10);
+  });
+
+  it("is null rather than Infinity when there was no gross", () => {
+    expect(refundRate(0, 50)).toBeNull();
   });
 });
 
