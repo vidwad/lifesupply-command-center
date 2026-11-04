@@ -28,15 +28,15 @@ const ACTIONS = "src/app/(dashboard)/automation/product-studio/actions.ts";
 const STUDIO = "src/server/services/product-studio/index.ts";
 
 describe("unattended runs keep their controls", () => {
-  it("creation and cancellation take the Super Admin-only publish permission, in the action and the service", () => {
+  it("creation, cancellation and deletion take the Super Admin-only publish permission, in the action and the service", () => {
     const service = stripComments(read(SERVICE));
     expect(service).toContain(
       "AUTOPILOT_PERMISSION = PERMISSIONS.PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE",
     );
-    expect(service.match(/requireAutopilotPermission\(args\.actorPermissions\)/g)?.length).toBe(2);
+    expect(service.match(/requireAutopilotPermission\(args\.actorPermissions\)/g)?.length).toBe(3);
     const actions = stripComments(read(ACTIONS));
     expect(actions).toContain("requirePermission(PERMISSIONS.PRODUCTS_APPROVE_BIGCOMMERCE_UPDATE)");
-    expect(actions.match(/await requireRunner\(\)/g)?.length).toBe(2);
+    expect(actions.match(/await requireRunner\(\)/g)?.length).toBe(3);
   });
 
   it("re-checks all three flags before starting and before every step", () => {
@@ -180,5 +180,40 @@ describe("unattended runs keep their controls", () => {
     expect(process).toContain("requireFeature(FEATURE_FLAGS.PRODUCT_STUDIO)");
     expect(process).toContain("runProductStudioResearch(");
     expect(process).toContain("runProductStudioGeneration({");
+  });
+});
+
+describe("a finished run's record can be deleted (product owner, 2026-11-04)", () => {
+  it("the service refuses a live run, deletes the row and audits what went", () => {
+    const service = stripComments(read(SERVICE));
+    const start = service.indexOf("export async function deleteProductStudioRun(");
+    expect(start).toBeGreaterThan(0);
+    const body = service.slice(start, service.indexOf("\n}\n", start));
+    expect(body).toContain("requireAutopilotPermission(args.actorPermissions)");
+    expect(body).toContain("if (LIVE_RUN_STATUSES.has(run.status))");
+    expect(body).toContain("prisma.productStudioRun.delete({ where: { id: run.id } })");
+    expect(body).toContain('action: "product_studio.autopilot_run_deleted"');
+    expect(body).toContain("items: run._count.items");
+  });
+
+  it("the database removes the items and detaches the projects with the run", () => {
+    const schema = read("prisma/schema.prisma");
+    expect(schema).toContain(
+      "run     ProductStudioRun      @relation(fields: [runId], references: [id], onDelete: Cascade)",
+    );
+    expect(schema).toContain(
+      "autopilotRun      ProductStudioRun?          @relation(fields: [autopilotRunId], references: [id], onDelete: SetNull)",
+    );
+  });
+
+  it("the list offers it on finished runs only, to whoever may start a run", () => {
+    const page = stripComments(read("src/app/(dashboard)/automation/product-studio/page.tsx"));
+    expect(page).toContain("canRun && !LIVE_RUN_STATUSES.has(run.status)");
+    expect(page).toContain("<RunActions runId={run.id} items={run._count.items} />");
+    const actions = stripComments(
+      read("src/app/(dashboard)/automation/product-studio/run-actions.tsx"),
+    );
+    expect(actions).toContain("useState(false)"); // two-step confirm
+    expect(actions).toContain("Projects, images");
   });
 });

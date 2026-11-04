@@ -267,6 +267,60 @@ export async function cancelProductStudioRun(args: {
   await finalizeRunIfComplete(run.id);
 }
 
+/**
+ * Removes a finished run's record (product owner, 2026-11-04). The run row
+ * and its per-product items are the working record of one unattended pass;
+ * the durable history lives elsewhere: the audit log, the AI usage ledger,
+ * the publish logs, and the projects, which keep their images, reviews and
+ * approvals and are only detached from the run. The database removes the
+ * items and detaches the projects with the row. A run still in progress is
+ * refused: stop it first, so no lane is working on rows that have gone.
+ */
+export async function deleteProductStudioRun(args: {
+  runId: string;
+  actorUserId: string;
+  actorPermissions: readonly string[];
+}): Promise<{ items: number; projects: number }> {
+  requireAutopilotPermission(args.actorPermissions);
+  const run = await prisma.productStudioRun.findUnique({
+    where: { id: args.runId },
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      completedAt: true,
+      imagesGenerated: true,
+      stopReason: true,
+      settings: true,
+      _count: { select: { items: true, projects: true } },
+    },
+  });
+  if (!run) throw new ProductStudioInputError("Run not found.");
+  if (LIVE_RUN_STATUSES.has(run.status)) {
+    throw new ProductStudioInputError(
+      "This run is still in progress. Stop it and let it finish before deleting its record.",
+    );
+  }
+  await prisma.productStudioRun.delete({ where: { id: run.id } });
+  await writeAudit({
+    actorUserId: args.actorUserId,
+    action: "product_studio.autopilot_run_deleted",
+    entityType: "ProductStudioRun",
+    entityId: run.id,
+    beforeData: {
+      status: run.status,
+      createdAt: run.createdAt,
+      completedAt: run.completedAt,
+      imagesGenerated: run.imagesGenerated,
+      stopReason: run.stopReason,
+      items: run._count.items,
+      projects: run._count.projects,
+      settings: json(run.settings),
+    },
+  });
+  return { items: run._count.items, projects: run._count.projects };
+}
+
 /** Marks the run as stopping and cancels every item not yet started. */
 async function requestRunStop(args: {
   runId: string;
