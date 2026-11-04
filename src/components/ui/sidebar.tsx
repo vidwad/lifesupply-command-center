@@ -140,7 +140,7 @@ export function Sidebar({
           side="left"
           data-sidebar="sidebar"
           data-mobile="true"
-          className={cn("w-72 max-w-[85vw] p-0", className)}
+          className={cn("w-72 max-w-[85vw] p-0 pt-[env(safe-area-inset-top)]", className)}
           title={mobileTitle}
           description={mobileDescription}
           hideClose

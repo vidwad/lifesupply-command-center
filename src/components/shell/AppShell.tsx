@@ -78,6 +78,13 @@ export async function AppShell({ user, signOutAction, children }: Props) {
         counts={counts}
       />
       <div className="flex h-full min-w-0 flex-1 flex-col">
+        {/* The status bar's band when the app runs full screen from the Home
+            Screen: the time and signal are white, so the band is dark. Zero
+            height everywhere else. */}
+        <div
+          aria-hidden="true"
+          className="shrink-0 bg-slate-950 pt-[env(safe-area-inset-top)] md:hidden"
+        />
         <TopBar
           user={user}
           divisions={divisionOptions}
