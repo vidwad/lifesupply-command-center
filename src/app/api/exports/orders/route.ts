@@ -17,10 +17,13 @@ export async function GET(req: Request) {
   const status =
     statusParam && VALID_ORDER_STATUSES.has(statusParam) ? (statusParam as OrderStatus) : undefined;
   const exceptionsOnly = searchParams.get("exceptions") === "1";
+  // The app shell's Division selector, carried by the Orders page (2026-11-03).
+  const divisionId = searchParams.get("division")?.trim() || undefined;
 
   const where: Prisma.OrderWhereInput = {
     ...(status ? { status } : {}),
     ...(exceptionsOnly ? { exceptionStatus: { not: "none" } } : {}),
+    ...(divisionId ? { divisionId } : {}),
   };
 
   const orders = await prisma.order.findMany({

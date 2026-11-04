@@ -8,6 +8,12 @@ import { prisma } from "@/server/db/client";
 export type ListOrdersFilters = {
   status?: OrderStatus;
   storeId?: string;
+  /**
+   * The app shell's Division selector (2026-11-03). Every synced order
+   * carries its store's division, so the Order column is the filter; a
+   * store belongs to exactly one division.
+   */
+  divisionId?: string;
   exceptionsOnly?: boolean;
   search?: string;
   /** 1-based page (Phase-8 follow-up pagination). */
@@ -23,6 +29,7 @@ export async function listOrders(filters: ListOrdersFilters = {}) {
 
   if (filters.status) where.status = filters.status;
   if (filters.storeId) where.storeId = filters.storeId;
+  if (filters.divisionId) where.divisionId = filters.divisionId;
   if (filters.exceptionsOnly) where.exceptionStatus = { in: ["flagged", "in_review"] };
   if (filters.search) {
     const q = filters.search.trim();
@@ -76,6 +83,7 @@ export async function countOrders(filters: ListOrdersFilters = {}): Promise<numb
   const where: Prisma.OrderWhereInput = {};
   if (filters.status) where.status = filters.status;
   if (filters.storeId) where.storeId = filters.storeId;
+  if (filters.divisionId) where.divisionId = filters.divisionId;
   if (filters.exceptionsOnly) where.exceptionStatus = { in: ["flagged", "in_review"] };
   if (filters.search) {
     const q = filters.search.trim();

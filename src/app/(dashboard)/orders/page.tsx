@@ -35,7 +35,41 @@ const STATUS_FILTERS = [
   { label: "Cancelled", value: "cancelled" },
 ] as const;
 
-type SearchParams = { status?: string; q?: string; exceptions?: string; page?: string };
+type SearchParams = {
+  status?: string;
+  q?: string;
+  exceptions?: string;
+  page?: string;
+  /** The app shell's Division selector, as `context-params.ts` writes it. */
+  division?: string;
+};
+
+/**
+ * The page's own filters plus the shell's division, for every link and form
+ * the page builds (2026-11-03). Before this, a status chip, the search box
+ * or the next page rebuilt the address without the division, so the
+ * selector appeared to have no effect on this screen.
+ */
+function carried(params: SearchParams): Record<string, string | undefined> {
+  return {
+    status: params.status || undefined,
+    q: params.q || undefined,
+    exceptions: params.exceptions || undefined,
+    division: params.division?.trim() || undefined,
+  };
+}
+
+/** The query string for a set of filters, empty when none apply. */
+function queryString(entries: Record<string, string | undefined>): string {
+  const next = new URLSearchParams();
+  for (const [key, value] of Object.entries(entries)) if (value) next.set(key, value);
+  const s = next.toString();
+  return s ? `?${s}` : "";
+}
+
+function ordersHref(entries: Record<string, string | undefined>): string {
+  return `/orders${queryString(entries)}`;
+}
 
 export default async function OrdersPage({
   searchParams,
@@ -53,8 +87,11 @@ export default async function OrdersPage({
       : undefined,
     search: params.q?.trim() || undefined,
     exceptionsOnly: params.exceptions === "1",
+    // Honours the Division selector in the app shell. Absent = all divisions.
+    divisionId: params.division?.trim() || undefined,
     page,
   };
+  const carry = carried(params);
 
   const [orders, totalOrders] = await Promise.all([listOrders(filters), countOrders(filters)]);
   const activeStatus = filters.status ?? "";
@@ -70,7 +107,7 @@ export default async function OrdersPage({
             <SyncButtons entity="orders" />
             {canExport ? (
               <ExportButton
-                href={`/api/exports/orders${params.status || params.exceptions ? `?${new URLSearchParams({ ...(params.status && { status: params.status }), ...(params.exceptions && { exceptions: params.exceptions }) }).toString()}` : ""}`}
+                href={`/api/exports/orders${queryString({ status: carry.status, exceptions: carry.exceptions, division: carry.division })}`}
               />
             ) : null}
           </div>
@@ -82,11 +119,7 @@ export default async function OrdersPage({
         <div className="flex flex-wrap items-center gap-2">
           {STATUS_FILTERS.map((f) => {
             const isActive = activeStatus === f.value;
-            const next = new URLSearchParams();
-            if (f.value) next.set("status", f.value);
-            if (params.q) next.set("q", params.q);
-            if (params.exceptions) next.set("exceptions", params.exceptions);
-            const href = `/orders${next.toString() ? `?${next}` : ""}`;
+            const href = ordersHref({ ...carry, status: f.value || undefined });
             return (
               <Link
                 key={f.value || "all"}
@@ -101,10 +134,11 @@ export default async function OrdersPage({
               </Link>
             );
           })}
-          <ExceptionsToggle active={!!filters.exceptionsOnly} status={activeStatus} q={params.q} />
+          <ExceptionsToggle active={!!filters.exceptionsOnly} carry={carry} />
           <form action="/orders" className="ml-auto flex items-center gap-2">
             {filters.status && <input type="hidden" name="status" value={filters.status} />}
             {filters.exceptionsOnly && <input type="hidden" name="exceptions" value="1" />}
+            {carry.division && <input type="hidden" name="division" value={carry.division} />}
             <input
               type="search"
               name="q"
@@ -190,19 +224,21 @@ export default async function OrdersPage({
           page={page}
           pageSize={ORDERS_PAGE_SIZE}
           totalCount={totalOrders}
-          params={{ status: params.status, q: params.q, exceptions: params.exceptions }}
+          params={carry}
         />
       </div>
     </div>
   );
 }
 
-function ExceptionsToggle({ active, status, q }: { active: boolean; status: string; q?: string }) {
-  const next = new URLSearchParams();
-  if (status) next.set("status", status);
-  if (q) next.set("q", q);
-  if (!active) next.set("exceptions", "1");
-  const href = `/orders${next.toString() ? `?${next}` : ""}`;
+function ExceptionsToggle({
+  active,
+  carry,
+}: {
+  active: boolean;
+  carry: Record<string, string | undefined>;
+}) {
+  const href = ordersHref({ ...carry, exceptions: active ? undefined : "1" });
   return (
     <Link
       href={href}
