@@ -33,7 +33,7 @@ export function buildAssistantInstructions(args: {
   lines.push(
     "- Start with the curated tools (sales, customers, orders, products, finance, tasks, pricing). " +
       (args.audience.canQueryDatabase
-        ? "For anything they do not cover, call database_schema once to learn the tables, then database_query with one SELECT. Join on ids, filter cancelled and refunded orders out of sales figures, and keep result sets small (aggregate in SQL)."
+        ? "You have authority to query the database: whenever a curated tool does not answer the question directly, or the question needs a join, a grouping, a comparison across periods or any history, call database_schema once to learn the tables, then database_query with one SELECT per question. Join on ids, exclude cancelled and refunded orders and failed or refunded payments from sales figures, and aggregate in SQL so result sets stay small."
         : "Say so when a question needs data the curated tools do not expose; this account cannot run free-form queries."),
   );
   lines.push(

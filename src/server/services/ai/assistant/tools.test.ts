@@ -51,14 +51,14 @@ describe("every tool is gated and unique", () => {
     }
   });
 
-  it("offers the SQL tools only to an account with every AI context and settings administration", () => {
+  it("offers the SQL tools to an account with every AI data context, and to no one else", () => {
     const owner = [
       PERMISSIONS.AI_USE,
       PERMISSIONS.AI_USE_FINANCIAL_CONTEXT,
       PERMISSIONS.AI_USE_CUSTOMER_CONTEXT,
       PERMISSIONS.AI_USE_INVESTOR_CONTEXT,
-      PERMISSIONS.ADMIN_MANAGE_SYSTEM_SETTINGS,
     ];
+    expect(canQueryDatabase(owner.slice(0, 3))).toBe(false);
     expect(canQueryDatabase(owner)).toBe(true);
     expect(toolsForPermissions(owner).map((t) => t.name)).toContain("database_query");
     const analyst = [PERMISSIONS.AI_USE, PERMISSIONS.ORDERS_VIEW];

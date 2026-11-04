@@ -38,17 +38,23 @@ export type AssistantTool = {
   description: string;
   /** Every listed permission is required. */
   permissions: PermissionKey[];
-  /** The SQL tools: the three AI context permissions plus system-settings administration. */
+  /** The SQL tools: the three AI context permissions, which together grant whole-data visibility. */
   requiresDatabaseAccess?: true;
   parameters: Record<string, unknown>;
   run: (args: Record<string, unknown>, ctx: ToolContext) => Promise<unknown>;
 };
 
+/**
+ * Who may run SQL (owner, 2026-11-04: "the AI should have authority to run
+ * SQL queries on the database as needed"). The three AI context permissions
+ * are what let a person see financial, customer and investor data through
+ * every other tool, so holding all three is the line; the queries themselves
+ * are read-only SELECTs under the guard and a read-only transaction.
+ */
 const DATABASE_ACCESS: PermissionKey[] = [
   PERMISSIONS.AI_USE_FINANCIAL_CONTEXT,
   PERMISSIONS.AI_USE_CUSTOMER_CONTEXT,
   PERMISSIONS.AI_USE_INVESTOR_CONTEXT,
-  PERMISSIONS.ADMIN_MANAGE_SYSTEM_SETTINGS,
 ];
 
 export function canQueryDatabase(permissions: string[]): boolean {
@@ -795,7 +801,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
   {
     name: "database_query",
     description:
-      "Run one read-only SELECT against the Command Center database (Postgres). Rows are capped at 200 and the statement at 10 seconds, so aggregate in SQL. Quote camelCase columns. Use database_schema first.",
+      "Run one read-only SELECT against the Command Center database (Postgres): joins, groupings, history, anything the curated tools do not answer directly. Rows are capped at 200 and the statement at 10 seconds, so aggregate in SQL. Quote camelCase columns. Use database_schema first in a conversation.",
     permissions: [PERMISSIONS.AI_USE],
     requiresDatabaseAccess: true,
     parameters: {
