@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Roboto, Roboto_Condensed } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme/theme-provider";
@@ -46,6 +46,12 @@ const lifeSupplyDisplay = Roboto_Condensed({
   variable: "--font-lsh-display",
   weight: ["400", "500", "600", "700"],
 });
+
+/**
+ * `viewport-fit=cover` lets the phone's bottom key bar pad itself above the
+ * home indicator with `env(safe-area-inset-bottom)` (2026-11-03).
+ */
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export const metadata: Metadata = {
   title: {

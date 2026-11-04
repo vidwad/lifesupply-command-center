@@ -71,3 +71,35 @@ describe("the app shell keeps a navigation route on narrow screens", () => {
     expect(header).toContain("px-4 py-4 md:px-6 md:py-5");
   });
 });
+
+describe("the phone has function keys along the bottom (2026-11-03)", () => {
+  const bar = read("BottomTabBar.tsx");
+
+  it("sits in the shell's column below the scrolling area, so it covers nothing", () => {
+    const shell = read("AppShell.tsx");
+    expect(shell).toMatch(
+      /<main className="flex-1 overflow-y-auto">\{children\}<\/main>[\s\S]*?<BottomTabBar/,
+    );
+    expect(bar).toContain(
+      'className="shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"',
+    );
+  });
+
+  it("offers home, orders, customers, tasks and the AI tool, each behind its sidebar permission", () => {
+    const hrefs = [...bar.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
+    expect(hrefs).toEqual(["/dashboard", "/orders", "/customers", "/tasks", "/ai-analyst"]);
+    expect(bar).toContain("PERMISSIONS.DASHBOARD_VIEW");
+    expect(bar).toContain("PERMISSIONS.ORDERS_VIEW");
+    expect(bar).toContain("PERMISSIONS.CUSTOMERS_VIEW");
+    expect(bar).toContain("PERMISSIONS.TASKS_VIEW");
+    expect(bar).toContain("PERMISSIONS.AI_USE");
+    expect(bar).toContain("permissions.includes(item.permission)");
+  });
+
+  it("marks the current destination and shows what needs attention on the tasks key", () => {
+    expect(bar).toContain('aria-current={active ? "page" : undefined}');
+    expect(bar).toContain("counts.myOverdueTasks + counts.approvalsCanDecide");
+    // Each key is a full-height target a thumb can hit.
+    expect(bar).toContain("min-h-14");
+  });
+});
