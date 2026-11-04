@@ -212,6 +212,10 @@ export default async function CustomerDetailPage({ params }: Props) {
                   <Row label="Reactivation score" value={String(customer.reactivationScore)} />
                 )}
               </dl>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Counts orders that went through. Cancelled, declined and refunded orders are left
+                out, so the recent orders above may list more than the order count.
+              </p>
             </CardContent>
           </Card>
 

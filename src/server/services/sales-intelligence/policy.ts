@@ -9,7 +9,14 @@
  * Nothing in this file touches Prisma, BigCommerce, feature flags, or any
  * write path.
  */
-import { OrderStatus } from "@prisma/client";
+import type { OrderStatus, PaymentStatus } from "@prisma/client";
+
+import {
+  NON_SALE_ORDER_STATUSES,
+  NON_SALE_PAYMENT_STATUSES,
+  SALE_ORDER_STATUSES,
+  SALE_ORDER_WHERE,
+} from "@/server/services/orders/sale-rule";
 
 /**
  * Statuses whose revenue counts.
@@ -19,25 +26,29 @@ import { OrderStatus } from "@prisma/client";
  * status — including the in-flight ones — is counted, because the order was
  * placed and the money is expected.
  *
- * NOTE — this differs from the Executive Dashboard, which excludes only
+ * Since 2026-11-03 the rule is shared with the customer lifetime figures and
+ * the BigCommerce reconciliation through `services/orders/sale-rule.ts`, and
+ * it also looks at the payment: a `failed` or fully `refunded` payment is
+ * excluded whatever the order status. In production that mostly removes
+ * BigCommerce "Incomplete" checkouts whose card was declined, which arrive
+ * as `received` + `failed` and were being counted as revenue.
+ *
+ * NOTE — this still differs from the Executive Dashboard, which excludes only
  * `cancelled` and therefore counts the 9,375 refunded orders in production as
  * revenue. That inconsistency is recorded in `docs/36` §7.1 as a finding, not
  * silently reconciled here: changing the dashboard's headline revenue figure
  * is a product-owner decision, not a side effect of adding a new service.
  */
-export const REVENUE_STATUSES: OrderStatus[] = [
-  OrderStatus.received,
-  OrderStatus.processing,
-  OrderStatus.awaiting_supplier,
-  OrderStatus.in_supplier_queue,
-  OrderStatus.awaiting_human_review,
-  OrderStatus.shipped,
-  OrderStatus.delivered,
-  OrderStatus.completed,
-];
+export const REVENUE_STATUSES: OrderStatus[] = [...SALE_ORDER_STATUSES];
 
 /** Statuses deliberately excluded from every revenue and unit figure. */
-export const EXCLUDED_STATUSES: OrderStatus[] = [OrderStatus.cancelled, OrderStatus.refunded];
+export const EXCLUDED_STATUSES: OrderStatus[] = [...NON_SALE_ORDER_STATUSES];
+
+/** Payment statuses deliberately excluded from every revenue and unit figure. */
+export const EXCLUDED_PAYMENT_STATUSES: PaymentStatus[] = [...NON_SALE_PAYMENT_STATUSES];
+
+/** The two exclusions as one Prisma filter, for the query builders. */
+export const REVENUE_ORDER_WHERE = SALE_ORDER_WHERE;
 
 /**
  * A money value only counts when it is strictly positive.

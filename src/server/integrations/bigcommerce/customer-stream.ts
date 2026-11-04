@@ -10,6 +10,9 @@
  * lifespan, B2B detection, and payment methods — all derived from the
  * orders + customers walks WITHOUT any additional per-order API calls,
  * so this is a free upgrade over the previous "last-order-only" CSV.
+ * Only orders that count as a sale contribute (2026-11-03): cancelled,
+ * declined and refunded orders are skipped, the same rule the customer
+ * sync and the Order table apply (`services/orders/sale-rule.ts`).
  *
  * For deeper enrichment (per-order product mix / category resolution,
  * per-order refund transactions, wishlists, abandoned carts), use the
@@ -21,6 +24,8 @@
 
 import { resolveCredentialsBundleForConnection } from "@/server/services/integrations";
 import { prisma } from "@/server/db/client";
+
+import { bcOrderCountsAsSale, type BcOrderStatusFields } from "./sync/order-mapper";
 
 const BC_BASE = "https://api.bigcommerce.com";
 const PAGE_SIZE = 250;
@@ -61,7 +66,7 @@ type BcCustomer = {
   date_created?: string;
 };
 
-type BcOrder = {
+type BcOrder = BcOrderStatusFields & {
   id: number;
   customer_id: number;
   date_created: string;
@@ -298,6 +303,7 @@ export function buildBigCommerceCustomerCsvStream(prep: { storeRoot: string; api
           for (const o of orders) {
             ordersScanned++;
             if (ordersScanned > HARD_CAP_ORDERS) break;
+            if (!bcOrderCountsAsSale(o)) continue;
             const orderMs = new Date(o.date_created).getTime();
             const total = Number(o.total_inc_tax) || 0;
             const pm = o.payment_method?.trim() || undefined;

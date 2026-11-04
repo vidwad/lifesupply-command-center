@@ -7,8 +7,12 @@
  *   BC-OWNED (overwritten on every sync):
  *     email, firstName, lastName, companyName, phone
  *
- *   COMPUTED (recomputed on every sync from the order walk):
+ *   COMPUTED (recomputed on every full sync from the order walk; preserved
+ *   on incremental syncs, whose walk is partial — see `preserveAggregates`):
  *     lifetimeValue, orderCount, firstOrderAt, lastOrderAt
+ *     Only orders that count as a sale contribute (2026-11-03): cancelled,
+ *     declined and refunded orders are skipped by the walk, matching
+ *     `services/orders/sale-rule.ts`.
  *
  *   CC-OWNED (set on create only; NEVER touched by sync):
  *     customerType, consentStatus, mailchimpStatus, reactivationScore,
@@ -76,6 +80,14 @@ export function mapBcCustomerToUpsert(
     storeId: string;
     divisionId: string | null;
     aggregate: SlimOrderAggregate | undefined;
+    /**
+     * Leave an existing customer's computed fields alone (2026-11-03). An
+     * incremental sync's order walk only covers orders modified since the
+     * last run, so its aggregate is partial; writing it would replace a
+     * customer's lifetime value with the last few weeks' spend. The order
+     * sync recomputes the lifetime figures from the Order table instead.
+     */
+    preserveAggregates?: boolean;
   },
 ): CustomerUpsertPayloads {
   // ---- BC-owned (overwrite on every sync) ----
@@ -119,7 +131,7 @@ export function mapBcCustomerToUpsert(
     update: {
       // CC-owned fields intentionally OMITTED — Prisma preserves them.
       ...bcOwned,
-      ...computed,
+      ...(args.preserveAggregates ? {} : computed),
       metadata,
     },
   };

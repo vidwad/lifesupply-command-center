@@ -138,6 +138,7 @@ async function runOrderSync(args: {
         shipmentsUpserted: counts.shipmentsUpserted,
         shipmentsDeleted: counts.shipmentsDeleted,
         shipmentsFailed: counts.shipmentsFailed,
+        customersRecomputed: counts.customersRecomputed,
         mode: args.mode,
         sinceIso: sinceIso ?? null,
       },
