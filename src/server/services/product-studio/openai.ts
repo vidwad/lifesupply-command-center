@@ -523,7 +523,7 @@ export async function reformatListingDescription(args: {
   title: string;
   longDescription: string;
 }): Promise<ReformatCallResult> {
-  const client = await getOpenAiClient();
+  const client = await getOpenAiClient({ feature: "product_studio.reformat" });
   if (!client) throw new AiProviderNotConfiguredError("openai");
   const model = await resolveOpenAiModel();
   const prompt = buildDescriptionReformatPrompt(args);
@@ -570,7 +570,7 @@ export async function researchProduct(args: {
   /** Provenance lines for photographs that are seller listing images. */
   referenceNotes?: readonly string[];
 }): Promise<ResearchCallResult> {
-  const client = await getOpenAiClient();
+  const client = await getOpenAiClient({ feature: "product_studio.research" });
   if (!client) throw new AiProviderNotConfiguredError("openai");
   const model = await resolveOpenAiModel();
   const prompt = buildProductResearchPrompt({
@@ -698,7 +698,7 @@ export async function searchSellerProductImages(args: {
   ownStoreHosts?: readonly string[];
   maxCandidates?: number;
 }): Promise<SellerImageSearchCallResult> {
-  const client = await getOpenAiClient();
+  const client = await getOpenAiClient({ feature: "product_studio.seller_image_search" });
   if (!client) throw new AiProviderNotConfiguredError("openai");
   const model = await resolveOpenAiModel();
   const prompt = buildSellerImageSearchPrompt({
@@ -766,7 +766,7 @@ export async function generateProductImage(args: {
   references: ReferenceAsset[];
   aspect: FrameAspect;
 }): Promise<GeneratedImage> {
-  const client = await getOpenAiClient();
+  const client = await getOpenAiClient({ feature: "product_studio.image_generation" });
   if (!client) throw new AiProviderNotConfiguredError("openai");
   // Env, then the admin's AI setting, then the built-in default.
   const caps = imageModelCapabilities(await resolveOpenAiImageModel());
@@ -819,7 +819,7 @@ export async function qaProductImage(args: {
   references: ReferenceAsset[];
   generated: GeneratedImage;
 }): Promise<{ result: ProductStudioQa; modelName: string; rawOutput: string; usage: Usage }> {
-  const client = await getOpenAiClient();
+  const client = await getOpenAiClient({ feature: "product_studio.image_qa" });
   if (!client) throw new AiProviderNotConfiguredError("openai");
   const model = await resolveOpenAiModel();
   const prompt = buildImageQaPrompt({

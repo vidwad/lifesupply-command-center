@@ -720,6 +720,16 @@ Suggested metrics:
 
 ---
 
+## 21A. Usage Metering and Daily Budgets (added November 3, 2026)
+
+Every OpenAI client is handed out by `src/server/integrations/openai/client.ts`. Since November 3, 2026 that function is the budget chokepoint: it checks the day's estimated spend against the caps in Admin → AI Settings before returning a client, and meters every billable response the client receives into the `AiUsageEvent` ledger with the calling user and feature. A reached cap raises `AiBudgetExceededError` with a message naming the cap; the day resets at midnight America/Toronto. Costs are estimates from list prices in `src/server/services/ai/pricing.ts`; the OpenAI invoice is the billed amount.
+
+Caps: daily spend for everyone and per user (0 = no cap), daily live-dialog minutes for everyone and per user, and the longest single live session. Live voice sessions also need the `ai.live_voice` feature flag, default off.
+
+The page-aware assistant drawer with text and live voice, which these settings serve, is designed and staged in `docs/43_AI_ASSISTANT_DRAWER.md`.
+
+---
+
 ## 22. Acceptance Criteria
 
 The AI layer is acceptable when:

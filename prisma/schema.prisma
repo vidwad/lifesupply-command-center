@@ -54,6 +54,7 @@ model User {
   requestedApprovals          Approval[]            @relation("ApprovalRequester")
   decidedApprovals            Approval[]            @relation("ApprovalApprover")
   aiOutputs                   AiOutput[]
+  aiUsageEvents               AiUsageEvent[]
   triggeredSyncs              IntegrationSyncLog[]  @relation("SyncTriggeredBy")
   investorInteractionsCreated InvestorInteraction[] @relation("InvestorInteractionCreator")
   ownedOpportunities          Opportunity[]         @relation("OpportunityOwner")
@@ -1434,6 +1435,47 @@ model AiOutput {
   @@index([status])
   @@index([promptTemplateKey, promptTemplateVersion])
   @@map("ai_outputs")
+}
+
+/// One metered OpenAI call (2026-11-03). Written by the metering wrapper in
+/// integrations/openai/client.ts for every text, image and transcription
+/// request, and by the live-dialog route for Realtime sessions. The daily
+/// budgets in Admin → AI Settings are enforced against the day's sum of
+/// `estimatedCostUsd` and `audioSeconds`. Cost is an estimate from the list
+/// prices in services/ai/pricing.ts, never a billed amount.
+model AiUsageEvent {
+  id                String      @id @default(cuid())
+  userId            String?
+  /// What spent it: a template key, `product_studio.<step>`, `assistant.text`, `assistant.voice`.
+  feature           String
+  kind              AiUsageKind
+  modelName         String
+  inputTokens       Int?
+  cachedInputTokens Int?
+  outputTokens      Int?
+  audioInputTokens  Int?
+  audioOutputTokens Int?
+  imageInputTokens  Int?
+  imageOutputTokens Int?
+  /// Live-dialog wall time, the figure the voice-minute budgets count.
+  audioSeconds      Int?
+  estimatedCostUsd  Decimal     @db.Decimal(10, 4)
+  metadata          Json?
+  createdAt         DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([feature, createdAt])
+  @@map("ai_usage_events")
+}
+
+enum AiUsageKind {
+  text
+  image
+  transcription
+  realtime
 }
 
 enum AiModelProvider {

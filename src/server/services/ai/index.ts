@@ -175,7 +175,7 @@ export async function generateDashboardBriefing(userId: string): Promise<AiOutpu
   const [data, reactivation] = await Promise.all([getDashboardData(), getReactivationSummary()]);
   const context = buildBriefingContext(data, reactivation);
 
-  const result = await aiCall("dashboard_briefing", { context });
+  const result = await aiCall("dashboard_briefing", { context }, { actorUserId: userId });
 
   const sourceReferences = {
     period: data.period?.name,
@@ -255,7 +255,11 @@ export async function askAiAnalyst(args: {
     redactReactivationForAi(reactivation, permissions),
   );
 
-  const result = await aiCall("analyst_query", { context, question: trimmed });
+  const result = await aiCall(
+    "analyst_query",
+    { context, question: trimmed },
+    { actorUserId: args.userId },
+  );
 
   const warnings: string[] = [];
   if (data.period == null) warnings.push("No open financial period — answers may use stale data.");
@@ -379,7 +383,7 @@ export async function analyzeOpportunity(args: {
     }
   }
   const context = lines.join("\n");
-  const result = await aiCall("opportunity_analysis", { context });
+  const result = await aiCall("opportunity_analysis", { context }, { actorUserId: args.userId });
 
   const warnings: string[] = [];
   if (opportunity.estimatedRevenueImpact == null) warnings.push("Revenue impact not supplied.");

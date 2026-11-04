@@ -114,10 +114,11 @@ export async function draftReactivationCampaign(
     ...audienceLines,
   ].join("\n");
 
-  const result = await aiCall("campaign_draft", {
-    context,
-    bucket: input.bucket,
-  });
+  const result = await aiCall(
+    "campaign_draft",
+    { context, bucket: input.bucket },
+    { actorUserId: actor.id },
+  );
 
   // Snapshot the audience IDs so the approver sees exactly who would receive
   // the message even if reactivation scores shift before approval.

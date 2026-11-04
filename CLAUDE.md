@@ -366,6 +366,7 @@ If a command fails, fix the failure within the phase scope. If the fix is out of
 - Log AI prompts, outputs, model used, user, timestamp, source data references, and approval status where relevant.
 - Clearly distinguish facts, assumptions, limitations, and recommendations in AI-generated management content.
 - Use server-side model wrappers. Do not expose the OpenAI API key in client-side code.
+- Every OpenAI client comes from `getOpenAiClient()` with a feature attribution (2026-11-03). It checks the daily budgets set in Admin → AI Settings before returning and meters every billable call into the `AiUsageEvent` ledger. Only the model listing opts out with `{ metered: false }`. Never construct an OpenAI client directly. The assistant drawer design (page-aware text and live voice) and its stages are in `docs/43_AI_ASSISTANT_DRAWER.md`; the live voice flag `ai.live_voice` stays off until the owner turns it on.
 
 ---
 
