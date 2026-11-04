@@ -77,7 +77,7 @@ export function BottomTabBar({ permissions, counts }: Props) {
   return (
     <nav
       aria-label="Quick access"
-      className="shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="phone-key-bar shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="flex items-stretch">
         {items.map((item) => {

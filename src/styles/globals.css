@@ -1333,3 +1333,24 @@
   inherits: false;
   initial-value: 2.5rem;
 }
+
+/*
+ * The phone's bottom key bar on iOS (product owner, 2026-11-03).
+ *
+ * Safari 26 floats its toolbar over the page and reports only the home
+ * indicator in env(safe-area-inset-bottom), about 34px, while the toolbar
+ * reaches about 80px up from the edge. On a 2026-11-03 screenshot the keys
+ * sat under it. Every iOS browser is WebKit, and -webkit-touch-callout is
+ * iOS-only, so this clears the toolbar there and nowhere else. Opened from
+ * the Home Screen there is no toolbar, so only the indicator inset applies.
+ */
+@supports (-webkit-touch-callout: none) {
+  .phone-key-bar {
+    padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), 20px) + 48px);
+  }
+  @media (display-mode: standalone) {
+    .phone-key-bar {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  }
+}
