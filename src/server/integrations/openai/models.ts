@@ -1,12 +1,19 @@
 /**
  * The OpenAI models the configured key can use (2026-10-26), for the AI
- * settings page to list under the Product Studio fields. Read-only; a
- * failure is returned, never thrown, so the page still renders with the
- * static suggestions.
+ * settings page to list under the model fields. Read-only; a failure is
+ * returned, never thrown, so the page still renders with the static
+ * suggestions. Since 2026-11-03 the live-dialog families are listed too.
  */
 import { getOpenAiClient } from "./client";
 
-export type OpenAiModelChoices = { text: string[]; image: string[] };
+export type OpenAiModelChoices = {
+  text: string[];
+  image: string[];
+  /** Models that can hold a Realtime voice session. */
+  realtime: string[];
+  /** Speech-to-text models, for live dialog's input transcription and dictation. */
+  transcription: string[];
+};
 
 export type OpenAiModelListing =
   | { ok: true; choices: OpenAiModelChoices; total: number }
@@ -17,23 +24,35 @@ const TEXT_FAMILY = /^(gpt-5|gpt-4\.1|o[1-9])/;
 const NOT_TEXT =
   /(audio|realtime|tts|transcribe|image|embedding|moderation|search-preview|codex|-pro$)/;
 const IMAGE_FAMILY = /^gpt-image-/;
+/** Realtime session models; the translation and dated snapshot variants are left out. */
+const REALTIME_FAMILY = /^(gpt-realtime|gpt-4o(-mini)?-realtime)/;
+const NOT_REALTIME = /(translation|-\d{4}-\d{2}-\d{2}$)/;
+/** Speech-to-text models; `-diarize` variants label speakers, which the drawer does not use. */
+const TRANSCRIPTION_FAMILY = /^(gpt-4o(-mini)?-transcribe|whisper-)/;
+const NOT_TRANSCRIPTION = /(diarize|-\d{4}-\d{2}-\d{2}$)/;
 
 /**
- * Pure: narrows a model id list to the ones the two fields accept. Text
+ * Pure: narrows a model id list to the ones each field accepts. Text
  * models are the Responses-capable chat families; audio, realtime, speech,
  * embedding, moderation and search-preview variants are left out because
- * they cannot run research with web search and structured output.
+ * they cannot run research with web search and structured output. The
+ * realtime and transcription lists serve the live-dialog fields.
  */
 export function pickModelChoices(ids: readonly string[]): OpenAiModelChoices {
   const unique = [...new Set(ids)].sort();
   return {
     text: unique.filter((id) => TEXT_FAMILY.test(id) && !NOT_TEXT.test(id)),
     image: unique.filter((id) => IMAGE_FAMILY.test(id)),
+    realtime: unique.filter((id) => REALTIME_FAMILY.test(id) && !NOT_REALTIME.test(id)),
+    transcription: unique.filter(
+      (id) => TRANSCRIPTION_FAMILY.test(id) && !NOT_TRANSCRIPTION.test(id),
+    ),
   };
 }
 
 export async function listOpenAiModels(): Promise<OpenAiModelListing> {
-  const client = await getOpenAiClient();
+  // Listing carries no usage and must work when the day's budget is spent.
+  const client = await getOpenAiClient({ metered: false });
   if (!client) return { ok: false, reason: "No OpenAI API key is configured." };
   try {
     const ids: string[] = [];

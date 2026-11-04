@@ -15,8 +15,15 @@ describe("narrowing the OpenAI model list to the two fields", () => {
       "gpt-5-pro",
       "gpt-4o-audio-preview",
       "gpt-4o-realtime-preview",
+      "gpt-4o-mini-realtime-preview",
+      "gpt-4o-realtime-preview-2025-06-03",
+      "gpt-realtime",
+      "gpt-realtime-mini",
+      "gpt-realtime-translation",
       "gpt-4o-mini-tts",
       "gpt-4o-transcribe",
+      "gpt-4o-mini-transcribe",
+      "gpt-4o-transcribe-diarize",
       "gpt-4o-search-preview",
       "text-embedding-3-large",
       "omni-moderation-latest",
@@ -36,8 +43,21 @@ describe("narrowing the OpenAI model list to the two fields", () => {
       "o4-mini",
     ]);
     expect(choices.image).toEqual(["gpt-image-1", "gpt-image-1.5", "gpt-image-2"]);
+    // Live dialog (2026-11-03): session models without the translation and
+    // dated variants; speech-to-text without the speaker-labelling variant.
+    expect(choices.realtime).toEqual([
+      "gpt-4o-mini-realtime-preview",
+      "gpt-4o-realtime-preview",
+      "gpt-realtime",
+      "gpt-realtime-mini",
+    ]);
+    expect(choices.transcription).toEqual([
+      "gpt-4o-mini-transcribe",
+      "gpt-4o-transcribe",
+      "whisper-1",
+    ]);
   });
   it("returns empty lists for an empty account", () => {
-    expect(pickModelChoices([])).toEqual({ text: [], image: [] });
+    expect(pickModelChoices([])).toEqual({ text: [], image: [], realtime: [], transcription: [] });
   });
 });

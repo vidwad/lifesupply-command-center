@@ -108,10 +108,11 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     }
 
     // ---- Model call with guarded context + schema-validated output.
-    const result = await aiCall(agent.templateKey, {
-      context: buildAgentContext(blocks),
-      params: JSON.stringify(params),
-    });
+    const result = await aiCall(
+      agent.templateKey,
+      { context: buildAgentContext(blocks), params: JSON.stringify(params) },
+      { actorUserId: input.user.id },
+    );
     const output = agentOutputSchema.parse(result.structuredOutput);
 
     // Skipped tools are a real limitation of the analysis — surface them.

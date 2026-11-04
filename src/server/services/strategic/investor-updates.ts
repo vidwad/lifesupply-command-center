@@ -135,7 +135,7 @@ export async function draftInvestorUpdate(
   lines.push(input.brief.trim());
 
   const context = lines.join("\n");
-  const result = await aiCall("investor_update", { context });
+  const result = await aiCall("investor_update", { context }, { actorUserId: actor.id });
 
   const distributionSnapshot = investors.map((i) => ({
     id: i.id,

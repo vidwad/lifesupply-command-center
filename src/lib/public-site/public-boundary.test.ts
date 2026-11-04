@@ -63,6 +63,8 @@ const COMMAND_CENTER_MIGRATIONS_SINCE_WEBSITE_STAGES = new Set([
   "20261030210000_products_default_list_index",
   // Index for the customers list's default order, with sorting and filters (product owner, 2026-11-02).
   "20261102230000_customers_default_list_index",
+  // AI usage ledger for the daily budgets in AI Settings (product owner, 2026-11-03).
+  "20261103120000_ai_usage_events",
 ]);
 
 /** Every file in the public content model, for sweeps that must cover all copy. */

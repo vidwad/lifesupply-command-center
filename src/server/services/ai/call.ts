@@ -34,6 +34,12 @@ export type AiCallResult = {
 export type AiCallOptions = {
   /** Hard cap on output tokens. Defaults to 1024. */
   maxOutputTokens?: number;
+  /**
+   * Who the call is for (2026-11-03). Named on the usage ledger row and
+   * counted against that person's daily budget; an unattended call leaves
+   * it out and counts only against the organisation-wide cap.
+   */
+  actorUserId?: string | null;
 };
 
 /**
@@ -49,7 +55,9 @@ export async function aiCall(
   const template = await renderPrompt(templateKey, vars);
   const maxTokens = options.maxOutputTokens ?? 1024;
 
-  const client = await getOpenAiClient();
+  // The client checks the day's budget and meters the call under the
+  // template's key, so every template is on the ledger by name.
+  const client = await getOpenAiClient({ userId: options.actorUserId, feature: templateKey });
   if (!client) throw new AiProviderNotConfiguredError("openai");
   const raw = await invokeOpenAi(client, template, maxTokens);
 

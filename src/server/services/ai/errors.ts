@@ -37,3 +37,15 @@ export class AiActionPermissionError extends Error {
     this.name = "AiActionPermissionError";
   }
 }
+
+/**
+ * A daily budget set in Admin → AI Settings has been reached (2026-11-03).
+ * Raised by `services/ai/budget.ts` before a metered call starts; the
+ * message is written for the person who sees it.
+ */
+export class AiBudgetExceededError extends Error {
+  constructor(public readonly reason: string) {
+    super(reason);
+    this.name = "AiBudgetExceededError";
+  }
+}
