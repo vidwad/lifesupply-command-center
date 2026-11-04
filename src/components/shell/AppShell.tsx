@@ -1,8 +1,13 @@
+import { cookies } from "next/headers";
+
+import { AnalystChat } from "@/app/(dashboard)/ai-analyst/analyst-chat";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { prisma } from "@/server/db/client";
 import { getNotificationCounts } from "@/server/services/notifications";
 
-import { BottomTabBar } from "./BottomTabBar";
-import { SidebarNav } from "./SidebarNav";
+import { AppSidebar } from "./AppSidebar";
+import { DockShell } from "./DockShell";
+import { DOCK_HEIGHT_PX } from "./MobileDock";
 import { TopBar } from "./TopBar";
 
 type Props = {
@@ -17,8 +22,23 @@ type Props = {
   children: React.ReactNode;
 };
 
+/** What the dock's assistant panel offers first. */
+const DOCK_ASSISTANT_SUGGESTIONS = [
+  "What needs my attention today?",
+  "How are sales this month against last?",
+  "Which orders are stuck?",
+];
+
+/**
+ * The application shell (2026-11-04, after the owner's pookt-operations
+ * app): a collapsible grouped sidebar, a header naming the open module,
+ * and on a phone a dock of function keys at the foot of every page with
+ * the assistant a tap away. The column is the phone's visible height
+ * (`h-dvh`, `h-screen` as the fallback) so nothing sits behind a browser
+ * toolbar; the main area pads for the fixed dock below `md`.
+ */
 export async function AppShell({ user, signOutAction, children }: Props) {
-  const [notificationCounts, divisions, periods] = await Promise.all([
+  const [notificationCounts, divisions, periods, cookieStore] = await Promise.all([
     getNotificationCounts({ id: user.id, permissions: user.permissions }),
     prisma.division.findMany({
       where: { isActive: true },
@@ -31,39 +51,53 @@ export async function AppShell({ user, signOutAction, children }: Props) {
       take: 12,
       select: { id: true, name: true, status: true },
     }),
+    cookies(),
   ]);
+  // The desktop panel remembers whether it was collapsed.
+  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
+  const divisionOptions = divisions.map((d) => ({ value: d.id, label: d.name }));
+  const periodOptions = periods.map((p) => ({
+    value: p.id,
+    label: p.status === "open" ? `${p.name} · open` : p.name,
+  }));
+  const counts = {
+    approvalsCanDecide: notificationCounts.approvalsCanDecide,
+    myOverdueTasks: notificationCounts.myOverdueTasks,
+  };
+  const canUseAi = user.permissions.includes("ai.use");
 
-  // `h-dvh` is the phone's visible height with the browser's address bar and
-  // toolbar in whatever state they are in; `100vh` is the height with them
-  // hidden, which left the bottom key bar behind the toolbar (product owner,
-  // 2026-11-03). `h-screen` stays as the fallback for a browser without
-  // dynamic viewport units.
   return (
-    <div className="flex h-dvh h-screen w-full overflow-hidden bg-muted/20">
-      <aside className="hidden w-64 shrink-0 border-r bg-background md:flex md:flex-col">
-        <SidebarNav permissions={user.permissions} />
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
+    <SidebarProvider
+      defaultOpen={sidebarOpen}
+      className="h-dvh h-screen overflow-hidden bg-muted/20"
+    >
+      <AppSidebar
+        permissions={user.permissions}
+        divisions={divisionOptions}
+        periods={periodOptions}
+        counts={counts}
+      />
+      <div className="flex h-full min-w-0 flex-1 flex-col">
         <TopBar
           user={user}
-          divisions={divisions.map((d) => ({ value: d.id, label: d.name }))}
-          periods={periods.map((p) => ({
-            value: p.id,
-            label: p.status === "open" ? `${p.name} · open` : p.name,
-          }))}
+          divisions={divisionOptions}
+          periods={periodOptions}
           notificationCounts={notificationCounts}
           signOutAction={signOutAction}
         />
-        <main className="flex-1 overflow-y-auto">{children}</main>
-        {/* The phone's function keys, below the scrolling area (2026-11-03). */}
-        <BottomTabBar
+        <DockShell
           permissions={user.permissions}
-          counts={{
-            approvalsCanDecide: notificationCounts.approvalsCanDecide,
-            myOverdueTasks: notificationCounts.myOverdueTasks,
-          }}
-        />
+          counts={counts}
+          assistant={canUseAi ? <AnalystChat suggestions={DOCK_ASSISTANT_SUGGESTIONS} /> : null}
+        >
+          <main
+            className="flex-1 overflow-y-auto md:pb-0"
+            style={{ paddingBottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))` }}
+          >
+            {children}
+          </main>
+        </DockShell>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

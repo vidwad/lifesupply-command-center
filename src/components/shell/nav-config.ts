@@ -191,3 +191,58 @@ export const NAV_ICONS = {
   Sparkles,
   BarChart3,
 };
+
+/**
+ * The sidebar's groups (2026-11-04, after the owner's pookt-operations
+ * app): the primary items by the job they serve. An item missing from
+ * every group is not shown in the sidebar; the command palette still
+ * lists all of `PRIMARY_NAV`.
+ */
+export type NavGroup = { label: string; items: NavItem[] };
+
+const GROUP_HREFS: ReadonlyArray<readonly [label: string, hrefs: readonly string[]]> = [
+  ["Overview", ["/dashboard", "/operations"]],
+  ["Commerce", ["/orders", "/customers", "/products", "/products/studio", "/suppliers"]],
+  [
+    "Pricing",
+    [
+      "/products/pricing",
+      "/products/pricing/runs",
+      "/products/pricing/recommendations",
+      "/products/pricing/operations",
+    ],
+  ],
+  ["Finance & growth", ["/financials", "/marketing", "/analytics", "/investors", "/opportunities"]],
+  ["Intelligence", ["/ai-analyst", "/reports"]],
+  ["Workflow", ["/tasks", "/approvals"]],
+  ["Administration", ["/automation", "/automation/product-studio", "/public-web", "/admin"]],
+];
+
+export const NAV_GROUPS: NavGroup[] = GROUP_HREFS.map(([label, hrefs]) => ({
+  label,
+  items: hrefs
+    .map((href) => PRIMARY_NAV.find((item) => item.href === href))
+    .filter((item): item is NavItem => item != null),
+}));
+
+/** Whether the address is the item's page or one beneath it. */
+export function isNavItemActive(pathname: string, item: NavItem): boolean {
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+/** The navigation item an address belongs to: the deepest matching one. */
+export function navItemForPath(pathname: string): NavItem | null {
+  let best: NavItem | null = null;
+  for (const item of PRIMARY_NAV) {
+    if (isNavItemActive(pathname, item) && (!best || item.href.length > best.href.length)) {
+      best = item;
+    }
+  }
+  return best;
+}
+
+export function navGroupForPath(pathname: string): NavGroup | null {
+  const item = navItemForPath(pathname);
+  if (!item) return null;
+  return NAV_GROUPS.find((group) => group.items.includes(item)) ?? null;
+}

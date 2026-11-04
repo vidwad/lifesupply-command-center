@@ -1,54 +1,58 @@
 /**
- * Shell responsiveness canaries (2026-10-27).
+ * Shell canaries.
  *
- * The sidebar is not rendered below the `md` breakpoint. Before this date
+ * The sidebar is not rendered below the `md` breakpoint. Before 2026-10-27
  * nothing replaced it, so a phone had no navigation beyond the search box.
- * These hold the replacement in place: a menu button in the top bar that
- * opens the same navigation as a drawer, carrying the context selectors.
+ * Since 2026-11-04 the shell follows the owner's pookt-operations app: one
+ * grouped sidebar that collapses on a desktop and opens as a sheet on a
+ * phone, a header naming the open module, and a dock of function keys at
+ * the foot of every page. These hold that structure in place.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { NAV_GROUPS, PRIMARY_NAV, navGroupForPath, navItemForPath } from "./nav-config";
+
 const read = (name: string) => readFileSync(join(__dirname, name), "utf8").replace(/\r\n/g, "\n");
+const ROOT = join(__dirname, "..", "..", "..");
+const readRoot = (rel: string) => readFileSync(join(ROOT, rel), "utf8").replace(/\r\n/g, "\n");
 
 describe("the app shell keeps a navigation route on narrow screens", () => {
-  it("hides the sidebar only where the top bar offers the drawer", () => {
-    const shell = read("AppShell.tsx");
-    expect(shell).toContain(
-      'className="hidden w-64 shrink-0 border-r bg-background md:flex md:flex-col"',
+  it("renders the panel only from md up, and the header's trigger opens the sheet below it", () => {
+    const sidebar = readRoot("src/components/ui/sidebar.tsx");
+    expect(sidebar).toContain('className="group peer hidden md:block"');
+    expect(sidebar).toMatch(
+      /if \(isMobile\) \{\s*return \(\s*<Sheet open=\{openMobile\} onOpenChange=\{setOpenMobile\}>/,
     );
+    expect(sidebar).toContain('side="left"');
     const topBar = read("TopBar.tsx");
-    expect(topBar).toContain("<MobileNav permissions={user.permissions}");
-    const mobile = read("MobileNav.tsx");
-    expect(mobile).toContain('className="h-9 w-9 shrink-0 md:hidden"');
-    expect(mobile).toContain('aria-label="Open navigation"');
+    expect(topBar).toContain("<SidebarTrigger />");
+    expect(sidebar).toContain(
+      'aria-label={isMobile ? "Open navigation" : open ? "Collapse navigation" : "Expand navigation"}',
+    );
   });
 
-  it("the drawer reuses the sidebar navigation and offers the context as option lists, and closes on navigation", () => {
-    const mobile = read("MobileNav.tsx");
-    expect(mobile).toContain(
-      "<SidebarNav permissions={permissions} onNavigate={() => setOpen(false)} />",
+  it("the sheet is the same navigation, offers the context as option lists, and closes on navigation", () => {
+    const app = read("AppSidebar.tsx");
+    expect(app).toContain("NAV_GROUPS.map((group) => ({");
+    expect(app).toContain("<ContextOptionLists divisions={divisions} periods={periods} />");
+    // The context sits at the foot of the sheet only; the header's selects serve a desktop.
+    expect(app).toMatch(/<SidebarFooter className="[^"]*md:hidden"/);
+    expect(app).toMatch(
+      /useEffect\(\(\) => \{\s*if \(isMobile\) setOpenMobile\(false\);\s*\}, \[pathname, isMobile, setOpenMobile\]\);/,
     );
-    expect(mobile).toContain("<ContextOptionLists divisions={divisions} periods={periods} />");
-    // The navigation and the context scroll as one, so an expanded list
-    // below a long navigation is reachable.
-    expect(mobile).toMatch(
-      /<div className="min-h-0 flex-1 overflow-y-auto">[\s\S]*?<SidebarNav[\s\S]*?<ContextOptionLists/,
-    );
-    expect(mobile).toMatch(
-      /if \(seenPathname !== pathname\) \{\s*setSeenPathname\(pathname\);\s*setOpen\(false\);/,
-    );
-    const sidebar = read("SidebarNav.tsx");
-    expect(sidebar.match(/onClick=\{onNavigate\}/g)?.length).toBe(2);
+    const shell = read("AppShell.tsx");
+    expect(shell).toContain("<AppSidebar");
+    expect(shell).toContain("<TopBar");
   });
 
-  it("the drawer's context controls are buttons, never a native select, and carry no hover styles", () => {
+  it("the sheet's context controls are buttons, never a native select, and carry no hover styles", () => {
     // A native select inside the modal drawer did not always open on the
     // first touch (product owner, 2026-10-29): its picker is the operating
     // system's and depends on the dialog's focus trap and scroll lock. The
-    // drawer's lists are ordinary buttons; the top bar keeps its selects.
+    // sheet's lists are ordinary buttons; the header keeps its selects.
     const lists = read("ContextOptionLists.tsx");
     expect(lists).not.toContain("<select");
     expect(lists).not.toMatch(/\bhover:/);
@@ -56,11 +60,9 @@ describe("the app shell keeps a navigation route on narrow screens", () => {
     expect(lists).toContain("aria-checked={active}");
     expect(lists).toContain('emptyLabel="All divisions"');
     expect(lists).toContain('emptyLabel="Open period"');
-    const mobile = read("MobileNav.tsx");
-    expect(mobile).not.toContain("ContextSelectors");
+    expect(read("AppSidebar.tsx")).not.toContain("ContextSelectors");
     // Both selectors change the same two address parameters.
-    const selectors = read("ContextSelectors.tsx");
-    expect(selectors).toContain('from "./context-params"');
+    expect(read("ContextSelectors.tsx")).toContain('from "./context-params"');
     expect(lists).toContain('from "./context-params"');
   });
 
@@ -72,53 +74,86 @@ describe("the app shell keeps a navigation route on narrow screens", () => {
   });
 });
 
-describe("the phone has function keys along the bottom (2026-11-03)", () => {
-  const bar = read("BottomTabBar.tsx");
+describe("the sidebar groups every destination and the header names the open one (2026-11-04)", () => {
+  it("places each primary item in exactly one group, so nothing silently leaves the sidebar", () => {
+    const grouped = NAV_GROUPS.flatMap((group) => group.items.map((item) => item.href));
+    expect([...grouped].sort()).toEqual(PRIMARY_NAV.map((item) => item.href).sort());
+    expect(new Set(grouped).size).toBe(grouped.length);
+  });
 
-  it("sits in the shell's column below the scrolling area, so it covers nothing", () => {
+  it("resolves an address to its deepest item and that item's group", () => {
+    expect(navItemForPath("/products/pricing/runs")?.href).toBe("/products/pricing/runs");
+    expect(navItemForPath("/products/studio/abc")?.href).toBe("/products/studio");
+    expect(navItemForPath("/orders/123")?.href).toBe("/orders");
+    expect(navGroupForPath("/orders/123")?.label).toBe("Commerce");
+    expect(navItemForPath("/settings-that-do-not-exist")).toBeNull();
+  });
+
+  it("the header shows the item's label and the sidebar collapses to icons with tooltips", () => {
+    const title = read("HeaderTitle.tsx");
+    expect(title).toContain("navItemForPath(pathname)");
+    expect(title).toContain('{item?.label ?? "Command Center"}');
+    const sidebar = readRoot("src/components/ui/sidebar.tsx");
+    expect(sidebar).toContain('data-collapsible={state === "collapsed" ? "icon" : ""}');
+    expect(sidebar).toContain('hidden={state !== "collapsed" || isMobile}');
+    expect(sidebar).toContain("SIDEBAR_COOKIE_NAME");
+    expect(read("AppShell.tsx")).toContain('cookieStore.get("sidebar_state")?.value !== "false"');
+  });
+});
+
+describe("the phone has function keys along the bottom (2026-11-03, dock 2026-11-04)", () => {
+  const dock = read("MobileDock.tsx");
+
+  it("is fixed at the foot, hidden from md up, and the main area pads for it below md", () => {
+    expect(dock).toContain(
+      'className="phone-dock fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 backdrop-blur md:hidden"',
+    );
     const shell = read("AppShell.tsx");
-    // The column is the phone's visible height, not the address-bar-hidden
-    // height, or the bar ends up behind the browser's toolbar.
-    expect(shell).toContain('className="flex h-dvh h-screen w-full overflow-hidden bg-muted/20"');
-    expect(shell).toMatch(
-      /<main className="flex-1 overflow-y-auto">\{children\}<\/main>[\s\S]*?<BottomTabBar/,
+    expect(shell).toContain('className="flex-1 overflow-y-auto md:pb-0"');
+    expect(shell).toContain(
+      "paddingBottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))`",
     );
-    expect(bar).toContain(
-      'className="phone-key-bar shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden"',
-    );
-    // iOS Safari floats its toolbar over the page and reports only the home
-    // indicator as the inset, so the bar clears the toolbar there explicitly.
-    const css = readFileSync(join(__dirname, "..", "..", "styles", "globals.css"), "utf8");
+    // One variable carries the bottom padding: the safe-area inset, and on
+    // iOS Safari the floating toolbar's height, which Safari does not report.
+    const css = readRoot("src/styles/globals.css");
+    expect(css).toMatch(/:root \{\s*--phone-dock-pad: env\(safe-area-inset-bottom, 0px\);\s*\}/);
     expect(css).toMatch(
-      /@supports \(-webkit-touch-callout: none\) \{\s*\.phone-key-bar \{\s*padding-bottom: calc\(max\(env\(safe-area-inset-bottom, 0px\), 20px\) \+ 48px\);/,
+      /@supports \(-webkit-touch-callout: none\) \{\s*:root \{\s*--phone-dock-pad: calc\(max\(env\(safe-area-inset-bottom, 0px\), 20px\) \+ 48px\);/,
     );
-    expect(css).toMatch(/@media \(display-mode: standalone\) \{\s*\.phone-key-bar/);
+    expect(css).toMatch(
+      /@media \(display-mode: standalone\) \{\s*:root \{\s*--phone-dock-pad: env/,
+    );
+    expect(css).toMatch(/\.phone-dock \{\s*padding-bottom: var\(--phone-dock-pad\);/);
   });
 
-  it("offers home, orders, customers, tasks and the AI tool, each behind its sidebar permission", () => {
-    const hrefs = [...bar.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
-    expect(hrefs).toEqual(["/dashboard", "/orders", "/customers", "/tasks", "/ai-analyst"]);
-    expect(bar).toContain("PERMISSIONS.DASHBOARD_VIEW");
-    expect(bar).toContain("PERMISSIONS.ORDERS_VIEW");
-    expect(bar).toContain("PERMISSIONS.CUSTOMERS_VIEW");
-    expect(bar).toContain("PERMISSIONS.TASKS_VIEW");
-    expect(bar).toContain("PERMISSIONS.AI_USE");
-    expect(bar).toContain("permissions.includes(item.permission)");
+  it("offers home, two keys that differ by page, the AI tool and the menu, each behind its permission", () => {
+    const hrefs = [...dock.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
+    expect(hrefs).toEqual(["/dashboard", "/orders", "/tasks", "/customers", "/products"]);
+    expect(dock).toContain("permissions.includes(key.permission)");
+    // The open page's own keys come first, then defaults, never the page already open.
+    expect(dock).toContain(
+      'actions.slice(0, 2).map((action) => ({ kind: "action" as const, action }))',
+    );
+    expect(dock).toContain('if (key.id === "home" || isActive(pathname, key)) continue;');
+    expect(dock).toContain("onClick={toggleSidebar}");
+    expect(dock).toContain("counts.myOverdueTasks + counts.approvalsCanDecide");
   });
 
-  it("marks the current destination and shows what needs attention on the tasks key", () => {
-    expect(bar).toContain('aria-current={active ? "page" : undefined}');
-    expect(bar).toContain("counts.myOverdueTasks + counts.approvalsCanDecide");
-    // Each key is a full-height target a thumb can hit.
-    expect(bar).toContain("min-h-14");
+  it("the AI key opens a panel above the dock holding the assistant, and pages publish keys through one provider", () => {
+    expect(dock).toContain("{assistant && assistantOpen && (");
+    expect(dock).toContain("bottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))`");
+    const shell = read("AppShell.tsx");
+    expect(shell).toContain("<AnalystChat suggestions={DOCK_ASSISTANT_SUGGESTIONS} />");
+    const dockShell = read("DockShell.tsx");
+    expect(dockShell).toContain("<DockActionsProvider onChange={onChange}>");
+    expect(read("dock-actions.tsx")).toContain("export function useDockActions(");
   });
 });
 
 describe("the Command Center opens from the Home Screen as an app (2026-11-04)", () => {
-  const ROOT = join(__dirname, "..", "..", "..");
-  const layout = readFileSync(join(ROOT, "src/app/layout.tsx"), "utf8");
-  const dashboardLayout = readFileSync(join(ROOT, "src/app/(dashboard)/layout.tsx"), "utf8");
-  const manifest = readFileSync(join(ROOT, "src/app/manifest.ts"), "utf8");
+  const layout = readRoot("src/app/layout.tsx");
+  const dashboardLayout = readRoot("src/app/(dashboard)/layout.tsx");
+  const manifest = readRoot("src/app/manifest.ts");
 
   it("declares a standalone manifest with the dashboard as its start address and the icons it needs", () => {
     expect(manifest).toContain('display: "standalone"');
@@ -136,16 +171,15 @@ describe("the Command Center opens from the Home Screen as an app (2026-11-04)",
     expect(layout).toContain(
       'className="min-h-dvh min-h-screen bg-background font-sans text-foreground antialiased"',
     );
+    expect(read("AppShell.tsx")).toContain(
+      'className="h-dvh h-screen overflow-hidden bg-muted/20"',
+    );
   });
 });
 
 describe("the Products page folds its secondary filters on a phone (2026-11-04)", () => {
-  const ROOT = join(__dirname, "..", "..", "..");
-  const page = readFileSync(join(ROOT, "src/app/(dashboard)/products/page.tsx"), "utf8");
-  const disclosure = readFileSync(
-    join(ROOT, "src/components/data/PhoneFilterDisclosure.tsx"),
-    "utf8",
-  );
+  const page = readRoot("src/app/(dashboard)/products/page.tsx");
+  const disclosure = readRoot("src/components/data/PhoneFilterDisclosure.tsx");
 
   it("keeps the quality pills visible and folds the range, performance and threshold rows", () => {
     const pills = page.indexOf('label="Missing images"');
