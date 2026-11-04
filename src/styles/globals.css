@@ -1335,7 +1335,8 @@
 }
 
 /*
- * The phone's bottom key bar on iOS (product owner, 2026-11-03).
+ * The phone's dock on iOS (product owner, 2026-11-03). `--phone-dock-pad` is
+ * the dock's bottom padding; the main area pads by the dock's height plus it.
  *
  * Safari 26 floats its toolbar over the page and reports only the home
  * indicator in env(safe-area-inset-bottom), about 34px, while the toolbar
@@ -1344,13 +1345,19 @@
  * iOS-only, so this clears the toolbar there and nowhere else. Opened from
  * the Home Screen there is no toolbar, so only the indicator inset applies.
  */
+:root {
+  --phone-dock-pad: env(safe-area-inset-bottom, 0px);
+}
 @supports (-webkit-touch-callout: none) {
-  .phone-key-bar {
-    padding-bottom: calc(max(env(safe-area-inset-bottom, 0px), 20px) + 48px);
+  :root {
+    --phone-dock-pad: calc(max(env(safe-area-inset-bottom, 0px), 20px) + 48px);
   }
   @media (display-mode: standalone) {
-    .phone-key-bar {
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+    :root {
+      --phone-dock-pad: env(safe-area-inset-bottom, 0px);
     }
   }
+}
+.phone-dock {
+  padding-bottom: var(--phone-dock-pad);
 }
