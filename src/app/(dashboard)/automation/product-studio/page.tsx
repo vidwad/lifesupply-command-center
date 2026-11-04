@@ -9,11 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { requirePermission, userHasPermission } from "@/server/permissions";
+import { LIVE_RUN_STATUSES } from "@/server/services/product-studio/autopilot-policy";
 import {
   autopilotFlagState,
   listProductStudioRuns,
 } from "@/server/services/product-studio/autopilot-read";
 
+import { RunActions } from "./run-actions";
 import { RUN_STATUS_LABEL, RUN_STATUS_VARIANT } from "./run-status";
 
 export const metadata = { title: "Product Studio runs" };
@@ -54,7 +56,9 @@ export default async function ProductStudioRunsPage() {
                 products list
               </Link>{" "}
               and choose &ldquo;Run unattended&rdquo;. The run form sets the criteria; this page is
-              the record.
+              the record. A finished run&rsquo;s record can be deleted from its row; the projects it
+              worked on keep their images, reviews and approvals, and the audit log keeps the
+              history.
             </p>
             {!flags.enabled ? (
               <p className="text-xs text-muted-foreground">
@@ -93,6 +97,11 @@ export default async function ProductStudioRunsPage() {
                 <TH>Started by</TH>
                 <TH>Created</TH>
                 <TH>Finished</TH>
+                {/* Positioned, so the screen-reader label inside the scrolling
+                    table does not widen the page on a phone. */}
+                <TH className="relative">
+                  <span className="sr-only">Actions</span>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -144,6 +153,12 @@ export default async function ProductStudioRunsPage() {
                     </TD>
                     <TD className="text-xs text-muted-foreground">
                       {run.completedAt ? formatDateTime(run.completedAt) : "—"}
+                    </TD>
+                    <TD align="right">
+                      {/* Only a finished run, and only for whoever may start one. */}
+                      {canRun && !LIVE_RUN_STATUSES.has(run.status) ? (
+                        <RunActions runId={run.id} items={run._count.items} />
+                      ) : null}
                     </TD>
                   </TR>
                 );

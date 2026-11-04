@@ -366,6 +366,16 @@ manual workflow's five guards; worker functions thin and serialised per item; pa
 read-only module. `publish-canaries.test.ts` names `autopilot-publish.ts` as the second permitted
 importer of the publish service. `chokepoints.test.ts` lists the service and the kill-set flag.
 
+**Deleting a run's record (product owner, November 4, 2026).** The run row and its per-product rows are
+the working record of one unattended pass, not the durable history: the audit log holds every
+creation, stop, product outcome and completion; the AI usage ledger holds the spend; the publish
+logs hold what reached a store; and the projects keep their images, reviews and approvals. So a
+finished run can be deleted from its row on the runs list by whoever may start a run, after an
+inline confirm that names what goes. The database removes the product rows with it and detaches
+the projects, which are otherwise untouched; the deletion itself is audited as
+`product_studio.autopilot_run_deleted` with the run's status, counts and criteria. A run still
+queued or running is refused: stop it first and let it finish.
+
 ## 6. Data model
 
 - `ProductStudioProject` — intake, final listing copy, market summary, status, warnings, and the

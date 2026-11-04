@@ -1,7 +1,7 @@
 "use server";
 
 /**
- * Server actions for unattended Product Studio runs (2026-10-27). Both
+ * Server actions for unattended Product Studio runs (2026-10-27). All three
  * require the Super Admin-only publish permission at this boundary, and the
  * service re-asserts it from the permissions passed in.
  */
@@ -14,6 +14,7 @@ import { ProductStudioInputError } from "@/server/services/product-studio";
 import {
   cancelProductStudioRun,
   createProductStudioRun,
+  deleteProductStudioRun,
 } from "@/server/services/product-studio/autopilot";
 import {
   AutopilotSettingsError,
@@ -77,4 +78,29 @@ export async function cancelRunAction(
   revalidatePath(`/automation/product-studio/${runId}`);
   revalidatePath("/automation/product-studio");
   return { ok: "Stop requested. Products already in progress finish their current step first." };
+}
+
+/**
+ * Removes a finished run's record from the list (product owner, 2026-11-04).
+ * The service refuses a run still in progress.
+ */
+export async function deleteRunAction(
+  _previous: AutopilotActionState,
+  formData: FormData,
+): Promise<AutopilotActionState> {
+  const user = await requireRunner();
+  const runId = String(formData.get("runId") ?? "");
+  let removed: { items: number };
+  try {
+    removed = await deleteProductStudioRun({
+      runId,
+      actorUserId: user.id,
+      actorPermissions: user.permissions,
+    });
+  } catch (error) {
+    return actionError(error);
+  }
+  revalidatePath("/automation/product-studio");
+  revalidatePath(`/automation/product-studio/${runId}`);
+  return { ok: `Run deleted with its ${removed.items} product rows.` };
 }
