@@ -227,7 +227,7 @@ export function MobileDock({
             >
               <X className="h-4 w-4" />
             </button>
-            <div className="max-h-[60dvh] overflow-y-auto rounded-xl border bg-background p-4 shadow-2xl">
+            <div className="max-h-[60dvh] overflow-y-auto rounded-xl border border-sky-200 bg-sky-50 p-4 shadow-2xl dark:border-sky-900 dark:bg-sky-950">
               {assistant}
             </div>
           </div>
