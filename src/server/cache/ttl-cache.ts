@@ -15,6 +15,17 @@ export type TtlCache<T> = {
   clear(): void;
 };
 
+/** One TtlCache per key; see createKeyedTtlCache. */
+export type KeyedTtlCache<T> = {
+  get(key: string, load: () => Promise<T>): Promise<T>;
+  clear(): void;
+};
+
+export type KeyedTtlCacheOptions = TtlCacheOptions & {
+  /** How many keys are held at once; the least recently read goes first. */
+  maxEntries: number;
+};
+
 export type TtlCacheOptions = {
   /** The clock, for tests. */
   now?: () => number;
@@ -78,6 +89,42 @@ export function createTtlCache<T>(ttlMs: number, options: TtlCacheOptions = {}):
       generation += 1;
       entry = null;
       refreshing = false;
+    },
+  };
+}
+
+/**
+ * A cache per key for figures that differ by a small set of inputs
+ * (2026-11-05): the products under each filter combination, for instance.
+ * Each key behaves as createTtlCache does; once `maxEntries` keys are held,
+ * the least recently read is dropped, so a stream of one-off searches cannot
+ * grow the process without bound.
+ */
+export function createKeyedTtlCache<T>(
+  ttlMs: number,
+  options: KeyedTtlCacheOptions,
+): KeyedTtlCache<T> {
+  const caches = new Map<string, TtlCache<T>>();
+  return {
+    get(key, load) {
+      let cache = caches.get(key);
+      if (cache) {
+        // Re-inserted so the Map's order is the order of last use.
+        caches.delete(key);
+      } else {
+        cache = createTtlCache<T>(ttlMs, options);
+      }
+      caches.set(key, cache);
+      while (caches.size > options.maxEntries) {
+        const oldest = caches.keys().next().value;
+        if (oldest === undefined) break;
+        caches.delete(oldest);
+      }
+      return cache.get(load);
+    },
+    clear() {
+      for (const cache of caches.values()) cache.clear();
+      caches.clear();
     },
   };
 }

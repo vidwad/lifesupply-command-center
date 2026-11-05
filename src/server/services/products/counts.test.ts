@@ -101,17 +101,27 @@ describe("the products page reads one scan and shared sales figures", () => {
     expect(service).toContain("select: { id: true, imageStatus: true }");
   });
 
-  it("loads the sales figures by product and day in one query and shares them for ten minutes", () => {
+  it("loads the sales figures by product and day in one query and shares them for thirty minutes", () => {
     expect(performance).toContain(`(o."orderDate"::date - DATE '1970-01-01')::int AS "day"`);
     expect(performance).toContain("GROUP BY 1, 2");
     expect(performance).toContain(`AND o."status" NOT IN ('cancelled', 'refunded')`);
-    expect(performance).toContain("PRODUCT_SALES_TTL_MS = 10 * 60_000");
+    expect(performance).toContain("PRODUCT_SALES_TTL_MS = 30 * 60_000");
     expect(performance).toContain("staleWhileRevalidate: true");
     expect(performance).not.toContain("prisma.orderItem.groupBy");
   });
 
-  it("warms the figures when the web process starts", () => {
+  it("shares one filter combination's population for a minute, bounded by key count (2026-11-05)", () => {
+    expect(service).toContain("PRODUCT_POPULATION_TTL_MS = 60_000");
+    expect(service).toContain("PRODUCT_POPULATION_MAX_ENTRIES = 8");
+    expect(service).toContain(
+      "createKeyedTtlCache<ProductPopulationRow[]>(PRODUCT_POPULATION_TTL_MS, {",
+    );
+    expect(service).toContain("populationCache.get(populationKey(base), () =>");
+  });
+
+  it("warms the figures and the population when the web process starts", () => {
     expect(instrumentation).toContain("warmProductSales");
+    expect(instrumentation).toContain("warmProductPopulation");
   });
 
   it("offers the range presets and a custom start and end date, and labels the columns with the range", () => {

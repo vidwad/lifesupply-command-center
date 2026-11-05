@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createTtlCache } from "./ttl-cache";
+import { createKeyedTtlCache, createTtlCache } from "./ttl-cache";
 
 const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
 
@@ -140,5 +140,71 @@ describe("createTtlCache", () => {
       const cache = createTtlCache<number>(1_000, { now: () => 0, staleWhileRevalidate: true });
       await expect(cache.get(async () => 42)).resolves.toBe(42);
     });
+  });
+});
+
+describe("createKeyedTtlCache", () => {
+  it("keeps one entry per key and shares it until its time to live passes", async () => {
+    let clock = 0;
+    const loads: string[] = [];
+    const cache = createKeyedTtlCache<string>(1_000, { now: () => clock, maxEntries: 4 });
+    const load = (key: string) => async () => {
+      loads.push(key);
+      return `${key}@${clock}`;
+    };
+
+    await expect(cache.get("a", load("a"))).resolves.toBe("a@0");
+    await expect(cache.get("b", load("b"))).resolves.toBe("b@0");
+    await expect(cache.get("a", load("a"))).resolves.toBe("a@0");
+    expect(loads).toEqual(["a", "b"]);
+    clock = 1_000;
+    await expect(cache.get("a", load("a"))).resolves.toBe("a@1000");
+    expect(loads).toEqual(["a", "b", "a"]);
+  });
+
+  it("drops the least recently read key once the limit is reached", async () => {
+    const loads: string[] = [];
+    const cache = createKeyedTtlCache<number>(60_000, { now: () => 0, maxEntries: 2 });
+    const load = (key: string) => async () => {
+      loads.push(key);
+      return loads.length;
+    };
+
+    await cache.get("a", load("a"));
+    await cache.get("b", load("b"));
+    await cache.get("a", load("a")); // a is now the most recently read
+    await cache.get("c", load("c")); // past two keys: b goes
+    expect(loads).toEqual(["a", "b", "c"]);
+    await cache.get("a", load("a")); // still held
+    await cache.get("b", load("b")); // loaded anew
+    expect(loads).toEqual(["a", "b", "c", "b"]);
+  });
+
+  it("serves a key's stale entry while that key refreshes", async () => {
+    let clock = 0;
+    let loads = 0;
+    const cache = createKeyedTtlCache<number>(1_000, {
+      now: () => clock,
+      staleWhileRevalidate: true,
+      maxEntries: 4,
+    });
+    const load = async () => ++loads;
+
+    await expect(cache.get("k", load)).resolves.toBe(1);
+    clock = 5_000;
+    await expect(cache.get("k", load)).resolves.toBe(1);
+    await flush();
+    await expect(cache.get("k", load)).resolves.toBe(2);
+    expect(loads).toBe(2);
+  });
+
+  it("clears every key", async () => {
+    let loads = 0;
+    const cache = createKeyedTtlCache<number>(60_000, { now: () => 0, maxEntries: 4 });
+    await cache.get("a", async () => ++loads);
+    await cache.get("b", async () => ++loads);
+    cache.clear();
+    await expect(cache.get("a", async () => ++loads)).resolves.toBe(3);
+    await expect(cache.get("b", async () => ++loads)).resolves.toBe(4);
   });
 });

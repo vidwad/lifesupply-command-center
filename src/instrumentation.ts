@@ -18,10 +18,13 @@ export async function register(): Promise<void> {
       "web process started (instrumentation registered)",
     );
     // The product sales figures read the whole order history (about ten
-    // seconds on the production database). Load them now so the first
-    // reader of the products list does not wait; failure is logged only.
+    // seconds on the production database), and the products population
+    // reads the whole catalogue. Load both now so the first reader of the
+    // products list does not wait; failure is logged only.
     const { warmProductSales } = await import("@/server/services/products/performance");
+    const { warmProductPopulation } = await import("@/server/services/products");
     void warmProductSales();
+    void warmProductPopulation();
   }
 }
 
