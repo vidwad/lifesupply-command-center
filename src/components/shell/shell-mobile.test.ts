@@ -147,6 +147,10 @@ describe("the phone has function keys along the bottom (2026-11-03, dock 2026-11
   it("the AI key opens a panel above the dock holding the assistant, and pages publish keys through one provider", () => {
     expect(dock).toContain("{assistant && assistantOpen && (");
     expect(dock).toContain("bottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))`");
+    // The panel is tinted light blue so it reads apart from the page beneath (owner, 2026-11-04).
+    expect(dock).toContain(
+      "border-sky-200 bg-sky-50 p-4 shadow-2xl dark:border-sky-900 dark:bg-sky-950",
+    );
     const shell = read("AppShell.tsx");
     expect(shell).toContain("<AnalystChat suggestions={DOCK_ASSISTANT_SUGGESTIONS} />");
     const dockShell = read("DockShell.tsx");
