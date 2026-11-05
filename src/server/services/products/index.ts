@@ -1,6 +1,8 @@
 import type { Prisma, ProductStatus } from "@prisma/client";
 
+import { createKeyedTtlCache } from "@/server/cache/ttl-cache";
 import { prisma } from "@/server/db/client";
+import { logger } from "@/server/logger";
 
 import {
   PERFORMANCE_SEGMENTS,
@@ -94,33 +96,43 @@ export function parseSortDirection(value: string | undefined): SortDirection {
  * Builds the orderBy. Every branch ends with `id` so paging is deterministic:
  * without a unique final key, rows sharing a sort value can swap between
  * pages and one is never shown.
+ *
+ * Every branch also *begins* with `deletedAt` (2026-11-05). The list only
+ * ever shows rows where it is null, so the key changes nothing about the
+ * order, but Postgres cannot treat `deletedAt IS NULL` as an equality that
+ * lets an index on (deletedAt, …) serve an ORDER BY on the columns after
+ * it. Without the key, the default page scanned and sorted all 51,000
+ * products on every load, 1.9 seconds on the production database, and the
+ * index built for it went unused; with it, the same page is an index scan
+ * of 50 rows.
  */
-function productOrderBy(
+export function productOrderBy(
   sort: ProductSortKey | undefined,
   dir: SortDirection,
 ): Prisma.ProductOrderByWithRelationInput[] {
+  const live: Prisma.ProductOrderByWithRelationInput = { deletedAt: "asc" };
   switch (sort) {
     case "name":
-      return [{ name: dir }, { id: "asc" }];
+      return [live, { name: dir }, { id: "asc" }];
     case "sku":
       // Nulls last in both directions: a product with no SKU is not the
       // "smallest" SKU, it is an absence, and it should not head the list.
-      return [{ sku: { sort: dir, nulls: "last" } }, { id: "asc" }];
+      return [live, { sku: { sort: dir, nulls: "last" } }, { id: "asc" }];
     case "category":
-      return [{ category: { name: dir } }, { id: "asc" }];
+      return [live, { category: { name: dir } }, { id: "asc" }];
     case "store":
-      return [{ store: { name: dir } }, { id: "asc" }];
+      return [live, { store: { name: dir } }, { id: "asc" }];
     case "quality":
-      return [{ imageStatus: dir }, { descriptionStatus: dir }, { id: "asc" }];
+      return [live, { imageStatus: dir }, { descriptionStatus: dir }, { id: "asc" }];
     case "images":
-      return [{ imageCount: dir }, { id: "asc" }];
+      return [live, { imageCount: dir }, { id: "asc" }];
     case "revenue":
       // Handled by listProductsByRevenue; this is the fallback when no
       // sales index was supplied.
-      return [{ isFeatured: "desc" }, { name: "asc" }, { id: "asc" }];
+      return [live, { isFeatured: "desc" }, { name: "asc" }, { id: "asc" }];
     default:
       // Unsorted default: featured first, then alphabetical.
-      return [{ isFeatured: "desc" }, { name: "asc" }, { id: "asc" }];
+      return [live, { isFeatured: "desc" }, { name: "asc" }, { id: "asc" }];
   }
 }
 
@@ -169,17 +181,72 @@ export async function countProducts(filters: ListProductsFilters = {}): Promise<
  * this one scan — the header total, the quality pills and the segment pills —
  * where it used to run six counts, each a scan of the catalogue or thousands
  * of id probes, which took several seconds on the production database.
+ *
+ * The scan itself reads the whole catalogue (51,000 rows, most of a second
+ * on the production database), so one filter combination's rows are shared
+ * by every reader for a minute (2026-11-05); past that the last rows are
+ * shown while the next scan runs, and the web process loads the unfiltered
+ * rows as it starts. Only the sync writes the columns these rows carry, and
+ * it runs in the worker process, so the figures can lag it by up to a minute.
  */
 export type ProductPopulationRow = { id: string; imageStatus: string };
+
+/** How long one filter combination's rows are served before the next scan. */
+export const PRODUCT_POPULATION_TTL_MS = 60_000;
+
+/** How many filter combinations' rows are held at once. */
+export const PRODUCT_POPULATION_MAX_ENTRIES = 8;
+
+const populationCache = createKeyedTtlCache<ProductPopulationRow[]>(PRODUCT_POPULATION_TTL_MS, {
+  staleWhileRevalidate: true,
+  maxEntries: PRODUCT_POPULATION_MAX_ENTRIES,
+});
+
+/**
+ * The filters that shape the population, in a fixed order, so equal filters
+ * share one entry whatever else (page, sort, quality, segment) differs.
+ */
+export function populationKey(filters: ListProductsFilters): string {
+  return JSON.stringify([
+    filters.storeId ?? null,
+    filters.divisionId ?? null,
+    filters.categoryId ?? null,
+    filters.status ?? null,
+    filters.maxImages ?? null,
+    filters.maxDescriptionChars ?? null,
+    filters.search?.trim() || null,
+  ]);
+}
 
 export async function loadProductPopulation(
   filters: ListProductsFilters,
 ): Promise<ProductPopulationRow[]> {
   const { imageStatus: _quality, performance: _segment, ...base } = filters;
-  return prisma.product.findMany({
-    where: productWhere(base),
-    select: { id: true, imageStatus: true },
-  });
+  return populationCache.get(populationKey(base), () =>
+    prisma.product.findMany({
+      where: productWhere(base),
+      select: { id: true, imageStatus: true },
+    }),
+  );
+}
+
+/** Drops every shared population so the next reader scans anew. */
+export function invalidateProductPopulation(): void {
+  populationCache.clear();
+}
+
+/**
+ * Loads the unfiltered population ahead of the first reader, at process
+ * start. Never throws: a database that is not ready yet is logged, and the
+ * first reader loads.
+ */
+export async function warmProductPopulation(): Promise<void> {
+  try {
+    const rows = await loadProductPopulation({});
+    logger.info({ products: rows.length }, "product population warmed");
+  } catch (err) {
+    logger.warn({ err }, "product population could not be warmed");
+  }
 }
 
 /** How many products each quality filter would return, given the other active filters. */

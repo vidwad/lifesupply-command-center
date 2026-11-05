@@ -35,7 +35,11 @@ export const PROMISING_MIN_UNITS = 2;
  * (2026-10-30). The figures change only when orders sync, and loading them
  * reads the whole order history from disk on the production database.
  */
-export const PRODUCT_SALES_TTL_MS = 10 * 60_000;
+// Thirty minutes (2026-11-05, from ten): the figures change only when an
+// order sync runs, and each reload reads the whole order history, about
+// eleven seconds of the production database's attention that every other
+// page shares.
+export const PRODUCT_SALES_TTL_MS = 30 * 60_000;
 
 export const PERFORMANCE_SEGMENTS = ["top", "promising", "cold", "non_seller"] as const;
 export type PerformanceSegment = (typeof PERFORMANCE_SEGMENTS)[number];
@@ -403,7 +407,7 @@ export async function loadProductSalesSeries(): Promise<ProductSalesSeries> {
   return series;
 }
 
-// One load serves every reader for ten minutes; past that the last figures
+// One load serves every reader for thirty minutes; past that the last figures
 // are shown while the next load runs, so no reader waits for the database.
 const seriesCache = createTtlCache<ProductSalesSeries>(PRODUCT_SALES_TTL_MS, {
   staleWhileRevalidate: true,

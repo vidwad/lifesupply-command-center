@@ -107,7 +107,7 @@ export default async function ProductsPage({
   const effectiveSort = sort ?? (perf === "top" ? "revenue" : undefined);
   const effectiveDir = sort ? dir : perf === "top" ? "desc" : dir;
   // Classified from the sales figures the process shares (loaded once,
-  // fresh within ten minutes); the rows, the total and every pill count
+  // fresh within thirty minutes); the rows, the total and every pill count
   // read these same figures.
   const performanceIndex = await buildPerformanceIndex(range, topLimit);
   const filters: ListProductsFilters = {
@@ -131,8 +131,9 @@ export default async function ProductsPage({
 
   // The header total, the quality pills and the segment pills all come from
   // one scan of the products under the other filters, judged by the same
-  // predicates the rows use, so the total can never disagree with what is
-  // listed, and each pill reads as "what you would get if you clicked this".
+  // predicates the rows use, so each pill reads as "what you would get if
+  // you clicked this". The scan is shared by every reader for a minute, so
+  // right after a sync the counts can trail the rows by that long.
   const [listed, population] = await Promise.all([
     listProducts(filters),
     loadProductPopulation(filters),

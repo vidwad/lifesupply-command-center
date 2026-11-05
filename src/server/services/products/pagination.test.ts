@@ -14,7 +14,9 @@ import { describe, expect, it } from "vitest";
 import {
   parseProductSort,
   parseSortDirection,
+  populationKey,
   PRODUCT_SORT_KEYS,
+  productOrderBy,
   PRODUCTS_PAGE_SIZE,
 } from "./index";
 
@@ -241,5 +243,52 @@ describe("filter pill counts", () => {
     // Sort is a view preference, not a filter — changing filter should not
     // silently reset the column the user chose.
     expect(page).toContain('if (sort) qs.set("sort", sort);');
+  });
+});
+
+describe("product ordering (2026-11-05)", () => {
+  it("names the soft-delete column first on every branch, so the (deletedAt, …) index can serve the order", () => {
+    // Postgres cannot use `deletedAt IS NULL` as the equality that would let
+    // the index order the columns after it; naming the column in the ORDER
+    // BY is what turns the default page from a 51,000-row sort into an index
+    // scan of fifty rows. The id tiebreaker stays last.
+    for (const key of [undefined, ...PRODUCT_SORT_KEYS]) {
+      for (const dir of ["asc", "desc"] as const) {
+        const order = productOrderBy(key, dir);
+        expect(order[0]).toEqual({ deletedAt: "asc" });
+        expect(order[order.length - 1]).toEqual({ id: "asc" });
+      }
+    }
+  });
+
+  it("orders the default page featured first, then by name", () => {
+    expect(productOrderBy(undefined, "asc")).toEqual([
+      { deletedAt: "asc" },
+      { isFeatured: "desc" },
+      { name: "asc" },
+      { id: "asc" },
+    ]);
+  });
+});
+
+describe("the shared population (2026-11-05)", () => {
+  it("keys one entry per filter combination, ignoring page, sort and the quality and segment filters", () => {
+    const base = populationKey({ divisionId: "d1", search: "glove" });
+    expect(
+      populationKey({
+        divisionId: "d1",
+        search: "glove",
+        page: 7,
+        sort: "sku",
+        dir: "desc",
+        imageStatus: "missing",
+        performance: "top",
+      }),
+    ).toBe(base);
+    expect(populationKey({ divisionId: "d2", search: "glove" })).not.toBe(base);
+    expect(populationKey({ divisionId: "d1" })).not.toBe(base);
+    expect(populationKey({ divisionId: "d1", search: "glove", maxImages: 1 })).not.toBe(base);
+    // A blank search is no search.
+    expect(populationKey({ search: "   " })).toBe(populationKey({}));
   });
 });
