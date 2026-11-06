@@ -208,3 +208,55 @@ describe("createKeyedTtlCache", () => {
     await expect(cache.get("b", async () => ++loads)).resolves.toBe(4);
   });
 });
+
+describe("expire", () => {
+  it("serves the current value while a fresh load runs, instead of dropping it", async () => {
+    let clock = 0;
+    let loads = 0;
+    const cache = createTtlCache<number>(60_000, { now: () => clock, staleWhileRevalidate: true });
+    const load = async () => ++loads;
+
+    await expect(cache.get(load)).resolves.toBe(1);
+    clock = 10; // well inside the time to live
+    cache.expire();
+    await expect(cache.get(load)).resolves.toBe(1); // no reader waits
+    await flush();
+    await expect(cache.get(load)).resolves.toBe(2);
+    expect(loads).toBe(2);
+  });
+
+  it("loads anew for the next reader when nothing is served stale", async () => {
+    let loads = 0;
+    const cache = createTtlCache<number>(60_000, { now: () => 0 });
+    const load = async () => ++loads;
+
+    await expect(cache.get(load)).resolves.toBe(1);
+    cache.expire();
+    await expect(cache.get(load)).resolves.toBe(2);
+  });
+
+  it("does nothing on an empty cache", async () => {
+    const cache = createTtlCache<number>(60_000, { now: () => 0 });
+    cache.expire();
+    await expect(cache.get(async () => 5)).resolves.toBe(5);
+  });
+
+  it("expires every key of a keyed cache", async () => {
+    let loads = 0;
+    const cache = createKeyedTtlCache<number>(60_000, {
+      now: () => 0,
+      staleWhileRevalidate: true,
+      maxEntries: 4,
+    });
+    const load = async () => ++loads;
+
+    await cache.get("a", load);
+    await cache.get("b", load);
+    cache.expire();
+    await expect(cache.get("a", load)).resolves.toBe(1);
+    await expect(cache.get("b", load)).resolves.toBe(2);
+    await flush();
+    await expect(cache.get("a", load)).resolves.toBe(3);
+    await expect(cache.get("b", load)).resolves.toBe(4);
+  });
+});

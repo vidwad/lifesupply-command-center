@@ -368,6 +368,10 @@ If a command fails, fix the failure within the phase scope. If the fix is out of
 - Use server-side model wrappers. Do not expose the OpenAI API key in client-side code.
 - Every OpenAI client comes from `getOpenAiClient()` with a feature attribution (2026-11-03). It checks the daily budgets set in Admin → AI Settings before returning and meters every billable call into the `AiUsageEvent` ledger. Only the model listing opts out with `{ metered: false }`. Never construct an OpenAI client directly. The assistant drawer design (page-aware text and live voice) and its stages are in `docs/43_AI_ASSISTANT_DRAWER.md`; the live voice flag `ai.live_voice` stays off until the owner turns it on.
 
+### Page load performance
+
+- The production database is a tenth of a CPU with 64 MB of cache, so a whole-table scan costs most of a second and concurrent queries only slow each other. Figures that are the same for every reader (the dashboard, totals, pill counts, the sales index) are shared through `src/server/cache/ttl-cache.ts`, warmed in sequence at process start in `src/instrumentation.ts`, and refreshed in the background with heavy queries one after another; list rows themselves are always read live. Every ORDER BY on a soft-deleted table names `deletedAt` first, or its index cannot serve the sort. Measure with Render's request logs and `EXPLAIN (ANALYZE, BUFFERS)` on production before changing a query; `docs/44_PAGE_LOAD_PERFORMANCE.md` records the measurements, the rules and the open items (2026-11-05).
+
 ---
 
 ## 9. Active Phase Sequence

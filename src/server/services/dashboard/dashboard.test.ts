@@ -12,7 +12,9 @@ import {
   type ProductAggregate,
 } from "./index";
 
-const service = readFileSync(join(__dirname, "index.ts"), "utf8").replace(/\r\n/g, "\n");
+const read = (path: string) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
+const service = read(join(__dirname, "index.ts"));
+const instrumentation = read(join(__dirname, "..", "..", "..", "instrumentation.ts"));
 
 const agg = (productId: string, revenue: number, grossProfit: number): ProductAggregate => ({
   productId,
@@ -71,5 +73,42 @@ describe("dashboard cache", () => {
     expect(DASHBOARD_CACHE_TTL_MS).toBe(60_000);
     expect(service).toContain('import { createTtlCache } from "@/server/cache/ttl-cache";');
     expect(service).toContain("staleWhileRevalidate: true");
+  });
+
+  it("is loaded as the web process starts, after the cheaper figures", () => {
+    expect(service).toContain("export async function warmDashboard()");
+    expect(instrumentation).toContain(
+      "await warmOpenExceptionCount();\n      await warmDashboard();",
+    );
+    expect(instrumentation).toContain("await warmDashboard();\n      await warmProductSales();");
+  });
+
+  it("can be marked stale without making the next reader wait", () => {
+    expect(service).toContain("export function expireDashboardCache()");
+    expect(service).toContain("dashboardCache.expire();");
+  });
+});
+
+describe("the load", () => {
+  it("takes the exception count from the shared figure", () => {
+    expect(service).toContain("const exceptionOrders = await countOpenExceptions();");
+    expect(service).not.toContain("prisma.order.count({ where: { exceptionStatus");
+  });
+
+  it("runs the heavy order queries one after another, not alongside the readers' own", () => {
+    const start = service.indexOf("const loadOperations = async () => {");
+    const end = service.indexOf("return {", start);
+    expect(start).toBeGreaterThan(-1);
+    const body = service.slice(start, end);
+    for (const query of [
+      "prisma.order.count({ where: { status: { in: OPEN_ORDER_STATUSES } } })",
+      "countOpenExceptions()",
+      'prisma.order.count({ where: { status: "awaiting_supplier" } })',
+      "prisma.order.findMany({",
+      "loadProducts()",
+    ]) {
+      expect(body).toContain(`await ${query}`);
+    }
+    expect(body).not.toContain("Promise.all");
   });
 });

@@ -17,14 +17,25 @@ export async function register(): Promise<void> {
       { deployEnv: process.env.DEPLOY_ENV ?? "unknown" },
       "web process started (instrumentation registered)",
     );
-    // The product sales figures read the whole order history (about ten
-    // seconds on the production database), and the products population
-    // reads the whole catalogue. Load both now so the first reader of the
-    // products list does not wait; failure is logged only.
-    const { warmProductSales } = await import("@/server/services/products/performance");
+    // The figures every reader shares are loaded now, so the first visit to
+    // a page after a deploy does not wait for them; each warm-up logs its
+    // own failure and never throws. They run one after another, cheapest and
+    // most visited first, because the production database has a tenth of a
+    // CPU and concurrent scans only slow each other and the first visitors.
+    // The product sales figures go last: they read the whole order history
+    // (about ten seconds).
     const { warmProductPopulation } = await import("@/server/services/products");
-    void warmProductSales();
-    void warmProductPopulation();
+    const { warmCustomerCount } = await import("@/server/services/customers");
+    const { warmOpenExceptionCount } = await import("@/server/services/orders/open-exceptions");
+    const { warmDashboard } = await import("@/server/services/dashboard");
+    const { warmProductSales } = await import("@/server/services/products/performance");
+    void (async () => {
+      await warmProductPopulation();
+      await warmCustomerCount();
+      await warmOpenExceptionCount();
+      await warmDashboard();
+      await warmProductSales();
+    })();
   }
 }
 

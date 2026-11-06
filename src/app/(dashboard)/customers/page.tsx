@@ -95,6 +95,8 @@ export default async function CustomersPage({
     dir,
   };
 
+  // The count is shared across readers for a minute (see countCustomers), so
+  // the header total can trail a sync by that long; the rows never do.
   const [customers, totalCustomers] = await Promise.all([
     listCustomers(filters),
     countCustomers(filters),
