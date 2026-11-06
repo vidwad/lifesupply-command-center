@@ -13,6 +13,7 @@ import { ChartCard } from "@/components/data/ChartCard";
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { KpiCard } from "@/components/data/KpiCard";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -53,6 +54,27 @@ export default async function AnalyticsPage({
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/analytics",
+          title: "Analytics",
+          filters: { range: data.range, store: data.store?.name ?? "All stores" },
+          storeId: data.store?.id,
+          figures: [
+            { label: "Users", value: data.totals.users.toLocaleString() },
+            { label: "Sessions", value: data.totals.sessions.toLocaleString() },
+            { label: "Purchases", value: data.totals.purchases.toLocaleString() },
+            { label: "Revenue", value: formatCurrency(data.totals.revenue) },
+            {
+              label: "Conversion",
+              value:
+                data.totals.avgConversionRate != null
+                  ? formatPercent(data.totals.avgConversionRate, 2)
+                  : "—",
+            },
+          ],
+        }}
+      />
       <PageHeader
         title="Analytics"
         description="Website traffic, engagement, conversion, and campaign attribution from GA4."

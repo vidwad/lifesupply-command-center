@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AssistantTurnDto } from "@/server/services/ai/assistant/types";
 
+import { DraftCards } from "./DraftCards";
+
 import { budgetStripText } from "./budget-strip";
 import { useCurrentAssistantPageContext } from "./page-context";
 import { toolLabel } from "./tool-labels";
@@ -480,6 +482,7 @@ function TurnView({ turn }: { turn: AssistantTurnDto }) {
             ))}
           </ul>
         )}
+        <DraftCards drafts={turn.drafts} aiOutputId={turn.aiOutputId} />
         <p className="text-[10px] text-muted-foreground">{turn.modelName}</p>
       </div>
     </li>
@@ -573,6 +576,7 @@ function LiveVoiceView({
       </div>
       <TranscriptLines lines={state.lines} />
       <ToolChips tools={state.tools} />
+      <DraftCards drafts={state.drafts} aiOutputId={null} />
     </li>
   );
 }
@@ -591,6 +595,7 @@ function VoiceSessionView({ session }: { session: VoiceSessionSummary }) {
       ) : (
         <p className="text-sm text-muted-foreground">Nothing was said.</p>
       )}
+      <DraftCards drafts={session.drafts} aiOutputId={null} />
     </li>
   );
 }

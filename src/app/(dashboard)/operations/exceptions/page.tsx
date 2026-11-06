@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { SavedViewsBar } from "@/components/views/SavedViewsBar";
 import { formatDateTime } from "@/lib/format";
@@ -135,6 +136,19 @@ export default async function ExceptionsPage({
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/operations/exceptions",
+          title: "Exceptions",
+          filters: {
+            status: activeStatus,
+            ...(params.severity && { severity: params.severity }),
+            ...(params.type && { type: params.type }),
+            ...(params.q && { search: params.q }),
+          },
+          figures: [{ label: "Exceptions listed", value: String(rows.length) }],
+        }}
+      />
       <PageHeader
         title="Exceptions"
         description="Items needing attention across orders, suppliers, products, financials, and integrations."

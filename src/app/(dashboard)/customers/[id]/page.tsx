@@ -6,6 +6,7 @@ import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/data/OrderBadges";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -53,6 +54,25 @@ export default async function CustomerDetailPage({ params }: Props) {
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/customers/[id]",
+          title: customer.displayName,
+          entity: { type: "customer", id: customer.id, label: customer.displayName },
+          storeId: customer.store?.id,
+          figures: [
+            { label: "Type", value: customer.customerType },
+            { label: "Store", value: customer.store?.name ?? "Unknown" },
+            { label: "Consent", value: customer.consentStatus },
+            { label: "Lifetime value", value: formatCurrency(customer.lifetimeValue) },
+            { label: "Orders", value: String(customer.orderCount) },
+            {
+              label: "Last order",
+              value: customer.lastOrderAt ? formatDate(customer.lastOrderAt) : "Never",
+            },
+          ],
+        }}
+      />
       <PageHeader
         title={customer.displayName}
         description={`${customer.customerType} • ${customer.store?.name ?? "Unknown store"}`}

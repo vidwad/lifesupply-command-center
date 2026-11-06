@@ -6,6 +6,7 @@ import { ExportButton } from "@/components/data/ExportButton";
 import { SortHeader } from "@/components/data/SortHeader";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Pagination } from "@/components/data/Pagination";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -157,6 +158,22 @@ export default async function CustomersPage({
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/customers",
+          title: "Customers",
+          filters: {
+            ...(active.type && { type: active.type }),
+            ...(active.consent && { consent: active.consent }),
+            ...(active.store && { store: active.store }),
+            ...(active.q && { search: active.q }),
+            ...(sort && { sort: `${sort} ${dir}` }),
+            page: String(page),
+          },
+          storeId: storeId,
+          figures: [{ label: "Customers matching", value: totalCustomers.toLocaleString() }],
+        }}
+      />
       <PageHeader
         title="Customers"
         description="B2B clinics, institutional buyers, and retail customers across all stores."

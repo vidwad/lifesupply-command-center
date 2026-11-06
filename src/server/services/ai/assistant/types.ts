@@ -1,6 +1,7 @@
 /**
  * Shapes shared by the assistant's pieces (2026-11-04). See docs/43 §4.4.
  */
+import type { TaskDraft } from "./task-draft";
 
 export type AssistantPageContext = {
   route: string;
@@ -56,6 +57,9 @@ export type AssistantTurnDto = {
   sources: string[];
   warnings: string[];
   responseId: string;
+  /** Tasks the assistant drafted this turn, for the person to confirm (Stage 4). */
+  drafts: TaskDraft[];
+  aiOutputId: string;
 };
 
 /** Today's allowances against the caps, for the drawer's budget strip. */

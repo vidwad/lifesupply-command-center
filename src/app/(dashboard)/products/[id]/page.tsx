@@ -6,6 +6,7 @@ import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -33,6 +34,25 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/products/[id]",
+          title: product.name,
+          entity: { type: "product", id: product.id, label: product.name },
+          storeId: product.store?.id,
+          figures: [
+            { label: "SKU", value: product.sku ?? "—" },
+            { label: "Category", value: product.category?.name ?? "Uncategorized" },
+            {
+              label: "Price",
+              value: product.variants[0] ? formatCurrency(product.variants[0].price) : "—",
+            },
+            { label: "Revenue, 90 days", value: formatCurrency(product.sales90d.revenue) },
+            { label: "Units, 90 days", value: String(product.sales90d.quantity) },
+            { label: "Margin, 90 days", value: margin != null ? formatPercent(margin, 1) : "—" },
+          ],
+        }}
+      />
       <PageHeader
         title={product.name}
         description={`${product.category?.name ?? "Uncategorized"} • ${product.store?.name ?? "—"}`}

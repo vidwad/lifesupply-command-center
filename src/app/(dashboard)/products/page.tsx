@@ -8,6 +8,7 @@ import { ExportButton } from "@/components/data/ExportButton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { PhoneFilterDisclosure } from "@/components/data/PhoneFilterDisclosure";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -197,6 +198,25 @@ export default async function ProductsPage({
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/products",
+          title: "Products & Catalog",
+          filters: {
+            ...(filters.storeId && { store: filters.storeId }),
+            ...(filters.categoryId && { category: filters.categoryId }),
+            ...(filters.status && { status: filters.status }),
+            ...(filters.imageStatus && { quality: filters.imageStatus }),
+            ...(filters.performance && { segment: filters.performance }),
+            ...(filters.search && { search: filters.search }),
+            performanceRange: range.description,
+            page: String(page),
+          },
+          storeId: filters.storeId,
+          divisionId: filters.divisionId,
+          figures: [{ label: "Products matching", value: totalProducts.toLocaleString() }],
+        }}
+      />
       <PageHeader
         title="Products & Catalog"
         description="Catalog quality, supplier mapping, margin, and featured selection."

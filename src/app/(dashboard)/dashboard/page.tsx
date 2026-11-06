@@ -18,6 +18,7 @@ import { ProductLeaderboard } from "@/components/data/ProductLeaderboard";
 import { TaskList } from "@/components/data/TaskList";
 import { RevenueTrendChart } from "@/components/charts/RevenueTrendChart";
 import { Badge } from "@/components/ui/badge";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -40,6 +41,29 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/dashboard",
+          title: "Executive Dashboard",
+          filters: { period: periodLabel },
+          figures: [
+            { label: "Revenue", value: formatCurrency(data.revenue.current) },
+            { label: "Gross profit", value: formatCurrency(data.grossProfit.current) },
+            {
+              label: "Gross margin",
+              value:
+                data.grossMargin.current != null ? formatPercent(data.grossMargin.current, 1) : "—",
+            },
+            { label: "Open orders", value: String(data.operations.openOrders) },
+            { label: "Exception orders", value: String(data.operations.exceptionOrders) },
+            { label: "Operating income", value: formatCurrency(data.operatingIncome.current) },
+            {
+              label: "Cash",
+              value: data.cash.current != null ? formatCurrency(data.cash.current) : "—",
+            },
+          ],
+        }}
+      />
       <PageHeader
         title="Executive Dashboard"
         description="Consolidated view across LifeSupply Canada, Wellmart Medical, and U.S. operations."
