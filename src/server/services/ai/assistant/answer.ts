@@ -13,7 +13,12 @@
  * sources as its references, then audited.
  */
 import type { Prisma } from "@prisma/client";
-import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
+import type {
+  Response as OpenAiResponse,
+  ResponseCreateParamsNonStreaming,
+  ResponseCreateParamsStreaming,
+  ResponseStreamEvent,
+} from "openai/resources/responses/responses";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
@@ -24,7 +29,12 @@ import { AiOutputTruncatedError, AiProviderNotConfiguredError } from "../errors"
 import { buildAssistantInstructions } from "./prompt";
 import { toJsonSafe } from "./sql-guard";
 import { canQueryDatabase, runAssistantTool, toolsForPermissions } from "./tools";
-import type { AssistantAnswer, AssistantPageContext, AssistantToolCall } from "./types";
+import type {
+  AssistantAnswer,
+  AssistantPageContext,
+  AssistantProgressEvent,
+  AssistantToolCall,
+} from "./types";
 
 export const MAX_TOOL_ROUNDS = 8;
 const MAX_TOOL_OUTPUT_CHARS = 30_000;
@@ -39,6 +49,13 @@ export type AnswerArgs = {
   /** The ledger's feature name. Text mode by default. */
   feature?: string;
   now?: Date;
+  /**
+   * Report tool calls and, with `stream`, the answer's text as it arrives
+   * (2026-11-06, the drawer). The returned answer is unchanged either way.
+   */
+  onEvent?: (event: AssistantProgressEvent) => void;
+  /** Ask the model to stream, so `onEvent` sees text deltas. */
+  stream?: boolean;
 };
 
 /** The assistant's text model: env OPENAI_MODEL, then the shared default setting, then the built-in default. */
@@ -134,6 +151,43 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
     })),
   ];
 
+  const emit = (event: AssistantProgressEvent) => {
+    try {
+      args.onEvent?.(event);
+    } catch {
+      // A listener's failure never fails the turn.
+    }
+  };
+
+  /**
+   * One request to the model. Streaming reads the events as they come, hands
+   * the text deltas on, and returns the completed response the stream ends
+   * with, so the loop below is the same in both modes.
+   */
+  const createResponse = async (
+    request: ResponseCreateParamsNonStreaming,
+  ): Promise<OpenAiResponse> => {
+    if (!args.stream) return client.responses.create(request);
+    const stream = (await client.responses.create({
+      ...request,
+      stream: true,
+    } as ResponseCreateParamsStreaming)) as AsyncIterable<ResponseStreamEvent>;
+    let final: OpenAiResponse | null = null;
+    for await (const event of stream) {
+      if (event.type === "response.output_text.delta") {
+        emit({ type: "delta", text: event.delta });
+      } else if (
+        event.type === "response.completed" ||
+        event.type === "response.incomplete" ||
+        event.type === "response.failed"
+      ) {
+        final = event.response;
+      }
+    }
+    if (!final) throw new Error("The model's stream ended without a response.");
+    return final;
+  };
+
   const toolCalls: AssistantToolCall[] = [];
   const sources = new Set<string>();
   const usage = { inputTokens: 0, outputTokens: 0 };
@@ -158,7 +212,7 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
       store: true,
       ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
     } as unknown as ResponseCreateParamsNonStreaming;
-    const response = await client.responses.create(request);
+    const response = await createResponse(request);
     responseId = response.id;
     modelName = response.model ?? model;
     usage.inputTokens += response.usage?.input_tokens ?? 0;
@@ -185,9 +239,11 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
       } catch {
         output = JSON.stringify({ error: "The arguments were not valid JSON." });
         toolCalls.push({ name: call.name, arguments: {}, skipped: "invalid arguments", ms: 0 });
+        emit({ type: "tool", name: call.name, status: "skipped", reason: "invalid arguments" });
         outputs.push({ type: "function_call_output", call_id: call.callId, output });
         continue;
       }
+      emit({ type: "tool", name: call.name, status: "running" });
       const result = await runAssistantTool(call.name, parsed, {
         userId: args.userId,
         permissions: args.permissions,
@@ -197,9 +253,11 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
       if (result.ok) {
         output = serialiseToolResult(result.result);
         toolCalls.push({ name: call.name, arguments: parsed, ms });
+        emit({ type: "tool", name: call.name, status: "done" });
       } else {
         output = JSON.stringify({ error: result.error });
         toolCalls.push({ name: call.name, arguments: parsed, skipped: result.error, ms });
+        emit({ type: "tool", name: call.name, status: "skipped", reason: result.error });
       }
       outputs.push({ type: "function_call_output", call_id: call.callId, output });
     }

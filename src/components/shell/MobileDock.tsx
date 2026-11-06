@@ -11,7 +11,6 @@ import {
   Menu,
   ShoppingCart,
   Users,
-  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -117,25 +116,26 @@ function isActive(pathname: string, key: NavKey): boolean {
  * the sidebar is always there. Home, two middle keys that differ by page
  * (the open page's own keys first, then default destinations, never the
  * one already open), the AI key, and Menu, which opens the same sheet as
- * the header's trigger. The AI key opens a panel above the bar holding the
- * assistant; the panel closes without losing a typed question because the
- * panel's content is kept mounted while the dock is.
+ * the header's trigger. The AI key opens the assistant drawer, which the
+ * shell owns (docs/43 Stage 2, 2026-11-06); until then it opened a small
+ * panel above the bar.
  */
 export function MobileDock({
   permissions,
   counts,
   actions,
-  assistant,
+  onAssistant,
+  assistantOpen,
 }: {
   permissions: string[];
   counts: Counts;
   actions: DockAction[];
-  /** The assistant panel's content; omitted when the person cannot use AI. */
-  assistant: React.ReactNode | null;
+  /** Opens or closes the assistant; null when the person cannot use AI. */
+  onAssistant: (() => void) | null;
+  assistantOpen: boolean;
 }) {
   const pathname = usePathname();
   const { toggleSidebar } = useSidebar();
-  const [assistantOpen, setAssistantOpen] = useState(false);
   const keyboardUp = useKeyboardUp();
 
   const allowed = DOCK_NAV.filter((key) => permissions.includes(key.permission));
@@ -147,7 +147,7 @@ export function MobileDock({
     if (key.id === "home" || isActive(pathname, key)) continue;
     middle.push({ kind: "nav", key });
   }
-  const columns = (home ? 1 : 0) + middle.length + (assistant ? 1 : 0) + 1;
+  const columns = (home ? 1 : 0) + middle.length + (onAssistant ? 1 : 0) + 1;
   if (columns < 2) return null;
 
   const keyClass = (active: boolean) =>
@@ -210,23 +210,6 @@ export function MobileDock({
 
   return (
     <>
-      {assistant && assistantOpen && (
-        <div className="phone-dock-panel fixed inset-x-0 z-30 px-3 pb-2 pt-[env(safe-area-inset-top)] md:hidden">
-          <div className="relative mx-auto max-w-xl">
-            <button
-              type="button"
-              onClick={() => setAssistantOpen(false)}
-              aria-label="Hide the assistant panel"
-              className="absolute -top-2 right-2 z-10 grid h-9 w-9 place-items-center rounded-full border bg-background text-muted-foreground shadow-sm"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="max-h-[60dvh] overflow-y-auto rounded-xl border border-sky-200 bg-sky-50 p-4 shadow-2xl dark:border-sky-900 dark:bg-sky-950">
-              {assistant}
-            </div>
-          </div>
-        </div>
-      )}
       <nav
         aria-label="Quick access"
         className={cn(
@@ -242,10 +225,10 @@ export function MobileDock({
           {middle.map((entry) =>
             entry.kind === "action" ? actionKey(entry.action) : navKey(entry.key),
           )}
-          {assistant && (
+          {onAssistant && (
             <button
               type="button"
-              onClick={() => setAssistantOpen((v) => !v)}
+              onClick={onAssistant}
               aria-pressed={assistantOpen}
               aria-label={assistantOpen ? "Hide the assistant" : "Ask the assistant"}
               className={keyClass(assistantOpen || pathname.startsWith("/ai-analyst"))}

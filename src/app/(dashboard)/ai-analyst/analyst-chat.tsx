@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { ExternalLink, Send, Sparkles, Wrench } from "lucide-react";
 
+import { TOOL_LABELS } from "@/components/ai/assistant/tool-labels";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/format";
 
@@ -12,28 +13,6 @@ type Props = {
   suggestions: string[];
   /** What the person is looking at, for "this page" questions. Serialised into the form. */
   pageContext?: Record<string, unknown> | null;
-};
-
-const TOOL_LABELS: Record<string, string> = {
-  list_stores: "stores",
-  dashboard_snapshot: "dashboard",
-  sales_overview: "sales",
-  top_products: "top products",
-  search_customers: "customers",
-  customer_detail: "customer",
-  product_top_customers: "product's customers",
-  search_orders: "orders",
-  order_detail: "order",
-  search_products: "products",
-  open_exceptions: "exceptions",
-  tasks_and_approvals: "tasks and approvals",
-  financial_summary: "financials",
-  marketing_performance: "campaigns",
-  competitor_prices: "competitor prices",
-  website_content: "website",
-  bigcommerce_read: "store API",
-  database_schema: "database schema",
-  database_query: "database query",
 };
 
 /**
