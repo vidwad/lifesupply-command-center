@@ -8,17 +8,21 @@
  *
  * With `staleWhileRevalidate`, an expired entry is still served while one
  * fresh load runs in the background, so after the first load no reader waits
- * for the database. `clear()` discards the entry and any refresh in flight.
+ * for the database. `clear()` discards the entry and any refresh in flight;
+ * `expire()` keeps the entry but marks it stale, so a write the figures
+ * depend on is reflected at the next refresh while no reader waits for it.
  */
 export type TtlCache<T> = {
   get(load: () => Promise<T>): Promise<T>;
   clear(): void;
+  expire(): void;
 };
 
 /** One TtlCache per key; see createKeyedTtlCache. */
 export type KeyedTtlCache<T> = {
   get(key: string, load: () => Promise<T>): Promise<T>;
   clear(): void;
+  expire(): void;
 };
 
 export type KeyedTtlCacheOptions = TtlCacheOptions & {
@@ -90,6 +94,12 @@ export function createTtlCache<T>(ttlMs: number, options: TtlCacheOptions = {}):
       entry = null;
       refreshing = false;
     },
+    expire() {
+      // A load still in flight may predate the write; the next reader starts
+      // another, which is the price of never serving a figure known stale as
+      // fresh.
+      if (entry) entry.expiresAt = 0;
+    },
   };
 }
 
@@ -125,6 +135,9 @@ export function createKeyedTtlCache<T>(
     clear() {
       for (const cache of caches.values()) cache.clear();
       caches.clear();
+    },
+    expire() {
+      for (const cache of caches.values()) cache.expire();
     },
   };
 }

@@ -12,7 +12,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  CUSTOMER_COUNT_MAX_ENTRIES,
+  CUSTOMER_COUNT_TTL_MS,
   CUSTOMER_SORT_KEYS,
+  customerCountKey,
   customerOrderBy,
   parseCustomerSort,
   parseSortDirection,
@@ -25,6 +28,8 @@ const migration = read(
   "prisma/migrations/20261102230000_customers_default_list_index/migration.sql",
 );
 const schema = read("prisma/schema.prisma");
+const service = read("src/server/services/customers/index.ts");
+const instrumentation = read("src/instrumentation.ts");
 
 describe("parsing the sort from the query string", () => {
   it("accepts the supported keys only", () => {
@@ -52,29 +57,73 @@ describe("the order builder", () => {
     }
   });
 
+  it("begins every ordering with the soft-delete column, so the index can serve the sort", () => {
+    // Postgres only drops a leading index column from the sort match on an
+    // equality, and `deletedAt IS NULL` is not one; naming the column first
+    // changes nothing about the result and lets the index stop after a page.
+    for (const key of [...CUSTOMER_SORT_KEYS, undefined]) {
+      for (const dir of ["asc", "desc"] as const) {
+        expect(customerOrderBy(key, dir)[0]).toEqual({ deletedAt: "asc" });
+      }
+    }
+  });
+
   it("puts customers with no last order or no score last in both directions", () => {
-    expect(customerOrderBy("lastOrder", "desc")[0]).toEqual({
+    expect(customerOrderBy("lastOrder", "desc")[1]).toEqual({
       lastOrderAt: { sort: "desc", nulls: "last" },
     });
-    expect(customerOrderBy("lastOrder", "asc")[0]).toEqual({
+    expect(customerOrderBy("lastOrder", "asc")[1]).toEqual({
       lastOrderAt: { sort: "asc", nulls: "last" },
     });
-    expect(customerOrderBy("reactivation", "desc")[0]).toEqual({
+    expect(customerOrderBy("reactivation", "desc")[1]).toEqual({
       reactivationScore: { sort: "desc", nulls: "last" },
     });
   });
 
   it("orders names the way the display name is derived: company, then person, then email", () => {
     const keys = customerOrderBy("name", "asc").map((clause) => Object.keys(clause)[0]);
-    expect(keys).toEqual(["companyName", "lastName", "firstName", "email", "id"]);
+    expect(keys).toEqual(["deletedAt", "companyName", "lastName", "firstName", "email", "id"]);
   });
 
   it("defaults to the most recent order first, never-ordered customers last", () => {
     expect(customerOrderBy(undefined, "asc")).toEqual([
+      { deletedAt: "asc" },
       { lastOrderAt: { sort: "desc", nulls: "last" } },
       { createdAt: "desc" },
       { id: "asc" },
     ]);
+  });
+});
+
+describe("the shared count", () => {
+  it("is held for a minute per filter combination, eight combinations at a time", () => {
+    expect(CUSTOMER_COUNT_TTL_MS).toBe(60_000);
+    expect(CUSTOMER_COUNT_MAX_ENTRIES).toBe(8);
+    expect(service).toContain("createKeyedTtlCache<number>(CUSTOMER_COUNT_TTL_MS, {");
+    expect(service).toContain("staleWhileRevalidate: true,");
+    expect(service).toContain("countCache.get(customerCountKey(filters), () =>");
+  });
+
+  it("keys the count by the filters alone, not by page, sort or direction", () => {
+    const base = customerCountKey({ customerType: "b2b", search: "clinic" });
+    expect(customerCountKey({ customerType: "b2b", search: " clinic ", page: 7 })).toBe(base);
+    expect(
+      customerCountKey({ customerType: "b2b", search: "clinic", sort: "value", dir: "desc" }),
+    ).toBe(base);
+    expect(customerCountKey({ customerType: "retail", search: "clinic" })).not.toBe(base);
+    expect(
+      customerCountKey({ customerType: "b2b", search: "clinic", consent: "subscribed" }),
+    ).not.toBe(base);
+    expect(customerCountKey({ customerType: "b2b", search: "clinic", storeId: "s1" })).not.toBe(
+      base,
+    );
+    // A blank search is no search.
+    expect(customerCountKey({ search: "   " })).toBe(customerCountKey({}));
+  });
+
+  it("is counted as the web process starts, and the page says the total may trail a sync", () => {
+    expect(instrumentation).toContain("await warmCustomerCount();");
+    expect(page).toContain("the header total can trail a sync by that long");
   });
 });
 

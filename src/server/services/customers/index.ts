@@ -1,6 +1,8 @@
 import type { CustomerType, Prisma } from "@prisma/client";
 
+import { createKeyedTtlCache } from "@/server/cache/ttl-cache";
 import { prisma } from "@/server/db/client";
+import { logger } from "@/server/logger";
 
 export type ListCustomersFilters = {
   customerType?: CustomerType;
@@ -52,6 +54,15 @@ export function parseSortDirection(value: string | undefined): SortDirection {
  * without a unique final key, rows sharing a sort value can swap between
  * pages and one is never shown.
  *
+ * Every branch begins with `deletedAt`. The list only shows rows where it is
+ * null, so naming it changes nothing about the order, but it lets the index
+ * on (deletedAt, lastOrderAt DESC NULLS LAST, createdAt DESC, id) serve the
+ * default order: Postgres only drops a leading index column from the sort
+ * match when the query has an equality on it, and `IS NULL` is not one.
+ * Without it the default page read and sorted all 75,000 customers on every
+ * load (1.1 s on the production database, 2026-11-05); with it the scan
+ * stops after fifty rows.
+ *
  * Optional columns sort nulls last in both directions. A customer who has
  * never ordered is not the "latest" last order, and a customer with no
  * reactivation score is not the best candidate; both are absences and
@@ -61,12 +72,14 @@ export function customerOrderBy(
   sort: CustomerSortKey | undefined,
   dir: SortDirection,
 ): Prisma.CustomerOrderByWithRelationInput[] {
+  const live = { deletedAt: "asc" } as const;
   const nullsLast = { sort: dir, nulls: "last" } as const;
   switch (sort) {
     case "name":
       // The display name is the company, else the person's name, else the
       // email, so the order follows the same precedence.
       return [
+        live,
         { companyName: nullsLast },
         { lastName: nullsLast },
         { firstName: nullsLast },
@@ -74,24 +87,25 @@ export function customerOrderBy(
         { id: "asc" },
       ];
     case "type":
-      return [{ customerType: dir }, { id: "asc" }];
+      return [live, { customerType: dir }, { id: "asc" }];
     case "store":
-      return [{ store: { name: dir } }, { id: "asc" }];
+      return [live, { store: { name: dir } }, { id: "asc" }];
     case "consent":
-      return [{ consentStatus: dir }, { id: "asc" }];
+      return [live, { consentStatus: dir }, { id: "asc" }];
     case "value":
-      return [{ lifetimeValue: dir }, { id: "asc" }];
+      return [live, { lifetimeValue: dir }, { id: "asc" }];
     case "orders":
-      return [{ orderCount: dir }, { id: "asc" }];
+      return [live, { orderCount: dir }, { id: "asc" }];
     case "lastOrder":
-      return [{ lastOrderAt: nullsLast }, { createdAt: dir }, { id: "asc" }];
+      return [live, { lastOrderAt: nullsLast }, { createdAt: dir }, { id: "asc" }];
     case "reactivation":
-      return [{ reactivationScore: nullsLast }, { id: "asc" }];
+      return [live, { reactivationScore: nullsLast }, { id: "asc" }];
     default:
       // Unsorted default: most recent order first, customers who have never
       // ordered last, newest of those first. The index
       // customers_deletedAt_lastOrderAt_createdAt_id_idx matches this order.
       return [
+        live,
         { lastOrderAt: { sort: "desc", nulls: "last" } },
         { createdAt: "desc" },
         { id: "asc" },
@@ -149,9 +163,62 @@ export async function listCustomers(filters: ListCustomersFilters = {}) {
 
 export type CustomerListRow = Awaited<ReturnType<typeof listCustomers>>[number];
 
+/**
+ * The header total and the page count. Counting the whole table walks all
+ * 75,000 customers (most of a second on the production database), so one
+ * filter combination's count is shared by every reader for a minute
+ * (2026-11-05); past that the last count is shown while the next runs, and
+ * the web process counts the unfiltered list as it starts. Customers are
+ * written by the syncs and imports, which run in the worker, so the total
+ * can trail them by up to a minute; the rows themselves never do.
+ */
+export const CUSTOMER_COUNT_TTL_MS = 60_000;
+
+/** How many filter combinations' counts are held at once. */
+export const CUSTOMER_COUNT_MAX_ENTRIES = 8;
+
+const countCache = createKeyedTtlCache<number>(CUSTOMER_COUNT_TTL_MS, {
+  staleWhileRevalidate: true,
+  maxEntries: CUSTOMER_COUNT_MAX_ENTRIES,
+});
+
+/**
+ * The filters that shape the count, in a fixed order, so equal filters share
+ * one entry whatever else (page, sort, direction) differs.
+ */
+export function customerCountKey(filters: ListCustomersFilters): string {
+  return JSON.stringify([
+    filters.customerType ?? null,
+    filters.storeId ?? null,
+    filters.consent ?? null,
+    filters.search?.trim() || null,
+  ]);
+}
+
 /** Total Customer rows matching filters (NOT capped — used for the page header). */
 export async function countCustomers(filters: ListCustomersFilters = {}): Promise<number> {
-  return prisma.customer.count({ where: customerWhere(filters) });
+  return countCache.get(customerCountKey(filters), () =>
+    prisma.customer.count({ where: customerWhere(filters) }),
+  );
+}
+
+/** Drops every shared count so the next reader counts anew. */
+export function invalidateCustomerCounts(): void {
+  countCache.clear();
+}
+
+/**
+ * Counts the unfiltered list ahead of the first reader, at process start.
+ * Never throws: a database that is not ready yet is logged, and the first
+ * reader counts.
+ */
+export async function warmCustomerCount(): Promise<void> {
+  try {
+    const customers = await countCustomers({});
+    logger.info({ customers }, "customer count warmed");
+  } catch (err) {
+    logger.warn({ err }, "customer count could not be warmed");
+  }
 }
 
 export async function getCustomerById(id: string) {

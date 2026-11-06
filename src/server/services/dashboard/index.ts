@@ -2,6 +2,8 @@ import type { OrderStatus, Prisma } from "@prisma/client";
 
 import { createTtlCache } from "@/server/cache/ttl-cache";
 import { prisma } from "@/server/db/client";
+import { logger } from "@/server/logger";
+import { countOpenExceptions } from "@/server/services/orders/open-exceptions";
 
 // -----------------------------------------------------------------------------
 // Type-safe shape returned to the page. Numbers are coerced to plain `number`
@@ -164,7 +166,9 @@ export function rankProductAggregates(rows: ProductAggregate[]): RankedProducts 
 // seconds on the production database, so one load serves every request for a
 // minute; past that the last figures are shown while the next load runs, so
 // no reader waits. Regenerating the briefing clears it so the new text shows
-// at once.
+// at once; resolving an exception only marks it stale. The web process loads
+// it as it starts, so the first visit after a deploy does not wait either
+// (2026-11-05: that visit took nine seconds).
 // -----------------------------------------------------------------------------
 
 export const DASHBOARD_CACHE_TTL_MS = 60_000;
@@ -179,6 +183,25 @@ export function getDashboardData(): Promise<DashboardData> {
 
 export function invalidateDashboardCache(): void {
   dashboardCache.clear();
+}
+
+/** The next reader is served the current figures while a fresh load runs. */
+export function expireDashboardCache(): void {
+  dashboardCache.expire();
+}
+
+/**
+ * Loads the dashboard ahead of the first reader, at process start. Never
+ * throws: a database that is not ready yet is logged, and the first reader
+ * loads.
+ */
+export async function warmDashboard(): Promise<void> {
+  try {
+    await getDashboardData();
+    logger.info("dashboard warmed");
+  } catch (err) {
+    logger.warn({ err }, "dashboard could not be warmed");
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -255,18 +278,65 @@ async function loadDashboardData(): Promise<DashboardData> {
     return { ranked, products: new Map(records.map((p) => [p.id, p])) };
   };
 
+  // The order counts, the exception list and the product aggregate each read
+  // thousands of rows (together most of the load's three seconds on the
+  // production database). They run one after another: the database has a
+  // tenth of a CPU, and when a reader's visit started a refresh, fourteen
+  // concurrent queries starved that reader's own small ones, so a dashboard
+  // served from the cache still took three seconds (2026-11-05). In sequence
+  // the refresh takes about as long overall and the requests in flight keep
+  // most of the database.
+  const loadOperations = async () => {
+    const openOrders = await prisma.order.count({ where: { status: { in: OPEN_ORDER_STATUSES } } });
+    const exceptionOrders = await countOpenExceptions();
+    const awaitingSupplier = await prisma.order.count({ where: { status: "awaiting_supplier" } });
+    const awaitingHumanReview = await prisma.order.count({
+      where: { status: "awaiting_human_review" },
+    });
+    const completedThisPeriod = await prisma.order.count({
+      where: { status: "completed", orderDate: { gte: periodStart } },
+    });
+    const cancelledThisPeriod = await prisma.order.count({
+      where: { status: "cancelled", orderDate: { gte: periodStart } },
+    });
+    const exceptionList = await prisma.order.findMany({
+      where: { exceptionStatus: { in: ["flagged", "in_review"] } },
+      orderBy: { orderDate: "desc" },
+      include: {
+        store: { select: { name: true } },
+        customer: { select: { firstName: true, lastName: true, companyName: true, email: true } },
+      },
+      take: 5,
+    });
+    const { ranked, products } = await loadProducts();
+    return {
+      openOrders,
+      exceptionOrders,
+      awaitingSupplier,
+      awaitingHumanReview,
+      completedThisPeriod,
+      cancelledThisPeriod,
+      exceptionList,
+      ranked,
+      products,
+    };
+  };
+
   const [
     { previousPeriod, previousSummary },
     currentSummary,
     trendPeriods,
-    openOrders,
-    exceptionOrders,
-    awaitingSupplier,
-    awaitingHumanReview,
-    completedThisPeriod,
-    cancelledThisPeriod,
-    { ranked, products },
-    exceptionList,
+    {
+      openOrders,
+      exceptionOrders,
+      awaitingSupplier,
+      awaitingHumanReview,
+      completedThisPeriod,
+      cancelledThisPeriod,
+      exceptionList,
+      ranked,
+      products,
+    },
     priorityTaskRecords,
     briefing,
     campaignRecords,
@@ -291,22 +361,7 @@ async function loadDashboardData(): Promise<DashboardData> {
           : { where: { divisionId: "__none__" } },
       },
     }),
-    prisma.order.count({ where: { status: { in: OPEN_ORDER_STATUSES } } }),
-    prisma.order.count({ where: { exceptionStatus: { in: ["flagged", "in_review"] } } }),
-    prisma.order.count({ where: { status: "awaiting_supplier" } }),
-    prisma.order.count({ where: { status: "awaiting_human_review" } }),
-    prisma.order.count({ where: { status: "completed", orderDate: { gte: periodStart } } }),
-    prisma.order.count({ where: { status: "cancelled", orderDate: { gte: periodStart } } }),
-    loadProducts(),
-    prisma.order.findMany({
-      where: { exceptionStatus: { in: ["flagged", "in_review"] } },
-      orderBy: { orderDate: "desc" },
-      include: {
-        store: { select: { name: true } },
-        customer: { select: { firstName: true, lastName: true, companyName: true, email: true } },
-      },
-      take: 5,
-    }),
+    loadOperations(),
     prisma.task.findMany({
       where: {
         status: { in: ["open", "in_progress", "awaiting_approval", "blocked"] },

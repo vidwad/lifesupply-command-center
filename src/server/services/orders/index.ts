@@ -4,6 +4,9 @@ import type { OrderStatus, Prisma } from "@prisma/client";
 
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
+import { expireDashboardCache } from "@/server/services/dashboard";
+
+import { expireOpenExceptionCount } from "./open-exceptions";
 
 export type ListOrdersFilters = {
   status?: OrderStatus;
@@ -241,6 +244,10 @@ export async function resolveOrderException(args: {
     where: { id: args.orderId },
     data: { exceptionStatus: "resolved", exceptionReason: newReason },
   });
+  // The bell and the dashboard count open exceptions from shared figures;
+  // they pick this up at their next refresh rather than making a reader wait.
+  expireOpenExceptionCount();
+  expireDashboardCache();
 
   // Mirror resolution into the central Exception table so the operations
   // exception queue stays in sync. Best-effort — if no row exists nothing

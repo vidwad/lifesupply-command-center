@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions";
 import { prisma } from "@/server/db/client";
 import { approvePermissionFor } from "@/server/services/approvals";
+import { countOpenExceptions } from "@/server/services/orders/open-exceptions";
 
 const APPROVAL_TYPES = [
   "campaign",
@@ -24,6 +25,11 @@ export type NotificationCounts = {
  * Fast counts for the topbar bell. Each block is filtered to what the user
  * can actually act on, so the badge is meaningful (no "12 pending approvals
  * none of which you can decide").
+ *
+ * These run on every full page load, inside the shell. The exception count
+ * is the same for every user and costs most of a second on the production
+ * database, so it comes from the shared count (2026-11-05); the other two
+ * are per user and read a handful of rows.
  */
 export async function getNotificationCounts(user: {
   id: string;
@@ -49,16 +55,13 @@ export async function getNotificationCounts(user: {
   };
 
   const canViewOrders = user.permissions.includes(PERMISSIONS.ORDERS_VIEW as PermissionKey);
-  const exceptionsWhere: Prisma.OrderWhereInput = {
-    exceptionStatus: { in: ["flagged", "in_review"] },
-  };
 
   const [approvalsCanDecide, myOverdueTasks, openExceptions] = await Promise.all([
     decidableTypes.length === 0
       ? Promise.resolve(0)
       : prisma.approval.count({ where: approvalWhere }),
     prisma.task.count({ where: tasksWhere }),
-    canViewOrders ? prisma.order.count({ where: exceptionsWhere }) : Promise.resolve(0),
+    canViewOrders ? countOpenExceptions() : Promise.resolve(0),
   ]);
 
   return {
