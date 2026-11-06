@@ -106,9 +106,6 @@ function useKeyboardUp(): boolean {
   return up;
 }
 
-/** Height of the keys row, without the bottom padding. Main pads by the same. */
-export const DOCK_HEIGHT_PX = 72;
-
 function isActive(pathname: string, key: NavKey): boolean {
   if (pathname === key.href) return true;
   return !key.exact && pathname.startsWith(`${key.href}/`);
@@ -214,10 +211,7 @@ export function MobileDock({
   return (
     <>
       {assistant && assistantOpen && (
-        <div
-          className="fixed inset-x-0 z-30 px-3 pb-2 pt-[env(safe-area-inset-top)] md:hidden"
-          style={{ bottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))` }}
-        >
+        <div className="phone-dock-panel fixed inset-x-0 z-30 px-3 pb-2 pt-[env(safe-area-inset-top)] md:hidden">
           <div className="relative mx-auto max-w-xl">
             <button
               type="button"
@@ -241,11 +235,8 @@ export function MobileDock({
         )}
       >
         <div
-          className="mx-auto grid max-w-xl px-2"
-          style={{
-            height: DOCK_HEIGHT_PX,
-            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-          }}
+          className="phone-dock-keys mx-auto grid max-w-xl px-2"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
         >
           {home && navKey(home)}
           {middle.map((entry) =>

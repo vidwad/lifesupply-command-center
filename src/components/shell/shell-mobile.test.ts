@@ -114,14 +114,29 @@ describe("the phone has function keys along the bottom (2026-11-03, dock 2026-11
     expect(dock).toContain('keyboardUp && "hidden"');
     expect(dock).toContain("if (!isUp && window.scrollY > 0) window.scrollTo({ top: 0 });");
     const shell = read("AppShell.tsx");
-    expect(shell).toContain('className="flex-1 overflow-y-auto md:pb-0"');
-    expect(shell).toContain(
-      "paddingBottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))`",
-    );
+    expect(shell).toContain('<main className="phone-dock-space flex-1 overflow-y-auto">');
+    // The shell is a server component. A constant imported from the dock's
+    // "use client" module reaches it as a client reference, not a number:
+    // the inline padding it wrote was `calc(function(){throw Error(...)}px
+    // + ...)`, invalid, so the padding was 0 and every page's last 72px sat
+    // behind the dock (owner, 2026-11-05). The height lives in CSS.
+    expect(shell).not.toContain("DOCK_HEIGHT_PX");
+    expect(shell).not.toMatch(/import \{[^}]*\} from "\.\/MobileDock"/);
+    expect(dock).not.toContain("DOCK_HEIGHT_PX");
+    expect(dock).toContain('className="phone-dock-keys mx-auto grid max-w-xl px-2"');
     // One variable carries the bottom padding: the safe-area inset, and on
     // iOS Safari the floating toolbar's height, which Safari does not report.
     const css = readRoot("src/styles/globals.css");
-    expect(css).toMatch(/:root \{\s*--phone-dock-pad: env\(safe-area-inset-bottom, 0px\);\s*\}/);
+    expect(css).toMatch(
+      /:root \{\s*--phone-dock-height: 72px;\s*--phone-dock-pad: env\(safe-area-inset-bottom, 0px\);\s*\}/,
+    );
+    expect(css).toMatch(/\.phone-dock-keys \{\s*height: var\(--phone-dock-height\);/);
+    expect(css).toMatch(
+      /\.phone-dock-space \{\s*padding-bottom: calc\(var\(--phone-dock-height\) \+ 1px \+ var\(--phone-dock-pad, 0px\)\);/,
+    );
+    expect(css).toMatch(
+      /@media \(min-width: 768px\) \{\s*\.phone-dock-space \{\s*padding-bottom: 0;/,
+    );
     expect(css).toMatch(
       /@supports \(-webkit-touch-callout: none\) \{\s*:root \{\s*--phone-dock-pad: calc\(max\(env\(safe-area-inset-bottom, 0px\), 20px\) \+ 48px\);/,
     );
@@ -146,7 +161,12 @@ describe("the phone has function keys along the bottom (2026-11-03, dock 2026-11
 
   it("the AI key opens a panel above the dock holding the assistant, and pages publish keys through one provider", () => {
     expect(dock).toContain("{assistant && assistantOpen && (");
-    expect(dock).toContain("bottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))`");
+    expect(dock).toContain(
+      'className="phone-dock-panel fixed inset-x-0 z-30 px-3 pb-2 pt-[env(safe-area-inset-top)] md:hidden"',
+    );
+    expect(readRoot("src/styles/globals.css")).toMatch(
+      /\.phone-dock-panel \{\s*bottom: calc\(var\(--phone-dock-height\) \+ 1px \+ var\(--phone-dock-pad, 0px\)\);/,
+    );
     // The panel is tinted light blue so it reads apart from the page beneath (owner, 2026-11-04).
     expect(dock).toContain(
       "border-sky-200 bg-sky-50 p-4 shadow-2xl dark:border-sky-900 dark:bg-sky-950",

@@ -7,7 +7,6 @@ import { getNotificationCounts } from "@/server/services/notifications";
 
 import { AppSidebar } from "./AppSidebar";
 import { DockShell } from "./DockShell";
-import { DOCK_HEIGHT_PX } from "./MobileDock";
 import { TopBar } from "./TopBar";
 
 type Props = {
@@ -35,7 +34,12 @@ const DOCK_ASSISTANT_SUGGESTIONS = [
  * and on a phone a dock of function keys at the foot of every page with
  * the assistant a tap away. The column is the phone's visible height
  * (`h-dvh`, `h-screen` as the fallback) so nothing sits behind a browser
- * toolbar; the main area pads for the fixed dock below `md`.
+ * toolbar; the main area pads for the fixed dock below `md` through the
+ * `phone-dock-space` rule. The dock's height is a CSS variable, never a
+ * constant imported from the dock: that module is "use client", and a value
+ * imported from it into this server component is a client reference, which
+ * wrote an invalid padding and left every page's foot behind the dock
+ * (2026-11-05).
  */
 export async function AppShell({ user, signOutAction, children }: Props) {
   const [notificationCounts, divisions, periods, cookieStore] = await Promise.all([
@@ -97,12 +101,7 @@ export async function AppShell({ user, signOutAction, children }: Props) {
           counts={counts}
           assistant={canUseAi ? <AnalystChat suggestions={DOCK_ASSISTANT_SUGGESTIONS} /> : null}
         >
-          <main
-            className="flex-1 overflow-y-auto md:pb-0"
-            style={{ paddingBottom: `calc(${DOCK_HEIGHT_PX}px + var(--phone-dock-pad, 0px))` }}
-          >
-            {children}
-          </main>
+          <main className="phone-dock-space flex-1 overflow-y-auto">{children}</main>
         </DockShell>
       </div>
     </SidebarProvider>

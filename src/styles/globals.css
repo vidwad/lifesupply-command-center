@@ -1335,8 +1335,15 @@
 }
 
 /*
- * The phone's dock on iOS (product owner, 2026-11-03). `--phone-dock-pad` is
- * the dock's bottom padding; the main area pads by the dock's height plus it.
+ * The phone's dock (product owner, 2026-11-03). `--phone-dock-height` is the
+ * keys row; `--phone-dock-pad` is the dock's bottom padding; the main area
+ * pads by the two together below `md`, and the assistant panel sits on top
+ * of them. The height lives here, not in a TypeScript constant: the shell
+ * is a server component, and a constant imported from the dock's "use
+ * client" module reaches it as a client reference, not a number, so the
+ * padding it wrote was invalid and every page's last 72px sat behind the
+ * dock (owner, 2026-11-05: the products list could not be scrolled to its
+ * Next button).
  *
  * Safari 26 floats its toolbar over the page and reports only the home
  * indicator in env(safe-area-inset-bottom), about 34px, while the toolbar
@@ -1346,6 +1353,7 @@
  * the Home Screen there is no toolbar, so only the indicator inset applies.
  */
 :root {
+  --phone-dock-height: 72px;
   --phone-dock-pad: env(safe-area-inset-bottom, 0px);
 }
 @supports (-webkit-touch-callout: none) {
@@ -1360,4 +1368,20 @@
 }
 .phone-dock {
   padding-bottom: var(--phone-dock-pad);
+}
+.phone-dock-keys {
+  height: var(--phone-dock-height);
+}
+/* The assistant panel opens just above the dock, its 1px top border included. */
+.phone-dock-panel {
+  bottom: calc(var(--phone-dock-height) + 1px + var(--phone-dock-pad, 0px));
+}
+/* The main area leaves room for the dock below md, where the dock shows. */
+.phone-dock-space {
+  padding-bottom: calc(var(--phone-dock-height) + 1px + var(--phone-dock-pad, 0px));
+}
+@media (min-width: 768px) {
+  .phone-dock-space {
+    padding-bottom: 0;
+  }
 }
