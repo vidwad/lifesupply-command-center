@@ -1,6 +1,6 @@
 # 43 — AI Assistant Drawer: Page-Aware Text and Live Voice
 
-**Document status:** Design and staged plan, with Stages 0 to 4 delivered
+**Document status:** Stages 0 to 4 delivered; Stage 5 prepared, with the owner's two switches recorded in §11
 **Opened:** November 3, 2026
 **Owner:** Product owner (Vid)
 **Audience:** Product owner, Claude Code, Codex, developers
@@ -215,7 +215,7 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 | 2 | The drawer: bottom sheet in the shell, text mode, tool-call rows, budget strip, phone layout, Playwright checks at 390 px and desktop. | Delivered November 6, 2026. See §4.5a as built. |
 | 3 | Live voice: session, tool and usage routes; WebRTC client; transcript; dictation; cutoffs; the flag turned on in staging only. | Delivered November 6, 2026, on GPT-Live. See §4.5b as built. |
 | 4 | Page registrations across the main modules (dashboard, customers, orders, products, sales intelligence, operations, finance), and `draft_task`. | Delivered November 6, 2026. See §4.4a as built. |
-| 5 | Production enablement: owner turns on `ai.live_voice`, sets caps, two-week review of the ledger by feature, then widen tools. | |
+| 5 | Production enablement: owner turns on `ai.live_voice`, sets caps, two-week review of the ledger by feature, then widen tools. | Prepared November 6, 2026: the code is live and the switches are the owner's. See §11. |
 
 ## 9. Decisions for the owner
 
@@ -230,3 +230,28 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 ## 10. Relationship to Phase 11
 
 The assistant is an internal feature on the Render surface and adds no public page. It widens the surface that Phase 11C (security) and 11E (performance) evidence must cover (`BLK-09`): the voice routes are new authenticated endpoints, and WebRTC sessions add browser-side load but no server audio. It does not accept any launch gate and does not relax the rule that AI takes no external action.
+
+## 11. Stage 5: production enablement (prepared November 6, 2026)
+
+Everything the stage needs is deployed. Two switches remain, and both are the owner's: no API, script or MCP path flips them, by design (`docs/06`, flags default off; `CLAUDE.md`, the flag stays off until the owner turns it on).
+
+### 11.1 The owner's two switches
+
+1. **Caps.** Admin → AI Settings → Daily budgets. Recommended (decision A-1): everyone $50 a day, each person $10 a day. The voice allowances already default to 60 minutes a day for everyone, 20 a person, and a 15-minute session. At $0.05 a minute of voice plus about a cent a question for the backend, a full voice day is about $3 plus tokens; the spend cap is the backstop.
+2. **The flag.** Admin → Feature Flags → `ai.live_voice` → on. It takes effect at the next drawer open: the microphone button enables and its tooltip changes from the flag's reason to "Start a live conversation". Off again stops new sessions at once; a session already running ends at its limit.
+
+### 11.2 First session, what to expect
+
+- Open the Command Center over HTTPS (the Render URL or a Home Screen install; a browser allows the microphone only on HTTPS or localhost). Expand the drawer, press the microphone, allow the microphone when the browser asks.
+- The drawer shows "Connecting…", then "Listening…" with a timer against the session limit. Speak; the transcript appears for both sides. A question about the business shows a "Looked at:" chip while the backend runs its tool, then the answer is spoken and transcribed.
+- End with the red button, or let the limit end it. The session then stays in the thread with its duration, and in AI Analyst → Output review as module `assistant.voice`.
+- The budget strip shows the minutes used. Admin → AI Settings → Today's AI use lists `assistant.voice` (the session seconds and the backend rows), `assistant.text` and `assistant.dictation`.
+
+### 11.3 The two-week review
+
+Each day of use, Admin → AI Settings → Today's AI use is the figure to read; the ledger rows are in `ai_usage_events` with `feature`, `kind` (`realtime` for session seconds, `text` for the backend), `modelName`, `audioSeconds` and `estimatedCostUsd`. After two weeks of ordinary use the owner decides the standing caps and which tools to widen (`draft_task` is the only workflow tool today; the next candidates are a read-only "my tasks" view and the operations exception queue as first-class tools).
+
+### 11.4 Turning it off
+
+Admin → Feature Flags → `ai.live_voice` off. Setting `ai.budget.daily_voice_minutes` to a small number has the same effect for everyone while leaving the flag on.
+
