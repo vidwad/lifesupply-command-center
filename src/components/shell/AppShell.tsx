@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 
-import { AnalystChat } from "@/app/(dashboard)/ai-analyst/analyst-chat";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { prisma } from "@/server/db/client";
 import { getNotificationCounts } from "@/server/services/notifications";
@@ -21,7 +20,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** What the dock's assistant panel offers first. */
+/** What the assistant drawer offers first. */
 const DOCK_ASSISTANT_SUGGESTIONS = [
   "What needs my attention today?",
   "How are sales this month against last?",
@@ -31,8 +30,10 @@ const DOCK_ASSISTANT_SUGGESTIONS = [
 /**
  * The application shell (2026-11-04, after the owner's pookt-operations
  * app): a collapsible grouped sidebar, a header naming the open module,
- * and on a phone a dock of function keys at the foot of every page with
- * the assistant a tap away. The column is the phone's visible height
+ * the assistant drawer at the foot of every page (docs/43 Stage 2), and on
+ * a phone a dock of function keys with the assistant a tap away. The
+ * drawer reads its allowances when it opens, so the shell adds no query
+ * for it. The column is the phone's visible height
  * (`h-dvh`, `h-screen` as the fallback) so nothing sits behind a browser
  * toolbar; the main area pads for the fixed dock below `md` through the
  * `phone-dock-space` rule. The dock's height is a CSS variable, never a
@@ -99,7 +100,7 @@ export async function AppShell({ user, signOutAction, children }: Props) {
         <DockShell
           permissions={user.permissions}
           counts={counts}
-          assistant={canUseAi ? <AnalystChat suggestions={DOCK_ASSISTANT_SUGGESTIONS} /> : null}
+          assistant={canUseAi ? { suggestions: DOCK_ASSISTANT_SUGGESTIONS } : null}
         >
           <main className="phone-dock-space flex-1 overflow-y-auto">{children}</main>
         </DockShell>

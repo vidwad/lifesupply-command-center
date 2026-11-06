@@ -21,7 +21,15 @@ vi.mock("@/server/integrations/openai/client", () => ({
         requests.push(request);
         const next = responses.shift();
         if (!next) throw new Error("no scripted response left");
-        return next;
+        if (!request.stream) return next;
+        // Streaming: the text in pieces, then the completed response.
+        const text = typeof next.output_text === "string" ? next.output_text : "";
+        return (async function* () {
+          for (const piece of text.match(/.{1,12}/g) ?? []) {
+            yield { type: "response.output_text.delta", delta: piece };
+          }
+          yield { type: "response.completed", response: next };
+        })();
       },
     },
   }),
@@ -177,6 +185,43 @@ describe("answerAssistantQuestion", () => {
       previousResponseId: "resp_8",
     });
     expect(requests[0]).toMatchObject({ previous_response_id: "resp_8" });
+  });
+
+  it("streams the text and reports each tool call when asked to", async () => {
+    responses = [
+      {
+        id: "resp_1",
+        model: "m",
+        output: [{ type: "function_call", call_id: "c1", name: "sales_overview", arguments: "{}" }],
+        output_text: "",
+        usage: { input_tokens: 1, output_tokens: 1 },
+      },
+      {
+        id: "resp_2",
+        model: "m",
+        output: [message("Sales were steady this month.")],
+        output_text: "Sales were steady this month.",
+        usage: { input_tokens: 1, output_tokens: 1 },
+      },
+    ];
+    const events: unknown[] = [];
+    const result = await answerAssistantQuestion({
+      question: "How are sales?",
+      userId: "u1",
+      permissions: ["ai.use"],
+      stream: true,
+      onEvent: (e) => events.push(e),
+    });
+    expect(result.answer).toBe("Sales were steady this month.");
+    expect(result.responseId).toBe("resp_2");
+    expect(requests.every((r) => r.stream === true)).toBe(true);
+    expect(events[0]).toEqual({ type: "tool", name: "sales_overview", status: "running" });
+    expect(events[1]).toEqual({ type: "tool", name: "sales_overview", status: "done" });
+    const text = events
+      .filter((e): e is { type: "delta"; text: string } => (e as { type: string }).type === "delta")
+      .map((e) => e.text)
+      .join("");
+    expect(text).toBe("Sales were steady this month.");
   });
 
   it("raises when the answer was cut off before any text, instead of storing a blank", async () => {

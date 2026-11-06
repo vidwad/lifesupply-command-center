@@ -1,6 +1,6 @@
 # 43 — AI Assistant Drawer: Page-Aware Text and Live Voice
 
-**Document status:** Design and staged plan, with Stage 0 delivered
+**Document status:** Design and staged plan, with Stages 0 to 2 delivered
 **Opened:** November 3, 2026
 **Owner:** Product owner (Vid)
 **Audience:** Product owner, Claude Code, Codex, developers
@@ -126,6 +126,12 @@ A `PageContextProvider` in the shell holds it; a page calls `useAssistantPageCon
 | Budget strip | Shows today's spend and voice minutes against the caps, and the reason when a mode is blocked. |
 | Phone | Full-height sheet; composer above the keyboard; the mic button is a large target; the sheet closes on back. |
 
+### 4.5a The drawer as built (November 6, 2026)
+
+`src/components/ai/assistant/AssistantDrawer.tsx`, mounted once in the shell's client boundary (`DockShell`) for anyone with `ai.use`. Below `md` it is a full-height sheet that the dock's AI key opens and the X or the phone's back closes (opening pushes a history entry; the pop closes). From `md` up it is a 44 px bar at the foot of the page, after the main area in the shell's column, that expands to 45% of the viewport. The dock's earlier tinted panel is gone.
+
+Text mode posts to `/api/ai/assistant/chat`, which runs the Stage 1 turn with `stream: true` and relays server-sent events: `tool` (running, done or skipped, with the reason), `delta` (the answer's text as the model writes it; a new tool round drops the text so far, which was the model thinking aloud), and `done` with the whole turn and today's budget, or `error`. The page context is sanitised to its declared fields and sizes on the way in. Enter sends, Shift+Enter breaks a line, Stop aborts the request, New starts a conversation. The budget strip reads `/api/ai/assistant/budget` when the drawer comes into view, not on every page load, and is refreshed by each `done` event; it names today's spend against the caps, the person's own cap when set, and the voice minutes, or "voice off" while the flag is off. The microphone button is present and disabled with the reason until Stage 3. A page registers its context through `useAssistantPageContext` or `<AssistantPageContext value=… />`; a page that registers nothing still sends its route and module name. The AI Analyst page keeps its own conversation component on the same turn service.
+
 ### 4.6 Persistence and audit
 
 Each completed text turn is an `AiOutput` with module `assistant.text`, the question as prompt, the answer as output, the tool calls and page context as source references. A voice session is one `AiOutput` with module `assistant.voice` holding the transcript, written at session end. Audit rows: `ai.assistant_query`, `ai.assistant_voice_started`, `ai.assistant_voice_ended`, with the user, model, duration and estimated cost. The ledger rows carry `feature` values `assistant.text`, `assistant.voice`, `assistant.dictation`.
@@ -190,7 +196,7 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 |---|---|---|
 | 0 | Usage ledger and daily budgets enforced at the client; live-dialog model, voice and transcription settings; feature flag; this document. | Delivered November 3, 2026 (this PR). |
 | 1 | The brain: the tool registry (`src/server/services/ai/assistant/tools.ts`), the tool loop on the Responses API with web search (`answer.ts`), the page-context type, `AiOutput` and audit rows; the AI Analyst page and the dock panel run on it. Streaming deferred. | Delivered November 4, 2026. See §4.3 as built. |
-| 2 | The drawer: bottom sheet in the shell, text mode, tool-call rows, budget strip, phone layout, Playwright checks at 390 px and desktop. | |
+| 2 | The drawer: bottom sheet in the shell, text mode, tool-call rows, budget strip, phone layout, Playwright checks at 390 px and desktop. | Delivered November 6, 2026. See §4.5a as built. |
 | 3 | Live voice: session, tool and usage routes; WebRTC client; transcript; dictation; cutoffs; the flag turned on in staging only. | |
 | 4 | Page registrations across the main modules (dashboard, customers, orders, products, sales intelligence, operations, finance), and `draft_task`. | |
 | 5 | Production enablement: owner turns on `ai.live_voice`, sets caps, two-week review of the ledger by feature, then widen tools. | |

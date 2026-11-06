@@ -159,22 +159,17 @@ describe("the phone has function keys along the bottom (2026-11-03, dock 2026-11
     expect(dock).toContain("counts.myOverdueTasks + counts.approvalsCanDecide");
   });
 
-  it("the AI key opens a panel above the dock holding the assistant, and pages publish keys through one provider", () => {
-    expect(dock).toContain("{assistant && assistantOpen && (");
-    expect(dock).toContain(
-      'className="phone-dock-panel fixed inset-x-0 z-30 px-3 pb-2 pt-[env(safe-area-inset-top)] md:hidden"',
-    );
-    expect(readRoot("src/styles/globals.css")).toMatch(
-      /\.phone-dock-panel \{\s*bottom: calc\(var\(--phone-dock-height\) \+ 1px \+ var\(--phone-dock-pad, 0px\)\);/,
-    );
-    // The panel is tinted light blue so it reads apart from the page beneath (owner, 2026-11-04).
-    expect(dock).toContain(
-      "border-sky-200 bg-sky-50 p-4 shadow-2xl dark:border-sky-900 dark:bg-sky-950",
-    );
-    const shell = read("AppShell.tsx");
-    expect(shell).toContain("<AnalystChat suggestions={DOCK_ASSISTANT_SUGGESTIONS} />");
+  it("the AI key opens the assistant drawer the shell owns, and pages publish keys through one provider", () => {
+    // Until 2026-11-06 the key opened a small tinted panel above the dock;
+    // the drawer (docs/43 Stage 2) replaced it, so the dock only toggles.
+    expect(dock).toContain("onClick={onAssistant}");
+    expect(dock).not.toContain("assistantOpen && (");
     const dockShell = read("DockShell.tsx");
     expect(dockShell).toContain("<DockActionsProvider onChange={onChange}>");
+    expect(dockShell).toContain(
+      "onAssistant={assistant ? () => setAssistantOpen((v) => !v) : null}",
+    );
+    expect(dockShell).toContain("<AssistantDrawer");
     expect(read("dock-actions.tsx")).toContain("export function useDockActions(");
   });
 });
