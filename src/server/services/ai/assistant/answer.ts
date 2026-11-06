@@ -110,7 +110,8 @@ export function collectSources(output: unknown, into = new Set<string>()): strin
   return [...into];
 }
 
-function serialiseToolResult(value: unknown): string {
+/** A tool's result as the model receives it, capped so a table cannot flood the context. */
+export function serialiseToolResult(value: unknown): string {
   const text = JSON.stringify(toJsonSafe(value)) ?? "null";
   if (text.length <= MAX_TOOL_OUTPUT_CHARS) return text;
   return `${text.slice(0, MAX_TOOL_OUTPUT_CHARS)}… [truncated: ${text.length} characters; narrow the request]`;

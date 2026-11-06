@@ -20,6 +20,7 @@ describe("narrowing the OpenAI model list to the two fields", () => {
       "gpt-realtime",
       "gpt-realtime-mini",
       "gpt-realtime-translation",
+      "gpt-live-1",
       "gpt-4o-mini-tts",
       "gpt-4o-transcribe",
       "gpt-4o-mini-transcribe",
@@ -48,6 +49,7 @@ describe("narrowing the OpenAI model list to the two fields", () => {
     expect(choices.realtime).toEqual([
       "gpt-4o-mini-realtime-preview",
       "gpt-4o-realtime-preview",
+      "gpt-live-1",
       "gpt-realtime",
       "gpt-realtime-mini",
     ]);

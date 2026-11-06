@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
+  AudioLines,
   Bot,
   ChevronDown,
   ChevronUp,
   ExternalLink,
   Mic,
+  PhoneOff,
   RotateCcw,
   Send,
   Sparkles,
@@ -17,12 +19,15 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { AssistantTurnDto } from "@/server/services/ai/assistant/types";
 
 import { budgetStripText } from "./budget-strip";
 import { useCurrentAssistantPageContext } from "./page-context";
 import { toolLabel } from "./tool-labels";
 import { useAssistantChat, type PendingTurn } from "./use-assistant-chat";
-import type { AssistantTurnDto } from "@/server/services/ai/assistant/types";
+import { useDictation } from "./use-dictation";
+import { useVoiceSession, type VoiceSessionSummary } from "./use-voice-session";
+import { formatSeconds, type VoiceState } from "./voice-events";
 
 type Props = {
   suggestions: string[];
@@ -31,22 +36,43 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
+type Entry =
+  | { kind: "turn"; at: string; turn: AssistantTurnDto }
+  | { kind: "voice"; at: string; session: VoiceSessionSummary };
+
 /**
- * The assistant drawer (docs/43 §4.5, Stage 2, 2026-11-06). One
+ * The assistant drawer (docs/43 §4.5, Stage 2 and 3, 2026-11-06). One
  * conversation, two shapes: below `md` a full-height sheet the dock's AI
  * key opens, which closes on the X or the phone's back; from `md` up a bar
  * at the foot of the page that expands to about half the viewport. Text
- * mode streams the answer and shows each tool as it runs; the budget strip
- * carries today's allowances. Voice arrives in Stage 3; its button says so.
+ * mode streams the answer and shows each tool as it runs. Live voice holds
+ * a spoken conversation over WebRTC with the same tools behind it, shown as
+ * a running transcript with a timer against the session limit; a finished
+ * session stays in the thread. Hold-to-talk dictation fills the composer.
+ * The budget strip carries today's allowances.
  */
 export function AssistantDrawer({ suggestions, open, onOpenChange }: Props) {
   const pageContext = useCurrentAssistantPageContext();
   const chat = useAssistantChat();
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState("");
+  const [voiceLog, setVoiceLog] = useState<VoiceSessionSummary[]>([]);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pushedHistory = useRef(false);
+
+  const voice = useVoiceSession({
+    onEnded: (summary) => {
+      setVoiceLog((prev) => [...prev, summary]);
+      void chat.refreshBudget();
+    },
+  });
+  const dictation = useDictation({
+    onText: (text) => {
+      setDraft((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+      textareaRef.current?.focus();
+    },
+  });
 
   const visible = open || expanded;
 
@@ -80,11 +106,13 @@ export function AssistantDrawer({ suggestions, open, onOpenChange }: Props) {
     onOpenChange(false);
   }, [onOpenChange]);
 
+  const voiceActive = voice.status !== "idle" && voice.status !== "error";
+
   // The transcript follows the newest text.
   useEffect(() => {
     const el = transcriptRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [chat.turns, chat.pending?.text, chat.pending?.tools.length]);
+  }, [chat.turns, chat.pending?.text, chat.pending?.tools.length, voice.state.lines, voiceLog]);
 
   const send = useCallback(() => {
     const question = draft.trim();
@@ -100,14 +128,30 @@ export function AssistantDrawer({ suggestions, open, onOpenChange }: Props) {
     }
   };
 
+  const reset = useCallback(() => {
+    chat.reset();
+    setVoiceLog([]);
+  }, [chat]);
+
   const spendBlocked = chat.budget?.spendBlocked ?? null;
-  const voiceReason = chat.budget?.voiceBlocked ?? "Live voice arrives in the next stage.";
+  const voiceReason =
+    chat.budget?.voiceBlocked ?? (chat.budget ? null : "Reading today's allowances…");
+  const canStartVoice = !voiceReason && voice.status === "idle";
   const title = pageContext.title ?? "this page";
+  const hasThread = chat.turns.length > 0 || voiceLog.length > 0;
+
+  const entries = useMemo<Entry[]>(() => {
+    const list: Entry[] = [
+      ...chat.turns.map((turn) => ({ kind: "turn" as const, at: turn.createdAt, turn })),
+      ...voiceLog.map((session) => ({ kind: "voice" as const, at: session.endedAt, session })),
+    ];
+    return list.sort((a, b) => a.at.localeCompare(b.at));
+  }, [chat.turns, voiceLog]);
 
   const conversation = (
     <>
       <div ref={transcriptRef} className="flex-1 overflow-y-auto px-4 py-3">
-        {chat.turns.length === 0 && !chat.pending ? (
+        {!hasThread && !chat.pending && !voiceActive ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Ask about {title}, the stores, customers, orders, products or the market. Figures come
@@ -134,18 +178,30 @@ export function AssistantDrawer({ suggestions, open, onOpenChange }: Props) {
           </div>
         ) : (
           <ol className="space-y-3">
-            {chat.turns.map((turn, index) => (
-              <TurnView key={`${turn.createdAt}-${index}`} turn={turn} />
-            ))}
+            {entries.map((entry, index) =>
+              entry.kind === "turn" ? (
+                <TurnView key={`turn-${entry.at}-${index}`} turn={entry.turn} />
+              ) : (
+                <VoiceSessionView key={`voice-${entry.at}-${index}`} session={entry.session} />
+              ),
+            )}
             {chat.pending && <PendingView pending={chat.pending} />}
+            {voiceActive && (
+              <LiveVoiceView
+                status={voice.status}
+                state={voice.state}
+                maxSeconds={voice.maxSeconds}
+                onStop={voice.stop}
+              />
+            )}
           </ol>
         )}
-        {chat.error && (
+        {(chat.error || voice.error || dictation.error) && (
           <p
             role="alert"
             className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
-            {chat.error}
+            {chat.error ?? voice.error ?? dictation.error}
           </p>
         )}
       </div>
@@ -167,22 +223,72 @@ export function AssistantDrawer({ suggestions, open, onOpenChange }: Props) {
             onKeyDown={onKeyDown}
             disabled={!!chat.pending || !!spendBlocked}
             placeholder={
-              spendBlocked ?? (chat.turns.length ? "Ask a follow-up…" : `Ask about ${title}…`)
+              spendBlocked ??
+              (dictation.status === "recording"
+                ? "Listening…"
+                : dictation.status === "transcribing"
+                  ? "Transcribing…"
+                  : chat.turns.length
+                    ? "Ask a follow-up…"
+                    : `Ask about ${title}…`)
             }
             aria-label="Ask the assistant"
             className="max-h-32 min-h-[2.5rem] flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled
-            title={voiceReason}
-            aria-label="Live voice"
-            className="h-10 w-10 shrink-0"
-          >
-            <Mic className="h-4 w-4" />
-          </Button>
+          {dictation.supported && (
+            <Button
+              type="button"
+              variant={dictation.status === "recording" ? "default" : "outline"}
+              size="icon"
+              disabled={!!chat.pending || !!spendBlocked || dictation.status === "transcribing"}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                void dictation.start();
+              }}
+              onPointerUp={dictation.stop}
+              onPointerLeave={dictation.stop}
+              onPointerCancel={dictation.stop}
+              onContextMenu={(event) => event.preventDefault()}
+              title="Hold to dictate"
+              aria-label="Hold to dictate"
+              aria-pressed={dictation.status === "recording"}
+              className={cn(
+                "h-10 w-10 shrink-0 touch-none select-none",
+                dictation.status === "transcribing" && "animate-pulse",
+              )}
+            >
+              <AudioLines className="h-4 w-4" />
+            </Button>
+          )}
+          {voiceActive ? (
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={voice.stop}
+              aria-label="End the live conversation"
+              title="End the live conversation"
+              className="h-10 w-10 shrink-0"
+            >
+              <PhoneOff className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={!canStartVoice}
+              onClick={() => {
+                voice.dismissError();
+                void voice.start(pageContext);
+              }}
+              title={voiceReason ?? "Start a live conversation"}
+              aria-label="Live voice"
+              className="h-10 w-10 shrink-0"
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+          )}
           {chat.pending ? (
             <Button
               type="button"
@@ -229,12 +335,12 @@ export function AssistantDrawer({ suggestions, open, onOpenChange }: Props) {
               <p className="text-sm font-semibold leading-tight">Assistant</p>
               <p className="truncate text-[11px] leading-tight text-muted-foreground">{title}</p>
             </div>
-            {chat.turns.length > 0 && (
+            {hasThread && (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={chat.reset}
+                onClick={reset}
                 aria-label="New conversation"
               >
                 <RotateCcw className="h-4 w-4" />
@@ -266,30 +372,41 @@ export function AssistantDrawer({ suggestions, open, onOpenChange }: Props) {
             <Bot className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <span className="font-medium">Assistant</span>
             <span className="truncate text-muted-foreground">· {title}</span>
+            {voiceActive && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
+                Live {formatSeconds(voice.state.seconds)}
+              </span>
+            )}
             {expanded ? (
               <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
             ) : (
               <ChevronUp className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
             )}
           </button>
-          {expanded && chat.turns.length > 0 && (
+          {expanded && hasThread && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={chat.reset}
+              onClick={reset}
               aria-label="New conversation"
             >
               <RotateCcw className="h-4 w-4" /> New
             </Button>
           )}
-          {!expanded && (
+          {!expanded && !voiceActive && (
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              disabled
-              title={voiceReason}
+              disabled={!canStartVoice}
+              onClick={() => {
+                setExpanded(true);
+                voice.dismissError();
+                void voice.start(pageContext);
+              }}
+              title={voiceReason ?? "Start a live conversation"}
               aria-label="Live voice"
               className="h-8 w-8"
             >
@@ -387,6 +504,93 @@ function PendingView({ pending }: { pending: PendingTurn }) {
         )}
         <ToolChips tools={pending.tools} />
       </div>
+    </li>
+  );
+}
+
+function TranscriptLines({ lines }: { lines: { role: "user" | "assistant"; text: string }[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {lines.map((line, i) => (
+        <li
+          key={`${line.role}-${i}`}
+          className={cn(
+            "max-w-[90%] rounded-2xl px-3 py-1.5 text-sm",
+            line.role === "user"
+              ? "ml-auto rounded-br-sm bg-primary/90 text-primary-foreground"
+              : "rounded-bl-sm bg-background",
+          )}
+        >
+          {line.text}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function LiveVoiceView({
+  status,
+  state,
+  maxSeconds,
+  onStop,
+}: {
+  status: string;
+  state: VoiceState;
+  maxSeconds: number;
+  onStop: () => void;
+}) {
+  const label =
+    status === "connecting"
+      ? "Connecting…"
+      : status === "ending"
+        ? "Ending…"
+        : state.lines.length
+          ? "Live"
+          : "Listening…";
+  return (
+    <li
+      className="space-y-2 rounded-2xl border border-destructive/30 bg-muted/30 px-3 py-2"
+      aria-live="polite"
+      aria-label="Live conversation"
+    >
+      <div className="flex items-center gap-2 text-xs">
+        <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-destructive" />
+        <span className="font-medium">{label}</span>
+        <span className="tabular-nums text-muted-foreground">
+          {formatSeconds(state.seconds)}
+          {maxSeconds ? ` / ${formatSeconds(maxSeconds)}` : ""}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onStop}
+          className="ml-auto h-7"
+          aria-label="End the live conversation"
+        >
+          <PhoneOff className="h-3.5 w-3.5" /> End
+        </Button>
+      </div>
+      <TranscriptLines lines={state.lines} />
+      <ToolChips tools={state.tools} />
+    </li>
+  );
+}
+
+function VoiceSessionView({ session }: { session: VoiceSessionSummary }) {
+  return (
+    <li className="space-y-2 rounded-2xl border bg-muted/30 px-3 py-2">
+      <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
+        <Mic className="h-3 w-3" aria-hidden="true" />
+        Live conversation, {formatSeconds(session.seconds)}
+        {session.reason === "expired" ? ", ended at the session limit" : ""}
+        {session.reason === "connection_lost" ? ", connection lost" : ""}
+      </p>
+      {session.lines.length ? (
+        <TranscriptLines lines={session.lines} />
+      ) : (
+        <p className="text-sm text-muted-foreground">Nothing was said.</p>
+      )}
     </li>
   );
 }

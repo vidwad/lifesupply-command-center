@@ -14,28 +14,43 @@ export const DEFAULT_OPENAI_MODEL = "gpt-5-mini";
  */
 export const DEFAULT_OPENAI_IMAGE_MODEL = "gpt-image-1.5";
 /**
- * The live-dialog model when nothing is configured anywhere (2026-11-03).
- * The full model follows tool calls more reliably than the mini; the daily
- * voice budgets bound what it can cost.
+ * The live-dialog model when nothing is configured anywhere. GPT-Live
+ * (2026-11-06): one voice model, gpt-live-1, billed by the second, with a
+ * backend text model doing the tool work. The Realtime models the setting
+ * first named (2026-11-03) are deprecated by OpenAI and cannot open a Live
+ * session; the voice service refuses them with a message naming this
+ * setting. The daily voice budgets bound what a session can cost.
  */
-export const DEFAULT_OPENAI_REALTIME_MODEL = "gpt-realtime";
-/** The live-dialog voice. OpenAI recommends marin and cedar for quality. */
+export const DEFAULT_OPENAI_REALTIME_MODEL = "gpt-live-1";
+/** The live-dialog voice. marin is GPT-Live's default. */
 export const DEFAULT_OPENAI_REALTIME_VOICE = "marin";
-/** Transcribes the person's speech, in live dialog and for dictation. */
+/** Transcribes dictation in text mode (GPT-Live transcribes its own sessions). */
 export const DEFAULT_OPENAI_TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe";
 
-/** The built-in Realtime voices the SDK names (2026-11-03). */
+/** The GPT-Live voices OpenAI names (2026-11-06): the default first. */
 export const OPENAI_REALTIME_VOICES = [
   "marin",
-  "cedar",
-  "alloy",
-  "ash",
-  "ballad",
-  "coral",
-  "echo",
-  "sage",
-  "shimmer",
-  "verse",
+  "quartz",
+  "ripple",
+  "vesper",
+  "willow",
+  "stone",
+  "gleam",
+  "meridian",
+  "bossa",
+  "tempo",
+  "beacon",
+  "delta",
+  "cinder",
+  "nuri",
+  "juni",
+  "flitz",
+  "brise",
+  "sillage",
+  "nira",
+  "harema",
+  "shida",
+  "noeul",
 ] as const;
 
 export type GetOpenAiClientOptions =
@@ -100,10 +115,11 @@ export async function resolveOpenAiImageModel(): Promise<string> {
 }
 
 /**
- * The live-dialog (Realtime) model. Resolution order (2026-11-03): env
+ * The live-dialog (GPT-Live) model. Resolution order (2026-11-03): env
  * OPENAI_REALTIME_MODEL, then SystemSetting `ai.openai_realtime_model`,
  * then the built-in default. The shared default model is not consulted: a
- * text model cannot hold a voice session.
+ * text model cannot hold a voice session. The names keep "realtime" from
+ * the first design so existing settings and environments still apply.
  */
 export async function resolveOpenAiRealtimeModel(): Promise<string> {
   const env = process.env.OPENAI_REALTIME_MODEL?.trim();

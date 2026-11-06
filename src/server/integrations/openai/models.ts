@@ -9,7 +9,7 @@ import { getOpenAiClient } from "./client";
 export type OpenAiModelChoices = {
   text: string[];
   image: string[];
-  /** Models that can hold a Realtime voice session. */
+  /** Models that can hold a live voice session: GPT-Live, and the deprecated Realtime family. */
   realtime: string[];
   /** Speech-to-text models, for live dialog's input transcription and dictation. */
   transcription: string[];
@@ -24,8 +24,8 @@ const TEXT_FAMILY = /^(gpt-5|gpt-4\.1|o[1-9])/;
 const NOT_TEXT =
   /(audio|realtime|tts|transcribe|image|embedding|moderation|search-preview|codex|-pro$)/;
 const IMAGE_FAMILY = /^gpt-image-/;
-/** Realtime session models; the translation and dated snapshot variants are left out. */
-const REALTIME_FAMILY = /^(gpt-realtime|gpt-4o(-mini)?-realtime)/;
+/** Live-dialog models: GPT-Live first (2026-11-06), then the deprecated Realtime family; translation and dated variants left out. */
+const REALTIME_FAMILY = /^(gpt-live|gpt-realtime|gpt-4o(-mini)?-realtime)/;
 const NOT_REALTIME = /(translation|-\d{4}-\d{2}-\d{2}$)/;
 /** Speech-to-text models; `-diarize` variants label speakers, which the drawer does not use. */
 const TRANSCRIPTION_FAMILY = /^(gpt-4o(-mini)?-transcribe|whisper-)/;

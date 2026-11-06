@@ -77,6 +77,16 @@ describe("estimateCostUsd", () => {
     expect(usd).toBeCloseTo((300 / 1e6) * 5 + (4_160 / 1e6) * 40, 4);
   });
 
+  it("prices a GPT-Live session by the second, at five cents a minute", () => {
+    const { usd, known } = estimateCostUsd("gpt-live-1", "realtime", { audioSeconds: 90 });
+    expect(known).toBe(true);
+    expect(usd).toBeCloseTo(0.075, 4);
+    // Tokens the session itself reports are not priced twice.
+    expect(
+      estimateCostUsd("gpt-live-1", "realtime", { audioSeconds: 60, inputTokens: 1000 }).usd,
+    ).toBeCloseTo(0.05, 4);
+  });
+
   it("prices whisper by the minute", () => {
     const { usd } = estimateCostUsd("whisper-1", "transcription", { audioSeconds: 120 });
     expect(usd).toBeCloseTo(0.012, 4);

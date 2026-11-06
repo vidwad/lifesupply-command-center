@@ -39,7 +39,7 @@ export const FEATURE_FLAGS = {
   PUBLIC_INQUIRY_INTAKE: "public_inquiry.intake",
   /** Send inquiry acknowledgment and owner notification emails (Stage 7). Default OFF; kill switch. */
   PUBLIC_INQUIRY_SEND: "public_inquiry.send",
-  /** Let the assistant drawer open live voice sessions, which spend Realtime minutes. Default OFF; kill switch. */
+  /** Let the assistant drawer open live voice sessions, which spend GPT-Live minutes. Default OFF; kill switch. */
   AI_LIVE_VOICE: "ai.live_voice",
 } as const;
 
@@ -80,5 +80,5 @@ export const FEATURE_FLAG_DESCRIPTIONS: Record<FeatureFlagKey, string> = {
   [FEATURE_FLAGS.PUBLIC_INQUIRY_SEND]:
     "Send inquiry acknowledgment and owner notification emails (routes to the sink when configured).",
   [FEATURE_FLAGS.AI_LIVE_VOICE]:
-    "Allow live voice dialog in the assistant drawer. Spends Realtime minutes within the daily voice budgets in AI Settings.",
+    "Allow live voice dialog in the assistant drawer. Spends GPT-Live minutes and backend tokens within the daily voice budgets in AI Settings.",
 };

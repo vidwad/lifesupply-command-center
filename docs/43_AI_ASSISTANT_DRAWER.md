@@ -1,6 +1,6 @@
 # 43 — AI Assistant Drawer: Page-Aware Text and Live Voice
 
-**Document status:** Design and staged plan, with Stages 0 to 2 delivered
+**Document status:** Design and staged plan, with Stages 0 to 3 delivered
 **Opened:** November 3, 2026
 **Owner:** Product owner (Vid)
 **Audience:** Product owner, Claude Code, Codex, developers
@@ -25,9 +25,11 @@ The text path and the voice path must not have separate data access. If they did
 
 Each page registers a small typed object: route, entity type and id, active filters, date range, store and division, and the headline figures already rendered. The assistant's system prompt includes it, and tools accept it as an argument so "what is this customer's lifetime value" resolves to the customer on screen. This is more reliable than reading the DOM, costs nothing in tokens compared with sending the HTML, and keeps the assistant from seeing anything the page did not already show.
 
-### 3.3 Realtime over WebRTC, with the server holding the key
+### 3.3 GPT-Live over WebRTC, with the server holding the key (revised November 6, 2026)
 
-The browser connects to OpenAI directly with a client secret that expires in minutes; the API key never leaves the server. The server mints the secret only after checking the `ai.use` permission, the `ai.live_voice` feature flag, and the voice budgets. The secret's time-to-live is the "longest live session" setting, so a session cannot outlive its allowance even if the browser misbehaves. A WebSocket relay through Render would add a hop, a second audio encode, and memory on a 512 MB web service that already has a history of dying under load.
+The plan was written for OpenAI's Realtime API. By the time Stage 3 was built, OpenAI had marked the Realtime models deprecated and shipped **GPT-Live** (`gpt-live-1`), which the owner asked for by name. The shape is better for this application: the browser sends its WebRTC offer to our server, our server opens the session with the API key (which therefore never leaves the server, and needs no client secret), and the voice model hands every question about the business to a **backend text model** (the assistant's configured text model, `gpt-5-mini` by default) that carries the same read-only tools as text mode. Tool calls still come to the browser on the data channel, the browser relays each to our tool route, and the result goes back the same way; the browser runs nothing. Audio travels directly between the browser and OpenAI, so Render carries no audio. The voice session is billed by the second ($0.05 a minute); the backend model by its tokens.
+
+GPT-Live has no time-to-live field. The "longest live session" setting is enforced by the browser (a timer that sends `session.close`) and by the server (each usage report answers with a stop reason once the session's seconds or the day's minutes reach a cap).
 
 ### 3.4 Budgets as a chokepoint, not a convention
 
@@ -132,6 +134,14 @@ A `PageContextProvider` in the shell holds it; a page calls `useAssistantPageCon
 
 Text mode posts to `/api/ai/assistant/chat`, which runs the Stage 1 turn with `stream: true` and relays server-sent events: `tool` (running, done or skipped, with the reason), `delta` (the answer's text as the model writes it; a new tool round drops the text so far, which was the model thinking aloud), and `done` with the whole turn and today's budget, or `error`. The page context is sanitised to its declared fields and sizes on the way in. Enter sends, Shift+Enter breaks a line, Stop aborts the request, New starts a conversation. The budget strip reads `/api/ai/assistant/budget` when the drawer comes into view, not on every page load, and is refreshed by each `done` event; it names today's spend against the caps, the person's own cap when set, and the voice minutes, or "voice off" while the flag is off. The microphone button is present and disabled with the reason until Stage 3. A page registers its context through `useAssistantPageContext` or `<AssistantPageContext value=… />`; a page that registers nothing still sends its route and module name. The AI Analyst page keeps its own conversation component on the same turn service.
 
+### 4.5b Live voice as built (November 6, 2026)
+
+`src/server/services/ai/assistant/voice.ts` opens the session: it checks the flag and the voice budget, resolves the live model (must be a `gpt-live` model; a Realtime name is refused with a message naming the setting), the voice and the backend model, builds the voice instructions in OpenAI's template for `gpt-live-1` (role, backchannel policy, interruption policy, and a delegation policy naming when to generate `<|SpawnThinking|>`) and the backend instructions (the text assistant's, plus "answer for a spoken conversation"), and posts `{ session: { model, instructions, audio.output.voice, delegation: { type: "responses", responses: { model, instructions, tools, tool_choice } } }, transport: { type: "webrtc", sdp } }` to `/v1/live/sessions`. The answer's SDP goes back to the browser with the session id and the limit in seconds. The session is one `AiOutput` (module `assistant.voice`) created at start and completed at the end with the transcript; its ledger row begins with the 15 initialisation seconds OpenAI bills and is overwritten with the running total the browser reports, so a cut connection still leaves what was spent; each backend response is its own ledger row keyed by its response id.
+
+Routes under `/api/ai/assistant/voice/`: `session` (POST the offer and the page context), `tool` (run one relayed call under the person's permissions), `usage` (seconds and backend tokens; answers with a stop reason when a cap is reached), `end` (final seconds, reason, transcript; idempotent; accepts a beacon). `/api/ai/assistant/dictate` transcribes a hold-to-talk clip with the transcription model, metered as `assistant.dictation`.
+
+In the browser, `voice-events.ts` folds the data channel's events (`session.started`, `session.input_transcript.delta`, `session.output_transcript.delta`, `session.usage.updated`, `session.closed`, the nested `response.event` carrying `response.output_item.done` function calls and `response.completed` usage, and `error`) into the transcript and the effects to carry out; `use-voice-session.ts` owns the peer connection, the microphone, the audio element and the effects (relay a tool, report usage every ten seconds, end on the button, on a stop from the server, on the timer, on leaving the page, or on the tab closing by beacon). The drawer shows the live transcript with a timer against the limit and an End button, keeps a finished session in the thread, enables the microphone button only when the flag is on and the budgets allow (its tooltip gives the reason otherwise), and offers hold-to-talk dictation that fills the composer.
+
 ### 4.6 Persistence and audit
 
 Each completed text turn is an `AiOutput` with module `assistant.text`, the question as prompt, the answer as output, the tool calls and page context as source references. A voice session is one `AiOutput` with module `assistant.voice` holding the transcript, written at session end. Audit rows: `ai.assistant_query`, `ai.assistant_voice_started`, `ai.assistant_voice_ended`, with the user, model, duration and estimated cost. The ledger rows carry `feature` values `assistant.text`, `assistant.voice`, `assistant.dictation`.
@@ -182,11 +192,11 @@ It does not stop a call in flight, and it does not refund. A long Product Studio
 |---|---|---|
 | One text question with two tool calls | gpt-5-mini | under $0.01 |
 | One text question with two tool calls | gpt-5 | $0.02 to $0.05 |
-| One minute of live dialog | gpt-realtime | about $0.30 to $0.50 depending on how much each side talks |
-| One minute of live dialog | gpt-realtime-mini | about $0.10 to $0.15 |
+| One minute of live dialog | gpt-live-1 (voice) | $0.05, billed by the second, plus the backend model's tokens (about $0.01 a question on gpt-5-mini) |
+| One minute of live dialog | gpt-realtime (deprecated, not supported by the voice service) | about $0.30 to $0.50 depending on how much each side talks |
 | One minute of dictation | gpt-4o-mini-transcribe | about $0.003 |
 
-The default voice allowances (60 minutes a day, everyone) therefore bound voice at roughly $30 a day on gpt-realtime. A spend cap of $25 to $50 a day would cover present use with room; the owner sets it.
+The default voice allowances (60 minutes a day, everyone) therefore bound voice at about $3 a day of session time on gpt-live-1, plus the backend's tokens. A spend cap of $25 to $50 a day would cover present use with room; the owner sets it.
 
 ## 8. Stages
 
@@ -197,7 +207,7 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 | 0 | Usage ledger and daily budgets enforced at the client; live-dialog model, voice and transcription settings; feature flag; this document. | Delivered November 3, 2026 (this PR). |
 | 1 | The brain: the tool registry (`src/server/services/ai/assistant/tools.ts`), the tool loop on the Responses API with web search (`answer.ts`), the page-context type, `AiOutput` and audit rows; the AI Analyst page and the dock panel run on it. Streaming deferred. | Delivered November 4, 2026. See §4.3 as built. |
 | 2 | The drawer: bottom sheet in the shell, text mode, tool-call rows, budget strip, phone layout, Playwright checks at 390 px and desktop. | Delivered November 6, 2026. See §4.5a as built. |
-| 3 | Live voice: session, tool and usage routes; WebRTC client; transcript; dictation; cutoffs; the flag turned on in staging only. | |
+| 3 | Live voice: session, tool and usage routes; WebRTC client; transcript; dictation; cutoffs; the flag turned on in staging only. | Delivered November 6, 2026, on GPT-Live. See §4.5b as built. |
 | 4 | Page registrations across the main modules (dashboard, customers, orders, products, sales intelligence, operations, finance), and `draft_task`. | |
 | 5 | Production enablement: owner turns on `ai.live_voice`, sets caps, two-week review of the ledger by feature, then widen tools. | |
 
@@ -206,7 +216,7 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 | Id | Decision | Default if not decided |
 |---|---|---|
 | A-1 | Daily spend cap values. | None; no cap until set. Recommended $25 to $50 everyone, $10 per user. |
-| A-2 | Voice model: `gpt-realtime` (quality) or `gpt-realtime-mini` (cost). | `gpt-realtime`. |
+| A-2 | Voice model. Since November 6, 2026 only `gpt-live-1` can open a session (the Realtime models are deprecated); the cost lever is the backend text model. | `gpt-live-1`, backend `gpt-5-mini`. |
 | A-3 | Whether the assistant may read personal contact details aloud. | No, unless asked by name. |
 | A-4 | Whether voice sessions should be transcribed and kept as `AiOutput` rows. | Yes, text only, under `ai.view_logs`. |
 | A-5 | Whether `draft_task` ships in Stage 4 or waits. | Ships, confirm-only. |
