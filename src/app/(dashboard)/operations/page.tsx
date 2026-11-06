@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { SavedViewsBar } from "@/components/views/SavedViewsBar";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -99,6 +100,22 @@ export default async function OperationsPage({
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/operations",
+          title: "Operations Control Center",
+          filters: { view: data.view, ...(params.store && { store: params.store }) },
+          storeId: params.store || undefined,
+          figures: [
+            { label: "In this queue", value: String(data.queue.length) },
+            { label: "Needs attention", value: String(data.counts.needsAttention) },
+            { label: "Awaiting supplier", value: String(data.counts.awaitingSupplier) },
+            { label: "Needs review", value: String(data.counts.needsReview) },
+            { label: "Delayed over 7 days", value: String(data.counts.delayed) },
+            { label: "Flagged exceptions", value: String(data.counts.flaggedExceptions) },
+          ],
+        }}
+      />
       <PageHeader
         title="Operations Control Center"
         description="Order queues, supplier exceptions, and operational accountability."

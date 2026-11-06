@@ -29,6 +29,7 @@ import { getProductSalesStats, getSalesOverview } from "@/server/services/sales-
 
 import { readBigCommerce } from "./bigcommerce-read";
 import { BLOCKED_TABLES, guardReadOnlySql, toJsonSafe } from "./sql-guard";
+import { normaliseTaskDraft, TASK_ENTITY_TYPES, TASK_PRIORITIES } from "./task-draft";
 import { readWebsiteSection, WEBSITE_SECTIONS } from "./website";
 
 export type ToolContext = { userId: string; permissions: string[]; now: Date };
@@ -822,6 +823,44 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         { timeout: 15_000 },
       );
       return { rowCount: rows.length, rows: toJsonSafe(rows) };
+    },
+  },
+  {
+    // docs/43 Stage 4 (2026-11-06). The one tool that touches a workflow,
+    // and it still writes nothing: the person sees the draft in the drawer
+    // with a Create button, and the existing task service creates the row
+    // under their user when they press it.
+    name: "draft_task",
+    description:
+      "Propose a task for the person to confirm: a follow-up, a reminder, something to check or chase. Nothing is created; the person sees the draft with a Create button. Give a short imperative title, a one- or two-sentence description with the figures that prompted it, a priority, a due date when one was implied, and the related record when the task is about one.",
+    permissions: [PERMISSIONS.TASKS_CREATE],
+    parameters: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Imperative, under 200 characters." },
+        description: {
+          type: "string",
+          description: "Why, with the figures. Under 2,000 characters.",
+        },
+        priority: { type: "string", enum: [...TASK_PRIORITIES], description: "Default medium." },
+        dueDate: { type: "string", description: "YYYY-MM-DD, when the person implied one." },
+        relatedEntityType: {
+          type: "string",
+          enum: [...TASK_ENTITY_TYPES],
+          description: "The record the task is about, with relatedEntityId.",
+        },
+        relatedEntityId: { type: "string", description: "The record's Command Center id." },
+      },
+      required: ["title"],
+      additionalProperties: false,
+    },
+    run: async (args) => {
+      const draft = normaliseTaskDraft(args);
+      if (!draft) throw new Error("A task needs a title.");
+      return {
+        draft,
+        note: "Shown to the person as a draft with a Create button. Nothing has been created; tell the person the draft is ready to confirm.",
+      };
     },
   },
 ];

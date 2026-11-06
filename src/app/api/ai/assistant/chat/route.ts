@@ -13,6 +13,7 @@ import { requirePermission } from "@/server/permissions";
 import { AiNotConfiguredError } from "@/server/services/ai";
 import { answerAssistantQuestion } from "@/server/services/ai/assistant/answer";
 import { getAssistantBudgetSummary } from "@/server/services/ai/assistant/budget-summary";
+import { draftsFromToolCalls } from "@/server/services/ai/assistant/task-draft";
 import type {
   AssistantChatEvent,
   AssistantPageContext,
@@ -144,6 +145,8 @@ export async function POST(req: Request) {
             sources: result.sources,
             warnings: result.warnings,
             responseId: result.responseId,
+            drafts: draftsFromToolCalls(result.toolCalls),
+            aiOutputId: result.aiOutputId,
           },
         });
       } catch (err) {

@@ -12,6 +12,7 @@ import {
 } from "@/components/data/OrderBadges";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatDateTime, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -65,6 +66,23 @@ export default async function OrderDetailPage({ params }: Props) {
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/orders/[id]",
+          title: `Order ${order.orderNumber}`,
+          entity: { type: "order", id: order.id, label: `Order ${order.orderNumber}` },
+          storeId: order.store.id,
+          figures: [
+            { label: "Store", value: order.store.name },
+            { label: "Placed", value: formatDateTime(order.orderDate) },
+            { label: "Status", value: order.status },
+            { label: "Payment", value: order.paymentStatus },
+            { label: "Fulfillment", value: order.fulfillmentStatus },
+            { label: "Exception", value: order.exceptionStatus },
+            { label: "Total", value: formatCurrency(order.grandTotal) },
+          ],
+        }}
+      />
       <PageHeader
         title={`Order ${order.orderNumber}`}
         description={`${order.store.name} • ${formatDateTime(order.orderDate)}`}

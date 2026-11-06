@@ -10,6 +10,7 @@ import { KpiCard } from "@/components/data/KpiCard";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { CircleDollarSign } from "lucide-react";
 import { formatCurrency, formatDateTime, formatPercent } from "@/lib/format";
@@ -85,6 +86,31 @@ export default async function FinancialsPage({
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/financials",
+          title: "Financials",
+          filters: { period: data.period.name, division: data.division.name },
+          divisionId: data.division.id,
+          range: { from: data.period.startDate.slice(0, 10), to: data.period.endDate.slice(0, 10) },
+          figures: [
+            { label: "Revenue", value: formatCurrency(data.revenue.current) },
+            { label: "Gross profit", value: formatCurrency(data.grossProfit.current) },
+            {
+              label: "Gross margin",
+              value:
+                data.grossMargin.current != null ? formatPercent(data.grossMargin.current, 1) : "—",
+            },
+            { label: "Operating income", value: formatCurrency(data.operatingIncome.current) },
+            {
+              label: "Cash",
+              value: data.cash.current != null ? formatCurrency(data.cash.current) : "—",
+            },
+            { label: "Approval", value: data.approvalStatus },
+            { label: "Currency", value: data.currency },
+          ],
+        }}
+      />
       <PageHeader
         title="Financials"
         description={`${data.division.name} • ${data.period.name}`}

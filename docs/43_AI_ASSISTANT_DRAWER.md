@@ -1,6 +1,6 @@
 # 43 — AI Assistant Drawer: Page-Aware Text and Live Voice
 
-**Document status:** Design and staged plan, with Stages 0 to 3 delivered
+**Document status:** Design and staged plan, with Stages 0 to 4 delivered
 **Opened:** November 3, 2026
 **Owner:** Product owner (Vid)
 **Audience:** Product owner, Claude Code, Codex, developers
@@ -117,6 +117,12 @@ type AssistantPageContext = {
 
 A `PageContextProvider` in the shell holds it; a page calls `useAssistantPageContext(ctx)` in its client island, or a server page renders `<AssistantPageContext value={...} />`. The drawer reads it on each turn, so navigating changes what the assistant knows without restarting the conversation.
 
+### 4.4a Registrations as built (November 6, 2026)
+
+Eleven server pages render `<AssistantPageContext value={…} />` with what their header shows: the executive dashboard (period and its KPIs), the customers list (type, consent, store, search, sort, page, the matching total) and a customer (type, store, consent, lifetime value, orders, last order), the orders list (status, exceptions, search, division, page, the matching total) and an order (store, date, status, payment, fulfillment, exception, total), the products list (store, category, status, quality, segment, search, the performance range, page, the matching total) and a product (SKU, category, price, 90-day revenue, units and margin), analytics (range, store, users, sessions, purchases, revenue, conversion), the operations control centre (queue, store, the queue counts) and its exceptions list (status, severity, type, search, the count), and financials (period, division, the period's dates, revenue, gross profit, margin, operating income, cash, approval, currency). The figures are the formatted strings the page itself shows, so the assistant quotes what the person sees and nothing the page did not render.
+
+`draft_task` is the registry's one workflow tool and still writes nothing: it is offered only to a person with `tasks.create`, it returns the normalised draft (title, description, priority, due date, related record), the turn's `drafts` carry it to the drawer, and the drawer shows a card with Create. Create posts to `/api/ai/assistant/tasks`, which creates the task through the existing task service under the person's own user with `sourceType: ai_recommendation` and the answer's `AiOutput` id as its source. A draft the backend makes during a voice session appears the same way, during the session and in its record afterwards.
+
 ### 4.5 Client
 
 | Piece | Behaviour |
@@ -208,7 +214,7 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 | 1 | The brain: the tool registry (`src/server/services/ai/assistant/tools.ts`), the tool loop on the Responses API with web search (`answer.ts`), the page-context type, `AiOutput` and audit rows; the AI Analyst page and the dock panel run on it. Streaming deferred. | Delivered November 4, 2026. See §4.3 as built. |
 | 2 | The drawer: bottom sheet in the shell, text mode, tool-call rows, budget strip, phone layout, Playwright checks at 390 px and desktop. | Delivered November 6, 2026. See §4.5a as built. |
 | 3 | Live voice: session, tool and usage routes; WebRTC client; transcript; dictation; cutoffs; the flag turned on in staging only. | Delivered November 6, 2026, on GPT-Live. See §4.5b as built. |
-| 4 | Page registrations across the main modules (dashboard, customers, orders, products, sales intelligence, operations, finance), and `draft_task`. | |
+| 4 | Page registrations across the main modules (dashboard, customers, orders, products, sales intelligence, operations, finance), and `draft_task`. | Delivered November 6, 2026. See §4.4a as built. |
 | 5 | Production enablement: owner turns on `ai.live_voice`, sets caps, two-week review of the ledger by feature, then widen tools. | |
 
 ## 9. Decisions for the owner

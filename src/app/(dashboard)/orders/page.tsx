@@ -10,6 +10,7 @@ import {
   PaymentStatusBadge,
 } from "@/components/data/OrderBadges";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -98,6 +99,20 @@ export default async function OrdersPage({
 
   return (
     <div>
+      <AssistantPageContext
+        value={{
+          route: "/orders",
+          title: "Orders",
+          filters: {
+            ...(filters.status && { status: filters.status }),
+            ...(filters.exceptionsOnly && { exceptions: "only" }),
+            ...(filters.search && { search: filters.search }),
+            page: String(page),
+          },
+          divisionId: filters.divisionId,
+          figures: [{ label: "Orders matching", value: totalOrders.toLocaleString() }],
+        }}
+      />
       <PageHeader
         title="Orders"
         description="Normalized order management across BigCommerce stores."

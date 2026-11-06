@@ -84,6 +84,22 @@ describe("foldVoiceEvent", () => {
     expect(settleVoiceTool(state, "call_9", "done").tools[0]!.status).toBe("done");
   });
 
+  it("keeps a draft_task call as a draft for the person to confirm (Stage 4)", () => {
+    const { state } = fold(INITIAL_VOICE_STATE, {
+      type: "response.event",
+      event: {
+        type: "response.output_item.done",
+        item: {
+          type: "function_call",
+          call_id: "call_d",
+          name: "draft_task",
+          arguments: '{"title":"Chase order 76507","priority":"high"}',
+        },
+      },
+    });
+    expect(state.drafts).toEqual([{ title: "Chase order 76507", priority: "high" }]);
+  });
+
   it("ignores a nested arguments-done alone, and reports backend usage once per completed response", () => {
     const { effects } = fold(
       INITIAL_VOICE_STATE,

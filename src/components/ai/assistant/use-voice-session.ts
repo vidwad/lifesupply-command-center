@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { AssistantPageContext } from "@/server/services/ai/assistant/types";
 
+import type { TaskDraft } from "@/server/services/ai/assistant/task-draft";
+
 import {
   foldVoiceEvent,
   INITIAL_VOICE_STATE,
@@ -29,6 +31,7 @@ export type VoiceSessionSummary = {
   seconds: number;
   reason: string;
   endedAt: string;
+  drafts: TaskDraft[];
 };
 
 export type VoiceStatus = "idle" | "connecting" | "live" | "ending" | "error";
@@ -127,11 +130,13 @@ export function useVoiceSession(args: { onEnded: (summary: VoiceSessionSummary) 
         seconds: stateRef.current.seconds,
         reason,
         endedAt: new Date().toISOString(),
+        drafts: stateRef.current.drafts,
       };
       setStatus("idle");
       update(INITIAL_VOICE_STATE);
       sessionIdRef.current = null;
-      if (summary.lines.length || summary.seconds) onEnded.current(summary);
+      if (summary.lines.length || summary.seconds || summary.drafts.length)
+        onEnded.current(summary);
     },
     [endPayload, teardownMedia, update],
   );

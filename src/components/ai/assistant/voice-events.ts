@@ -13,6 +13,8 @@
  * `response.output_item.done` with the call's id, name and arguments; the
  * backend's tokens as `response.completed`), and `error`.
  */
+import { normaliseTaskDraft, type TaskDraft } from "@/server/services/ai/assistant/task-draft";
+
 export type VoiceLine = { role: "user" | "assistant"; text: string };
 
 export type VoiceToolActivity = {
@@ -30,6 +32,8 @@ export type VoiceState = {
   closeReason: string | null;
   /** The last non-fatal error the session reported. */
   error: string | null;
+  /** Tasks the backend drafted during the session, for the person to confirm. */
+  drafts: TaskDraft[];
 };
 
 export type VoiceEffect =
@@ -50,6 +54,7 @@ export const INITIAL_VOICE_STATE: VoiceState = {
   tools: [],
   closeReason: null,
   error: null,
+  drafts: [],
 };
 
 type Rec = Record<string, unknown>;
@@ -124,8 +129,13 @@ export function foldVoiceEvent(
               args = {};
             }
             effects.push({ type: "tool_call", callId, name, arguments: args });
+            const draft = name === "draft_task" ? normaliseTaskDraft(args) : null;
             return {
-              state: { ...state, tools: [...state.tools, { callId, name, status: "running" }] },
+              state: {
+                ...state,
+                tools: [...state.tools, { callId, name, status: "running" }],
+                drafts: draft ? [...state.drafts, draft] : state.drafts,
+              },
               effects,
             };
           }
