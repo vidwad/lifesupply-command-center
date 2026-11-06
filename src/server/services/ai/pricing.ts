@@ -54,7 +54,11 @@ export const MODEL_RATES: ReadonlyArray<readonly [prefix: string, rate: ModelRat
   ["o3", { inputText: 2, cachedInputText: 0.5, outputText: 8 }],
   ["o1", { inputText: 15, cachedInputText: 7.5, outputText: 60 }],
 
-  // --- Live dialog (Realtime) -------------------------------------------
+  // --- Live dialog -------------------------------------------------------
+  // GPT-Live (2026-11-06): the voice session is billed by the second at
+  // $0.05 a minute; its backend model's tokens are separate ledger rows.
+  ["gpt-live", { inputText: 0, outputText: 0, perAudioMinute: 0.05 }],
+  // The Realtime family, deprecated by OpenAI, billed by audio tokens.
   [
     "gpt-realtime-mini",
     {

@@ -93,12 +93,23 @@ describe("every tool is gated and unique", () => {
 describe("the assistant never writes", () => {
   const all = sources.map((f) => f.code).join("\n");
 
-  it("makes no Prisma mutation except the answer's own AiOutput row", () => {
-    const writes =
-      all.match(
-        /prisma\.[a-zA-Z]+\.(createMany|create|updateMany|update|upsert|deleteMany|delete)\b/g,
-      ) ?? [];
-    expect(writes).toEqual(["prisma.aiOutput.create"]);
+  it("makes no Prisma mutation except the answer's and the voice session's own rows", () => {
+    // The answer keeps its AiOutput; a voice session keeps its AiOutput and
+    // overwrites its own ledger row with the seconds reported (2026-11-06).
+    // Nothing else in the directory writes.
+    const pattern =
+      /prisma\.[a-zA-Z]+\.(createMany|create|updateMany|update|upsert|deleteMany|delete)\b/g;
+    for (const file of sources) {
+      const writes = file.code.match(pattern) ?? [];
+      if (file.name === "answer.ts") expect(writes).toEqual(["prisma.aiOutput.create"]);
+      else if (file.name === "voice.ts")
+        expect([...new Set(writes)].sort()).toEqual([
+          "prisma.aiOutput.create",
+          "prisma.aiOutput.update",
+          "prisma.aiUsageEvent.update",
+        ]);
+      else expect(writes, file.name).toEqual([]);
+    }
   });
 
   it("uses raw SQL only inside the read-only transaction, and only its two SET lines execute", () => {
@@ -112,10 +123,9 @@ describe("the assistant never writes", () => {
     expect(all).toContain("guardReadOnlySql(");
   });
 
-  it("reaches no feature flag, credential helper or write-back service", () => {
+  it("reaches no feature flag setter, credential helper or write-back service", () => {
     for (const forbidden of [
       "setFeatureFlag",
-      "resolveCredential(",
       "MASTER_ENCRYPTION_KEY",
       "price-writeback",
       "catalog-publish",
@@ -124,6 +134,17 @@ describe("the assistant never writes", () => {
     ]) {
       expect(all, forbidden).not.toContain(forbidden);
     }
+    // Only the voice session reads a credential: the OpenAI key, once, to
+    // open the session on the server; the key never reaches the browser.
+    for (const file of sources) {
+      const reads = file.code.match(/resolveCredential\([^)]*\)/g) ?? [];
+      if (file.name === "voice.ts")
+        expect(reads).toEqual(['resolveCredential("openai", "apiKey")']);
+      else expect(reads, file.name).toEqual([]);
+    }
+    expect(sources.find((f) => f.name === "voice.ts")?.code).toContain(
+      "requireFeature(FEATURE_FLAGS.AI_LIVE_VOICE)",
+    );
   });
 });
 

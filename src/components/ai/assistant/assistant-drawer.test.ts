@@ -121,4 +121,21 @@ describe("the drawer in the shell", () => {
     // Enter sends; Shift+Enter is a new line.
     expect(drawer).toContain('event.key === "Enter" && !event.shiftKey');
   });
+
+  it("opens live voice only when the flag and the budgets allow, ends it from the composer, and dictates by holding", () => {
+    expect(drawer).toContain('const canStartVoice = !voiceReason && voice.status === "idle";');
+    expect(drawer).toContain("disabled={!canStartVoice}");
+    expect(drawer).toContain('title={voiceReason ?? "Start a live conversation"}');
+    expect(drawer).toContain('aria-label="End the live conversation"');
+    expect(drawer).toContain('aria-label="Hold to dictate"');
+    expect(drawer).toContain("onPointerUp={dictation.stop}");
+    const voiceHook = read("src/components/ai/assistant/use-voice-session.ts");
+    expect(voiceHook).toContain('VOICE_SESSION_ROUTE = "/api/ai/assistant/voice/session"');
+    expect(voiceHook).toContain('pc.createDataChannel("oai-events")');
+    expect(voiceHook).toContain('type: "session.close"');
+    expect(voiceHook).toContain("navigator.sendBeacon(VOICE_END_ROUTE");
+    // The browser never runs a tool: it relays the call and returns the result.
+    expect(voiceHook).toContain("fetch(VOICE_TOOL_ROUTE");
+    expect(voiceHook).toContain("toolResultEvents(effect.callId, output)");
+  });
 });

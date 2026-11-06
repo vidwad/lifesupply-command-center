@@ -14,7 +14,7 @@ const COMMON_MODELS: Record<string, string[]> = {
 };
 
 const OPENAI_IMAGE_MODELS = ["gpt-image-1.5", "gpt-image-1", "gpt-image-2"];
-const OPENAI_REALTIME_MODELS = ["gpt-realtime", "gpt-realtime-mini"];
+const OPENAI_REALTIME_MODELS = ["gpt-live-1"];
 const OPENAI_TRANSCRIBE_MODELS = ["gpt-4o-mini-transcribe", "gpt-4o-transcribe", "whisper-1"];
 
 export type AiSettingsValues = {
@@ -300,18 +300,21 @@ export function AiSettingsForm({
       </section>
 
       {/*
-       * Live dialog (product owner, 2026-11-03). The assistant drawer's voice
-       * mode runs on OpenAI's Realtime API; these pick the model that holds
-       * the session, the voice it answers in, and the model that transcribes
-       * what the person says. Voice sessions also need the ai.live_voice
-       * feature flag, so a model choice here never turns spending on by itself.
+       * Live dialog (product owner, 2026-11-03; GPT-Live 2026-11-06). The
+       * assistant drawer's voice mode runs on OpenAI's GPT-Live: the voice
+       * model holds the spoken conversation and hands every question to the
+       * text model, which calls the same read-only tools as text mode. These
+       * pick the voice model, the voice, and the model that transcribes
+       * dictation. Voice sessions also need the ai.live_voice feature flag,
+       * so a model choice here never turns spending on by itself.
        */}
       <section className="space-y-4 rounded-md border bg-card p-4">
-        <h2 className="text-sm font-medium">Live dialog (OpenAI Realtime)</h2>
+        <h2 className="text-sm font-medium">Live dialog (OpenAI GPT-Live)</h2>
         <p className="text-xs text-muted-foreground">
-          The assistant drawer&apos;s voice mode. The realtime model holds the conversation and
-          calls the same read-only data tools as text mode; the transcription model turns speech
-          into the text shown in the transcript. Leave a field empty to fall back to{" "}
+          The assistant drawer&apos;s voice mode. The GPT-Live model holds the spoken conversation,
+          billed by the second, and hands every question about the business to the text model above,
+          which calls the same read-only data tools as text mode. The transcription model turns
+          dictation into text in the composer. Leave a field empty to fall back to{" "}
           {openAiDefaults.realtimeModel}, the {openAiDefaults.realtimeVoice} voice and{" "}
           {openAiDefaults.transcribeModel}. Voice sessions start only while the{" "}
           <code className="font-mono text-[11px]">ai.live_voice</code> feature flag is on.
@@ -321,7 +324,7 @@ export function AiSettingsForm({
         <EnvOverrideNote name="OPENAI_TRANSCRIBE_MODEL" value={openAiEnv.transcribeModel} />
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="ai.openai_realtime_model">Realtime model</Label>
+            <Label htmlFor="ai.openai_realtime_model">Live voice model</Label>
             <Input
               id="ai.openai_realtime_model"
               name="ai.openai_realtime_model"
@@ -344,8 +347,9 @@ export function AiSettingsForm({
               onPick={setRealtimeModel}
             />
             <p className="text-xs text-muted-foreground">
-              gpt-realtime follows data-tool calls most reliably. gpt-realtime-mini costs roughly a
-              third as much per minute of audio and is the economical choice for routine questions.
+              gpt-live-1 is the GPT-Live model, about five cents a minute of conversation plus the
+              text model&apos;s tokens. The older gpt-realtime models are deprecated by OpenAI and
+              cannot open a live session.
             </p>
           </div>
           <div className="space-y-1.5">
@@ -364,8 +368,8 @@ export function AiSettingsForm({
               ))}
             </select>
             <p className="text-xs text-muted-foreground">
-              OpenAI recommends marin and cedar for quality. A voice cannot change once a session
-              has spoken, so the choice applies to the next session.
+              marin is GPT-Live&apos;s default. A voice is fixed when a session starts, so the
+              choice applies to the next session.
             </p>
           </div>
           <div className="space-y-1.5 md:col-span-2">
@@ -392,9 +396,9 @@ export function AiSettingsForm({
               onPick={setTranscribeModel}
             />
             <p className="text-xs text-muted-foreground">
-              Writes the person&apos;s side of the transcript in live dialog, and transcribes
-              dictation in text mode. gpt-4o-mini-transcribe is half the price of gpt-4o-transcribe
-              and accurate enough for spoken questions about the business.
+              Transcribes hold-to-talk dictation in text mode; GPT-Live writes its own transcripts.
+              gpt-4o-mini-transcribe is half the price of gpt-4o-transcribe and accurate enough for
+              spoken questions about the business.
             </p>
           </div>
         </div>
