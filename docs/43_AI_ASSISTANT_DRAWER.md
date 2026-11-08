@@ -242,7 +242,7 @@ Everything the stage needs is deployed. Two switches remain, and both are the ow
 
 **How they were turned on.** On November 7, 2026 the owner instructed both switches on with the recommended caps. The Admin pages need the owner's browser session, so the change was applied by `scripts/ai/set-live-voice.ts`, run as a one-off Render job inside the web service's image (the database is not reachable from a developer machine without its credential, which never leaves Render). The script calls the same `setFeatureFlag` and `setSetting` functions the Admin pages call, with the owner's account as the actor, so the audit log shows `feature_flag.enabled` for `ai.live_voice` and `system_setting.updated` for the two caps exactly as a click would. It is a dry run unless `--apply` is given, and inside a production environment it also requires `--i-understand-this-writes-to-production`. `pnpm ai:live-voice --off --apply …` is the matching way to turn voice off from a job; the Admin page remains the ordinary route. The flag also joined the kill-switch set the same day, so Admin → Feature Flags → kill switch now stops voice spend with everything else.
 
-Evidence of the applied change (the job's output and the audit rows) is recorded in §11.5 once the job has run.
+Evidence of the applied change (the job's output and the audit rows) is recorded in §11.5.
 
 ### 11.2 First session, what to expect
 
@@ -257,5 +257,16 @@ Each day of use, Admin → AI Settings → Today's AI use is the figure to read;
 
 ### 11.4 Turning it off
 
-Admin → Feature Flags → `ai.live_voice` off. Setting `ai.budget.daily_voice_minutes` to a small number has the same effect for everyone while leaving the flag on.
+Admin → Feature Flags → `ai.live_voice` off. Setting `ai.budget.daily_voice_minutes` to a small number has the same effect for everyone while leaving the flag on. The kill switch on the same page turns it off with the other spend-bearing flags.
+
+### 11.5 Evidence: the switches turned on (November 8, 2026, 06:50 UTC)
+
+Both switches were applied from the merge of PR #280 (`45a82b9`), deploy `dep-dbo1kbcs728c739ncit0` of the web service, by two one-off Render jobs on that service:
+
+| Job | Command | Result |
+|---|---|---|
+| `job-dbo1moijnfac73dm3fd0` | `pnpm ai:live-voice --on --daily-usd 50 --daily-usd-per-user 10 --actor-email <owner>` | Dry run, 06:49 UTC: actor resolved to the owner's account; state `ai.live_voice=off`, both caps `0`; three changes listed; nothing written. |
+| `job-dbo1n3m417fc73f1qok0` | the same with `--apply --i-understand-this-writes-to-production` | Applied 06:50:38 UTC: `ai.live_voice=on`, `ai.budget.daily_usd=50`, `ai.budget.daily_usd_per_user=10`. |
+
+The audit log holds the three rows a click on the Admin pages would have written, each with the owner as actor: `feature_flag.enabled` for `ai.live_voice` (`{enabled:false}` → `{enabled:true}`), and `system_setting.updated` for `ai.budget.daily_usd` (no row → `50`) and `ai.budget.daily_usd_per_user` (no row → `10`). The voice allowances stay at their defaults: 60 minutes a day for everyone, 20 a person, 15 a session. The flag is read on every request, so no restart was needed; the two-week review of §11.3 runs from this date.
 
