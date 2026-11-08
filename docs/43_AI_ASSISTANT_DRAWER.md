@@ -1,6 +1,6 @@
 # 43 — AI Assistant Drawer: Page-Aware Text and Live Voice
 
-**Document status:** Stages 0 to 4 delivered; Stage 5 prepared, with the owner's two switches recorded in §11
+**Document status:** Stages 0 to 4 delivered; Stage 5 switches turned on at the owner's instruction on November 7, 2026, recorded in §11
 **Opened:** November 3, 2026
 **Owner:** Product owner (Vid)
 **Audience:** Product owner, Claude Code, Codex, developers
@@ -215,7 +215,7 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 | 2 | The drawer: bottom sheet in the shell, text mode, tool-call rows, budget strip, phone layout, Playwright checks at 390 px and desktop. | Delivered November 6, 2026. See §4.5a as built. |
 | 3 | Live voice: session, tool and usage routes; WebRTC client; transcript; dictation; cutoffs; the flag turned on in staging only. | Delivered November 6, 2026, on GPT-Live. See §4.5b as built. |
 | 4 | Page registrations across the main modules (dashboard, customers, orders, products, sales intelligence, operations, finance), and `draft_task`. | Delivered November 6, 2026. See §4.4a as built. |
-| 5 | Production enablement: owner turns on `ai.live_voice`, sets caps, two-week review of the ledger by feature, then widen tools. | Prepared November 6, 2026: the code is live and the switches are the owner's. See §11. |
+| 5 | Production enablement: owner turns on `ai.live_voice`, sets caps, two-week review of the ledger by feature, then widen tools. | Prepared November 6, 2026; the owner instructed both switches on November 7, 2026, applied by `scripts/ai/set-live-voice.ts` as a Render job. The two-week review runs from then. See §11. |
 
 ## 9. Decisions for the owner
 
@@ -231,14 +231,18 @@ Each stage is one run: branch from main, build, verify with typecheck, lint, for
 
 The assistant is an internal feature on the Render surface and adds no public page. It widens the surface that Phase 11C (security) and 11E (performance) evidence must cover (`BLK-09`): the voice routes are new authenticated endpoints, and WebRTC sessions add browser-side load but no server audio. It does not accept any launch gate and does not relax the rule that AI takes no external action.
 
-## 11. Stage 5: production enablement (prepared November 6, 2026)
+## 11. Stage 5: production enablement (prepared November 6, 2026; switches turned on November 7, 2026)
 
-Everything the stage needs is deployed. Two switches remain, and both are the owner's: no API, script or MCP path flips them, by design (`docs/06`, flags default off; `CLAUDE.md`, the flag stays off until the owner turns it on).
+Everything the stage needs is deployed. Two switches remain, and both are the owner's: nothing flips them without the owner's instruction (`docs/06`, flags default off; `CLAUDE.md`, the flag stays off until the owner turns it on).
 
 ### 11.1 The owner's two switches
 
 1. **Caps.** Admin → AI Settings → Daily budgets. Recommended (decision A-1): everyone $50 a day, each person $10 a day. The voice allowances already default to 60 minutes a day for everyone, 20 a person, and a 15-minute session. At $0.05 a minute of voice plus about a cent a question for the backend, a full voice day is about $3 plus tokens; the spend cap is the backstop.
 2. **The flag.** Admin → Feature Flags → `ai.live_voice` → on. It takes effect at the next drawer open: the microphone button enables and its tooltip changes from the flag's reason to "Start a live conversation". Off again stops new sessions at once; a session already running ends at its limit.
+
+**How they were turned on.** On November 7, 2026 the owner instructed both switches on with the recommended caps. The Admin pages need the owner's browser session, so the change was applied by `scripts/ai/set-live-voice.ts`, run as a one-off Render job inside the web service's image (the database is not reachable from a developer machine without its credential, which never leaves Render). The script calls the same `setFeatureFlag` and `setSetting` functions the Admin pages call, with the owner's account as the actor, so the audit log shows `feature_flag.enabled` for `ai.live_voice` and `system_setting.updated` for the two caps exactly as a click would. It is a dry run unless `--apply` is given, and inside a production environment it also requires `--i-understand-this-writes-to-production`. `pnpm ai:live-voice --off --apply …` is the matching way to turn voice off from a job; the Admin page remains the ordinary route. The flag also joined the kill-switch set the same day, so Admin → Feature Flags → kill switch now stops voice spend with everything else.
+
+Evidence of the applied change (the job's output and the audit rows) is recorded in §11.5 once the job has run.
 
 ### 11.2 First session, what to expect
 

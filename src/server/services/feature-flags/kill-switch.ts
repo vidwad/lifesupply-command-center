@@ -28,6 +28,9 @@ const KILL_SET: FeatureFlagKey[] = [
   FEATURE_FLAGS.PRODUCT_STUDIO_AUTOPILOT,
   FEATURE_FLAGS.PRICING_WRITEBACKS,
   FEATURE_FLAGS.PUBLIC_INQUIRY_SEND,
+  // Live voice spends GPT-Live minutes; added when the owner turned it on
+  // (2026-11-07) so the lockout stops that spend with everything else.
+  FEATURE_FLAGS.AI_LIVE_VOICE,
 ];
 
 export type KillSwitchResult = {
