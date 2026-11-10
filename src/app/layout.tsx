@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Roboto, Roboto_Condensed } from "next/font/google";
+import localFont from "next/font/local";
 
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import "@/styles/globals.css";
@@ -18,14 +18,24 @@ import "@/styles/globals.css";
 // `display: swap` shows the system fallback during the (brief) font fetch
 // so users never see invisible text. `variable` exposes each family as a
 // CSS variable that tailwind.config.ts already references.
-const sans = Inter({
-  subsets: ["latin"],
+//
+// The files ship with the repository (src/app/fonts, see its README) rather
+// than being downloaded from Google Fonts at build time: that download made
+// every build depend on the network and failed the CI build check when it
+// did (2026-11-10). They are the same variable Latin files Google serves, so
+// nothing about the rendered type changes. A local font's family name is its
+// identifier, so these are named for the families; every stylesheet reads
+// the CSS variables, never the names.
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-sans",
 });
 
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-latin.woff2",
+  weight: "100 800",
   display: "swap",
   variable: "--font-mono",
 });
@@ -33,18 +43,18 @@ const mono = JetBrains_Mono({
 // The public LifeSupply experience preserves the type families used by the
 // legacy corporate site. They are exposed only as variables; the authenticated
 // Command Center continues to use the Inter/JetBrains system above.
-const lifeSupplyBody = Roboto({
-  subsets: ["latin"],
+const roboto = localFont({
+  src: "./fonts/roboto-latin.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-lsh-body",
-  weight: ["400", "500", "700"],
 });
 
-const lifeSupplyDisplay = Roboto_Condensed({
-  subsets: ["latin"],
+const robotoCondensed = localFont({
+  src: "./fonts/roboto-condensed-latin.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-lsh-display",
-  weight: ["400", "500", "600", "700"],
 });
 
 /**
@@ -76,7 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${sans.variable} ${mono.variable} ${lifeSupplyBody.variable} ${lifeSupplyDisplay.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable} ${roboto.variable} ${robotoCondensed.variable}`}
     >
       {/* `min-h-dvh` is the phone's visible height; `min-h-screen` (100vh) is the
           taller address-bar-hidden height, which let the document scroll by the
