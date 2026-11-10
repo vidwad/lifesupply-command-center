@@ -17,7 +17,11 @@ import {
   CUSTOMER_SORT_KEYS,
   customerCountKey,
   customerOrderBy,
+  LAST_ORDER_FILTER_LABELS,
+  LAST_ORDER_FILTERS,
+  lastOrderWhere,
   parseCustomerSort,
+  parseLastOrderFilter,
   parseSortDirection,
 } from "./index";
 
@@ -30,6 +34,7 @@ const migration = read(
 const schema = read("prisma/schema.prisma");
 const service = read("src/server/services/customers/index.ts");
 const instrumentation = read("src/instrumentation.ts");
+const exportRoute = read("src/app/api/exports/customers/route.ts");
 
 describe("parsing the sort from the query string", () => {
   it("accepts the supported keys only", () => {
@@ -44,6 +49,53 @@ describe("parsing the sort from the query string", () => {
     expect(parseSortDirection("asc")).toBe("asc");
     expect(parseSortDirection("DESC")).toBe("asc");
     expect(parseSortDirection(undefined)).toBe("asc");
+  });
+});
+
+describe("the last-order filter (product owner, 2026-11-10)", () => {
+  // A fixed instant, so the boundaries below are exact.
+  const now = new Date("2026-11-10T15:00:00.000Z");
+
+  it("accepts the seven buckets only, each with a label for the pill", () => {
+    for (const key of LAST_ORDER_FILTERS) {
+      expect(parseLastOrderFilter(key)).toBe(key);
+      expect(LAST_ORDER_FILTER_LABELS[key]).toBeTruthy();
+    }
+    expect(parseLastOrderFilter("7d")).toBeUndefined();
+    expect(parseLastOrderFilter("")).toBeUndefined();
+    expect(parseLastOrderFilter(undefined)).toBeUndefined();
+  });
+
+  it("reads the day buckets as 'within the last N days'", () => {
+    expect(lastOrderWhere("30d", now)).toEqual({ gte: new Date("2026-10-11T15:00:00.000Z") });
+    expect(lastOrderWhere("60d", now)).toEqual({ gte: new Date("2026-09-11T15:00:00.000Z") });
+    expect(lastOrderWhere("90d", now)).toEqual({ gte: new Date("2026-08-12T15:00:00.000Z") });
+  });
+
+  it("reads the month buckets as calendar months, and 'older' as the far side of 24", () => {
+    expect(lastOrderWhere("12m", now)).toEqual({ gte: new Date("2025-11-10T15:00:00.000Z") });
+    expect(lastOrderWhere("24m", now)).toEqual({ gte: new Date("2024-11-10T15:00:00.000Z") });
+    // The two 24-month buckets share one boundary, so every customer who
+    // has ordered is in exactly one of them.
+    expect(lastOrderWhere("older", now)).toEqual({ lt: new Date("2024-11-10T15:00:00.000Z") });
+  });
+
+  it("reads 'never' as no last order at all", () => {
+    expect(lastOrderWhere("never", now)).toBeNull();
+  });
+
+  it("is applied by the list and the count through the shared where clause", () => {
+    expect(service).toContain(
+      "if (filters.lastOrder) where.lastOrderAt = lastOrderWhere(filters.lastOrder);",
+    );
+  });
+
+  it("narrows the CSV export the same way, and the audit row says so", () => {
+    expect(exportRoute).toContain(
+      "...(lastOrder ? { lastOrderAt: lastOrderWhere(lastOrder) } : {}),",
+    );
+    expect(exportRoute).toContain("consent, customerType, lastOrder }");
+    expect(page).toContain("...(active.last && { last: active.last }),");
   });
 });
 
@@ -117,6 +169,9 @@ describe("the shared count", () => {
     expect(customerCountKey({ customerType: "b2b", search: "clinic", storeId: "s1" })).not.toBe(
       base,
     );
+    expect(customerCountKey({ customerType: "b2b", search: "clinic", lastOrder: "90d" })).not.toBe(
+      base,
+    );
     // A blank search is no search.
     expect(customerCountKey({ search: "   " })).toBe(customerCountKey({}));
   });
@@ -149,10 +204,14 @@ describe("the customers page", () => {
     }
   });
 
-  it("filters by type, consent and store, and carries them through search, sort and paging", () => {
+  it("filters by type, consent, store and last order, and carries them through search, sort and paging", () => {
     expect(page).toContain("CONSENT_FILTERS");
     expect(page).toContain("storeId");
     expect(page).toContain('name="store"');
+    expect(page).toContain("LAST_ORDER_FILTERS.map((f) => (");
+    expect(page).toContain('name="last"');
+    expect(page).toContain("last: active.last || undefined,");
+    expect(page).toContain('filterHref({ type: "", consent: "", store: "", last: "", q: "" })');
     expect(page).toContain("params={carried}");
     expect(page).toContain("params={{ ...carried, sort");
   });

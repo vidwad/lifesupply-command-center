@@ -14,8 +14,11 @@ import { PERMISSIONS } from "@/lib/permissions";
 import {
   countCustomers,
   CUSTOMERS_PAGE_SIZE,
+  LAST_ORDER_FILTER_LABELS,
+  LAST_ORDER_FILTERS,
   listCustomers,
   parseCustomerSort,
+  parseLastOrderFilter,
   parseSortDirection,
   type ListCustomersFilters,
 } from "@/server/services/customers";
@@ -55,6 +58,8 @@ type SearchParams = {
   type?: string;
   consent?: string;
   store?: string;
+  /** Last-order recency, one of LAST_ORDER_FILTERS. */
+  last?: string;
   q?: string;
   page?: string;
   sort?: string;
@@ -90,6 +95,7 @@ export default async function CustomersPage({
       ? (params.consent as ListCustomersFilters["consent"])
       : undefined,
     storeId,
+    lastOrder: parseLastOrderFilter(params.last),
     search: params.q?.trim() || undefined,
     page,
     sort,
@@ -110,9 +116,12 @@ export default async function CustomersPage({
     type: filters.customerType ?? "",
     consent: filters.consent ?? "",
     store: storeId ?? "",
+    last: filters.lastOrder ?? "",
     q: filters.search ?? "",
   };
-  const anyFilter = Boolean(active.type || active.consent || active.store || active.q);
+  const anyFilter = Boolean(
+    active.type || active.consent || active.store || active.last || active.q,
+  );
 
   // Changing a filter resets to page 1: staying on page 7 of a different
   // filter would usually land on an empty page. Sort is preserved, since it
@@ -132,6 +141,7 @@ export default async function CustomersPage({
     type: active.type || undefined,
     consent: active.consent || undefined,
     store: active.store || undefined,
+    last: active.last || undefined,
     q: active.q || undefined,
   };
   const sortHeader = (
@@ -154,6 +164,7 @@ export default async function CustomersPage({
   const exportQuery = new URLSearchParams({
     ...(active.type && { type: active.type }),
     ...(active.consent && { consent: active.consent }),
+    ...(active.last && { last: active.last }),
   }).toString();
 
   return (
@@ -166,6 +177,7 @@ export default async function CustomersPage({
             ...(active.type && { type: active.type }),
             ...(active.consent && { consent: active.consent }),
             ...(active.store && { store: active.store }),
+            ...(filters.lastOrder && { lastOrder: LAST_ORDER_FILTER_LABELS[filters.lastOrder] }),
             ...(active.q && { search: active.q }),
             ...(sort && { sort: `${sort} ${dir}` }),
             page: String(page),
@@ -207,6 +219,7 @@ export default async function CustomersPage({
             {active.type && <input type="hidden" name="type" value={active.type} />}
             {active.consent && <input type="hidden" name="consent" value={active.consent} />}
             {active.store && <input type="hidden" name="store" value={active.store} />}
+            {active.last && <input type="hidden" name="last" value={active.last} />}
             {sort && <input type="hidden" name="sort" value={sort} />}
             {sort && dir === "desc" && <input type="hidden" name="dir" value="desc" />}
             <input
@@ -256,12 +269,33 @@ export default async function CustomersPage({
 
           {anyFilter ? (
             <Link
-              href={filterHref({ type: "", consent: "", store: "", q: "" })}
+              href={filterHref({ type: "", consent: "", store: "", last: "", q: "" })}
               className="ml-auto text-xs text-muted-foreground underline-offset-4 hover:underline"
             >
               Clear filters
             </Link>
           ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Last order</span>
+          <Link
+            href={filterHref({ last: "" })}
+            aria-current={active.last === "" ? "true" : undefined}
+            className={active.last === "" ? PILL_ACTIVE : PILL_IDLE}
+          >
+            Any time
+          </Link>
+          {LAST_ORDER_FILTERS.map((f) => (
+            <Link
+              key={f}
+              href={filterHref({ last: f })}
+              aria-current={active.last === f ? "true" : undefined}
+              className={active.last === f ? PILL_ACTIVE : PILL_IDLE}
+            >
+              {LAST_ORDER_FILTER_LABELS[f]}
+            </Link>
+          ))}
         </div>
 
         {customers.length === 0 ? (
