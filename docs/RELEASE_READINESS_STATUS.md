@@ -117,7 +117,7 @@ been created. `git tag -l` on the baseline returns no tags.
 
 | Branch pattern | Purpose |
 |---|---|
-| `main` | Integration branch. Always CI-green. Not automatically production-promoted once `DEC-12` is implemented. |
+| `main` | Integration branch. Always CI-green: since November 10, 2026 the branch is protected, and a pull request merges only when both CI jobs ("Typecheck + lint + format + tests" and "Production build") have passed, administrators included; force pushes and deletion are refused. Not automatically production-promoted once `DEC-12` is implemented. |
 | `agent/*`, `claude/*` | Agent work packages. One Phase 11 work package per branch. |
 | `release/phase-11-staging` | First staging release branch, cut from an accepted `main` baseline. Deploys to staging only. |
 | `release/phase-11-production` | Production release branch. **Not to be cut until the §6 launch gates are Accepted.** |
