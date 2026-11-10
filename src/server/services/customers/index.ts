@@ -8,6 +8,8 @@ export type ListCustomersFilters = {
   customerType?: CustomerType;
   storeId?: string;
   consent?: "subscribed" | "unsubscribed" | "transactional";
+  /** When the customer last ordered (product owner, 2026-11-10). */
+  lastOrder?: LastOrderFilter;
   search?: string;
   /** 1-based page (post-roadmap pagination). */
   page?: number;
@@ -18,6 +20,77 @@ export type ListCustomersFilters = {
 const num = (d: Prisma.Decimal | null | undefined): number => (d == null ? 0 : Number(d));
 
 export const CUSTOMERS_PAGE_SIZE = 50;
+
+/**
+ * How recently a customer last ordered. The day and month buckets are
+ * "within the last N": a customer who ordered yesterday is in all five. The
+ * last two are the other end: a last order more than 24 months ago, and no
+ * order at all. Together with "any time" they cover every customer once
+ * each at the far end and cumulatively at the near end, which is how a
+ * reactivation list is read: "who has gone quiet for 90 days", "who has not
+ * ordered in two years".
+ */
+export const LAST_ORDER_FILTERS = ["30d", "60d", "90d", "12m", "24m", "older", "never"] as const;
+export type LastOrderFilter = (typeof LAST_ORDER_FILTERS)[number];
+
+export const LAST_ORDER_FILTER_LABELS: Record<LastOrderFilter, string> = {
+  "30d": "Last 30 days",
+  "60d": "Last 60 days",
+  "90d": "Last 90 days",
+  "12m": "Last 12 months",
+  "24m": "Last 24 months",
+  older: "Over 24 months ago",
+  never: "Never ordered",
+};
+
+/** Narrows an arbitrary query-string value to a supported last-order filter. */
+export function parseLastOrderFilter(value: string | undefined): LastOrderFilter | undefined {
+  return LAST_ORDER_FILTERS.includes(value as LastOrderFilter)
+    ? (value as LastOrderFilter)
+    : undefined;
+}
+
+// UTC arithmetic, so the boundary is the same instant whatever the server's
+// zone, and a daylight-saving change inside the window does not move it.
+const daysAgo = (now: Date, days: number): Date => {
+  const d = new Date(now);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d;
+};
+
+const monthsAgo = (now: Date, months: number): Date => {
+  const d = new Date(now);
+  d.setUTCMonth(d.getUTCMonth() - months);
+  return d;
+};
+
+/**
+ * The `lastOrderAt` clause for a filter, relative to `now`. Pure, so the
+ * list, the count and the export agree on the boundary, and the test can
+ * pin it. Calendar months rather than 30-day multiples, so "12 months"
+ * from the 10th is the 10th a year ago.
+ */
+export function lastOrderWhere(
+  filter: LastOrderFilter,
+  now: Date = new Date(),
+): Prisma.CustomerWhereInput["lastOrderAt"] {
+  switch (filter) {
+    case "30d":
+      return { gte: daysAgo(now, 30) };
+    case "60d":
+      return { gte: daysAgo(now, 60) };
+    case "90d":
+      return { gte: daysAgo(now, 90) };
+    case "12m":
+      return { gte: monthsAgo(now, 12) };
+    case "24m":
+      return { gte: monthsAgo(now, 24) };
+    case "older":
+      return { lt: monthsAgo(now, 24) };
+    case "never":
+      return null;
+  }
+}
 
 export type SortDirection = "asc" | "desc";
 
@@ -123,6 +196,7 @@ function customerWhere(filters: ListCustomersFilters): Prisma.CustomerWhereInput
   if (filters.customerType) where.customerType = filters.customerType;
   if (filters.storeId) where.storeId = filters.storeId;
   if (filters.consent) where.consentStatus = filters.consent;
+  if (filters.lastOrder) where.lastOrderAt = lastOrderWhere(filters.lastOrder);
   if (filters.search) {
     const q = filters.search.trim();
     where.OR = [
@@ -191,6 +265,7 @@ export function customerCountKey(filters: ListCustomersFilters): string {
     filters.customerType ?? null,
     filters.storeId ?? null,
     filters.consent ?? null,
+    filters.lastOrder ?? null,
     filters.search?.trim() || null,
   ]);
 }

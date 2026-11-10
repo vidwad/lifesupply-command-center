@@ -3,6 +3,7 @@ import { ConsentStatus, CustomerType, type Prisma } from "@prisma/client";
 import { writeAudit } from "@/server/audit";
 import { prisma } from "@/server/db/client";
 import { PERMISSIONS } from "@/lib/permissions";
+import { lastOrderWhere, parseLastOrderFilter } from "@/server/services/customers";
 import { csvResponse, toCsv } from "@/server/services/exports/csv";
 import { requirePermission } from "@/server/permissions";
 
@@ -20,11 +21,15 @@ export async function GET(req: Request) {
     consentParam && VALID_CONSENT.has(consentParam) ? (consentParam as ConsentStatus) : undefined;
   const customerType =
     typeParam && VALID_TYPES.has(typeParam) ? (typeParam as CustomerType) : undefined;
+  // The same last-order buckets as the list, so an export of "over 24
+  // months ago" holds the customers the page showed.
+  const lastOrder = parseLastOrderFilter(searchParams.get("last") ?? undefined);
 
   const where: Prisma.CustomerWhereInput = {
     deletedAt: null,
     ...(consent ? { consentStatus: consent } : {}),
     ...(customerType ? { customerType } : {}),
+    ...(lastOrder ? { lastOrderAt: lastOrderWhere(lastOrder) } : {}),
   };
 
   const customers = await prisma.customer.findMany({
@@ -74,7 +79,7 @@ export async function GET(req: Request) {
     actorUserId: actor.id,
     action: "export.customers.csv",
     entityType: "customer",
-    afterData: { rows: customers.length, consent, customerType },
+    afterData: { rows: customers.length, consent, customerType, lastOrder },
   });
 
   return csvResponse(`customers-${new Date().toISOString().slice(0, 10)}.csv`, csv);
