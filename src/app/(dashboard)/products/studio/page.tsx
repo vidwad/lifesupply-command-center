@@ -13,6 +13,7 @@ import { requirePermission, userHasPermission } from "@/server/permissions";
 import {
   countProductStudioProjectsByStatus,
   listProductStudioProjects,
+  parseListingFilter,
   parseProjectSort,
   parseProjectStatusFilter,
   PROJECT_STATUS_FILTER_KEYS,
@@ -35,6 +36,8 @@ type SearchParams = {
   dir?: string;
   /** A status filter (2026-10-27): draft, in_progress, needs_review, approved or failed. */
   status?: string;
+  /** "removed" (2026-11-11): only projects whose product the store no longer lists. */
+  listing?: string;
 };
 
 /** The sort choices offered in both layouts; the list's column headers offer more. */
@@ -76,18 +79,22 @@ export default async function ProductStudioPage({
   const view = params.view === "list" ? "list" : "cards";
   const sort = parseProjectSort(params.sort);
   const dir = params.dir === "desc" ? "desc" : "asc";
-  const status = parseProjectStatusFilter(params.status);
+  // The removed-listing view (2026-11-11) stands apart from the status
+  // pills: a status never shows a project whose product the store removed.
+  const listing = parseListingFilter(params.listing);
+  const status = listing ? undefined : parseProjectStatusFilter(params.status);
   const [projects, statusCounts] = await Promise.all([
-    listProductStudioProjects({ batchId, includeIds, status, sort, dir }),
+    listProductStudioProjects({ batchId, includeIds, status, listing, sort, dir }),
     countProductStudioProjectsByStatus({ batchId, includeIds }),
   ]);
   const first = batchId ? projects[0] : null;
-  const carried = { batch: batchId ?? undefined, view, status };
+  const carried = { batch: batchId ?? undefined, view, status, listing };
   // One link builder for the layout toggle, the status pills and the sort
   // choices: each changes one thing and keeps the rest.
   const href = (next: {
     view?: "cards" | "list";
     status?: string | undefined;
+    listing?: string | undefined;
     sort?: string | undefined;
     dir?: string | undefined;
   }) => {
@@ -96,7 +103,9 @@ export default async function ProductStudioPage({
     for (const id of includeIds) qs.append("id", id);
     const nextView = "view" in next ? next.view : view;
     if (nextView === "list") qs.set("view", "list");
-    const nextStatus = "status" in next ? next.status : status;
+    const nextListing = "listing" in next ? next.listing : "status" in next ? undefined : listing;
+    if (nextListing) qs.set("listing", nextListing);
+    const nextStatus = nextListing ? undefined : "status" in next ? next.status : status;
     if (nextStatus) qs.set("status", nextStatus);
     const nextSort = "sort" in next ? next.sort : sort;
     const nextDir = "sort" in next ? next.dir : params.dir;
@@ -187,7 +196,7 @@ export default async function ProductStudioPage({
             href={href({ status: undefined })}
             label="All"
             count={statusCounts.all}
-            active={!status}
+            active={!status && !listing}
           />
           {PROJECT_STATUS_FILTER_KEYS.map((key) => (
             <FilterPill
@@ -198,6 +207,14 @@ export default async function ProductStudioPage({
               active={status === key}
             />
           ))}
+          {/* Projects whose product the store no longer lists (2026-11-11):
+              out of every status view, found only here, to be archived. */}
+          <FilterPill
+            href={href({ listing: "removed" })}
+            label="Removed from store"
+            count={statusCounts.removed}
+            active={listing === "removed"}
+          />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-muted-foreground">Sort</span>
@@ -228,11 +245,19 @@ export default async function ProductStudioPage({
         {projects.length === 0 ? (
           <EmptyState
             icon={Sparkles}
-            title={status ? "No projects with this status" : "No Product Studio projects"}
+            title={
+              listing
+                ? "No projects for removed listings"
+                : status
+                  ? "No projects with this status"
+                  : "No Product Studio projects"
+            }
             description={
-              status
-                ? "Choose another status above, or All."
-                : "Create a project with one to four authoritative product photographs."
+              listing
+                ? "Every project's catalogue product is still listed on its store."
+                : status
+                  ? "Choose another status above, or All."
+                  : "Create a project with one to four authoritative product photographs."
             }
           />
         ) : view === "list" ? (
@@ -312,6 +337,11 @@ export default async function ProductStudioPage({
                         {project.product.sku ? (
                           <span className="font-mono text-xs"> · {project.product.sku}</span>
                         ) : null}
+                        {project.product.deletedAt ? (
+                          <Badge variant="destructive" className="ml-2">
+                            Removed from store
+                          </Badge>
+                        ) : null}
                       </>
                     ) : (
                       "—"
@@ -366,7 +396,11 @@ export default async function ProductStudioPage({
                         ) : null}
                       </div>
                     </div>
-                    <Badge variant="outline">{project.status.replaceAll("_", " ")}</Badge>
+                    {project.product?.deletedAt ? (
+                      <Badge variant="destructive">Removed from store</Badge>
+                    ) : (
+                      <Badge variant="outline">{project.status.replaceAll("_", " ")}</Badge>
+                    )}
                   </div>
                   <p className="line-clamp-2 text-sm text-muted-foreground">
                     {project.finalDescription ?? project.shortDescription}

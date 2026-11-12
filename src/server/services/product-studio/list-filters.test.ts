@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  parseListingFilter,
   parseProjectStatusFilter,
   PROJECT_STATUS_FILTER_KEYS,
   PROJECT_STATUS_FILTERS,
@@ -47,9 +48,40 @@ describe("the project status filter", () => {
   it("the list and the pill counts share one where clause, and the page carries the filter", () => {
     expect(service.match(/where: projectWhere\(filter\)/g)?.length).toBe(2);
     expect(page).toContain("countProductStudioProjectsByStatus({ batchId, includeIds })");
-    expect(page).toContain("const carried = { batch: batchId ?? undefined, view, status };");
+    expect(page).toContain(
+      "const carried = { batch: batchId ?? undefined, view, status, listing };",
+    );
     // Date added is offered in both layouts, newest and oldest.
     expect(page).toContain('{ key: "created", dir: "desc", label: "Newest first" }');
     expect(page).toContain('{ key: "created", dir: "asc", label: "Oldest first" }');
+  });
+});
+
+describe("projects whose product the store no longer lists (product owner, 2026-11-11)", () => {
+  it("accepts only 'removed'", () => {
+    expect(parseListingFilter("removed")).toBe("removed");
+    expect(parseListingFilter("deleted")).toBeUndefined();
+    expect(parseListingFilter(undefined)).toBeUndefined();
+  });
+
+  it("are out of every status view and the pill counts, and listed only under their own pill", () => {
+    // The shared where clause excludes them unless the listing filter asks
+    // for them; an unlinked project has no product and stays.
+    expect(service).toContain('if (filter.listing === "removed") {');
+    expect(service).toContain("where.product = { deletedAt: { not: null } };");
+    expect(service).toContain("where.NOT = { product: { deletedAt: { not: null } } };");
+    expect(service).toContain(
+      'prisma.productStudioProject.count({ where: projectWhere({ ...filter, listing: "removed" }) })',
+    );
+    // The page: its own pill, a status never combines with it, the list and
+    // the cards say so on the row.
+    expect(page).toContain('label="Removed from store"');
+    expect(page).toContain(
+      "const status = listing ? undefined : parseProjectStatusFilter(params.status);",
+    );
+    expect(page).toContain(
+      "listProductStudioProjects({ batchId, includeIds, status, listing, sort, dir })",
+    );
+    expect(page.match(/Removed from store/g)?.length).toBe(3);
   });
 });

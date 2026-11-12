@@ -200,11 +200,25 @@ function projectOrderBy(
   }
 }
 
+/**
+ * Projects whose catalogue product the store no longer lists (product owner,
+ * 2026-11-11) are kept out of every status view, including "All" and "Needs
+ * review": there is nothing left to review or publish for them. They are
+ * listed only under their own pill, so they can be found and archived.
+ */
+export type ListingFilter = "removed";
+
+export function parseListingFilter(value: string | undefined): ListingFilter | undefined {
+  return value === "removed" ? "removed" : undefined;
+}
+
 export type ListProjectsFilter = {
   batchId?: string | null;
   /** Projects shown beside the batch (2026-10-28): ones the products already had. */
   includeIds?: readonly string[];
   status?: ProjectStatusFilter;
+  /** "removed": only projects whose product the store no longer lists. */
+  listing?: ListingFilter;
   sort?: ProjectSortKey;
   dir?: "asc" | "desc";
 };
@@ -218,23 +232,32 @@ function projectWhere(filter: ListProjectsFilter): Prisma.ProductStudioProjectWh
     if (ids.length === 0) where.batchId = filter.batchId;
   }
   if (filter.status) where.status = { in: [...PROJECT_STATUS_FILTERS[filter.status]] };
+  if (filter.listing === "removed") {
+    where.product = { deletedAt: { not: null } };
+  } else {
+    // An unlinked project has no product to be retired, so it stays.
+    where.NOT = { product: { deletedAt: { not: null } } };
+  }
   return where;
 }
 
 /**
  * How many projects each status filter would show under the current batch,
- * plus the total, for the filter pills.
+ * plus the total and the removed-listing count, for the filter pills.
  */
 export async function countProductStudioProjectsByStatus(
   filter: Pick<ListProjectsFilter, "batchId" | "includeIds">,
-): Promise<Record<ProjectStatusFilter | "all", number>> {
-  const grouped = await prisma.productStudioProject.groupBy({
-    by: ["status"],
-    where: projectWhere(filter),
-    _count: { _all: true },
-  });
+): Promise<Record<ProjectStatusFilter | "all" | "removed", number>> {
+  const [grouped, removed] = await Promise.all([
+    prisma.productStudioProject.groupBy({
+      by: ["status"],
+      where: projectWhere(filter),
+      _count: { _all: true },
+    }),
+    prisma.productStudioProject.count({ where: projectWhere({ ...filter, listing: "removed" }) }),
+  ]);
   const byStatus = new Map(grouped.map((row) => [row.status, row._count._all]));
-  const counts = { all: 0 } as Record<ProjectStatusFilter | "all", number>;
+  const counts = { all: 0, removed } as Record<ProjectStatusFilter | "all" | "removed", number>;
   for (const key of PROJECT_STATUS_FILTER_KEYS) {
     counts[key] = PROJECT_STATUS_FILTERS[key].reduce(
       (sum, status) => sum + (byStatus.get(status) ?? 0),
@@ -251,7 +274,7 @@ export async function listProductStudioProjects(filter: ListProjectsFilter = {})
     orderBy: projectOrderBy(filter.sort, filter.dir ?? "asc", Boolean(filter.batchId)),
     take: 100,
     include: {
-      product: { select: { id: true, name: true, sku: true } },
+      product: { select: { id: true, name: true, sku: true, deletedAt: true } },
       // Small per-asset rows for the list's photo, approval and publish
       // counts (2026-10-26); never the bytes.
       assets: {
