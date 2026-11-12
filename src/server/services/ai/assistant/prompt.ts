@@ -59,6 +59,9 @@ export function buildAssistantInstructions(args: {
     lines.push("The person is looking at this page in the Command Center:");
     lines.push(JSON.stringify(args.pageContext));
     lines.push('When a question says "this" or "here", it means that page.');
+    lines.push(
+      "Its figures are already computed for the filters shown; when they answer the question, use them and say they are the page's figures. A lifetime value is all-time spend, whatever date filter is shown; spend within a period needs the orders.",
+    );
   }
   return lines.join("\n");
 }

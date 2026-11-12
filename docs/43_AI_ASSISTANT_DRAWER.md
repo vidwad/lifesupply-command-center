@@ -21,6 +21,17 @@ Build one assistant with two transports and one brain. The brain is a server-sid
 
 The text path and the voice path must not have separate data access. If they did, the permission redaction that exists today for the AI Analyst would have to be reimplemented twice and would drift. The Realtime API supports function calling with the same JSON-schema tool definitions as the Responses API, and the browser only relays the call to the server and the result back. So one `assistant/tools.ts` serves both.
 
+**When the model stops without writing (November 12, 2026).** Seen on production: two tool rounds, both
+successful (the schema, then one correct SQL query), then a completed response holding only reasoning
+and no message, so the owner read "ask a narrower question" for a question the figures already
+answered. The loop now sends one nudge on the same chain with the tools withheld (`tool_choice:
+"none"`): "write the answer now from the tool results already in this conversation". If even that
+yields no text, the stored warning says what the last response was (status, reason, item kinds)
+rather than blaming the round cap, and the answer invites the person to ask again, since the gathered
+results are still in the chain. The answer's text is also read from the message items when the SDK's
+`output_text` convenience field is absent. The instructions tell the model that a page's figures are
+already computed for its filters, and that a lifetime value is all-time whatever date filter shows.
+
 ### 3.2 Page context as a declared contract, not a screen scrape
 
 Each page registers a small typed object: route, entity type and id, active filters, date range, store and division, and the headline figures already rendered. The assistant's system prompt includes it, and tools accept it as an argument so "what is this customer's lifetime value" resolves to the customer on screen. This is more reliable than reading the DOM, costs nothing in tokens compared with sending the HTML, and keeps the assistant from seeing anything the page did not already show.
