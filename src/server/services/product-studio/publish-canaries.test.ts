@@ -186,6 +186,34 @@ describe("the publish service is gated, logged and single-shot", () => {
     );
   });
 
+  it("takes a 404 on that read as the store's word: the product is retired, the publish refused (2026-11-11)", () => {
+    const code = stripComments(read(SERVICE));
+    expect(code).toContain("if (!before.ok && before.status === 404) {");
+    expect(code).toContain('noticedBy: "publish_read_404"');
+    expect(code).toContain('reason: "listing_removed"');
+    // Only the one retirement module touches the product; it runs before any
+    // log row could be written, and the generic read failure keeps its own path.
+    expect(code.match(/retireProductsRemovedFromStore\(\{/g)?.length).toBe(1);
+    expect(code.indexOf("retireProductsRemovedFromStore({")).toBeLessThan(
+      code.indexOf("productStudioPublishLog.create"),
+    );
+    expect(code).not.toMatch(/prisma\.product\.(update|updateMany|delete)/);
+    // A retired product is refused by the rules before anything is read, so
+    // a gone listing is never read twice; the page shows the same reason.
+    const rules = stripComments(read(RULES));
+    expect(rules).toContain("if (product.deletedAt) {");
+    expect(rules).toContain("export function removedListingReason(");
+    for (const file of [
+      SERVICE,
+      "src/server/services/product-studio/index.ts",
+      "src/server/services/product-studio/autopilot.ts",
+    ]) {
+      expect(stripComments(read(file)), file + " must select the product's deletedAt").toContain(
+        "deletedAt: true",
+      );
+    }
+  });
+
   it("sends each item once, stops at the first failure, and has no scheduler or bulk path", () => {
     const code = stripComments(read(SERVICE));
     expect(code).toContain("publishedAt: writtenAt");

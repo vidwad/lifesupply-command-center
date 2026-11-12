@@ -10,12 +10,18 @@
  *      removing stale BC variants per product.
  *
  * Modes:
- *   - "full"        — walks ALL categories + products
+ *   - "full"        — walks ALL categories + products, then retires the
+ *                     store's live products the walk did not return
+ *                     (2026-11-11; rules in catalog-retirement.ts)
  *   - "incremental" — categories always full (small); products filtered by
- *                     date_modified:min={sinceIso}
+ *                     date_modified:min={sinceIso}; never retires anything,
+ *                     since it does not see the whole catalogue
  */
 import { prisma } from "@/server/db/client";
+import { logger } from "@/server/logger";
+import { retireProductsRemovedFromStore } from "@/server/services/products/store-removal";
 
+import { absentProducts, retirementDecision, type WalkOutcome } from "./catalog-retirement";
 import { mapBcCategoryToUpsert, SOURCE_SYSTEM, type BcCategory } from "./category-mapper";
 import { mapBcProductToUpsert, type BcProduct } from "./product-mapper";
 import { mapBcVariantToUpsert, mapInventoryTracking, type BcVariant } from "./variant-mapper";
@@ -31,6 +37,8 @@ export type SyncCatalogInput = {
   divisionId: string | null;
   mode: "full" | "incremental";
   sinceIso?: string;
+  /** The sync log this walk writes to, recorded on every retirement's audit row. */
+  syncLogId?: string;
   onProgress?: (counts: SyncCatalogCounts) => void | Promise<void>;
 };
 
@@ -43,8 +51,22 @@ export type SyncCatalogCounts = {
   productsFailed: number;
   variantsUpserted: number;
   variantsDeleted: number;
+  /**
+   * Live products of the store a complete full walk did not return, now
+   * retired (`deletedAt` set). Zero for an incremental walk.
+   */
+  productsRetired: number;
+  /** Why a full walk retired nothing although products were absent; null otherwise. */
+  retirementNote: string | null;
   errorMessages: string[];
 };
+
+/** The store's own product count, from a /v3 list page's `meta.pagination.total`. */
+function storeTotalOf(parsed: unknown): number | null {
+  if (!parsed || typeof parsed !== "object") return null;
+  const total = (parsed as { meta?: { pagination?: { total?: unknown } } }).meta?.pagination?.total;
+  return typeof total === "number" && Number.isFinite(total) ? total : null;
+}
 
 type BcProductWithVariants = BcProduct & {
   inventory_tracking?: string | null;
@@ -217,6 +239,8 @@ export async function syncBigCommerceCatalog(input: SyncCatalogInput): Promise<S
     productsFailed: 0,
     variantsUpserted: 0,
     variantsDeleted: 0,
+    productsRetired: 0,
+    retirementNote: null,
     errorMessages: [],
   };
 
@@ -235,6 +259,13 @@ export async function syncBigCommerceCatalog(input: SyncCatalogInput): Promise<S
       ? `?date_modified:min=${encodeURIComponent(input.sinceIso)}&${INCLUDE}`
       : `?${INCLUDE}`;
 
+  // Every BigCommerce id the walk returned, upserted or not, and whether the
+  // walk ended on its own terms. Retirement reads both: a product is absent
+  // only if a walk that reached its last page never returned it.
+  const seen = new Set<string>();
+  let walkComplete = false;
+  let storeTotal: number | null = null;
+
   let page = 1;
   while (counts.productsScanned < HARD_CAP_PRODUCTS) {
     const url = `${input.storeRoot}/v3/catalog/products${sinceParam}&limit=${PAGE_SIZE}&page=${page}`;
@@ -249,12 +280,17 @@ export async function syncBigCommerceCatalog(input: SyncCatalogInput): Promise<S
     } catch {
       break;
     }
+    if (page === 1) storeTotal = storeTotalOf(parsed);
     const products = parsed.data ?? [];
-    if (products.length === 0) break;
+    if (products.length === 0) {
+      walkComplete = true;
+      break;
+    }
 
     for (const bc of products) {
       counts.productsScanned++;
       if (counts.productsScanned > HARD_CAP_PRODUCTS) break;
+      seen.add(String(bc.id));
       try {
         const firstCategory = (bc.categories ?? []).find((c) => c > 0);
         const categoryId = firstCategory ? (categoryMap.get(firstCategory) ?? null) : null;
@@ -286,9 +322,68 @@ export async function syncBigCommerceCatalog(input: SyncCatalogInput): Promise<S
     }
 
     if (input.onProgress) await input.onProgress({ ...counts });
-    if (products.length < PAGE_SIZE) break;
+    if (products.length < PAGE_SIZE) {
+      walkComplete = true;
+      break;
+    }
     page++;
   }
 
+  await retireAbsentProducts(
+    input,
+    counts,
+    {
+      mode: input.mode,
+      walkComplete: walkComplete && counts.productsScanned <= HARD_CAP_PRODUCTS,
+      scanned: counts.productsScanned,
+      storeTotal,
+    },
+    seen,
+  );
+
   return counts;
+}
+
+/**
+ * Retires the store's live products a complete full walk did not return.
+ * The decision rules are pure (catalog-retirement.ts); this applies them and
+ * records the outcome in the counts. A refusal is a note, never an error:
+ * the upserts above stand whatever this decides.
+ */
+async function retireAbsentProducts(
+  input: SyncCatalogInput,
+  counts: SyncCatalogCounts,
+  walk: WalkOutcome,
+  seen: ReadonlySet<string>,
+): Promise<void> {
+  if (walk.mode !== "full") return;
+  const live = await prisma.product.findMany({
+    where: { storeId: input.storeId, sourceSystem: SOURCE_SYSTEM, deletedAt: null },
+    select: { id: true, sourceId: true },
+  });
+  const absent = absentProducts(live, seen);
+  const decision = retirementDecision({
+    walk,
+    liveCount: live.length,
+    absentCount: absent.length,
+  });
+  if (!decision.retire) {
+    counts.retirementNote = decision.reason;
+    logger.warn(
+      { storeId: input.storeId, absent: absent.length, live: live.length, reason: decision.reason },
+      "catalog sync: absent products were not retired",
+    );
+    return;
+  }
+  if (decision.count === 0) return;
+  const result = await retireProductsRemovedFromStore({
+    productIds: absent.map((product) => product.id),
+    noticedBy: "full_catalog_sync",
+    evidence: {
+      storeId: input.storeId,
+      ...(input.syncLogId ? { syncLogId: input.syncLogId } : {}),
+      message: `Not returned by a complete full catalogue walk of ${walk.scanned} products.`,
+    },
+  });
+  counts.productsRetired = result.retired.length;
 }

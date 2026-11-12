@@ -39,6 +39,17 @@ describe("unattended runs keep their controls", () => {
     expect(actions.match(/await requireRunner\(\)/g)?.length).toBe(3);
   });
 
+  it("refuses, at creation, a project whose product the store no longer lists (2026-11-11)", () => {
+    // Such a project would spend on research and images and then be refused
+    // at the store, as seventeen were over two weeks before this guard.
+    const service = stripComments(read(SERVICE));
+    expect(service).toContain("if (project.product?.deletedAt) {");
+    expect(service).toContain("is linked to a product its store no longer lists");
+    expect(service.indexOf("if (project.product?.deletedAt) {")).toBeLessThan(
+      service.indexOf("const run = await prisma.$transaction("),
+    );
+  });
+
   it("re-checks all three flags before starting and before every step", () => {
     const flags = stripComments(read("src/server/services/product-studio/autopilot-flags.ts"));
     for (const flag of [

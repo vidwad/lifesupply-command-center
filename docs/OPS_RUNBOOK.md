@@ -156,7 +156,14 @@ BC-owned catalog fields (name, price, SKU, status, image/description quality
 signals) overwrite on sync. Once products are synced, **re-running an order
 sync backfills** the `productId` / `productVariantId` links on order items
 (Phase 3B). Counts appear in the sync log (`categoriesUpserted`,
-`productsScanned`, `variantsUpserted/Deleted`).
+`productsScanned`, `variantsUpserted/Deleted`). Since November 11, 2026 a
+**full** walk also retires the store's live products it did not return
+(`productsRetired` in the sync log metadata; soft delete, audited as
+`product.retired_from_store`), refusing when the walk stopped early, fell
+short of the store's own total, or would retire more than a fifth of the
+catalogue (`retirementNote` says which). The incremental walk never retires,
+so run a full walk from the Products page when listings have been deleted in
+BigCommerce. See docs/27 §5.5.1.
 
 **Reconciliation (Phase 3E):** **Admin → Reconciliation** compares Command
 Center totals against BigCommerce source totals per store — lifetime counts

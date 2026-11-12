@@ -145,7 +145,7 @@ export async function createProductStudioRun(args: {
       status: true,
       productId: true,
       autopilotRunId: true,
-      product: { select: { name: true } },
+      product: { select: { name: true, deletedAt: true, store: { select: { name: true } } } },
       compositions: { select: { slot: true, status: true } },
       autopilotRun: { select: { status: true } },
     },
@@ -157,6 +157,15 @@ export async function createProductStudioRun(args: {
     const name = project.confirmedTitle ?? project.title;
     if (project.status === "archived") {
       throw new ProductStudioInputError(`"${name}" is archived and cannot be run.`);
+    }
+    // A product the store no longer lists (2026-11-11) would spend on research
+    // and images and then be refused at the store. It is refused here instead.
+    if (project.product?.deletedAt) {
+      throw new ProductStudioInputError(
+        `"${name}" is linked to a product its store no longer lists` +
+          (project.product.store ? ` (${project.product.store.name})` : "") +
+          "; it cannot be run. Archive the project, or start a new one from the current listing.",
+      );
     }
     if (project.autopilotRun && LIVE_RUN_STATUSES.has(project.autopilotRun.status)) {
       throw new ProductStudioInputError(`"${name}" is already in a live unattended run.`);

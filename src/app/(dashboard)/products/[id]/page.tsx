@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Camera, Star } from "lucide-react";
+import { ArrowLeft, Camera, ShieldAlert, Star } from "lucide-react";
 
 import { DataTable, TBody, TD, TH, THead, TR } from "@/components/data/DataTable";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AssistantPageContext } from "@/components/ai/assistant/page-context";
 import { PageHeader } from "@/components/shell/PageHeader";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import { getProductById } from "@/server/services/products";
 import { requirePermission, userHasPermission } from "@/server/permissions";
@@ -31,6 +31,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const margin =
     product.sales90d.revenue > 0 ? product.sales90d.grossProfit / product.sales90d.revenue : null;
+  // The store no longer lists this product (store-removal.ts, 2026-11-11).
+  // The row stays for its history; the page says so and offers no new work.
+  const removed = product.deletedAt;
+  const storeName = product.store?.name ?? "its store";
 
   return (
     <div>
@@ -63,7 +67,8 @@ export default async function ProductDetailPage({ params }: Props) {
         }
         actions={
           <div className="flex flex-wrap gap-2">
-            {userHasPermission(user, PERMISSIONS.PRODUCTS_UPDATE) &&
+            {!removed &&
+            userHasPermission(user, PERMISSIONS.PRODUCTS_UPDATE) &&
             userHasPermission(user, PERMISSIONS.AI_USE) ? (
               <Button asChild size="sm" variant="outline">
                 <Link href={`/products/studio/new?productId=${product.id}`}>
@@ -71,7 +76,11 @@ export default async function ProductDetailPage({ params }: Props) {
                 </Link>
               </Button>
             ) : null}
-            <Badge variant="outline">{product.status}</Badge>
+            {removed ? (
+              <Badge variant="destructive">Removed from store</Badge>
+            ) : (
+              <Badge variant="outline">{product.status}</Badge>
+            )}
             {product.isFeatured && (
               <Badge variant="warning">
                 <Star className="mr-1 h-3 w-3" /> Featured
@@ -80,6 +89,21 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         }
       />
+
+      {removed ? (
+        <div className="mx-4 mt-4 flex gap-3 rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive md:mx-6">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">This product is no longer listed on {storeName}.</p>
+            <p className="mt-1">
+              The store removed the listing; the Command Center noticed on {formatDate(removed)}.
+              Its order history, supplier mappings and Product Studio projects are kept. It no
+              longer appears in the products list and nothing can be published to it. If the item is
+              still sold under another listing, that listing is a separate product here.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-6 p-4 md:p-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
