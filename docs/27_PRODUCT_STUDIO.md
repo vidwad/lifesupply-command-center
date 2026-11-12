@@ -260,7 +260,15 @@ image, or a replacement for the thumbnail. The client module has no method for a
    The link is never changed afterwards; a project started from a product page is linked from the
    start, and the intake page now says which of the two it is creating. Linking spends nothing.
 4. The store's current description and image list are read first and recorded with every log row,
-   so a change can be reversed by hand. If that read fails, nothing is written.
+   so a change can be reversed by hand. If that read fails, nothing is written. A 404 on that read
+   is the store saying the listing is gone (2026-11-11): the catalogue product is retired on the
+   spot (`deletedAt` set through `store-removal.ts`, audited as `product.retired_from_store`), the
+   refusal is audited as `listing_removed`, and the message says the images stay with the project.
+   A retired product is refused by the rules before anything is read again, the project page shows
+   the same reason, and an unattended run refuses such a project at creation rather than spending on
+   research and images first. Seventeen projects over two weeks had reached this gate with
+   BigCommerce ids the store had deleted after the August catalogue import; the catalogue sync had
+   never learned of a deletion until that date (see §5.5.1).
 5. A `ProductStudioPublishLog` row exists before each request goes out. Items are sent one after
    another, images by slot then the description, and the run stops at the first failure. Each item
    is sent once; what succeeded is not resent on a retry.
@@ -275,6 +283,36 @@ not updated by a publish; the next catalogue sync brings the store's state back.
 **Canaries.** `publish-canaries.test.ts` holds the structure: one log writer, one client importer,
 log before request, read before write, no background path, page renders load only the read-only
 module, and the price client stays price-only. `chokepoints.test.ts` lists the service.
+
+### 5.5.1 Listings the store removes (product owner, 2026-11-11)
+
+The catalogue sync only ever added and updated, so a listing deleted in BigCommerce stayed here as
+a live product. The case that surfaced it: product 10747 (a Lille Healthcare brief) had been a
+duplicate of listing 20449 for the same SKU; a merchant deleted the duplicate after the August
+import, and three unattended runs each generated nothing new but reached the store with the dead id.
+
+Two things now learn of a removal, both on the store's own word, and both through one module,
+`src/server/services/products/store-removal.ts`:
+
+- **The publish read.** A 404 retires the product immediately (gate 4 above).
+- **The full catalogue walk.** After a full walk, every live BigCommerce product of the store that
+  the walk did not return is retired, under rules in `catalog-retirement.ts` that refuse when the
+  walk is incremental, stopped before its last page, returned nothing, fell short of the store's own
+  `meta.pagination.total`, or would retire more than a fifth of the store's live products. A refusal
+  is recorded as `retirementNote` on the sync log and is never an error. The incremental walk the
+  schedule runs cannot see deletions, so a full walk from the Products page is what catches them.
+
+A retirement is a soft delete: the row keeps its variants, order lines, publish logs and projects,
+leaves the products list, the population counts and the link search, and shows a "Removed from
+store" notice on its product page. Nothing hard-deletes a product (`store-removal.test.ts` holds
+that). A walk that does return the id again clears the mark, since the mapper's update sets
+`deletedAt` back to null; BigCommerce does not reuse ids, so in practice a removed listing stays
+removed and a relisted item arrives as a new product.
+
+**What to do with the project.** Its images and research are kept, and the project can be archived.
+The link to a product is never changed once made (§5.5 gate 3), so content cannot be moved to the
+replacement listing today; a new project from that product is the path. Whether a removed listing's
+content should be re-pointable to a same-SKU successor is an open question for the owner.
 
 ## 5.6 Unattended runs (product owner, 2026-10-27)
 

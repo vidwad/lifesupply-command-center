@@ -308,6 +308,7 @@ export async function getProductStudioProject(id: string) {
           sourceSystem: true,
           sourceId: true,
           metadata: true,
+          deletedAt: true,
           store: { select: { name: true } },
           // The store's own price and cost, read as the products list reads
           // them: the primary variant, then the preferred supplier's cost.

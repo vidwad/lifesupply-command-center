@@ -17,7 +17,9 @@
  *      carrying the store's prior description and image list, so a crash
  *      mid-write still leaves evidence of what was there.
  *   5. A pre-write read of the live product must succeed. Without it there is
- *      no record to restore from.
+ *      no record to restore from. A 404 on that read is the store saying the
+ *      listing is gone (2026-11-11): the catalogue product is retired through
+ *      store-removal.ts, so no later run or publish targets it again.
  *
  * One project per call, items sent one after another, and the run stops at
  * the first failure. There is no scheduler, no bulk path and no Inngest
@@ -51,6 +53,7 @@ import {
   writeBigCommerceProductDescription,
 } from "@/server/integrations/bigcommerce/catalog-publish";
 import { storeImageCount, storeThumbnailImageId } from "@/server/services/products";
+import { retireProductsRemovedFromStore } from "@/server/services/products/store-removal";
 import { resolveStoreCredentials } from "@/server/integrations/bigcommerce/store-credentials";
 import { logger } from "@/server/logger";
 
@@ -101,6 +104,7 @@ async function loadProject(projectId: string) {
           sourceSystem: true,
           sourceId: true,
           metadata: true,
+          deletedAt: true,
           store: { select: { name: true } },
         },
       },
@@ -450,6 +454,34 @@ export async function publishProductStudioProject(args: {
     credentials,
     productId: resolvedTarget.sourceProductId,
   });
+  if (!before.ok && before.status === 404) {
+    // The store says the listing does not exist (2026-11-11). That is the
+    // store's own word, so the catalogue product is retired here and now:
+    // the products list, the link search and every later run stop offering
+    // it, and the project page says why. Nothing was sent.
+    await retireProductsRemovedFromStore({
+      productIds: [resolvedTarget.productId],
+      noticedBy: "publish_read_404",
+      actorUserId: args.actorUserId,
+      evidence: { projectId: row.id, storeId: resolvedTarget.storeId, message: before.message },
+    });
+    await auditRefusal({
+      actorUserId: args.actorUserId,
+      row,
+      target: resolvedTarget,
+      reason: "listing_removed",
+      message: before.message,
+    });
+    throw new ProductStudioInputError(
+      "The store no longer lists this product: BigCommerce answered that product " +
+        resolvedTarget.sourceProductId +
+        " does not exist on " +
+        (resolvedTarget.storeName ?? "the store") +
+        ". It is now marked as removed from the store here, and nothing was sent. The images stay " +
+        "with this project; if the item is still sold under another listing, start a new project " +
+        "from that product.",
+    );
+  }
   if (!before.ok) {
     await auditRefusal({
       actorUserId: args.actorUserId,

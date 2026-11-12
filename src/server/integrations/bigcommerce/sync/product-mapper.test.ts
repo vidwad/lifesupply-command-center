@@ -85,6 +85,11 @@ describe("mapBcProductToUpsert", () => {
     expect(built.update).not.toHaveProperty("sourceSystem");
   });
 
+  it("clears a retirement mark on update, since the store returned the product (2026-11-11)", () => {
+    expect(built.update.deletedAt).toBeNull();
+    expect(built.create).not.toHaveProperty("deletedAt");
+  });
+
   it("records all BC category ids + brand id in metadata", () => {
     const meta = built.create.metadata as Record<string, unknown>;
     expect(meta.bcCategories).toEqual([12, 34]);

@@ -78,6 +78,16 @@ describe("resolving the store product", () => {
     );
     expect(resolvePublishTarget({ ...product, sourceId: " " }).target).toBeNull();
   });
+  it("refuses a product the store no longer lists, and says the images stay (2026-11-11)", () => {
+    const removed = resolvePublishTarget({
+      ...product,
+      deletedAt: new Date("2026-11-11T00:00:00Z"),
+    });
+    expect(removed.target).toBeNull();
+    expect(removed.reason).toMatch(/no longer listed on LifeSupply/);
+    expect(removed.reason).toMatch(/images stay with this project/);
+    expect(resolvePublishTarget({ ...product, deletedAt: null }).target).not.toBeNull();
+  });
 });
 
 describe("selecting what to send", () => {

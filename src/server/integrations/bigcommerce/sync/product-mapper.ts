@@ -135,6 +135,9 @@ export function mapBcProductToUpsert(
       // CC-owned fields intentionally omitted — Prisma preserves them.
       ...bcOwned,
       metadata,
+      // The store returned this product, so it is listed: a retirement mark
+      // (store-removal.ts, 2026-11-11) is cleared by the evidence against it.
+      deletedAt: null,
     },
   };
 }

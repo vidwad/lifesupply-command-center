@@ -48,7 +48,29 @@ export type LinkedProduct = {
   sourceSystem: string | null;
   sourceId: string | null;
   store?: { name: string } | null;
+  /**
+   * Set when the store no longer lists the product (store-removal.ts,
+   * 2026-11-11): the publish read got a 404, or a full catalogue walk did not
+   * return it. Such a product is no publish target.
+   */
+  deletedAt?: Date | null;
 };
+
+/** Why a product the store no longer lists cannot be published to. */
+export function removedListingReason(product: {
+  name: string;
+  store?: { name: string } | null;
+}): string {
+  return (
+    'Product "' +
+    product.name +
+    '" is no longer listed on ' +
+    (product.store?.name ?? "its store") +
+    ". The store removed the listing, so there is nothing to publish to. The images stay with " +
+    "this project; if the item is still sold under another listing, start a new project from " +
+    "that product."
+  );
+}
 
 export type PublishTarget = {
   storeId: string;
@@ -76,6 +98,9 @@ export function resolvePublishTarget(product: LinkedProduct | null | undefined):
         "This project is not linked to a catalogue product. Start a project from a product page " +
         "to publish to its store listing.",
     };
+  }
+  if (product.deletedAt) {
+    return { target: null, reason: removedListingReason(product) };
   }
   if (!product.storeId) {
     return {

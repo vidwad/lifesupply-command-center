@@ -62,6 +62,7 @@ async function runCatalogSync(args: {
       divisionId: store.divisionId,
       mode: args.mode,
       sinceIso,
+      syncLogId,
       onProgress: async (c) => {
         await prisma.integrationSyncLog.update({
           where: { id: syncLogId },
@@ -120,6 +121,10 @@ async function runCatalogSync(args: {
         productsScanned: counts.productsScanned,
         variantsUpserted: counts.variantsUpserted,
         variantsDeleted: counts.variantsDeleted,
+        // Products the store no longer lists, retired by this full walk
+        // (2026-11-11), or why none were although some were absent.
+        productsRetired: counts.productsRetired,
+        retirementNote: counts.retirementNote,
         mode: args.mode,
         sinceIso: sinceIso ?? null,
       },
@@ -149,6 +154,8 @@ async function runCatalogSync(args: {
         productsFailed: counts.productsFailed,
         variantsUpserted: counts.variantsUpserted,
         variantsDeleted: counts.variantsDeleted,
+        productsRetired: counts.productsRetired,
+        retirementNote: counts.retirementNote,
       },
     });
   }
