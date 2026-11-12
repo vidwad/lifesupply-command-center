@@ -11,12 +11,15 @@
  * mark (the mapper's update sets `deletedAt` back to null), so the mark can
  * never outlive the evidence for it.
  *
- * Two callers, both with the store's own word for it:
+ * Three callers, all with the store's own word for it:
  *   - the publish service, when its pre-write read of the listing gets a 404
  *     from BigCommerce (`noticedBy: "publish_read_404"`);
  *   - the full catalogue sync, for every live product a complete walk did not
  *     return (`noticedBy: "full_catalog_sync"`), under the guards in
- *     catalog-retirement.ts.
+ *     catalog-retirement.ts;
+ *   - the operator's script `pnpm catalog:retire-removed`, which re-reads each
+ *     product a publish was refused for and retires the ones the store still
+ *     answers 404 to (`noticedBy: "listing_check_404"`).
  *
  * Every retirement is audited as `product.retired_from_store`, one row per
  * product up to a cap and a summary row beyond it.
@@ -27,7 +30,7 @@ import { logger } from "@/server/logger";
 
 import { invalidateProductPopulation } from "./index";
 
-export type RetirementNotice = "publish_read_404" | "full_catalog_sync";
+export type RetirementNotice = "publish_read_404" | "full_catalog_sync" | "listing_check_404";
 
 /** Per-product audit rows are written up to this many; the rest share one summary row. */
 export const RETIREMENT_AUDIT_ROW_CAP = 100;

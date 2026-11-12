@@ -31,6 +31,7 @@
     "sales:backfill:plan": "tsx scripts/sales-intelligence/plan-historical-backfill.ts",
     "customers:recompute": "tsx scripts/customers/recompute-lifetime-metrics.ts",
     "ai:live-voice": "tsx scripts/ai/set-live-voice.ts",
+    "catalog:retire-removed": "tsx scripts/catalog/retire-removed-listings.ts",
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "perf:seed": "tsx scripts/perf/seed-volume.ts",

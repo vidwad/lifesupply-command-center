@@ -309,6 +309,18 @@ that). A walk that does return the id again clears the mark, since the mapper's 
 `deletedAt` back to null; BigCommerce does not reuse ids, so in practice a removed listing stays
 removed and a relisted item arrives as a new product.
 
+**Where such projects show.** Out of every status view of the Product Studio list, "All" and "Needs
+review" included (product owner, 2026-11-11): there is nothing left to review or publish for them.
+They are listed only under a "Removed from store" pill of their own, badged as such in both
+layouts, so they can be found and archived. An unlinked project has no product to be retired and
+stays where it was.
+
+**Clearing the backlog.** `pnpm catalog:retire-removed --actor-email <owner>` (dry run) reads the
+product ids from the publish refusals in the audit log, asks the store about each one again through
+the publish service's own read, and lists which it still answers 404 to; with `--apply` (and the
+production acknowledgement as a Render one-off job) it retires exactly those, audited with
+`noticedBy: "listing_check_404"`. A product the store still lists is left alone.
+
 **What to do with the project.** Its images and research are kept, and the project can be archived.
 The link to a product is never changed once made (§5.5 gate 3), so content cannot be moved to the
 replacement listing today; a new project from that product is the path. Whether a removed listing's

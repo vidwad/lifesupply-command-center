@@ -52,7 +52,7 @@ describe("retiring a product the store no longer lists", () => {
     expect(code).toContain('action: "product.retired_from_store"');
     expect(code).toContain("invalidateProductPopulation()");
     expect(code).toMatch(/noticedBy: RetirementNotice/);
-    expect(code).toContain('"publish_read_404" | "full_catalog_sync"');
+    expect(code).toContain('"publish_read_404" | "full_catalog_sync" | "listing_check_404"');
   });
 
   it("nothing in the application hard-deletes a product", () => {
