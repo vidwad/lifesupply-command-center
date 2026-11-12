@@ -71,7 +71,15 @@ vi.mock("./tools", () => ({
 }));
 
 import { AiOutputTruncatedError } from "../errors";
-import { answerAssistantQuestion, collectSources, functionCallsIn } from "./answer";
+import {
+  answerAssistantQuestion,
+  collectSources,
+  functionCallsIn,
+  NO_ANSWER_TEXT,
+  NUDGE_TO_ANSWER,
+  outputTypesIn,
+  responseText,
+} from "./answer";
 
 beforeEach(() => {
   requests.length = 0;
@@ -239,6 +247,122 @@ describe("answerAssistantQuestion", () => {
       answerAssistantQuestion({ question: "Everything?", userId: "u1", permissions: ["ai.use"] }),
     ).rejects.toBeInstanceOf(AiOutputTruncatedError);
     expect(created).toHaveLength(0);
+  });
+
+  it("nudges once, with the tools withheld, when the model stops without writing anything (2026-11-12)", async () => {
+    // Seen on production: a successful query round, then a completed
+    // response holding only reasoning. The nudge gets the answer out.
+    responses = [
+      {
+        id: "resp_1",
+        model: "m",
+        output: [{ type: "function_call", call_id: "c1", name: "sales_overview", arguments: "{}" }],
+        usage: { input_tokens: 1, output_tokens: 1 },
+      },
+      {
+        id: "resp_2",
+        model: "m",
+        status: "completed",
+        output: [{ type: "reasoning", summary: [] }],
+        output_text: "",
+        usage: { input_tokens: 1, output_tokens: 900 },
+      },
+      {
+        id: "resp_3",
+        model: "m",
+        output: [message("Revenue was $1,234.50.")],
+        output_text: "Revenue was $1,234.50.",
+        usage: { input_tokens: 1, output_tokens: 30 },
+      },
+    ];
+    const result = await answerAssistantQuestion({
+      question: "How are sales?",
+      userId: "u1",
+      permissions: ["ai.use"],
+    });
+    expect(result.answer).toBe("Revenue was $1,234.50.");
+    expect(result.warnings).toEqual([]);
+    expect(requests).toHaveLength(3);
+    expect(requests[2]).toMatchObject({
+      tool_choice: "none",
+      previous_response_id: "resp_2",
+      input: [{ role: "user", content: NUDGE_TO_ANSWER }],
+    });
+    expect(requests[1]).toMatchObject({ tool_choice: "auto" });
+    const refs = created[0]!.sourceReferences as Record<string, unknown>;
+    expect(refs.nudged).toBe(true);
+    expect(refs.rounds).toBe(3);
+  });
+
+  it("says what came back when even the nudge yields no text, instead of blaming the round cap", async () => {
+    responses = [
+      {
+        id: "resp_1",
+        model: "m",
+        status: "completed",
+        output: [{ type: "reasoning", summary: [] }],
+        output_text: "",
+        usage: {},
+      },
+      {
+        id: "resp_2",
+        model: "m",
+        status: "incomplete",
+        incomplete_details: { reason: "content_filter" },
+        output: [],
+        output_text: "",
+        usage: {},
+      },
+    ];
+    const result = await answerAssistantQuestion({
+      question: "How are sales?",
+      userId: "u1",
+      permissions: ["ai.use"],
+    });
+    expect(result.answer).toBe(NO_ANSWER_TEXT);
+    expect(result.warnings).toEqual([
+      "The model returned no text after 2 rounds (last response: incomplete, content_filter).",
+    ]);
+    expect(requests).toHaveLength(2);
+    const refs = created[0]!.sourceReferences as Record<string, unknown>;
+    expect(refs.lastResponse).toEqual({
+      status: "incomplete",
+      reason: "content_filter",
+      outputTypes: [],
+    });
+  });
+
+  it("reads the answer from the message items when the convenience field is absent", async () => {
+    responses = [
+      {
+        id: "resp_1",
+        model: "m",
+        output: [message("From the items.")],
+        usage: {},
+      },
+    ];
+    const result = await answerAssistantQuestion({
+      question: "How are sales?",
+      userId: "u1",
+      permissions: ["ai.use"],
+    });
+    expect(result.answer).toBe("From the items.");
+    expect(result.warnings).toEqual([]);
+  });
+});
+
+describe("responseText and outputTypesIn", () => {
+  it("prefers output_text, falls back to the message items, and never reads reasoning", () => {
+    expect(responseText({ output_text: " Direct. ", output: [message("Items.")] })).toBe("Direct.");
+    expect(responseText({ output_text: "", output: [message("A "), message("B")] })).toBe("A B");
+    expect(responseText({ output: [{ type: "reasoning", summary: [{ text: "thinking" }] }] })).toBe(
+      "",
+    );
+    expect(responseText({})).toBe("");
+    expect(
+      outputTypesIn([{ type: "reasoning" }, { type: "message" }, { type: "message" }]),
+    ).toEqual(["reasoning", "message"]);
+    expect(outputTypesIn(null)).toEqual([]);
   });
 });
 

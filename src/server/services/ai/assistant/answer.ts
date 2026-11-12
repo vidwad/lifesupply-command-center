@@ -39,6 +39,20 @@ import type {
 export const MAX_TOOL_ROUNDS = 8;
 const MAX_TOOL_OUTPUT_CHARS = 30_000;
 
+/**
+ * What the model is told when it stops without writing anything
+ * (2026-11-12). Seen on production: two tool rounds, both successful, then
+ * a completed response with reasoning but no message, so the person read
+ * "ask a narrower question" for a question the figures already answered.
+ * One more round with the tools withheld gets the answer out.
+ */
+export const NUDGE_TO_ANSWER =
+  "Write the answer now, in plain language, from the tool results already in this conversation. Do not call any more tools.";
+
+/** What the person reads when even the nudge produced no text. */
+export const NO_ANSWER_TEXT =
+  "The model did not write an answer this time. The figures it gathered are still in this conversation: ask again, or say “answer with what you found”.";
+
 export type AnswerArgs = {
   question: string;
   userId: string;
@@ -85,6 +99,37 @@ export function functionCallsIn(output: unknown): { callId: string; name: string
     calls.push({ callId, name, args: typeof item.arguments === "string" ? item.arguments : "{}" });
   }
   return calls;
+}
+
+/**
+ * Pure: the answer's text. `output_text` is the SDK's convenience field and
+ * is used when present; otherwise the message items' text is joined, which
+ * is what the field is made of.
+ */
+export function responseText(response: { output_text?: unknown; output?: unknown }): string {
+  const direct = typeof response.output_text === "string" ? response.output_text.trim() : "";
+  if (direct) return direct;
+  if (!Array.isArray(response.output)) return "";
+  const parts: string[] = [];
+  for (const item of response.output as OutputItem[]) {
+    if (item?.type !== "message" || !Array.isArray(item.content)) continue;
+    for (const content of item.content as OutputItem[]) {
+      if (content?.type === "output_text" && typeof content.text === "string") {
+        parts.push(content.text);
+      }
+    }
+  }
+  return parts.join("").trim();
+}
+
+/** Pure: the kinds of item a response carried, for the record when it carried no text. */
+export function outputTypesIn(output: unknown): string[] {
+  if (!Array.isArray(output)) return [];
+  return [
+    ...new Set(
+      (output as OutputItem[]).map((item) => (typeof item?.type === "string" ? item.type : "?")),
+    ),
+  ];
 }
 
 /** Pure: web pages the model searched or cited, from a response's output. */
@@ -198,6 +243,10 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
   let responseId = "";
   let modelName = model;
   let rounds = 0;
+  // The last response that asked for no tool, for the record and the
+  // warning when it carried no text either; and whether the nudge was sent.
+  let nudged = false;
+  let last: { status: string | null; reason: string | null; outputTypes: string[] } | null = null;
 
   while (rounds < MAX_TOOL_ROUNDS) {
     rounds += 1;
@@ -206,7 +255,8 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
       input,
       instructions,
       tools: toolDefinitions,
-      tool_choice: "auto",
+      // After the nudge the tools are withheld: the model has what it needs.
+      tool_choice: nudged ? "none" : "auto",
       parallel_tool_calls: true,
       include: ["web_search_call.action.sources"],
       max_output_tokens: maxOutputTokens,
@@ -222,11 +272,25 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
 
     const calls = functionCallsIn(response.output);
     if (calls.length === 0) {
-      answer = (response.output_text ?? "").trim();
-      const reason = (response as { incomplete_details?: { reason?: string } }).incomplete_details
-        ?.reason;
+      answer = responseText(response);
+      const reason =
+        (response as { incomplete_details?: { reason?: string } }).incomplete_details?.reason ??
+        null;
+      last = {
+        status: typeof response.status === "string" ? response.status : null,
+        reason,
+        outputTypes: outputTypesIn(response.output),
+      };
       if (!answer && reason === "max_output_tokens")
         throw new AiOutputTruncatedError(maxOutputTokens);
+      if (!answer && !nudged && rounds < MAX_TOOL_ROUNDS) {
+        // No tool asked for and nothing written: once, ask for the answer
+        // outright on the same chain, so the gathered results are not lost.
+        nudged = true;
+        input = [{ role: "user", content: NUDGE_TO_ANSWER }];
+        previousResponseId = responseId;
+        continue;
+      }
       break;
     }
 
@@ -268,8 +332,21 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
 
   const warnings: string[] = [];
   if (!answer) {
-    warnings.push(`The assistant used ${MAX_TOOL_ROUNDS} rounds of tools without finishing.`);
-    answer = "I could not finish within the allowed number of steps. Ask a narrower question.";
+    if (last) {
+      // The model stopped asking for tools and still wrote nothing, twice.
+      // The warning says what came back, so the record explains itself.
+      warnings.push(
+        `The model returned no text after ${rounds} round${rounds === 1 ? "" : "s"}` +
+          ` (last response: ${last.status ?? "unknown status"}` +
+          (last.reason ? `, ${last.reason}` : "") +
+          (last.outputTypes.length ? `; items: ${last.outputTypes.join(", ")}` : "") +
+          ").",
+      );
+      answer = NO_ANSWER_TEXT;
+    } else {
+      warnings.push(`The assistant used ${MAX_TOOL_ROUNDS} rounds of tools without finishing.`);
+      answer = "I could not finish within the allowed number of steps. Ask a narrower question.";
+    }
   }
   for (const call of toolCalls) {
     if (call.skipped) warnings.push(`${call.name}: ${call.skipped}`);
@@ -294,6 +371,8 @@ export async function answerAssistantQuestion(args: AnswerArgs): Promise<Assista
         previousResponseId: args.previousResponseId ?? null,
         responseId,
         rounds,
+        nudged,
+        lastResponse: last,
       } as Prisma.InputJsonObject,
       tokenUsage: usage,
       status: "generated",
