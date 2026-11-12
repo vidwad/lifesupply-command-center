@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { DollarSign, ShoppingCart, Users } from "lucide-react";
 
 import { DataTable, TBody, TD, THead, TR } from "@/components/data/DataTable";
 import { ExportButton } from "@/components/data/ExportButton";
+import { KpiCard } from "@/components/data/KpiCard";
 import { SortHeader } from "@/components/data/SortHeader";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -12,7 +13,6 @@ import { Pagination } from "@/components/data/Pagination";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { PERMISSIONS } from "@/lib/permissions";
 import {
-  countCustomers,
   CUSTOMERS_PAGE_SIZE,
   LAST_ORDER_FILTER_LABELS,
   LAST_ORDER_FILTERS,
@@ -20,6 +20,7 @@ import {
   parseCustomerSort,
   parseLastOrderFilter,
   parseSortDirection,
+  summarizeCustomers,
   type ListCustomersFilters,
 } from "@/server/services/customers";
 import { listStores } from "@/server/services/stores";
@@ -102,12 +103,14 @@ export default async function CustomersPage({
     dir,
   };
 
-  // The count is shared across readers for a minute (see countCustomers), so
+  // The count and the totals come from one aggregate shared across readers
+  // for a minute (see summarizeCustomers), so
   // the header total can trail a sync by that long; the rows never do.
-  const [customers, totalCustomers] = await Promise.all([
+  const [customers, totals] = await Promise.all([
     listCustomers(filters),
-    countCustomers(filters),
+    summarizeCustomers(filters),
   ]);
+  const totalCustomers = totals.customers;
 
   // The filters in force, as query-string values. A pill link overrides one
   // of them; the search form, the sort headers and the pagination footer
@@ -183,7 +186,11 @@ export default async function CustomersPage({
             page: String(page),
           },
           storeId: storeId,
-          figures: [{ label: "Customers matching", value: totalCustomers.toLocaleString() }],
+          figures: [
+            { label: "Customers matching", value: totalCustomers.toLocaleString() },
+            { label: "Lifetime value, matching", value: formatCurrency(totals.lifetimeValue) },
+            { label: "Orders, matching", value: totals.orders.toLocaleString() },
+          ],
         }}
       />
       <PageHeader
@@ -296,6 +303,32 @@ export default async function CustomersPage({
               {LAST_ORDER_FILTER_LABELS[f]}
             </Link>
           ))}
+        </div>
+
+        {/*
+         * Totals for the filtered set (product owner, 2026-11-12): the same
+         * aggregate that counts the header and the pager, so these three
+         * figures describe exactly the customers the rows below page through.
+         */}
+        <div className="grid gap-3 sm:grid-cols-3" data-testid="customer-totals">
+          <KpiCard
+            label="Customers"
+            value={totalCustomers.toLocaleString()}
+            caption={anyFilter ? "matching the filters" : "all customers"}
+            icon={Users}
+          />
+          <KpiCard
+            label="Lifetime value"
+            value={formatCurrency(totals.lifetimeValue)}
+            caption="added up across them"
+            icon={DollarSign}
+          />
+          <KpiCard
+            label="Orders"
+            value={totals.orders.toLocaleString()}
+            caption="added up across them"
+            icon={ShoppingCart}
+          />
         </div>
 
         {customers.length === 0 ? (

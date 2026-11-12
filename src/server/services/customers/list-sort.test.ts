@@ -151,9 +151,24 @@ describe("the shared count", () => {
   it("is held for a minute per filter combination, eight combinations at a time", () => {
     expect(CUSTOMER_COUNT_TTL_MS).toBe(60_000);
     expect(CUSTOMER_COUNT_MAX_ENTRIES).toBe(8);
-    expect(service).toContain("createKeyedTtlCache<number>(CUSTOMER_COUNT_TTL_MS, {");
+    expect(service).toContain("createKeyedTtlCache<CustomerTotals>(CUSTOMER_COUNT_TTL_MS, {");
     expect(service).toContain("staleWhileRevalidate: true,");
-    expect(service).toContain("countCache.get(customerCountKey(filters), () =>");
+    expect(service).toContain("totalsCache.get(customerCountKey(filters), async () =>");
+  });
+
+  it("carries the filtered set's lifetime value and orders on the same scan as the count (2026-11-12)", () => {
+    // One aggregate over the shared where clause: the count the header and
+    // the pager use is the same figure the totals show, never a second query.
+    expect(service).toContain("prisma.customer.aggregate({");
+    expect(service).toContain("where: customerWhere(filters),");
+    expect(service).toContain("_sum: { lifetimeValue: true, orderCount: true },");
+    expect(service).toContain("return (await summarizeCustomers(filters)).customers;");
+    expect(service).not.toMatch(/prisma\.customer\.count\(/);
+    // The page reads the three from that one call and shows all of them.
+    expect(page).toContain("summarizeCustomers(filters)");
+    expect(page).toContain("const totalCustomers = totals.customers;");
+    expect(page).toContain("formatCurrency(totals.lifetimeValue)");
+    expect(page).toContain("totals.orders.toLocaleString()");
   });
 
   it("keys the count by the filters alone, not by page, sort or direction", () => {

@@ -238,20 +238,34 @@ export async function listCustomers(filters: ListCustomersFilters = {}) {
 export type CustomerListRow = Awaited<ReturnType<typeof listCustomers>>[number];
 
 /**
- * The header total and the page count. Counting the whole table walks all
- * 75,000 customers (most of a second on the production database), so one
- * filter combination's count is shared by every reader for a minute
- * (2026-11-05); past that the last count is shown while the next runs, and
- * the web process counts the unfiltered list as it starts. Customers are
- * written by the syncs and imports, which run in the worker, so the total
- * can trail them by up to a minute; the rows themselves never do.
+ * The header total, the page count, and since 2026-11-12 the totals the page
+ * shows for the filtered set: how many customers, their lifetime value and
+ * their orders added up (product owner). Counting the whole table walks all
+ * 75,000 customers (most of a second on the production database), and the
+ * sums ride on the same scan as one aggregate query, so one filter
+ * combination's figures are shared by every reader for a minute
+ * (2026-11-05); past that the last figures are shown while the next scan
+ * runs, and the web process computes the unfiltered ones as it starts.
+ * Customers are written by the syncs and imports, which run in the worker,
+ * so the totals can trail them by up to a minute; the rows themselves never
+ * do. Measured on production: the unfiltered aggregate is one sequential
+ * scan at 1.25 s, a last-order window runs off the index in 3 ms.
  */
 export const CUSTOMER_COUNT_TTL_MS = 60_000;
 
 /** How many filter combinations' counts are held at once. */
 export const CUSTOMER_COUNT_MAX_ENTRIES = 8;
 
-const countCache = createKeyedTtlCache<number>(CUSTOMER_COUNT_TTL_MS, {
+export type CustomerTotals = {
+  /** Customers matching the filters. */
+  customers: number;
+  /** Their lifetime values added up, in the store currency. */
+  lifetimeValue: number;
+  /** Their order counts added up. Each follows the sale rule (docs/42). */
+  orders: number;
+};
+
+const totalsCache = createKeyedTtlCache<CustomerTotals>(CUSTOMER_COUNT_TTL_MS, {
   staleWhileRevalidate: true,
   maxEntries: CUSTOMER_COUNT_MAX_ENTRIES,
 });
@@ -270,16 +284,36 @@ export function customerCountKey(filters: ListCustomersFilters): string {
   ]);
 }
 
+/**
+ * The customers matching the filters, with their lifetime value and orders
+ * added up: one aggregate over the same where clause the rows use, so the
+ * three figures and the list can never disagree about who is counted.
+ */
+export async function summarizeCustomers(
+  filters: ListCustomersFilters = {},
+): Promise<CustomerTotals> {
+  return totalsCache.get(customerCountKey(filters), async () => {
+    const aggregate = await prisma.customer.aggregate({
+      where: customerWhere(filters),
+      _count: { _all: true },
+      _sum: { lifetimeValue: true, orderCount: true },
+    });
+    return {
+      customers: aggregate._count._all,
+      lifetimeValue: num(aggregate._sum.lifetimeValue),
+      orders: aggregate._sum.orderCount ?? 0,
+    };
+  });
+}
+
 /** Total Customer rows matching filters (NOT capped — used for the page header). */
 export async function countCustomers(filters: ListCustomersFilters = {}): Promise<number> {
-  return countCache.get(customerCountKey(filters), () =>
-    prisma.customer.count({ where: customerWhere(filters) }),
-  );
+  return (await summarizeCustomers(filters)).customers;
 }
 
 /** Drops every shared count so the next reader counts anew. */
 export function invalidateCustomerCounts(): void {
-  countCache.clear();
+  totalsCache.clear();
 }
 
 /**
